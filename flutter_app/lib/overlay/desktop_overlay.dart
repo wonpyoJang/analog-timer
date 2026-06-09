@@ -124,6 +124,13 @@ class _OverlayBodyState extends State<_OverlayBody>
   DateTime? _displayLastTick;
   late final AnimationController _blinkCtrl;
 
+  // "다음" 버튼 2초 카운트다운 — 그 사이 다시 탭하면 취소(모바일/웹과 동일)
+  bool _nextCounting = false;
+  double _nextPct = 0.0;
+  DateTime? _nextStart;
+  Timer? _nextFrameTimer;
+  static const _nextDelay = Duration(seconds: 2);
+
   @override
   void initState() {
     super.initState();
@@ -237,6 +244,38 @@ class _OverlayBodyState extends State<_OverlayBody>
     } catch (_) {}
   }
 
+  // ── "다음" 2초 카운트다운(취소 가능) ──────────────────────────
+  void _startNextCountdown() {
+    setState(() {
+      _nextCounting = true;
+      _nextPct = 0.0;
+      _nextStart = DateTime.now();
+    });
+    _animNext();
+  }
+
+  void _cancelNextCountdown() {
+    _nextFrameTimer?.cancel();
+    setState(() {
+      _nextCounting = false;
+      _nextPct = 0.0;
+      _nextStart = null;
+    });
+  }
+
+  void _animNext() {
+    if (!_nextCounting || _nextStart == null || !mounted) return;
+    final elapsed = DateTime.now().difference(_nextStart!).inMilliseconds;
+    final pct = (elapsed / _nextDelay.inMilliseconds).clamp(0.0, 1.0);
+    setState(() => _nextPct = pct);
+    if (pct >= 1.0) {
+      _cancelNextCountdown();
+      _sendAction('timer_next');
+      return;
+    }
+    _nextFrameTimer = Timer(const Duration(milliseconds: 16), _animNext);
+  }
+
   // 시계 영역 드래그로 창 이동 — 위치를 직접 추적해 setPosition 하고 저장(디바운스).
   void _onDragUpdate(DragUpdateDetails d) {
     _winPos += d.delta;
@@ -257,6 +296,7 @@ class _OverlayBodyState extends State<_OverlayBody>
     _clockTimer?.cancel();
     _displayTimer?.cancel();
     _posSaveTimer?.cancel();
+    _nextFrameTimer?.cancel();
     _blinkCtrl.dispose();
     super.dispose();
   }
@@ -363,20 +403,40 @@ class _OverlayBodyState extends State<_OverlayBody>
     const swColor = Color(0xFF2EA84A);
     final timerColor = _effectiveTimerColor;
 
-    Widget btn(IconData icon, Color color, VoidCallback onTap) {
-      return GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: const Color(0xCC1A1A1C),
-            shape: BoxShape.circle,
-            border: Border.all(color: color.withValues(alpha: 0.4)),
-          ),
-          child: Icon(icon, color: color, size: 16),
+    Widget btn(IconData icon, Color color, VoidCallback onTap,
+        {double fill = 0.0}) {
+      Widget inner = Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: const Color(0xCC1A1A1C),
+          shape: BoxShape.circle,
+          border: Border.all(color: color.withValues(alpha: 0.4)),
         ),
+        child: Icon(icon, color: color, size: 16),
       );
+      // 카운트다운 진행률을 좌→우 fill 로 표시
+      if (fill > 0) {
+        inner = ClipOval(
+          child: SizedBox(
+            width: 34,
+            height: 34,
+            child: Stack(
+              children: [
+                inner,
+                Positioned.fill(
+                  child: FractionallySizedBox(
+                    widthFactor: fill,
+                    alignment: Alignment.centerLeft,
+                    child: Container(color: color.withValues(alpha: 0.35)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      return GestureDetector(onTap: onTap, child: inner);
     }
 
     return Row(
@@ -385,8 +445,15 @@ class _OverlayBodyState extends State<_OverlayBody>
         if (_timerActive) ...[
           btn(_timerRunning ? Icons.pause : Icons.play_arrow, timerColor,
               () => _sendAction('timer_toggle')),
-          btn(Icons.skip_next, timerColor.withValues(alpha: 0.75),
-              () => _sendAction('timer_next')),
+          // ⏭ 탭 → 2초 카운트다운(좌→우 fill), 완료 시 다음 / 카운트 중 탭 시 취소
+          btn(
+            _nextCounting ? Icons.close : Icons.skip_next,
+            _nextCounting
+                ? const Color(0xFFFFC107)
+                : timerColor.withValues(alpha: 0.75),
+            _nextCounting ? _cancelNextCountdown : _startNextCountdown,
+            fill: _nextCounting ? _nextPct : 0.0,
+          ),
         ],
         if (_swActive || _swElapsedMs > 0)
           btn(_swRunning ? Icons.stop : Icons.play_arrow, swColor,
