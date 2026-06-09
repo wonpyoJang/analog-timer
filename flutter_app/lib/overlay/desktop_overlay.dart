@@ -1,0 +1,334 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:window_manager/window_manager.dart';
+import 'overlay_clock_painter.dart';
+
+/// 서브윈도우(오버레이) 진입점 — frameless / always-on-top / skipTaskbar 로 구성 후 실행.
+Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
+  const opts = WindowOptions(
+    size: Size(220, 270),
+    minimumSize: Size(180, 220),
+    backgroundColor: Colors.transparent,
+    skipTaskbar: true,
+    titleBarStyle: TitleBarStyle.hidden,
+    windowButtonVisibility: false,
+    alwaysOnTop: true,
+  );
+  await windowManager.waitUntilReadyToShow(opts, () async {
+    await windowManager.setAsFrameless();
+    await windowManager.setAlwaysOnTop(true);
+    await windowManager.setHasShadow(false);
+    await windowManager.show();
+  });
+  runApp(
+    DesktopOverlayApp(
+      mainWindowId: args['mainWindowId'] as String? ?? '0',
+      initial: args,
+    ),
+  );
+}
+
+class DesktopOverlayApp extends StatelessWidget {
+  final String mainWindowId;
+  final Map<String, dynamic> initial;
+  const DesktopOverlayApp({
+    super.key,
+    required this.mainWindowId,
+    required this.initial,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: _OverlayBody(mainWindowId: mainWindowId, initial: initial),
+    );
+  }
+}
+
+class _OverlayBody extends StatefulWidget {
+  final String mainWindowId;
+  final Map<String, dynamic> initial;
+  const _OverlayBody({required this.mainWindowId, required this.initial});
+
+  @override
+  State<_OverlayBody> createState() => _OverlayBodyState();
+}
+
+class _OverlayBodyState extends State<_OverlayBody>
+    with TickerProviderStateMixin {
+  bool _timerActive = false;
+  bool _timerRunning = false;
+  bool _swActive = false;
+  bool _swRunning = false;
+  String _timerLabel = '';
+  String _timerRemain = '--:--';
+  String _swElapsed = '';
+  Color _timerColor = const Color(0xFFE07A52);
+  bool _ending = false;
+  int _segRemainMs = 0;
+  int _swElapsedMs = 0;
+  double? _swStartAngleRad;
+
+  DateTime _now = DateTime.now();
+  Timer? _clockTimer;
+  Timer? _displayTimer;
+  DateTime? _displayLastTick;
+  late final AnimationController _blinkCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _applyState(widget.initial);
+    _clockTimer = Timer.periodic(
+      const Duration(milliseconds: 250),
+      (_) {
+        if (mounted) setState(() => _now = DateTime.now());
+      },
+    );
+    _blinkCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+      value: 1.0,
+    );
+
+    // 메인 윈도우 → 오버레이 상태 push 수신
+    WindowController.fromCurrentEngine().then((controller) {
+      controller.setWindowMethodHandler((call) async {
+        if (call.method == 'update' && call.arguments is String) {
+          try {
+            final map = jsonDecode(call.arguments as String) as Map<String, dynamic>;
+            _applyState(map);
+          } catch (_) {}
+        }
+        return null;
+      });
+    });
+  }
+
+  void _applyState(Map<String, dynamic> map) {
+    if (!mounted) {
+      _readState(map);
+      return;
+    }
+    final wasEnding = _ending;
+    setState(() => _readState(map));
+    if (_ending && !wasEnding) {
+      _blinkCtrl.repeat(reverse: true);
+    } else if (!_ending && wasEnding) {
+      _blinkCtrl
+        ..stop()
+        ..value = 1.0;
+    }
+    _syncDisplayTimer();
+  }
+
+  void _readState(Map<String, dynamic> map) {
+    _timerActive = map['timerActive'] as bool? ?? false;
+    _timerRunning = map['timerRunning'] as bool? ?? false;
+    _timerLabel = map['timerLabel'] as String? ?? '';
+    _timerRemain = map['timerRemain'] as String? ?? '--:--';
+    _swActive = map['swActive'] as bool? ?? false;
+    _swRunning = map['swRunning'] as bool? ?? false;
+    _swElapsed = map['swElapsed'] as String? ?? '';
+    final colorVal = (map['timerColorValue'] as num?)?.toInt();
+    if (colorVal != null) _timerColor = Color(colorVal);
+    _ending = map['ending'] as bool? ?? false;
+    _segRemainMs = (map['segRemainMs'] as num?)?.toInt() ?? 0;
+    _swElapsedMs = (map['swElapsedMs'] as num?)?.toInt() ?? 0;
+    _swStartAngleRad = (map['swStartAngleRad'] as num?)?.toDouble();
+  }
+
+  // push 사이(48ms)를 보간해 숫자가 부드럽게 흐르도록.
+  void _syncDisplayTimer() {
+    final shouldRun = _timerRunning || _swRunning;
+    if (shouldRun) {
+      _displayLastTick = DateTime.now();
+      _displayTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
+        if (!mounted) return;
+        final now = DateTime.now();
+        final elapsed = now.difference(_displayLastTick!).inMilliseconds;
+        _displayLastTick = now;
+        setState(() {
+          if (_timerRunning && _segRemainMs > 0) {
+            _segRemainMs = max(0, _segRemainMs - elapsed);
+            _timerRemain = _fmtMs(_segRemainMs);
+          }
+          if (_swRunning) {
+            _swElapsedMs += elapsed;
+            _swElapsed = _fmtMs(_swElapsedMs);
+          }
+        });
+      });
+    } else if (_displayTimer != null) {
+      _displayTimer?.cancel();
+      _displayTimer = null;
+      _displayLastTick = null;
+    }
+  }
+
+  String _fmtMs(int ms) {
+    final total = ms.clamp(0, ms) ~/ 1000;
+    final h = total ~/ 3600;
+    final m = (total % 3600) ~/ 60;
+    final s = total % 60;
+    if (h > 0) {
+      return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  Color get _effectiveTimerColor =>
+      _ending ? const Color(0xFFE05252) : _timerColor;
+
+  Future<void> _sendAction(String action) async {
+    try {
+      await WindowController.fromWindowId(widget.mainWindowId)
+          .invokeMethod('action', action);
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _clockTimer?.cancel();
+    _displayTimer?.cancel();
+    _blinkCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xF20E0E0F),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF2E2E32)),
+          boxShadow: const [
+            BoxShadow(color: Color(0x99000000), blurRadius: 16, offset: Offset(0, 4)),
+          ],
+        ),
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 시계 영역 = 드래그로 창 이동
+            DragToMoveArea(
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CustomPaint(
+                      painter: OverlayClockPainter(
+                        now: _now,
+                        timerActive: _timerActive,
+                        segRemainMs: _segRemainMs,
+                        segColor: _effectiveTimerColor,
+                        swActive: _swActive,
+                        swElapsedMs: _swElapsedMs,
+                        swStartAngleRad: _swStartAngleRad,
+                      ),
+                      child: const SizedBox.expand(),
+                    ),
+                    if (_timerActive || _swActive)
+                      IgnorePointer(child: _centerInfo()),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            _controlBar(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _centerInfo() {
+    return AnimatedBuilder(
+      animation: _blinkCtrl,
+      builder: (context, _) {
+        final opacity = _ending ? _blinkCtrl.value : 1.0;
+        return Opacity(
+          opacity: opacity.clamp(0.3, 1.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_timerActive) ...[
+                if (_timerLabel.isNotEmpty)
+                  Text(
+                    _timerLabel,
+                    style: GoogleFonts.bebasNeue(
+                      fontSize: 13,
+                      letterSpacing: 1.2,
+                      color: _effectiveTimerColor.withValues(alpha: 0.75),
+                    ),
+                  ),
+                Text(
+                  _timerRemain,
+                  style: GoogleFonts.bebasNeue(
+                    fontSize: 26,
+                    color: _effectiveTimerColor,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+              if (_swActive)
+                Text(
+                  '⏲ $_swElapsed',
+                  style: GoogleFonts.bebasNeue(
+                    fontSize: 17,
+                    color: const Color(0xFF2EA84A),
+                    letterSpacing: 1,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _controlBar() {
+    const swColor = Color(0xFF2EA84A);
+    final timerColor = _effectiveTimerColor;
+
+    Widget btn(IconData icon, Color color, VoidCallback onTap) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: const Color(0xCC1A1A1C),
+            shape: BoxShape.circle,
+            border: Border.all(color: color.withValues(alpha: 0.4)),
+          ),
+          child: Icon(icon, color: color, size: 16),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        if (_timerActive) ...[
+          btn(_timerRunning ? Icons.pause : Icons.play_arrow, timerColor,
+              () => _sendAction('timer_toggle')),
+          btn(Icons.skip_next, timerColor.withValues(alpha: 0.75),
+              () => _sendAction('timer_next')),
+        ],
+        if (_swActive || _swElapsedMs > 0)
+          btn(_swRunning ? Icons.stop : Icons.play_arrow, swColor,
+              () => _sendAction('sw_toggle')),
+        btn(Icons.close, Colors.white54, () => _sendAction('overlay_hide')),
+      ],
+    );
+  }
+}

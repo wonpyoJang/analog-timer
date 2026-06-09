@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,7 +22,7 @@ import 'live_activity/live_activity_service.dart';
 import 'services/persistence_service.dart';
 import 'services/desktop_service.dart';
 import 'services/desktop_notification_service.dart';
-import 'services/sync_service.dart';
+import 'services/desktop_overlay_service.dart';
 import 'features/timer/models/segment.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -40,11 +40,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _syncTick = 0;
   bool _inBackground = false;
 
-  // 데스크톱 전용 — 멀티기기 동기화 / 트레이 / 알림
-  final SyncService _sync = SyncService();
+  // 데스크톱 전용 — 트레이 / 알림 / 플로팅 오버레이 위젯
   Timer? _trayTimer;
   TimerState? _prevTimer;
-  bool _applyingRemote = false; // 원격 이벤트 적용 중 echo 발신 방지
+  bool _desktopOverlayOn = false;
 
   @override
   void initState() {
@@ -270,6 +269,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (_syncTick == 0) {
         _syncOverlay();
         _syncLiveActivity();
+        _syncDesktopOverlay();
       }
     });
   }
@@ -295,21 +295,85 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _clockTimer?.cancel();
     _persistTimer?.cancel();
     _trayTimer?.cancel();
-    _sync.dispose();
     super.dispose();
   }
 
   // ── 데스크톱 통합 ────────────────────────────────────────────
   Future<void> _initDesktop() async {
-    _sync.onRemoteEvent = _applyRemoteSyncEvent;
+    // 오버레이(서브윈도우) 버튼 → 메인으로 전달되는 액션 처리
+    DesktopOverlayService.instance.onAction = _handleOverlayAction;
     DesktopService.instance.onQuit = () async {
       await _saveState();
+      await DesktopOverlayService.instance.hide();
       await DesktopService.instance.quit();
     };
     _trayTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) _updateTray();
     });
     _updateTray();
+  }
+
+  /// 플로팅 오버레이 위젯(항상 위) 토글.
+  Future<void> _toggleDesktopOverlay() async {
+    if (_desktopOverlayOn) {
+      await DesktopOverlayService.instance.hide();
+      setState(() => _desktopOverlayOn = false);
+    } else {
+      await DesktopOverlayService.instance.show(_overlayStateMap());
+      setState(() => _desktopOverlayOn = true);
+    }
+  }
+
+  /// 오버레이 서브윈도우 버튼에서 올라온 액션을 메인 타이머/스톱워치에 반영.
+  void _handleOverlayAction(String action) {
+    if (!mounted) return;
+    switch (action) {
+      case 'timer_toggle':
+        final s = context.read<TimerBloc>().state;
+        if (s.status == TimerStatus.running) {
+          context.read<TimerBloc>().add(const TimerPause());
+        } else if (s.status == TimerStatus.paused ||
+            s.status == TimerStatus.idle ||
+            s.status == TimerStatus.done) {
+          context.read<TimerBloc>().add(const TimerStart());
+        }
+      case 'timer_next':
+        context.read<TimerBloc>().add(const TimerNext());
+      case 'sw_toggle':
+        context.read<StopwatchBloc>().add(const StopwatchToggle());
+      case 'overlay_hide':
+        DesktopOverlayService.instance.hide();
+        setState(() => _desktopOverlayOn = false);
+    }
+  }
+
+  /// 오버레이로 보낼 현재 타이머/스톱워치 상태 스냅샷.
+  Map<String, dynamic> _overlayStateMap() {
+    final timerState = context.read<TimerBloc>().state;
+    final swState = context.read<StopwatchBloc>().state;
+    final timerActive = timerState.status == TimerStatus.running ||
+        timerState.status == TimerStatus.paused;
+    final swActive = swState.running || swState.elapsedMs > 0;
+    final seg = timerState.currentSegment;
+    final segTotalMs = seg?.duration.inMilliseconds ?? 1;
+    final timerFrac = (timerActive && segTotalMs > 0)
+        ? (timerState.segRemainMs / segTotalMs).clamp(0.0, 1.0)
+        : 0.0;
+    return {
+      'timerActive': timerActive,
+      'timerRunning': timerState.status == TimerStatus.running,
+      'timerLabel': seg?.name ?? '',
+      'timerRemain': timerActive ? _fmt(timerState.segRemainMs) : '--:--',
+      'swActive': swActive,
+      'swRunning': swState.running,
+      'swElapsed': swActive ? _fmt(swState.elapsedMs) : '',
+      'timerColorValue': seg?.color.toARGB32() ?? 0xFFE07A52,
+      'timerFrac': timerFrac,
+      'ending': timerActive && timerState.segRemainMs <= 10000,
+      'segRemainMs': timerState.segRemainMs,
+      'swElapsedMs': swState.elapsedMs,
+      'swStartAngleRad': swState.startAngleRadians,
+    };
   }
 
   void _updateTray() {
@@ -326,14 +390,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     DesktopService.instance.updateTray(tooltip: tooltip, menuStatus: menuStatus);
   }
 
-  /// 타이머 상태 전이 시: (1) 세그먼트 완료 알림, (2) 동기화 이벤트 발신.
+  /// 타이머 상태 전이 시 세그먼트 완료 / 전체 완료 데스크톱 알림.
   /// segRemainMs 만 바뀌는 매 틱은 listenWhen 에서 걸러진다.
   void _onTimerTransition(TimerState cur) {
     final prev = _prevTimer;
     _prevTimer = cur;
     if (prev == null) return;
 
-    // (1) 알림
     if (cur.status == TimerStatus.done && prev.status != TimerStatus.done) {
       DesktopNotificationService.notify('타이머 완료', '모든 세그먼트를 마쳤습니다 🎉');
     } else if (cur.currentSeg != prev.currentSeg &&
@@ -345,72 +408,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final curName = cur.currentSegment?.name ?? '';
       DesktopNotificationService.notify('세그먼트 완료', '$prevName 완료 · 다음: $curName');
     }
-
-    // (2) 동기화 발신 — 원격 적용으로 인한 변화면 echo 금지
-    if (_applyingRemote || _sync.roomId.value == null) return;
-    String? action;
-    if (cur.status == TimerStatus.idle && prev.status != TimerStatus.idle) {
-      action = 'reset';
-    } else if (cur.status == TimerStatus.paused &&
-        prev.status != TimerStatus.paused) {
-      action = 'pause';
-    } else if (cur.currentSeg != prev.currentSeg) {
-      action = 'next';
-    } else if (cur.status == TimerStatus.running &&
-        prev.status != TimerStatus.running) {
-      action = prev.status == TimerStatus.paused ? 'resume' : 'start';
-    }
-    if (action != null) {
-      _sync.emit(
-        action: action,
-        remainingMs: cur.segRemainMs,
-        segIdx: cur.currentSeg,
-        segments: SyncCodec.toWebSegments(cur.segments),
-        loop: cur.loop,
-      );
-    }
-  }
-
-  void _applyRemoteSyncEvent(SyncEvent e) {
-    if (!mounted) return;
-    _applyingRemote = true;
-    final cur = context.read<TimerBloc>().state;
-    var segs = SyncCodec.fromWebSegments(e.segments);
-    if (segs.isEmpty) segs = cur.segments;
-    var seg = e.segIdx.clamp(0, segs.length - 1);
-    var remain = e.remainingMs;
-    TimerStatus status;
-    switch (e.action) {
-      case 'start':
-      case 'resume':
-        final elapsed = DateTime.now().millisecondsSinceEpoch - e.timestamp;
-        remain = (e.remainingMs - elapsed).clamp(0, 86400000);
-        status = TimerStatus.running;
-      case 'pause':
-        status = TimerStatus.paused;
-      case 'reset':
-        seg = 0;
-        remain = 0;
-        status = TimerStatus.idle;
-      case 'next':
-        status =
-            cur.status == TimerStatus.idle ? TimerStatus.paused : TimerStatus.running;
-      default:
-        status = TimerStatus.running;
-    }
-    context.read<TimerBloc>().add(
-      TimerRestore(
-        segments: segs,
-        currentSeg: seg,
-        segRemainMs: remain,
-        status: status,
-        loop: e.loop,
-      ),
-    );
-    // 적용으로 인한 상태 변화가 리스너를 한 번 트리거한 뒤 해제(no-op 변화 대비 타임아웃).
-    Future.delayed(const Duration(milliseconds: 200), () {
-      if (mounted) _applyingRemote = false;
-    });
   }
 
   String _fmt(int ms) {
@@ -439,6 +436,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       swActive: swActive,
       swElapsed: swActive ? _fmt(swState.elapsedMs) : '',
     );
+  }
+
+  void _syncDesktopOverlay() {
+    if (!_desktopOverlayOn || !isDesktop) return;
+    DesktopOverlayService.instance.update(_overlayStateMap());
   }
 
   void _syncOverlay() {
@@ -559,14 +561,42 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ),
                           ),
                         ],
+                        if (isDesktop) ...[
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: _toggleDesktopOverlay,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _desktopOverlayOn
+                                    ? AppColors.accent.withAlpha(0x33)
+                                    : AppColors.surface,
+                                border: Border.all(
+                                  color: _desktopOverlayOn
+                                      ? AppColors.accent
+                                      : AppColors.border,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                _desktopOverlayOn ? '위젯 ON' : '위젯',
+                                style: TextStyle(
+                                  color: _desktopOverlayOn
+                                      ? AppColors.accent
+                                      : AppColors.muted,
+                                  fontSize: 11,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 16),
-
-                    if (isDesktop) ...[
-                      _DesktopSyncBar(sync: _sync),
-                      const SizedBox(height: 16),
-                    ],
 
                     _ClockWidget(now: _now),
                     const SizedBox(height: 8),
@@ -785,181 +815,6 @@ class _ProgressBar extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-/// 데스크톱 멀티기기 동기화 바 — 방 코드 생성/참가/나가기 + 연결 상태 표시.
-class _DesktopSyncBar extends StatefulWidget {
-  final SyncService sync;
-  const _DesktopSyncBar({required this.sync});
-
-  @override
-  State<_DesktopSyncBar> createState() => _DesktopSyncBarState();
-}
-
-class _DesktopSyncBarState extends State<_DesktopSyncBar> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _join() {
-    final code = _controller.text.trim();
-    if (code.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').length < 4) return;
-    widget.sync.join(code);
-  }
-
-  void _newRoom() {
-    final code = SyncService.randomRoomCode();
-    _controller.text = code;
-    widget.sync.join(code);
-  }
-
-  Future<void> _copy(String code) async {
-    await Clipboard.setData(ClipboardData(text: code));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('방 코드 복사됨: $code'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<String?>(
-      valueListenable: widget.sync.roomId,
-      builder: (context, room, _) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: room == null ? _offline() : _online(room),
-        );
-      },
-    );
-  }
-
-  Widget _offline() {
-    return Row(
-      children: [
-        const Icon(Icons.sync, size: 16, color: AppColors.muted),
-        const SizedBox(width: 8),
-        Expanded(
-          child: SizedBox(
-            height: 34,
-            child: TextField(
-              controller: _controller,
-              textCapitalization: TextCapitalization.characters,
-              onSubmitted: (_) => _join(),
-              style: const TextStyle(color: AppColors.text, fontSize: 13),
-              decoration: InputDecoration(
-                hintText: '방 코드 (4~8자)',
-                hintStyle:
-                    const TextStyle(color: AppColors.muted, fontSize: 12),
-                isDense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                filled: true,
-                fillColor: AppColors.bg,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.accent),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 6),
-        _btn('참가', _join),
-        const SizedBox(width: 6),
-        _btn('새 방', _newRoom, accent: true),
-      ],
-    );
-  }
-
-  Widget _online(String room) {
-    return Row(
-      children: [
-        ValueListenableBuilder<SyncStatus>(
-          valueListenable: widget.sync.status,
-          builder: (context, st, _) => _dot(st),
-        ),
-        const SizedBox(width: 10),
-        const Text('방 ', style: TextStyle(color: AppColors.muted, fontSize: 12)),
-        SelectableText(
-          room,
-          style: const TextStyle(
-            color: AppColors.accent,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1,
-          ),
-        ),
-        const Spacer(),
-        _btn('복사', () => _copy(room)),
-        const SizedBox(width: 6),
-        _btn('나가기', widget.sync.leave),
-      ],
-    );
-  }
-
-  Widget _dot(SyncStatus st) {
-    final (color, label) = switch (st) {
-      SyncStatus.online => (AppColors.swGreen, '연결됨'),
-      SyncStatus.connecting => (AppColors.accent, '연결 중'),
-      SyncStatus.error => (AppColors.danger, '오류'),
-      SyncStatus.offline => (AppColors.muted, '오프라인'),
-    };
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(label, style: TextStyle(color: color, fontSize: 11)),
-      ],
-    );
-  }
-
-  Widget _btn(String label, VoidCallback onTap, {bool accent = false}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        decoration: BoxDecoration(
-          color: accent ? AppColors.accent.withAlpha(0x33) : AppColors.bg,
-          border:
-              Border.all(color: accent ? AppColors.accent : AppColors.border),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: accent ? AppColors.accent : AppColors.muted,
-            fontSize: 11,
-          ),
-        ),
-      ),
     );
   }
 }
