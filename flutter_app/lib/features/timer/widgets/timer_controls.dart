@@ -71,52 +71,68 @@ class _TimerControlsState extends State<TimerControls> {
               ),
             ),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
+            // 1행: START/RESUME/RUNNING + PAUSE
+            Row(
               children: [
-                // START / PAUSE / RESUME
-                _Btn(
-                  label: isRunning
-                      ? 'RUNNING…'
-                      : (state.status == TimerStatus.paused
-                            ? 'RESUME'
-                            : 'START'),
-                  enabled: !isRunning,
-                  primary: true,
-                  color: AppColors.timerOrange,
-                  onTap: isRunning
-                      ? null
-                      : () => context.read<TimerBloc>().add(const TimerStart()),
+                Expanded(
+                  child: _Btn(
+                    label: isRunning
+                        ? 'RUNNING…'
+                        : (state.status == TimerStatus.paused
+                              ? 'RESUME'
+                              : 'START'),
+                    enabled: !isRunning,
+                    primary: true,
+                    color: AppColors.timerOrange,
+                    onTap: isRunning
+                        ? null
+                        : () =>
+                              context.read<TimerBloc>().add(const TimerStart()),
+                  ),
                 ),
-                _Btn(
-                  label: 'PAUSE',
-                  enabled: isRunning,
-                  onTap: isRunning
-                      ? () => context.read<TimerBloc>().add(const TimerPause())
-                      : null,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _Btn(
+                    label: 'PAUSE',
+                    enabled: isRunning,
+                    onTap: isRunning
+                        ? () =>
+                              context.read<TimerBloc>().add(const TimerPause())
+                        : null,
+                  ),
                 ),
-                // NEXT with countdown animation
-                _NextBtn(
-                  counting: _nextCounting,
-                  pct: _nextPct,
-                  enabled: !isIdle,
-                  onTap: !isIdle
-                      ? () {
-                          if (_nextCounting) {
-                            _cancelNext();
-                          } else {
-                            _startNextCountdown();
+              ],
+            ),
+            const SizedBox(height: 8),
+            // 2행: NEXT (카운트다운) + RST
+            Row(
+              children: [
+                Expanded(
+                  child: _NextBtn(
+                    counting: _nextCounting,
+                    pct: _nextPct,
+                    enabled: !isIdle,
+                    onTap: !isIdle
+                        ? () {
+                            if (_nextCounting) {
+                              _cancelNext();
+                            } else {
+                              _startNextCountdown();
+                            }
                           }
-                        }
-                      : null,
+                        : null,
+                  ),
                 ),
-                _Btn(
-                  label: 'RST',
-                  danger: true,
-                  onTap: () {
-                    _cancelNext();
-                    context.read<TimerBloc>().add(const TimerReset());
-                  },
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _Btn(
+                    label: 'RST',
+                    danger: true,
+                    onTap: () {
+                      _cancelNext();
+                      context.read<TimerBloc>().add(const TimerReset());
+                    },
+                  ),
                 ),
               ],
             ),
@@ -165,7 +181,8 @@ class _Btn extends StatelessWidget {
     return GestureDetector(
       onTap: enabled ? onTap : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: bg,
           border: Border.all(color: border),
@@ -174,6 +191,8 @@ class _Btn extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(color: fg, fontSize: 11, letterSpacing: 0.8),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
       ),
     );
@@ -201,19 +220,22 @@ class _NextBtn extends StatelessWidget {
         child: Stack(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: const Color(0xFF2E2E38),
                 border: Border.all(color: AppColors.accent),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                '▶ 다음',
+              child: Text(
+                counting ? '✕ 취소' : '▶ 다음',
                 style: TextStyle(
-                  color: AppColors.accent,
+                  color: counting ? Colors.white : AppColors.accent,
                   fontSize: 11,
                   letterSpacing: 0.8,
                 ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
             if (counting)

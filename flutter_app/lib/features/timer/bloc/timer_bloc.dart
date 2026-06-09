@@ -19,13 +19,14 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     on<TimerSegmentAdded>(_onSegmentAdded);
     on<TimerSegmentRemoved>(_onSegmentRemoved);
     on<TimerSegmentUpdated>(_onSegmentUpdated);
+    on<TimerRestore>(_onRestore);
   }
 
   void _onStart(TimerStart event, Emitter<TimerState> emit) {
     if (state.segments.isEmpty) return;
 
     TimerState next = state;
-    if (state.status == TimerStatus.idle) {
+    if (state.status == TimerStatus.idle || state.status == TimerStatus.done) {
       next = state.copyWith(
         currentSeg: 0,
         loopCount: 0,
@@ -248,6 +249,21 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     final segs = List<Segment>.from(state.segments);
     if (event.index < segs.length) segs[event.index] = event.segment;
     emit(state.copyWith(segments: segs));
+  }
+
+  void _onRestore(TimerRestore event, Emitter<TimerState> emit) {
+    _stopTicker();
+    emit(
+      state.copyWith(
+        segments: event.segments,
+        currentSeg: event.currentSeg,
+        segRemainMs: event.segRemainMs,
+        status: event.status,
+        loop: event.loop,
+        log: const [],
+      ),
+    );
+    if (event.status == TimerStatus.running) _startTicker();
   }
 
   void _startTicker() {

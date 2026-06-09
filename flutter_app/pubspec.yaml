@@ -35,17 +35,30 @@ dependencies:
   flutter_bloc: ^9.1.1
   equatable: ^2.0.7
   google_fonts: ^6.2.1
+  flutter_overlay_window: ^0.5.0
+  live_activities: ^2.4.9
+  shared_preferences: ^2.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  web:
+    generate: false
+  windows:
+    generate: false
+  macos:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -88,3 +101,7 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+dependency_overrides:
+  flutter_overlay_window:
+    path: packages/flutter_overlay_window

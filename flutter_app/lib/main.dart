@@ -4,9 +4,21 @@ import 'theme/app_theme.dart';
 import 'features/timer/bloc/timer_bloc.dart';
 import 'features/stopwatch/bloc/stopwatch_bloc.dart';
 import 'home_screen.dart';
+import 'overlay/overlay_widget.dart';
 
 void main() {
   runApp(const AnalogTimerApp());
+}
+
+// 오버레이 isolate 진입점 — flutter_overlay_window가 별도로 호출
+@pragma('vm:entry-point')
+void overlayMain() {
+  runApp(
+    const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: TimerOverlayWidget(),
+    ),
+  );
 }
 
 class AnalogTimerApp extends StatelessWidget {

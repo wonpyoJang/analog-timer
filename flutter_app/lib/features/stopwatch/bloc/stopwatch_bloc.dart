@@ -13,6 +13,7 @@ class StopwatchBloc extends Bloc<StopwatchEvent, StopwatchState> {
     on<StopwatchLap>(_onLap);
     on<StopwatchReset>(_onReset);
     on<StopwatchTick>(_onTick);
+    on<StopwatchRestore>(_onRestore);
   }
 
   double _minAngle() {
@@ -50,6 +51,20 @@ class StopwatchBloc extends Bloc<StopwatchEvent, StopwatchState> {
 
   void _onTick(StopwatchTick event, Emitter<StopwatchState> emit) {
     emit(state.copyWith(elapsedMs: state.elapsedMs + event.elapsedMs));
+  }
+
+  void _onRestore(StopwatchRestore event, Emitter<StopwatchState> emit) {
+    _stopTicker();
+    emit(
+      state.copyWith(
+        elapsedMs: event.elapsedMs,
+        running: event.running,
+        startAngleRadians: event.startAngleRadians ?? _minAngle(),
+        laps: const [],
+        lapStartMs: 0,
+      ),
+    );
+    if (event.running) _startTicker();
   }
 
   void _startTicker() {

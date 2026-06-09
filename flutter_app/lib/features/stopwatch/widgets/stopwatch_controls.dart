@@ -23,27 +23,35 @@ class StopwatchControls extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
+            Row(
               children: [
-                _Btn(
-                  label: state.running ? 'PAUSE' : 'START',
-                  primary: true,
-                  color: AppColors.swGreen,
-                  onTap: () => context.read<StopwatchBloc>().add(
-                    const StopwatchToggle(),
+                Expanded(
+                  child: _Btn(
+                    label: state.running ? 'PAUSE' : 'START',
+                    primary: true,
+                    color: AppColors.swGreen,
+                    onTap: () => context.read<StopwatchBloc>().add(
+                      const StopwatchToggle(),
+                    ),
                   ),
                 ),
-                _Btn(
-                  label: 'LAP',
-                  onTap: () =>
-                      context.read<StopwatchBloc>().add(const StopwatchLap()),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _Btn(
+                    label: 'LAP',
+                    onTap: () =>
+                        context.read<StopwatchBloc>().add(const StopwatchLap()),
+                  ),
                 ),
-                _Btn(
-                  label: 'RST',
-                  danger: true,
-                  onTap: () =>
-                      context.read<StopwatchBloc>().add(const StopwatchReset()),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _Btn(
+                    label: 'RST',
+                    danger: true,
+                    onTap: () => context.read<StopwatchBloc>().add(
+                      const StopwatchReset(),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -85,7 +93,8 @@ class _Btn extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: bg,
           border: Border.all(color: border),
@@ -93,6 +102,8 @@ class _Btn extends StatelessWidget {
         ),
         child: Text(
           label,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
           style: TextStyle(color: fg, fontSize: 11, letterSpacing: 0.8),
         ),
       ),
