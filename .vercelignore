@@ -1,0 +1,6 @@
+flutter_app/
+build/
+original/
+docs/
+node_modules/
+*.log

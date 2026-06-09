@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아날로그 타이머</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0f; --surface: #1a1a1c; --border: #2e2e32;
+    --text: #e8e6e0; --muted: #6b6968; --accent: #f0c040; --radius: 16px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:'DM Mono',monospace;
+    min-height:100vh; display:flex; flex-direction:column;
+    align-items:center; padding:24px 16px 48px; gap:18px;
+  }
+  h1 { font-family:'Bebas Neue',sans-serif; font-size:clamp(22px,5vw,38px); letter-spacing:.12em; color:var(--accent); }
+
+  /* ── SYNC BAR ─────────────────────────────────────── */
+  .sync-bar {
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center;
+    width:min(560px,96vw); background:var(--surface);
+    border:1px solid var(--border); border-radius:10px;
+    padding:8px 14px; font-size:12px;
+  }
+  .sync-dot { width:8px; height:8px; border-radius:50%; background:#6b6968; flex-shrink:0; transition:background .3s; }
+  .sync-dot.online  { background:#2ea84a; box-shadow:0 0 6px #2ea84a88; }
+  .sync-dot.error   { background:#e05252; }
+  .sync-dot.polling { background:#f0c040; animation:pulse .8s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .sync-label { color:var(--muted); }
+  .sync-room-code {
+    font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:.12em;
+    color:var(--accent); background:#2a2500; border:1px solid #555010;
+    padding:2px 10px; border-radius:6px; cursor:pointer; user-select:all;
+    title:"클릭해서 복사";
+  }
+  .sync-input {
+    background:var(--surface); border:1px solid var(--border); border-radius:6px;
+    color:var(--text); font-family:'DM Mono',monospace; font-size:12px;
+    padding:5px 10px; width:160px; outline:none; letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .sync-input:focus { border-color:var(--accent); }
+  .sync-btn {
+    font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.06em;
+    border:1px solid var(--border); background:var(--surface); color:var(--text);
+    padding:5px 12px; border-radius:6px; cursor:pointer; transition:background .15s;
+  }
+  .sync-btn:hover { background:#25252a; }
+  .sync-btn.primary { background:#e07a52; color:#fff; border-color:#e07a52; }
+  .sync-btn.primary:hover { background:#c96840; }
+  .sync-btn.leave { color:#e05252; border-color:#554040; font-size:11px; padding:5px 8px; }
+  .sync-new { font-size:11px; color:var(--muted); cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+  .sync-new:hover { color:var(--text); }
+  /* ── END SYNC BAR ─────────────────────────────────── */
+
+  .clock-wrap { position:relative; width:min(400px,92vw); height:min(400px,92vw); }
+  #clockCanvas { width:100%; height:100%; border-radius:50%; }
+  .clock-center-info {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; pointer-events:none; gap:2px;
+  }
+  .timer-label { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:.1em; color:#c05a28; opacity:0; transition:opacity .3s; }
+  .timer-label.visible { opacity:1; }
+  .timer-remaining { font-family:'Bebas Neue',sans-serif; font-size:52px; font-weight:900; color:#c05a28; letter-spacing:.04em; line-height:1; text-shadow:0 1px 6px rgba(0,0,0,0.12); }
+  .sw-center { font-family:'Bebas Neue',sans-serif; font-size:17px; letter-spacing:.06em; color:#1a7a30; margin-top:4px; font-weight:700; }
+
+  .legend { display:flex; gap:18px; font-size:11px; color:var(--muted); align-items:center; flex-wrap:wrap; justify-content:center; }
+  .legend-item { display:flex; align-items:center; gap:6px; }
+  .legend-dot { width:10px; height:10px; border-radius:50%; }
+
+  .progress-bar-wrap { width:min(400px,92vw); height:5px; background:var(--border); border-radius:99px; overflow:hidden; }
+  #progressBar { height:100%; width:0%; border-radius:99px; background:#e07a52; transition:width .4s linear,background .4s; }
+
+  .dual-controls { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; width:min(560px,96vw); }
+  .control-group { display:flex; flex-direction:column; gap:7px; align-items:center; flex:1; min-width:150px; }
+  .group-label { font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:.1em; color:var(--muted); }
+  .group-btns { display:flex; gap:7px; }
+  .btn { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.06em; border:1px solid var(--border); background:var(--surface); color:var(--text); padding:8px 16px; border-radius:8px; cursor:pointer; transition:background .15s; }
+  .btn:hover { background:#25252a; }
+  .btn.t-primary { background:#e07a52; color:#fff; border-color:#e07a52; }
+  .btn.t-primary:hover { background:#c96840; }
+  .btn.s-primary { background:#2ea84a; color:#fff; border-color:#2ea84a; }
+  .btn.s-primary:hover { background:#228038; }
+  .btn.danger { color:#e05252; border-color:#554040; }
+  .btn.danger:hover { background:#1e1618; }
+  .btn.next { background:#2e2e38; color:#f0c040; border-color:#f0c040; position:relative; overflow:hidden; }
+  .btn.next:hover { background:#3a3a48; }
+  .btn.next.counting { color:#111; border-color:#f0c040; }
+  .btn-next-fill {
+    position:absolute; left:0; top:0; height:100%;
+    width:0%; background:#f0c040;
+    transition:none; z-index:0; border-radius:7px;
+  }
+  .btn-next-label { position:relative; z-index:1; }
+
+  .panel { width:min(560px,96vw); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; display:flex; flex-direction:column; gap:11px; }
+  .panel-title { font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:.1em; color:var(--muted); border-bottom:1px solid var(--border); padding-bottom:7px; }
+  .segment-list { display:flex; flex-direction:column; gap:6px; }
+  .segment-row { display:flex; align-items:center; gap:9px; background:#111113; border:1px solid var(--border); border-radius:7px; padding:6px 10px; }
+  .seg-color-dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
+  .seg-name-input { flex:1; background:transparent; border:none; color:var(--text); font-family:'DM Mono',monospace; font-size:12px; outline:none; }
+  .seg-min-wrap { display:flex; align-items:center; gap:4px; color:var(--muted); font-size:12px; }
+  .seg-min-input { width:46px; background:var(--surface); border:1px solid var(--border); border-radius:5px; color:var(--text); font-family:'DM Mono',monospace; font-size:12px; padding:3px 5px; text-align:center; outline:none; }
+  .seg-min-input:focus { border-color:#e07a52; }
+  .seg-del { background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:2px 3px; transition:color .15s; }
+  .seg-del:hover { color:#e05252; }
+  .add-btn { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); background:transparent; border:1px dashed var(--border); border-radius:6px; padding:6px; cursor:pointer; text-align:center; letter-spacing:.06em; transition:border-color .15s,color .15s; }
+  .add-btn:hover { border-color:#e07a52; color:#e07a52; }
+  .loop-row { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
+  .toggle { appearance:none; width:34px; height:18px; border-radius:9px; background:var(--border); position:relative; cursor:pointer; transition:background .2s; }
+  .toggle:checked { background:#e07a52; }
+  .toggle::after { content:''; position:absolute; width:12px; height:12px; border-radius:50%; background:#fff; top:3px; left:3px; transition:transform .2s; }
+  .toggle:checked::after { transform:translateX(16px); }
+
+  .bottom-panels { display:flex; gap:10px; width:min(560px,96vw); flex-wrap:wrap; }
+  .lap-box,.log-box { flex:1; min-width:190px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:11px 13px; max-height:120px; overflow-y:auto; font-size:11px; color:var(--muted); line-height:1.8; }
+  .box-title { font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:.1em; color:var(--muted); margin-bottom:5px; }
+  .log-entry { display:flex; gap:7px; }
+  .log-dot { width:6px; height:6px; border-radius:50%; margin-top:7px; flex-shrink:0; }
+  .lap-entry { display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding:2px 0; }
+</style>
+</head>
+<body>
+<h1>⏱ ANALOG TIMER</h1>
+
+<!-- ── SYNC BAR ──────────────────────────────────────── -->
+<div class="sync-bar" id="syncBar">
+  <div class="sync-dot" id="syncDot"></div>
+  <span class="sync-label" id="syncLabel">오프라인</span>
+
+  <!-- 연결 전 -->
+  <div id="syncOfflineControls" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <input class="sync-input" id="syncInput" placeholder="방 코드 입력…" maxlength="8">
+    <button class="sync-btn primary" onclick="joinRoomFromInput()">참가</button>
+    <span class="sync-new" onclick="createRoom()">새 방 만들기</span>
+  </div>
+
+  <!-- 연결 후 -->
+  <div id="syncOnlineControls" style="display:none;align-items:center;gap:8px">
+    <div class="sync-room-code" id="syncRoomCode" onclick="copyRoomCode()" title="클릭해서 복사"></div>
+    <button class="sync-btn leave" onclick="leaveRoom()">✕ 해제</button>
+  </div>
+</div>
+<!-- ── END SYNC BAR ──────────────────────────────────── -->
+
+<div class="clock-wrap">
+  <canvas id="clockCanvas"></canvas>
+  <div class="clock-center-info">
+    <div class="timer-label" id="timerLabel"></div>
+    <div class="timer-remaining" id="timerRemaining">--:--</div>
+    <div class="sw-center" id="swCenter"></div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#e07a52"></div><span>타이머 — 안쪽 나선 (중심→바깥)</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2ea84a"></div><span>스톱워치 — 바깥 링 (바깥→안)</span></div>
+</div>
+
+<div class="progress-bar-wrap"><div id="progressBar"></div></div>
+
+<div class="dual-controls">
+  <div class="control-group">
+    <div class="group-label">⏱ 타이머</div>
+    <div class="group-btns">
+      <button class="btn t-primary" id="btnTimerStart" onclick="startTimer()">START</button>
+      <button class="btn" onclick="pauseTimer()">PAUSE</button>
+      <button class="btn next" id="btnNext" onclick="nextSegment()">
+        <div class="btn-next-fill" id="nextFill"></div>
+        <span class="btn-next-label" id="nextLabel">▶ 다음</span>
+      </button>
+      <button class="btn danger" onclick="resetTimer()">RST</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="group-label">⏲ 스톱워치</div>
+    <div class="group-btns">
+      <button class="btn s-primary" id="btnSwStart" onclick="swToggle()">START</button>
+      <button class="btn" onclick="swLap()">LAP</button>
+      <button class="btn danger" onclick="swReset()">RST</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">타이머 세그먼트 설정</div>
+  <div class="segment-list" id="segmentList"></div>
+  <button class="add-btn" onclick="addSegment()">+ 세그먼트 추가</button>
+  <div class="loop-row">
+    <input type="checkbox" class="toggle" id="loopToggle">
+    <label for="loopToggle">연속 반복</label>
+  </div>
+</div>
+
+<div class="bottom-panels">
+  <div class="lap-box" id="lapBox">
+    <div class="box-title">⏲ 스톱워치 랩</div>
+    <div style="font-style:italic">랩 기록 없음</div>
+  </div>
+  <div class="log-box" id="logBox">
+    <div class="box-title">⏱ 타이머 로그</div>
+    <div style="font-style:italic">이벤트 없음</div>
+  </div>
+</div>
+
+<script>
+// ═══ STATE ═══════════════════════════════════════════
+const COLORS_HEX = ['#e05252','#52b0e0','#52e08e','#e07a52','#a052e0','#e0c052'];
+
+let segments = [
+  { name:'할 것 1', minutes:2,  color:'#e07a52' },
+  { name:'휴식 1',  minutes:5,  color:'#52b0e0' },
+  { name:'할 것 2', minutes:5,  color:'#e07a52' },
+  { name:'휴식 2',  minutes:5,  color:'#52b0e0' },
+  { name:'할 것 3', minutes:10, color:'#e07a52' },
+  { name:'휴식 3',  minutes:5,  color:'#52b0e0' },
+  { name:'할 것 4', minutes:15, color:'#e07a52' },
+  { name:'휴식 4',  minutes:5,  color:'#52b0e0' },
+];
+
+let timerState='idle', currentSeg=0, segRemainMs=0, loopCount=0, timerLastTick=null;
+let swRunning=false, swStartPerf=null, swElapsed=0, swLaps=[], swLapStart=0;
+
+// ═══ CANVAS ══════════════════════════════════════════
+const canvas=document.getElementById('clockCanvas');
+const ctx=canvas.getContext('2d');
+
+function resize(){
+  const size=canvas.parentElement.offsetWidth;
+  canvas.width=size*devicePixelRatio; canvas.height=size*devicePixelRatio;
+  canvas.style.width=size+'px'; canvas.style.height=size+'px';
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+}
+window.addEventListener('resize',resize);
+
+function getMinAngle(){
+  const n=new Date(), m=n.getMinutes(), s=n.getSeconds(), ms=n.getMilliseconds();
+  return ((m+(s+ms/1000)/60)/60)*Math.PI*2-Math.PI/2;
+}
+
+function drawClock(){
+  const size=canvas.width/devicePixelRatio;
+  const cx=size/2, cy=size/2, R=size/2-4;
+  ctx.clearRect(0,0,size,size);
+
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+  ctx.fillStyle='#ffffff'; ctx.fill();
+  ctx.strokeStyle='#111'; ctx.lineWidth=7; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,R-6,0,Math.PI*2);
+  ctx.strokeStyle='#555'; ctx.lineWidth=1.5; ctx.stroke();
+
+  drawTimerSpiral(cx,cy,R);
+  drawStopwatchRings(cx,cy,R);
+
+  for(let i=0;i<60;i++){
+    const a=(i/60)*Math.PI*2-Math.PI/2;
+    const isQ=i%15===0, isM=i%5===0;
+    const r0=isQ?R-22:isM?R-16:R-9;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*r0, cy+Math.sin(a)*r0);
+    ctx.lineTo(cx+Math.cos(a)*(R-7), cy+Math.sin(a)*(R-7));
+    ctx.strokeStyle=isQ?'#000':isM?'#333':'#aaa';
+    ctx.lineWidth=isQ?5:isM?2.5:1; ctx.stroke();
+  }
+
+  ctx.font=`900 ${R*0.13}px 'Bebas Neue',sans-serif`;
+  ctx.fillStyle='#111'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(let i=1;i<=12;i++){
+    const a=(i/12)*Math.PI*2-Math.PI/2;
+    ctx.fillText(i, cx+Math.cos(a)*(R-35), cy+Math.sin(a)*(R-35));
+  }
+
+  const now=new Date();
+  const h=now.getHours()%12, m=now.getMinutes(), s=now.getSeconds(), ms2=now.getMilliseconds();
+  const secA=((s+ms2/1000)/60)*Math.PI*2-Math.PI/2;
+  const minA=((m+(s+ms2/1000)/60)/60)*Math.PI*2-Math.PI/2;
+  const hourA=((h+m/60)/12)*Math.PI*2-Math.PI/2;
+  drawHand(cx,cy,hourA,R*0.48,10,'#111');
+  drawHand(cx,cy,minA,R*0.66,7,'#111');
+  drawHand(cx,cy,secA,R*0.79,2,'#dd2222');
+  drawHand(cx,cy,secA+Math.PI,R*0.17,2,'#dd2222');
+  ctx.beginPath(); ctx.arc(cx,cy,10,0,Math.PI*2); ctx.fillStyle='#dd2222'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
+}
+
+function drawHand(cx,cy,angle,len,w,color){
+  ctx.beginPath(); ctx.moveTo(cx,cy);
+  ctx.lineTo(cx+Math.cos(angle)*len, cy+Math.sin(angle)*len);
+  ctx.strokeStyle=color; ctx.lineWidth=w; ctx.lineCap='round'; ctx.stroke();
+}
+
+function drawTimerSpiral(cx,cy,R){
+  if(timerState==='idle') return;
+  const seg=segments[currentSeg];
+  if(!seg) return;
+
+  const remainMs=Math.max(0,segRemainMs);
+  const remainMin=remainMs/60000;
+  if(remainMin<=0) return;
+
+  const now=new Date();
+  const m=now.getMinutes(), s=now.getSeconds(), ms=now.getMilliseconds();
+  const minAngle=((m+(s+ms/1000)/60)/60)*Math.PI*2-Math.PI/2;
+
+  const color=seg.color;
+  const RING_W=16, GAP=3, STEP=RING_W+GAP;
+  const innermost=14;
+  const r_outer=R*0.79;
+
+  const fullLaps=Math.floor(remainMin/60);
+  const partialMin=remainMin%60;
+
+  for(let ring=0;ring<fullLaps;ring++){
+    const r=innermost+ring*STEP+RING_W/2;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,minAngle,minAngle+Math.PI*2);
+    ctx.strokeStyle=color+'77';
+    ctx.lineWidth=RING_W; ctx.lineCap='butt'; ctx.stroke();
+  }
+
+  if(partialMin>0){
+    const sweep=(partialMin/60)*Math.PI*2;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r_outer,minAngle,minAngle+sweep);
+    ctx.arc(cx,cy,innermost+fullLaps*STEP,minAngle+sweep,minAngle,true);
+    ctx.closePath();
+    ctx.fillStyle=color+'cc';
+    ctx.fill();
+    ctx.strokeStyle=color;
+    ctx.lineWidth=2; ctx.stroke();
+  }
+}
+
+function drawStopwatchRings(cx,cy,R){
+  if(!swRunning&&swElapsed===0) return;
+
+  const total=swElapsed+(swRunning&&swStartPerf?performance.now()-swStartPerf:0);
+  const elapsedMin=total/60000;
+  if(elapsedMin<=0) return;
+
+  const RING_W=13, GAP=2, STEP=RING_W+GAP;
+  const outermost=R-9;
+  const maxRings=Math.floor((outermost-36)/STEP);
+
+  const fullLaps=Math.floor(elapsedMin/60);
+  const partialMin=elapsedMin%60;
+  const SW_COLOR='#2ea84a';
+  const startAngle=swStartAngle!==null?swStartAngle:getMinAngle();
+
+  for(let ring=0;ring<Math.min(fullLaps,maxRings);ring++){
+    const r=outermost-ring*STEP-RING_W/2;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,startAngle,startAngle+Math.PI*2);
+    ctx.strokeStyle=SW_COLOR+'77';
+    ctx.lineWidth=RING_W; ctx.lineCap='butt'; ctx.stroke();
+  }
+
+  const curRing=Math.min(fullLaps,maxRings-1);
+  if(curRing>=0&&partialMin>0){
+    const r=outermost-curRing*STEP-RING_W/2;
+    const sweep=(partialMin/60)*Math.PI*2;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,startAngle,startAngle+sweep);
+    ctx.strokeStyle=SW_COLOR+'cc';
+    ctx.lineWidth=RING_W; ctx.lineCap='round'; ctx.stroke();
+  }
+}
+
+// ═══ TIMER LOGIC ═════════════════════════════════════
+let timerStartAngle=null;
+
+function startTimer(){
+  if(segments.length===0) return;
+  const wasIdle = timerState === 'idle';
+  if(wasIdle){
+    currentSeg=0; loopCount=0;
+    segRemainMs=segments[0].minutes*60000;
+    timerStartAngle=getMinAngle();
+    addLog(`시작: ${segments[0].name}`,segments[0].color);
+    updateTimerDisplay();
+  }
+  if(timerState!=='running'){
+    timerState='running'; timerLastTick=performance.now();
+    const btn=document.getElementById('btnTimerStart');
+    btn.textContent='RUNNING…'; btn.disabled=true;
+  }
+  emitEvent(wasIdle ? 'start' : 'resume');
+}
+
+function pauseTimer(){
+  if(timerState!=='running') return;
+  timerState='paused';
+  const btn=document.getElementById('btnTimerStart');
+  btn.textContent='RESUME'; btn.disabled=false; btn.onclick=startTimer;
+  addLog('일시정지','#6b6968');
+  emitEvent('pause');
+}
+
+function resetTimer(){
+  timerState='idle'; currentSeg=0; segRemainMs=0; loopCount=0; timerStartAngle=null;
+  const btn=document.getElementById('btnTimerStart');
+  btn.textContent='START'; btn.disabled=false; btn.onclick=startTimer;
+  document.getElementById('timerRemaining').textContent='--:--';
+  document.getElementById('progressBar').style.width='0%';
+  document.getElementById('timerLabel').textContent='';
+  document.getElementById('timerLabel').classList.remove('visible');
+  addLog('리셋','#6b6968');
+  emitEvent('reset');
+}
+
+function timerTick(now){
+  if(timerState!=='running') return;
+  const dt=now-timerLastTick; timerLastTick=now;
+  segRemainMs-=dt;
+  if(segRemainMs<=0){
+    addLog(`완료: ${segments[currentSeg].name}`,segments[currentSeg].color);
+    currentSeg++;
+    if(currentSeg>=segments.length){
+      loopCount++;
+      if(document.getElementById('loopToggle').checked){
+        currentSeg=0; addLog(`🔁 루프 ${loopCount}회 완료`,'#f0c040');
+      } else {
+        timerState='idle'; currentSeg=segments.length-1; segRemainMs=0;
+        addLog('모든 세그먼트 완료 🎉','#f0c040');
+        const btn=document.getElementById('btnTimerStart');
+        btn.textContent='START'; btn.disabled=false; btn.onclick=startTimer;
+        return;
+      }
+    }
+    segRemainMs=segments[currentSeg].minutes*60000;
+    addLog(`시작: ${segments[currentSeg].name}`,segments[currentSeg].color);
+  }
+  updateTimerDisplay();
+}
+
+function fmtTime(ms){
+  const totalSec=Math.floor(Math.max(0,ms)/1000);
+  const h=Math.floor(totalSec/3600);
+  const m=Math.floor((totalSec%3600)/60);
+  const s=totalSec%60;
+  if(h>0) return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function updateTimerDisplay(){
+  const seg=segments[currentSeg]; if(!seg) return;
+  const remain=Math.max(0,segRemainMs);
+  document.getElementById('timerRemaining').textContent=fmtTime(remain);
+  const lbl=document.getElementById('timerLabel');
+  lbl.textContent=seg.name; lbl.style.color=seg.color; lbl.classList.add('visible');
+  const totalMs=segments.reduce((a,s)=>a+s.minutes,0)*60000;
+  let elapsed=0;
+  for(let i=0;i<currentSeg;i++) elapsed+=segments[i].minutes*60000;
+  elapsed+=seg.minutes*60000-remain;
+  document.getElementById('progressBar').style.width=Math.min(100,(elapsed/totalMs)*100)+'%';
+  document.getElementById('progressBar').style.background=seg.color;
+}
+
+// ═══ STOPWATCH LOGIC ═════════════════════════════════
+let swStartAngle=null;
+
+function swToggle(){
+  if(!swRunning){
+    if(swElapsed===0){ swStartAngle=getMinAngle(); swLapStart=0; }
+    swRunning=true; swStartPerf=performance.now();
+    document.getElementById('btnSwStart').textContent='PAUSE';
+  } else {
+    swElapsed+=performance.now()-swStartPerf;
+    swRunning=false;
+    document.getElementById('btnSwStart').textContent='START';
+  }
+}
+
+function swLap(){
+  if(!swRunning&&swElapsed===0) return;
+  const total=swElapsed+(swRunning?performance.now()-swStartPerf:0);
+  const lapTime=total-swLapStart; swLapStart=total;
+  swLaps.push({lapTime,total}); renderLaps();
+}
+
+function swReset(){
+  swRunning=false; swStartPerf=null; swElapsed=0; swLaps=[]; swLapStart=0; swStartAngle=null;
+  document.getElementById('btnSwStart').textContent='START';
+  document.getElementById('swCenter').textContent='';
+  renderLaps();
+}
+
+function renderLaps(){
+  const box=document.getElementById('lapBox');
+  box.innerHTML='<div class="box-title">⏲ 스톱워치 랩</div>';
+  if(swLaps.length===0){ box.innerHTML+='<div style="font-style:italic">랩 기록 없음</div>'; return; }
+  swLaps.forEach((lap,i)=>{
+    const d=document.createElement('div'); d.className='lap-entry';
+    d.innerHTML=`<span style="color:#2ea84a">Lap ${i+1}</span><span>${fmtMs(lap.lapTime)}</span><span style="color:var(--muted)">${fmtMs(lap.total)}</span>`;
+    box.appendChild(d);
+  });
+  box.scrollTop=box.scrollHeight;
+}
+
+function fmtMs(ms){
+  const totalSec=Math.floor(Math.max(0,ms)/1000);
+  const h=Math.floor(totalSec/3600);
+  const m=Math.floor((totalSec%3600)/60);
+  const s=totalSec%60;
+  if(h>0) return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function updateSwCenter(){
+  if(!swRunning&&swElapsed===0) return;
+  const total=swElapsed+(swRunning&&swStartPerf?performance.now()-swStartPerf:0);
+  document.getElementById('swCenter').textContent='⏲ '+fmtMs(total);
+}
+
+// ═══ NEXT SEGMENT ════════════════════════════════════
+let nextCountdown = null;
+let nextAnimFrame = null;
+let nextStartTime = null;
+const NEXT_DELAY = 2000;
+
+function nextSegment() {
+  if (timerState === 'idle') return;
+  if (nextCountdown !== null) {
+    cancelAnimationFrame(nextAnimFrame);
+    nextCountdown = null; nextStartTime = null;
+    document.getElementById('nextLabel').textContent = '▶ 다음';
+    document.getElementById('nextFill').style.width = '0%';
+    document.getElementById('btnNext').classList.remove('counting');
+    return;
+  }
+  nextCountdown = true;
+  nextStartTime = performance.now();
+  document.getElementById('btnNext').classList.add('counting');
+
+  function animNext(now) {
+    if (!nextCountdown) return;
+    const elapsed = now - nextStartTime;
+    const pct = Math.min(100, (elapsed / NEXT_DELAY) * 100);
+    document.getElementById('nextFill').style.width = pct + '%';
+    const remaining = Math.ceil((NEXT_DELAY - elapsed) / 1000);
+    document.getElementById('nextLabel').textContent = remaining > 0 ? remaining + '초 후 넘어감 (취소하려면 탭)' : '넘어가는 중…';
+    if (elapsed >= NEXT_DELAY) {
+      doNextSegment();
+      nextCountdown = null; nextStartTime = null;
+      document.getElementById('nextLabel').textContent = '▶ 다음';
+      document.getElementById('nextFill').style.width = '0%';
+      document.getElementById('btnNext').classList.remove('counting');
+      return;
+    }
+    nextAnimFrame = requestAnimationFrame(animNext);
+  }
+  nextAnimFrame = requestAnimationFrame(animNext);
+}
+
+function doNextSegment() {
+  if (timerState === 'idle') return;
+  addLog(`건너뜀: ${segments[currentSeg].name}`, '#f0c040');
+  currentSeg++;
+  if (currentSeg >= segments.length) {
+    if (document.getElementById('loopToggle').checked) {
+      currentSeg = 0; loopCount++;
+      addLog(`🔁 루프 ${loopCount}회, 재시작`, '#f0c040');
+    } else {
+      timerState = 'idle'; currentSeg = segments.length - 1; segRemainMs = 0;
+      addLog('모든 세그먼트 완료 🎉', '#f0c040');
+      const btn = document.getElementById('btnTimerStart');
+      btn.textContent = 'START'; btn.disabled = false; btn.onclick = startTimer;
+      return;
+    }
+  }
+  segRemainMs = segments[currentSeg].minutes * 60 * 1000;
+  addLog(`시작: ${segments[currentSeg].name}`, segments[currentSeg].color);
+  if (timerState === 'paused') {
+    timerState = 'running'; timerLastTick = performance.now();
+    const btn = document.getElementById('btnTimerStart');
+    btn.textContent = 'RUNNING…'; btn.disabled = true;
+  }
+  updateTimerDisplay();
+  emitEvent('next');
+}
+
+// ═══ RENDER LOOP ═════════════════════════════════════
+function renderLoop(now){
+  if(timerState==='running') timerTick(now);
+  updateSwCenter();
+  drawClock();
+  requestAnimationFrame(renderLoop);
+}
+requestAnimationFrame(renderLoop);
+
+// ═══ SEGMENT UI ══════════════════════════════════════
+function renderSegmentList(){
+  const list=document.getElementById('segmentList'); list.innerHTML='';
+  segments.forEach((seg,i)=>{
+    const row=document.createElement('div'); row.className='segment-row';
+    row.innerHTML=`
+      <div class="seg-color-dot" style="background:${seg.color}"></div>
+      <input class="seg-name-input" value="${seg.name}" placeholder="이름" oninput="segments[${i}].name=this.value">
+      <div class="seg-min-wrap">
+        <input class="seg-min-input" type="number" min="0.1" max="60" step="0.5" value="${seg.minutes}" oninput="segments[${i}].minutes=parseFloat(this.value)||1">
+        <span>분</span>
+      </div>
+      <button class="seg-del" onclick="removeSegment(${i})">✕</button>`;
+    list.appendChild(row);
+  });
+}
+
+function addSegment(){
+  segments.push({name:'세그먼트 '+(segments.length+1),minutes:5,color:COLORS_HEX[segments.length%COLORS_HEX.length]});
+  renderSegmentList();
+}
+
+function removeSegment(i){
+  if(segments.length<=1) return;
+  segments.splice(i,1); renderSegmentList();
+}
+
+// ═══ LOG ═════════════════════════════════════════════
+function addLog(msg,color){
+  const box=document.getElementById('logBox');
+  const ph=box.querySelector('[style*="italic"]'); if(ph) ph.remove();
+  const now=new Date(), t=now.toTimeString().slice(0,8);
+  const e=document.createElement('div'); e.className='log-entry';
+  e.innerHTML=`<div class="log-dot" style="background:${color}"></div><span><span style="color:#555">${t}</span> ${msg}</span>`;
+  box.appendChild(e); box.scrollTop=box.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════════
+// ═══ SYNC (Vercel KV 기반, 1초 폴링) ════════════════════
+// ═══════════════════════════════════════════════════════
+const DEVICE_ID = Math.random().toString(36).slice(2, 10);
+let syncRoomId = null;
+let syncLastEventId = null;
+let syncPollTimer = null;
+let _applyingRemote = false; // 원격 이벤트 적용 중 재발신 방지
+
+function _getUrlRoom() {
+  return new URLSearchParams(location.search).get('room');
+}
+
+function _setUrlRoom(code) {
+  const url = new URL(location.href);
+  if (code) url.searchParams.set('room', code);
+  else url.searchParams.delete('room');
+  history.replaceState({}, '', url);
+}
+
+function createRoom() {
+  const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+  document.getElementById('syncInput').value = code;
+  joinRoom(code);
+}
+
+function joinRoomFromInput() {
+  const val = document.getElementById('syncInput').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if (val.length < 4) { alert('방 코드는 4자 이상이어야 합니다.'); return; }
+  joinRoom(val);
+}
+
+function joinRoom(code) {
+  syncRoomId = code.slice(0, 8);
+  _setUrlRoom(syncRoomId);
+
+  document.getElementById('syncRoomCode').textContent = syncRoomId;
+  document.getElementById('syncOfflineControls').style.display = 'none';
+  document.getElementById('syncOnlineControls').style.display = 'flex';
+  _setSyncUI('polling', '연결 중…');
+
+  // 현재 상태 즉시 조회 후 폴링 시작
+  _fetchRoomState();
+  syncPollTimer = setInterval(_fetchRoomState, 1000);
+}
+
+function leaveRoom() {
+  syncRoomId = null;
+  syncLastEventId = null;
+  clearInterval(syncPollTimer); syncPollTimer = null;
+  _setUrlRoom(null);
+  document.getElementById('syncOfflineControls').style.display = 'flex';
+  document.getElementById('syncOnlineControls').style.display = 'none';
+  document.getElementById('syncInput').value = '';
+  _setSyncUI('offline', '오프라인');
+}
+
+function copyRoomCode() {
+  if (!syncRoomId) return;
+  const url = location.origin + location.pathname + '?room=' + syncRoomId;
+  navigator.clipboard.writeText(url).then(() => {
+    const el = document.getElementById('syncRoomCode');
+    const orig = el.textContent;
+    el.textContent = '✓ 복사됨';
+    setTimeout(() => { el.textContent = orig; }, 1500);
+  });
+}
+
+function _setSyncUI(state, label) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'sync-dot ' + state;
+  lbl.textContent = label;
+}
+
+async function _fetchRoomState() {
+  if (!syncRoomId) return;
+  try {
+    const res = await fetch(`/api/room/${syncRoomId}`);
+    if (!res.ok) { _setSyncUI('error', '오류'); return; }
+    const data = await res.json();
+
+    _setSyncUI('online', '연결됨');
+
+    if (!data) return;                           // 방 생성 직후 빈 상태
+    if (data.eventId === syncLastEventId) return; // 변화 없음
+    if (data.deviceId === DEVICE_ID) {           // 내가 보낸 이벤트
+      syncLastEventId = data.eventId;
+      return;
+    }
+    _applyRemoteEvent(data);
+    syncLastEventId = data.eventId;
+  } catch {
+    _setSyncUI('error', '오류');
+  }
+}
+
+async function emitEvent(action) {
+  if (!syncRoomId || _applyingRemote) return;
+  const event = {
+    action,
+    timestamp: Date.now(),
+    remaining_ms: segRemainMs,
+    seg_idx: currentSeg,
+    segments: segments.map(s => ({ ...s })),
+    loop: document.getElementById('loopToggle').checked,
+    deviceId: DEVICE_ID,
+  };
+  try {
+    const res = await fetch(`/api/room/${syncRoomId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(event),
+    });
+    const data = await res.json();
+    syncLastEventId = data.eventId;
+  } catch { /* 발신 실패는 무시 — 다음 폴링에서 보정 */ }
+}
+
+function _applyRemoteEvent(event) {
+  _applyingRemote = true;
+  try {
+    // 세그먼트 설정이 다르면 업데이트
+    if (JSON.stringify(event.segments) !== JSON.stringify(segments)) {
+      segments = event.segments;
+      renderSegmentList();
+    }
+    document.getElementById('loopToggle').checked = event.loop;
+
+    switch (event.action) {
+      case 'start':
+      case 'resume': {
+        // 이벤트 발생 시점부터 경과 시간만큼 remaining에서 차감
+        const elapsed = Date.now() - event.timestamp;
+        currentSeg = event.seg_idx;
+        segRemainMs = Math.max(0, event.remaining_ms - elapsed);
+        timerState = 'running';
+        timerLastTick = performance.now();
+        timerStartAngle = timerStartAngle ?? getMinAngle();
+        const btnS = document.getElementById('btnTimerStart');
+        btnS.textContent = 'RUNNING…'; btnS.disabled = true;
+        updateTimerDisplay();
+        addLog(`[원격] ${event.action === 'start' ? '시작' : '재개'}`, '#6b6968');
+        break;
+      }
+      case 'pause': {
+        currentSeg = event.seg_idx;
+        segRemainMs = event.remaining_ms;
+        timerState = 'paused';
+        const btnP = document.getElementById('btnTimerStart');
+        btnP.textContent = 'RESUME'; btnP.disabled = false; btnP.onclick = startTimer;
+        updateTimerDisplay();
+        addLog('[원격] 일시정지', '#6b6968');
+        break;
+      }
+      case 'reset': {
+        timerState = 'idle'; currentSeg = 0; segRemainMs = 0;
+        loopCount = 0; timerStartAngle = null;
+        const btnR = document.getElementById('btnTimerStart');
+        btnR.textContent = 'START'; btnR.disabled = false; btnR.onclick = startTimer;
+        document.getElementById('timerRemaining').textContent = '--:--';
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('timerLabel').classList.remove('visible');
+        addLog('[원격] 리셋', '#6b6968');
+        break;
+      }
+      case 'next': {
+        currentSeg = event.seg_idx;
+        segRemainMs = event.remaining_ms;
+        if (timerState !== 'idle') {
+          timerState = 'running';
+          timerLastTick = performance.now();
+        }
+        updateTimerDisplay();
+        addLog('[원격] 다음 세그먼트', '#6b6968');
+        break;
+      }
+    }
+  } finally {
+    _applyingRemote = false;
+  }
+}
+
+// 입력창 Enter 키
+document.getElementById('syncInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') joinRoomFromInput();
+  document.getElementById('syncInput').value = document.getElementById('syncInput').value.toUpperCase();
+});
+
+// URL에 방 코드가 있으면 자동 참가
+const _urlRoom = _getUrlRoom();
+if (_urlRoom && /^[A-Z0-9]{4,8}$/.test(_urlRoom)) {
+  setTimeout(() => joinRoom(_urlRoom), 200);
+}
+
+// ═══ INIT ════════════════════════════════════════════
+resize();
+renderSegmentList();
+</script>
+</body>
+</html>
