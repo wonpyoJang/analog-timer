@@ -550,14 +550,14 @@ class _CenterInfo extends StatelessWidget {
               style: GoogleFonts.bebasNeue(
                 fontSize: 16,
                 letterSpacing: 1.5,
-                color: AppColors.timerOrangeDark,
+                color: seg.color,
               ),
             ),
             Text(
               _fmtMs(timerState.segRemainMs),
               style: GoogleFonts.bebasNeue(
                 fontSize: 48,
-                color: AppColors.timerOrangeDark,
+                color: seg.color,
                 letterSpacing: 1,
               ),
             ),

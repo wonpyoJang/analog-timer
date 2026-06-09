@@ -395,7 +395,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                   Text(
                     _timerLabel,
                     style: GoogleFonts.bebasNeue(
-                      fontSize: 11,
+                      fontSize: 15,
                       letterSpacing: 1.5,
                       color: _effectiveTimerColor.withValues(alpha: 0.75),
                     ),
@@ -403,7 +403,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                 Text(
                   _timerRemain,
                   style: GoogleFonts.bebasNeue(
-                    fontSize: 24,
+                    fontSize: 30,
                     color: _effectiveTimerColor,
                     letterSpacing: 1,
                   ),
@@ -413,7 +413,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                 Text(
                   '⏲ $_swElapsed',
                   style: GoogleFonts.bebasNeue(
-                    fontSize: 16,
+                    fontSize: 20,
                     color: const Color(0xFF2EA84A),
                     letterSpacing: 1,
                   ),
@@ -481,13 +481,13 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
 
   Widget _buildPillContent() {
     final valueStyle = GoogleFonts.bebasNeue(
-      fontSize: 19,
+      fontSize: 24,
       letterSpacing: 1,
       height: 1,
       fontWeight: FontWeight.w400,
     );
     final labelStyle = GoogleFonts.notoSansKr(
-      fontSize: 10,
+      fontSize: 12,
       letterSpacing: 0.5,
       height: 1,
       fontWeight: FontWeight.w500,
