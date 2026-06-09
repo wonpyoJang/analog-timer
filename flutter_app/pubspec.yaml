@@ -38,6 +38,12 @@ dependencies:
   flutter_overlay_window: ^0.5.0
   live_activities: ^2.4.9
   shared_preferences: ^2.3.0
+  http: ^1.2.2
+
+  # 데스크톱(Windows/macOS/Linux) 전용 — 모바일에선 호출하지 않음
+  window_manager: ^0.4.3
+  tray_manager: ^0.5.0
+  local_notifier: ^0.1.6
 
 dev_dependencies:
   flutter_test:
@@ -45,6 +51,7 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.3
+  msix: ^3.16.8
 
 flutter_launcher_icons:
   android: true
@@ -70,6 +77,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/icons/app_icon.ico
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -105,3 +115,13 @@ flutter:
 dependency_overrides:
   flutter_overlay_window:
     path: packages/flutter_overlay_window
+
+# Windows MSIX 인스톨러 설정 — `dart run msix:create` 로 패키징
+msix_config:
+  display_name: Analog Timer
+  publisher_display_name: Orthocare
+  identity_name: dev.analogtimer.AnalogTimer
+  msix_version: 0.0.4.0
+  logo_path: assets/icons/app_icon.png
+  capabilities: internetClient
+  install_certificate: false
