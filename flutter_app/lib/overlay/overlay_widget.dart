@@ -728,10 +728,10 @@ class _OverlayClockPainter extends CustomPainter {
     if (!timerActive || segRemainMs <= 0) return;
     final remainMin = segRemainMs / 60000.0;
     final minAngle = _minuteHandAngle();
-    const ringW = 16.0;
-    const gap = 3.0;
-    const step = ringW + gap;
-    const innermost = 14.0;
+    final ringW = R * 0.100; // 16px at R=160
+    final gap = R * 0.019; // 3px  at R=160
+    final step = ringW + gap;
+    final innermost = R * 0.088; // 14px at R=160
     final rOuter = R * 0.79;
     final fullLaps = remainMin ~/ 60;
     final partialMin = remainMin % 60;
@@ -778,11 +778,12 @@ class _OverlayClockPainter extends CustomPainter {
   void _drawStopwatchRings(Canvas canvas, double cx, double cy, double R) {
     if (!swActive || swElapsedMs <= 0) return;
     final elapsedMin = swElapsedMs / 60000.0;
-    const ringW = 13.0;
-    const gap = 2.0;
-    const step = ringW + gap;
-    final outermost = R - 9;
-    final maxRings = ((outermost - 36) / step).floor();
+    final ringW = R * 0.081; // 13px at R=160
+    final gap = R * 0.013; // 2px  at R=160
+    final step = ringW + gap;
+    final outermost = R - R * 0.056; // R-9 at R=160
+    final innerLimit = R * 0.225; // 36px at R=160
+    final maxRings = ((outermost - innerLimit) / step).floor();
     final fullLaps = elapsedMin ~/ 60;
     final partialMin = elapsedMin % 60;
     final startAngle = swStartAngleRad ?? _minuteHandAngle();
