@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../models/segment.dart';
+import 'timer_state.dart';
 
 abstract class TimerEvent extends Equatable {
   const TimerEvent();
@@ -54,4 +55,21 @@ class TimerSegmentUpdated extends TimerEvent {
   const TimerSegmentUpdated(this.index, this.segment);
   @override
   List<Object?> get props => [index, segment];
+}
+
+class TimerRestore extends TimerEvent {
+  final List<Segment> segments;
+  final int currentSeg;
+  final int segRemainMs;
+  final TimerStatus status;
+  final bool loop;
+  const TimerRestore({
+    required this.segments,
+    required this.currentSeg,
+    required this.segRemainMs,
+    required this.status,
+    required this.loop,
+  });
+  @override
+  List<Object?> get props => [segments, currentSeg, segRemainMs, status, loop];
 }

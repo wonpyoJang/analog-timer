@@ -84,7 +84,7 @@ class _SegmentRowState extends State<_SegmentRow> {
   }
 
   void _update(BuildContext context) {
-    final mins = double.tryParse(_minCtrl.text) ?? widget.segment.minutes;
+    final mins = int.tryParse(_minCtrl.text) ?? widget.segment.minutes;
     context.read<TimerBloc>().add(
       TimerSegmentUpdated(
         widget.index,
@@ -130,9 +130,7 @@ class _SegmentRowState extends State<_SegmentRow> {
             width: 52,
             child: TextField(
               controller: _minCtrl,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
+              keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.text, fontSize: 12),
               decoration: InputDecoration(

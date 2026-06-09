@@ -4,7 +4,7 @@ import '../../../theme/app_theme.dart';
 
 class Segment extends Equatable {
   final String name;
-  final double minutes;
+  final int minutes;
   final Color color;
 
   const Segment({
@@ -13,13 +13,25 @@ class Segment extends Equatable {
     required this.color,
   });
 
-  Segment copyWith({String? name, double? minutes, Color? color}) => Segment(
+  Segment copyWith({String? name, int? minutes, Color? color}) => Segment(
     name: name ?? this.name,
     minutes: minutes ?? this.minutes,
     color: color ?? this.color,
   );
 
-  Duration get duration => Duration(milliseconds: (minutes * 60000).round());
+  Duration get duration => Duration(minutes: minutes);
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'minutes': minutes,
+    'colorValue': color.toARGB32(),
+  };
+
+  static Segment fromJson(Map<String, dynamic> json) => Segment(
+    name: json['name'] as String,
+    minutes: (json['minutes'] as num).toInt(),
+    color: Color(json['colorValue'] as int),
+  );
 
   static List<Segment> get defaults => [
     Segment(name: '할 것 1', minutes: 2, color: AppColors.segColors[3]),
