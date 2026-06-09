@@ -2,5 +2,6 @@
 .vercel
 node_modules/
 build/
+dist/
 firebase-debug.log
 package-lock.json
