@@ -4,48 +4,85 @@ import 'dart:math';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:screen_retriever/screen_retriever.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 import 'overlay_clock_painter.dart';
 
+const _kOverlayPosX = 'overlay_pos_x';
+const _kOverlayPosY = 'overlay_pos_y';
+const _overlaySize = Size(220, 270);
+
 /// 서브윈도우(오버레이) 진입점 — frameless / always-on-top / skipTaskbar 로 구성 후 실행.
+///
+/// 서브윈도우에선 window_manager 의 getPosition / onWindowMoved 가 동작하지 않으므로,
+/// 위치는 Dart 에서 직접 추적(드래그 시 setPosition)하고 prefs 에 저장한다.
 Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
   const opts = WindowOptions(
-    size: Size(220, 270),
-    minimumSize: Size(180, 220),
+    size: _overlaySize,
+    minimumSize: _overlaySize,
     backgroundColor: Colors.transparent,
     skipTaskbar: true,
     titleBarStyle: TitleBarStyle.hidden,
     windowButtonVisibility: false,
     alwaysOnTop: true,
   );
+  final prefs = await SharedPreferences.getInstance();
+  final initialPos = await _resolveInitialPosition(prefs);
   await windowManager.waitUntilReadyToShow(opts, () async {
     await windowManager.setAsFrameless();
     await windowManager.setAlwaysOnTop(true);
     await windowManager.setHasShadow(false);
+    await windowManager.setPosition(initialPos);
     await windowManager.show();
   });
   runApp(
     DesktopOverlayApp(
       mainWindowId: args['mainWindowId'] as String? ?? '0',
       initial: args,
+      initialPos: initialPos,
     ),
   );
+}
+
+/// 저장된 위치가 있으면 그것을, 없으면 기본 작업영역 우상단을 반환.
+Future<Offset> _resolveInitialPosition(SharedPreferences prefs) async {
+  final x = prefs.getDouble(_kOverlayPosX);
+  final y = prefs.getDouble(_kOverlayPosY);
+  if (x != null && y != null) return Offset(x, y);
+  try {
+    final display = await screenRetriever.getPrimaryDisplay();
+    final size = display.visibleSize ?? display.size;
+    final origin = display.visiblePosition ?? Offset.zero;
+    return Offset(
+      origin.dx + size.width - _overlaySize.width - 12,
+      origin.dy + 12,
+    );
+  } catch (_) {
+    return const Offset(60, 60);
+  }
 }
 
 class DesktopOverlayApp extends StatelessWidget {
   final String mainWindowId;
   final Map<String, dynamic> initial;
+  final Offset initialPos;
   const DesktopOverlayApp({
     super.key,
     required this.mainWindowId,
     required this.initial,
+    required this.initialPos,
   });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: _OverlayBody(mainWindowId: mainWindowId, initial: initial),
+      home: _OverlayBody(
+        mainWindowId: mainWindowId,
+        initial: initial,
+        initialPos: initialPos,
+      ),
     );
   }
 }
@@ -53,7 +90,12 @@ class DesktopOverlayApp extends StatelessWidget {
 class _OverlayBody extends StatefulWidget {
   final String mainWindowId;
   final Map<String, dynamic> initial;
-  const _OverlayBody({required this.mainWindowId, required this.initial});
+  final Offset initialPos;
+  const _OverlayBody({
+    required this.mainWindowId,
+    required this.initial,
+    required this.initialPos,
+  });
 
   @override
   State<_OverlayBody> createState() => _OverlayBodyState();
@@ -77,12 +119,15 @@ class _OverlayBodyState extends State<_OverlayBody>
   DateTime _now = DateTime.now();
   Timer? _clockTimer;
   Timer? _displayTimer;
+  Timer? _posSaveTimer;
+  late Offset _winPos; // Dart 측에서 추적하는 창 좌상단(논리 px)
   DateTime? _displayLastTick;
   late final AnimationController _blinkCtrl;
 
   @override
   void initState() {
     super.initState();
+    _winPos = widget.initialPos;
     _applyState(widget.initial);
     _clockTimer = Timer.periodic(
       const Duration(milliseconds: 250),
@@ -192,10 +237,26 @@ class _OverlayBodyState extends State<_OverlayBody>
     } catch (_) {}
   }
 
+  // 시계 영역 드래그로 창 이동 — 위치를 직접 추적해 setPosition 하고 저장(디바운스).
+  void _onDragUpdate(DragUpdateDetails d) {
+    _winPos += d.delta;
+    windowManager.setPosition(_winPos);
+  }
+
+  void _onDragEnd(DragEndDetails _) {
+    _posSaveTimer?.cancel();
+    _posSaveTimer = Timer(const Duration(milliseconds: 300), () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_kOverlayPosX, _winPos.dx);
+      await prefs.setDouble(_kOverlayPosY, _winPos.dy);
+    });
+  }
+
   @override
   void dispose() {
     _clockTimer?.cancel();
     _displayTimer?.cancel();
+    _posSaveTimer?.cancel();
     _blinkCtrl.dispose();
     super.dispose();
   }
@@ -217,8 +278,11 @@ class _OverlayBodyState extends State<_OverlayBody>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 시계 영역 = 드래그로 창 이동
-            DragToMoveArea(
+            // 시계 영역 = 드래그로 창 이동 (서브윈도우라 위치를 직접 추적)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanUpdate: _onDragUpdate,
+              onPanEnd: _onDragEnd,
               child: AspectRatio(
                 aspectRatio: 1,
                 child: Stack(
