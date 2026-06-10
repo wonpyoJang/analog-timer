@@ -83,8 +83,19 @@ class _SegmentRowState extends State<_SegmentRow> {
     super.dispose();
   }
 
-  void _update(BuildContext context) {
+  void _updateName(BuildContext context) {
     final mins = int.tryParse(_minCtrl.text) ?? widget.segment.minutes;
+    context.read<TimerBloc>().add(
+      TimerSegmentUpdated(
+        widget.index,
+        widget.segment.copyWith(name: _nameCtrl.text, minutes: mins),
+      ),
+    );
+  }
+
+  void _updateMinutes(BuildContext context) {
+    final mins = int.tryParse(_minCtrl.text);
+    if (mins == null || mins <= 0) return; // 빈 필드 무시 — 이전 BLoC 값 보존
     context.read<TimerBloc>().add(
       TimerSegmentUpdated(
         widget.index,
@@ -123,7 +134,7 @@ class _SegmentRowState extends State<_SegmentRow> {
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
               ),
-              onChanged: (_) => _update(context),
+              onChanged: (_) => _updateName(context),
             ),
           ),
           SizedBox(
@@ -145,7 +156,7 @@ class _SegmentRowState extends State<_SegmentRow> {
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 4),
               ),
-              onChanged: (_) => _update(context),
+              onChanged: (_) => _updateMinutes(context),
             ),
           ),
           const SizedBox(width: 4),

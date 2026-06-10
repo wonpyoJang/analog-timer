@@ -205,7 +205,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             final s = context.read<TimerBloc>().state;
             if (s.status == TimerStatus.running) {
               context.read<TimerBloc>().add(const TimerPause());
-            } else if (s.status == TimerStatus.paused) {
+            } else if (s.status == TimerStatus.paused ||
+                s.status == TimerStatus.done) {
               context.read<TimerBloc>().add(const TimerStart());
             }
             // BLoC는 <1ms 안에 처리 — 80ms 대기 불필요, 다음 이벤트 루프 턴에 sync
@@ -355,11 +356,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final screenW = mq.size.width.round();
     final screenH = mq.size.height.round();
 
+    final timerDone = timerState.status == TimerStatus.done;
     OverlayService.updateState(
       timerActive: timerActive,
       timerRunning: timerState.status == TimerStatus.running,
       timerLabel: seg?.name ?? '',
       timerRemain: timerActive ? _fmt(timerState.segRemainMs) : '--:--',
+      timerDone: timerDone,
       swActive: swActive,
       swRunning: swState.running,
       swElapsed: swActive ? _fmt(swState.elapsedMs) : '',

@@ -16,6 +16,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     with TickerProviderStateMixin {
   // IPC 상태
   bool _timerActive = false;
+  bool _timerDone = false;
   bool _timerRunning = false; // running vs paused 구분
   bool _swActive = false;
   bool _swRunning = false; // sw 실제 실행 여부 (active=버튼 표시, running=아이콘)
@@ -97,8 +98,11 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         }
 
         final wasEnding = _ending;
+        final newTimerActive = map['timerActive'] as bool? ?? false;
+        final newTimerDone = map['timerDone'] as bool? ?? false;
         setState(() {
-          _timerActive = map['timerActive'] as bool? ?? false;
+          _timerActive = newTimerActive || newTimerDone; // done 상태도 컨트롤 표시
+          _timerDone = newTimerDone;
           _timerRunning = map['timerRunning'] as bool? ?? false;
           _timerLabel = map['timerLabel'] as String? ?? '';
           _timerRemain = map['timerRemain'] as String? ?? '--:--';
@@ -115,6 +119,10 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
           _screenWidthDp = map['screenWidthDp'] as int? ?? _screenWidthDp;
           _screenHeightDp = map['screenHeightDp'] as int? ?? _screenHeightDp;
         });
+        // 타이머가 비활성/완료되면 진행 중인 다음 카운트다운 취소
+        if (!newTimerActive && !newTimerDone && _nextCounting) {
+          _cancelNextCountdown();
+        }
         if (_ending && !wasEnding) {
           _blinkCtrl.repeat(reverse: true);
         } else if (!_ending && wasEnding) {
@@ -354,20 +362,27 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         if (_timerActive) ...[
-          btn(_timerRunning ? Icons.pause : Icons.play_arrow, timerColor, () {
-            setState(() => _timerRunning = !_timerRunning);
-            _syncDisplayTimer();
-            _sendAction('timer_toggle');
-          }),
-          // ⏭ → 탭 후 5초 카운트다운 (좌→우 fill), 완료 시 실행 / 탭 시 취소
           btn(
-            _nextCounting ? Icons.close : Icons.skip_next,
-            _nextCounting
-                ? const Color(0xFFFFC107)
-                : timerColor.withValues(alpha: 0.7),
-            _nextCounting ? _cancelNextCountdown : _startNextCountdown,
-            fill: _nextCounting ? _nextPct : 0.0,
+            _timerDone
+                ? Icons.replay
+                : (_timerRunning ? Icons.pause : Icons.play_arrow),
+            timerColor,
+            () {
+              if (!_timerDone) setState(() => _timerRunning = !_timerRunning);
+              _syncDisplayTimer();
+              _sendAction('timer_toggle');
+            },
           ),
+          // ⏭ → 탭 후 2초 카운트다운, 완료 시 실행 / 탭 시 취소 (done 상태엔 숨김)
+          if (!_timerDone)
+            btn(
+              _nextCounting ? Icons.close : Icons.skip_next,
+              _nextCounting
+                  ? const Color(0xFFFFC107)
+                  : timerColor.withValues(alpha: 0.7),
+              _nextCounting ? _cancelNextCountdown : _startNextCountdown,
+              fill: _nextCounting ? _nextPct : 0.0,
+            ),
         ],
         if (_swActive || _swElapsedMs > 0)
           btn(_swRunning ? Icons.stop : Icons.play_arrow, swColor, () {
