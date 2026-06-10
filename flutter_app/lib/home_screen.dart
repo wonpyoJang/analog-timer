@@ -20,6 +20,7 @@ import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
 import 'live_activity/live_activity_service.dart';
 import 'services/persistence_service.dart';
+import 'services/native_widget_service.dart';
 import 'features/timer/models/segment.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -35,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   DateTime _now = DateTime.now();
   bool _overlayOn = false;
   int _syncTick = 0;
+  int _nativeTick = 0;
   bool _inBackground = false;
 
   @override
@@ -223,6 +225,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           case 'overlay_hide':
             OverlayService.hide();
             setState(() => _overlayOn = false);
+            NativeWidgetService.cancelNotification();
         }
       } catch (_) {}
     });
@@ -253,11 +256,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       } else {
         setState(() => _now = now);
       }
-      _syncTick = (_syncTick + 1) % 3; // 6틱(~96ms) → 3틱(~48ms)
+      _syncTick = (_syncTick + 1) % 3;
       if (_syncTick == 0) {
         _syncOverlay();
         _syncLiveActivity();
       }
+      _nativeTick = (_nativeTick + 1) % 62; // ~1초마다
+      if (_nativeTick == 0) _syncNativeWidget();
     });
   }
 
@@ -309,6 +314,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       timerRemain: timerActive ? _fmt(timerState.segRemainMs) : '--:--',
       swActive: swActive,
       swElapsed: swActive ? _fmt(swState.elapsedMs) : '',
+    );
+  }
+
+  void _syncNativeWidget() {
+    if (!Platform.isAndroid) return;
+    final timerState = context.read<TimerBloc>().state;
+    final swState = context.read<StopwatchBloc>().state;
+    final timerActive =
+        timerState.status == TimerStatus.running ||
+        timerState.status == TimerStatus.paused;
+    final swActive = swState.running || swState.elapsedMs > 0;
+    final seg = timerState.currentSegment;
+
+    NativeWidgetService.updateState(
+      timerActive: timerActive,
+      timerLabel: seg?.name ?? '',
+      timerTime: timerActive ? _fmt(timerState.segRemainMs) : '--:--',
+      swTime: swActive ? _fmt(swState.elapsedMs) : '',
+      timerColor: seg?.color.toARGB32() ?? 0xFFE07A52,
     );
   }
 
