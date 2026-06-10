@@ -122,7 +122,8 @@ dependency_overrides:
 # Windows MSIX 인스톨러 설정 — `dart run msix:create` 로 패키징
 msix_config:
   display_name: Analog Timer
-  publisher_display_name: Orthocare
+  publisher_display_name: zero
+  publisher: CN=zero
   identity_name: dev.analogtimer.AnalogTimer
   msix_version: 0.0.4.0
   logo_path: assets/icons/app_icon.png
