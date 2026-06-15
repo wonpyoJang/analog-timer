@@ -10,8 +10,8 @@ bool get isDesktop =>
 
 /// 데스크톱 창(window_manager) + 시스템 트레이(tray_manager) 통합 서비스.
 ///
-/// - 창 닫기(X) → 종료 대신 트레이로 숨김
-/// - 트레이 좌클릭 → 창 복원, 우클릭 → 컨텍스트 메뉴
+/// - 창 닫기(X) → 완전 종료 (상태 저장 후 프로세스 종료)
+/// - 트레이 좌클릭 → 창 복원, 우클릭 → 컨텍스트 메뉴(열기/종료)
 /// - 트레이 툴팁/메뉴에 타이머 상태 표시
 class DesktopService with WindowListener, TrayListener {
   DesktopService._();
@@ -20,10 +20,11 @@ class DesktopService with WindowListener, TrayListener {
   /// 트레이 "열기" 또는 좌클릭으로 창을 복원할 때 호출.
   VoidCallback? onShow;
 
-  /// 트레이 "종료" 선택 시 호출. 보통 상태 저장 후 [quit] 을 부른다.
+  /// 종료 직전 호출 — 상태 저장용. 실제 프로세스 종료는 서비스가 담당한다.
   Future<void> Function()? onQuit;
 
   bool _trayReady = false;
+  bool _quitting = false;
   String? _lastMenuStatus;
 
   /// runApp 이전에 호출 — 창 크기/최소 크기를 고정하고 표시.
@@ -89,14 +90,27 @@ class DesktopService with WindowListener, TrayListener {
     }
   }
 
-  /// 트레이 종료 처리 — preventClose 해제 후 실제 종료.
+  /// 완전 종료 — 상태 저장(best-effort) 후 네이티브 close 경로로 깔끔히 종료.
+  ///
+  /// preventClose 를 해제하고 close() 를 호출하면 러너의 SetQuitOnClose(true)
+  /// 에 의해 메시지 루프가 정상 종료되어 프로세스가 깨끗이 끝난다.
+  /// (exit(0) 는 Flutter 멀티스레드 teardown 중 액세스 위반을 유발할 수 있어 지양)
   Future<void> quit() async {
-    if (!isDesktop) return;
-    await windowManager.setPreventClose(false);
-    windowManager.removeListener(this);
-    trayManager.removeListener(this);
-    await trayManager.destroy();
-    await windowManager.destroy();
+    if (!isDesktop || _quitting) return;
+    _quitting = true;
+    final cb = onQuit;
+    if (cb != null) {
+      try {
+        await cb();
+      } catch (_) {}
+    }
+    try {
+      await trayManager.destroy();
+    } catch (_) {}
+    try {
+      await windowManager.setPreventClose(false);
+    } catch (_) {}
+    await windowManager.close();
   }
 
   Future<void> _showWindow() async {
@@ -108,10 +122,8 @@ class DesktopService with WindowListener, TrayListener {
   // ── WindowListener ──────────────────────────────────────────
   @override
   void onWindowClose() async {
-    // 종료 대신 트레이로 숨김.
-    if (await windowManager.isVisible()) {
-      await windowManager.hide();
-    }
+    // X = 완전 종료 (상태 저장 후). 트레이 상주하지 않는다.
+    await quit();
   }
 
   // ── TrayListener ────────────────────────────────────────────
@@ -131,7 +143,7 @@ class DesktopService with WindowListener, TrayListener {
       case 'show':
         _showWindow();
       case 'quit':
-        onQuit?.call();
+        quit();
     }
   }
 }

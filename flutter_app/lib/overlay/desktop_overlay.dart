@@ -18,10 +18,12 @@ const _overlaySize = Size(220, 270);
 /// 서브윈도우에선 window_manager 의 getPosition / onWindowMoved 가 동작하지 않으므로,
 /// 위치는 Dart 에서 직접 추적(드래그 시 setPosition)하고 prefs 에 저장한다.
 Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
+  // 배경을 불투명 다크로 — 투명 레이어드 윈도우는 일부(구형/Intel) GPU 에서
+  // 합성에 실패해 '회색 빈 화면'으로 뜨는 사례가 있어, 투명 의존을 제거한다.
   const opts = WindowOptions(
     size: _overlaySize,
     minimumSize: _overlaySize,
-    backgroundColor: Colors.transparent,
+    backgroundColor: Color(0xFF0E0E0F),
     skipTaskbar: true,
     titleBarStyle: TitleBarStyle.hidden,
     windowButtonVisibility: false,
@@ -32,9 +34,10 @@ Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
   await windowManager.waitUntilReadyToShow(opts, () async {
     await windowManager.setAsFrameless();
     await windowManager.setAlwaysOnTop(true);
-    await windowManager.setHasShadow(false);
+    await windowManager.setHasShadow(true);
     await windowManager.setPosition(initialPos);
     await windowManager.show();
+    await windowManager.focus();
   });
   runApp(
     DesktopOverlayApp(
@@ -304,15 +307,11 @@ class _OverlayBodyState extends State<_OverlayBody>
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: const Color(0xFF0E0E0F),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xF20E0E0F),
-          borderRadius: BorderRadius.circular(14),
+          color: const Color(0xFF0E0E0F),
           border: Border.all(color: const Color(0xFF2E2E32)),
-          boxShadow: const [
-            BoxShadow(color: Color(0x99000000), blurRadius: 16, offset: Offset(0, 4)),
-          ],
         ),
         padding: const EdgeInsets.all(8),
         child: Column(

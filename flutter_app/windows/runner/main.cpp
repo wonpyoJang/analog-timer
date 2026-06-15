@@ -13,6 +13,24 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     CreateAndAttachConsole();
   }
 
+  // 단일 인스턴스 보장 — 이미 실행 중이면 기존 창을 앞으로 가져오고 종료.
+  // (desktop_multi_window 의 오버레이 서브윈도우는 같은 프로세스 내에서
+  //  생성되므로 wWinMain 은 인스턴스당 1회만 실행되어 안전하다.)
+  ::CreateMutexW(nullptr, FALSE, L"Local\\AnalogTimer_SingleInstance_Mutex");
+  if (::GetLastError() == ERROR_ALREADY_EXISTS) {
+    HWND existing = ::FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"Analog Timer");
+    if (existing == nullptr) {
+      existing = ::FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"analog_timer");
+    }
+    if (existing != nullptr) {
+      if (::IsIconic(existing)) {
+        ::ShowWindow(existing, SW_RESTORE);
+      }
+      ::SetForegroundWindow(existing);
+    }
+    return EXIT_SUCCESS;
+  }
+
   // Initialize COM, so that it is available for use in the library and/or
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);

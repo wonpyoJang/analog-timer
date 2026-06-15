@@ -302,10 +302,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _initDesktop() async {
     // 오버레이(서브윈도우) 버튼 → 메인으로 전달되는 액션 처리
     DesktopOverlayService.instance.onAction = _handleOverlayAction;
+    // 종료 직전 상태 저장만 — 실제 종료(exit)와 오버레이 정리는
+    // DesktopService.quit() 및 프로세스 종료가 담당한다.
     DesktopService.instance.onQuit = () async {
       await _saveState();
-      await DesktopOverlayService.instance.hide();
-      await DesktopService.instance.quit();
     };
     _trayTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) _updateTray();
