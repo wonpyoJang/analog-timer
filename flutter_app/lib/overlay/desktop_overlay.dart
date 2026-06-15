@@ -122,7 +122,6 @@ class _OverlayBodyState extends State<_OverlayBody>
   DateTime _now = DateTime.now();
   Timer? _clockTimer;
   Timer? _displayTimer;
-  Timer? _posSaveTimer;
   late Offset _winPos; // Dart 측에서 추적하는 창 좌상단(논리 px)
   DateTime? _displayLastTick;
   late final AnimationController _blinkCtrl;
@@ -279,26 +278,41 @@ class _OverlayBodyState extends State<_OverlayBody>
     _nextFrameTimer = Timer(const Duration(milliseconds: 16), _animNext);
   }
 
-  // 시계 영역 드래그로 창 이동 — 위치를 직접 추적해 setPosition 하고 저장(디바운스).
-  void _onDragUpdate(DragUpdateDetails d) {
-    _winPos += d.delta;
-    windowManager.setPosition(_winPos);
-  }
-
-  void _onDragEnd(DragEndDetails _) {
-    _posSaveTimer?.cancel();
-    _posSaveTimer = Timer(const Duration(milliseconds: 300), () async {
+  // 시계 영역 드래그 = 네이티브 startDragging 으로 부드럽게 이동(떨림 없음).
+  //
+  // 이전엔 onPanUpdate 마다 setPosition 했는데, 창이 움직이면 포인터의 로컬
+  // 좌표가 함께 이동해 다음 delta 가 과보정되는 피드백 루프 → 떨림이 발생했다.
+  // startDragging() 은 OS 의 이동 루프를 사용해 부드럽고, 릴리즈될 때까지 await
+  // 가 블록되므로 그 후 커서 스크린좌표 − 그랩오프셋 으로 최종 위치를 저장한다.
+  // (서브윈도우라 window_manager.getPosition() 은 0 을 반환해 쓸 수 없다.)
+  bool _dragging = false;
+  Future<void> _onDragStart(DragStartDetails _) async {
+    if (_dragging) return;
+    _dragging = true;
+    Offset grab = Offset.zero;
+    try {
+      grab = (await screenRetriever.getCursorScreenPoint()) - _winPos;
+    } catch (_) {}
+    try {
+      await windowManager.startDragging();
+    } catch (_) {
+      _dragging = false;
+      return;
+    }
+    try {
+      final cursor = await screenRetriever.getCursorScreenPoint();
+      _winPos = cursor - grab;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_kOverlayPosX, _winPos.dx);
       await prefs.setDouble(_kOverlayPosY, _winPos.dy);
-    });
+    } catch (_) {}
+    _dragging = false;
   }
 
   @override
   void dispose() {
     _clockTimer?.cancel();
     _displayTimer?.cancel();
-    _posSaveTimer?.cancel();
     _nextFrameTimer?.cancel();
     _blinkCtrl.dispose();
     super.dispose();
@@ -320,8 +334,7 @@ class _OverlayBodyState extends State<_OverlayBody>
             // 시계 영역 = 드래그로 창 이동 (서브윈도우라 위치를 직접 추적)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onPanUpdate: _onDragUpdate,
-              onPanEnd: _onDragEnd,
+              onPanStart: _onDragStart,
               child: AspectRatio(
                 aspectRatio: 1,
                 child: Stack(
