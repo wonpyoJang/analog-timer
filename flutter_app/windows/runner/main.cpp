@@ -56,6 +56,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
+  // 창이 닫혀(WM_CLOSE→WM_DESTROY→PostQuitMessage) 메시지 루프가 끝나면,
+  // Flutter 엔진/오버레이 서브엔진과 실행 중인 타이머·스트림의 destructor
+  // teardown 이 레이스를 일으켜 0xC0000005(액세스 위반) 크래시 + '창 없는
+  // 좀비 프로세스'가 남는 사례가 있었다. 정리 코드를 건너뛰고 프로세스를
+  // 즉시 강제 종료해 X 한 번에 확실히·깨끗이 닫히도록 한다.
+  ::TerminateProcess(::GetCurrentProcess(), 0);
+
   ::CoUninitialize();
   return EXIT_SUCCESS;
 }

@@ -49,10 +49,9 @@ class DesktopService with WindowListener, TrayListener {
   /// runApp 이후(또는 직전) 호출 — 트레이 아이콘/메뉴 + 리스너 등록.
   Future<void> init() async {
     if (!isDesktop) return;
-    windowManager.addListener(this);
-    // 닫기 버튼을 가로채 트레이로 숨기기 위함.
-    await windowManager.setPreventClose(true);
-
+    // X(닫기)는 window_manager 가로채기 없이 표준 Win32 경로로 닫는다.
+    // 러너(main.cpp)가 메시지 루프 종료 후 TerminateProcess 로 즉시 종료하므로
+    // teardown 레이스(크래시·좀비) 없이 한 번에 닫힌다. preventClose 미사용.
     trayManager.addListener(this);
     await trayManager.setIcon(
       Platform.isWindows
@@ -91,28 +90,26 @@ class DesktopService with WindowListener, TrayListener {
     }
   }
 
-  /// 완전 종료 — 상태 저장 후 프로세스를 즉시·확실히 강제 종료한다.
+  /// 트레이 "종료" 처리 — 상태 저장 후 네이티브 close 경로로 종료.
   ///
-  /// window_manager.close() / exit(0) 는 Flutter 엔진·멀티윈도우(오버레이)
-  /// 엔진과 실행 중인 타이머/스트림의 teardown 레이스로 0xC0000005(액세스 위반)
-  /// 크래시와 '창 없는 좀비 프로세스'를 남기는 사례가 있었다. 그래서 저장만 마친 뒤
-  /// TerminateProcess(자기 자신)로 teardown 을 건너뛰고 즉시 종료한다.
+  /// windowManager.close() 가 WM_CLOSE 를 보내면 러너의 메시지 루프가 끝나고
+  /// main.cpp 가 TerminateProcess 로 프로세스를 강제 종료한다(teardown 건너뜀).
+  /// X 버튼은 Dart 를 거치지 않고 같은 네이티브 경로로 닫힌다.
   Future<void> quit() async {
     if (!isDesktop || _quitting) return;
     _quitting = true;
-    // 1) 상태 저장 (best-effort)
     final cb = onQuit;
     if (cb != null) {
       try {
-        await cb();
+        await cb().timeout(const Duration(milliseconds: 500));
       } catch (_) {}
     }
-    // 2) 트레이 아이콘 정리 — 지연/실패해도 종료를 막지 않도록 타임아웃
     try {
       await trayManager.destroy().timeout(const Duration(milliseconds: 300));
     } catch (_) {}
-    // 3) 자기 프로세스 강제 종료 (Windows: TerminateProcess) — 크래시·좀비 방지
-    Process.killPid(pid, ProcessSignal.sigkill);
+    try {
+      await windowManager.close();
+    } catch (_) {}
   }
 
   Future<void> _showWindow() async {
@@ -121,12 +118,7 @@ class DesktopService with WindowListener, TrayListener {
     onShow?.call();
   }
 
-  // ── WindowListener ──────────────────────────────────────────
-  @override
-  void onWindowClose() async {
-    // X = 완전 종료 (상태 저장 후). 트레이 상주하지 않는다.
-    await quit();
-  }
+  // X(닫기)는 네이티브 경로로 처리하므로 WindowListener.onWindowClose 는 두지 않는다.
 
   // ── TrayListener ────────────────────────────────────────────
   @override
