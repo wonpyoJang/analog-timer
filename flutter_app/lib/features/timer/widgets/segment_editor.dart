@@ -106,6 +106,86 @@ class _SegmentRowState extends State<_SegmentRow> {
     );
   }
 
+  Future<void> _pickColor(BuildContext context) async {
+    final bloc = context.read<TimerBloc>();
+    final current = widget.segment.color.toARGB32();
+    final picked = await showDialog<Color>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '세그먼트 색상',
+                style: TextStyle(
+                  color: AppColors.text,
+                  fontSize: 13,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 14,
+                runSpacing: 14,
+                children: [
+                  for (final c in AppColors.segColors)
+                    GestureDetector(
+                      onTap: () => Navigator.pop(ctx, c),
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: c,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: c.toARGB32() == current
+                                  ? AppColors.text
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: c.toARGB32() == current
+                              ? const Icon(
+                                  Icons.check,
+                                  size: 18,
+                                  color: Colors.white,
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked != null) {
+      final mins = int.tryParse(_minCtrl.text) ?? widget.segment.minutes;
+      bloc.add(
+        TimerSegmentUpdated(
+          widget.index,
+          widget.segment.copyWith(
+            name: _nameCtrl.text,
+            minutes: mins,
+            color: picked,
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -133,15 +213,29 @@ class _SegmentRowState extends State<_SegmentRow> {
               ),
             ),
           ),
-          Container(
-            width: 11,
-            height: 11,
-            decoration: BoxDecoration(
-              color: widget.segment.color,
-              shape: BoxShape.circle,
+          // 색상 점 = 탭하면 팔레트에서 색 변경
+          GestureDetector(
+            onTap: () => _pickColor(context),
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                child: Container(
+                  width: 13,
+                  height: 13,
+                  decoration: BoxDecoration(
+                    color: widget.segment.color,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.text.withAlpha(0x33),
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
           Expanded(
             child: TextField(
               controller: _nameCtrl,
