@@ -57,6 +57,15 @@ class TimerSegmentUpdated extends TimerEvent {
   List<Object?> get props => [index, segment];
 }
 
+/// 세그먼트 순서 변경 (onReorderItem 규약: newIndex 는 '제거 후' 기준).
+class TimerSegmentReordered extends TimerEvent {
+  final int oldIndex;
+  final int newIndex;
+  const TimerSegmentReordered(this.oldIndex, this.newIndex);
+  @override
+  List<Object?> get props => [oldIndex, newIndex];
+}
+
 class TimerRestore extends TimerEvent {
   final List<Segment> segments;
   final int currentSeg;

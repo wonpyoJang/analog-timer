@@ -32,8 +32,21 @@ class SegmentEditor extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              ...state.segments.asMap().entries.map(
-                (e) => _SegmentRow(index: e.key, segment: e.value),
+              ReorderableListView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                onReorderItem: (oldIndex, newIndex) => context
+                    .read<TimerBloc>()
+                    .add(TimerSegmentReordered(oldIndex, newIndex)),
+                children: [
+                  for (final e in state.segments.asMap().entries)
+                    _SegmentRow(
+                      key: ValueKey(e.value.id),
+                      index: e.key,
+                      segment: e.value,
+                    ),
+                ],
               ),
               const SizedBox(height: 6),
               _AddButton(),
@@ -50,7 +63,7 @@ class SegmentEditor extends StatelessWidget {
 class _SegmentRow extends StatefulWidget {
   final int index;
   final Segment segment;
-  const _SegmentRow({required this.index, required this.segment});
+  const _SegmentRow({super.key, required this.index, required this.segment});
 
   @override
   State<_SegmentRow> createState() => _SegmentRowState();
@@ -105,6 +118,21 @@ class _SegmentRowState extends State<_SegmentRow> {
       ),
       child: Row(
         children: [
+          // 드래그 핸들 — 순서 변경
+          ReorderableDragStartListener(
+            index: widget.index,
+            child: const MouseRegion(
+              cursor: SystemMouseCursors.grab,
+              child: Padding(
+                padding: EdgeInsets.only(right: 6),
+                child: Icon(
+                  Icons.drag_indicator,
+                  size: 16,
+                  color: AppColors.muted,
+                ),
+              ),
+            ),
+          ),
           Container(
             width: 11,
             height: 11,

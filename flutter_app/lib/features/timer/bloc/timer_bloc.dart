@@ -19,6 +19,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     on<TimerSegmentAdded>(_onSegmentAdded);
     on<TimerSegmentRemoved>(_onSegmentRemoved);
     on<TimerSegmentUpdated>(_onSegmentUpdated);
+    on<TimerSegmentReordered>(_onSegmentReordered);
     on<TimerRestore>(_onRestore);
   }
 
@@ -249,6 +250,33 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     final segs = List<Segment>.from(state.segments);
     if (event.index < segs.length) segs[event.index] = event.segment;
     emit(state.copyWith(segments: segs));
+  }
+
+  void _onSegmentReordered(
+    TimerSegmentReordered event,
+    Emitter<TimerState> emit,
+  ) {
+    final old = event.oldIndex;
+    if (old < 0 || old >= state.segments.length) return;
+    // onReorderItem: newIndex 는 이미 '제거 후' 기준이라 추가 보정 불필요.
+    final to = event.newIndex;
+    if (to == old) return;
+
+    final segs = List<Segment>.from(state.segments);
+    final moved = segs.removeAt(old);
+    segs.insert(to, moved);
+
+    // 진행/일시정지 중인 현재 세그먼트 인덱스를 이동에 맞춰 보정.
+    int cur = state.currentSeg;
+    if (cur == old) {
+      cur = to;
+    } else {
+      if (old < cur) cur -= 1; // 앞에서 빠지면 한 칸 당겨짐
+      if (to <= cur) cur += 1; // 앞에 끼어들면 한 칸 밀림
+    }
+    cur = cur.clamp(0, segs.length - 1);
+
+    emit(state.copyWith(segments: segs, currentSeg: cur));
   }
 
   void _onRestore(TimerRestore event, Emitter<TimerState> emit) {
