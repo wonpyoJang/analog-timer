@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tray_manager/tray_manager.dart';
@@ -90,27 +91,28 @@ class DesktopService with WindowListener, TrayListener {
     }
   }
 
-  /// 완전 종료 — 상태 저장(best-effort) 후 네이티브 close 경로로 깔끔히 종료.
+  /// 완전 종료 — 상태 저장 후 프로세스를 즉시·확실히 강제 종료한다.
   ///
-  /// preventClose 를 해제하고 close() 를 호출하면 러너의 SetQuitOnClose(true)
-  /// 에 의해 메시지 루프가 정상 종료되어 프로세스가 깨끗이 끝난다.
-  /// (exit(0) 는 Flutter 멀티스레드 teardown 중 액세스 위반을 유발할 수 있어 지양)
+  /// window_manager.close() / exit(0) 는 Flutter 엔진·멀티윈도우(오버레이)
+  /// 엔진과 실행 중인 타이머/스트림의 teardown 레이스로 0xC0000005(액세스 위반)
+  /// 크래시와 '창 없는 좀비 프로세스'를 남기는 사례가 있었다. 그래서 저장만 마친 뒤
+  /// TerminateProcess(자기 자신)로 teardown 을 건너뛰고 즉시 종료한다.
   Future<void> quit() async {
     if (!isDesktop || _quitting) return;
     _quitting = true;
+    // 1) 상태 저장 (best-effort)
     final cb = onQuit;
     if (cb != null) {
       try {
         await cb();
       } catch (_) {}
     }
+    // 2) 트레이 아이콘 정리 — 지연/실패해도 종료를 막지 않도록 타임아웃
     try {
-      await trayManager.destroy();
+      await trayManager.destroy().timeout(const Duration(milliseconds: 300));
     } catch (_) {}
-    try {
-      await windowManager.setPreventClose(false);
-    } catch (_) {}
-    await windowManager.close();
+    // 3) 자기 프로세스 강제 종료 (Windows: TerminateProcess) — 크래시·좀비 방지
+    Process.killPid(pid, ProcessSignal.sigkill);
   }
 
   Future<void> _showWindow() async {
