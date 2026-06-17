@@ -11,26 +11,33 @@ import 'overlay_clock_painter.dart';
 
 const _kOverlayPosX = 'overlay_pos_x';
 const _kOverlayPosY = 'overlay_pos_y';
-const _overlaySize = Size(220, 270);
+const _kOverlayScale = 'overlay_scale';
+const _overlayBase = Size(220, 270); // scale=1 기준(디자인) 크기
+const _scaleMin = 0.7;
+const _scaleMax = 1.8;
+
+Size _sizeForScale(double s) => Size(_overlayBase.width * s, _overlayBase.height * s);
 
 /// 서브윈도우(오버레이) 진입점 — frameless / always-on-top / skipTaskbar 로 구성 후 실행.
 ///
 /// 서브윈도우에선 window_manager 의 getPosition / onWindowMoved 가 동작하지 않으므로,
 /// 위치는 Dart 에서 직접 추적(드래그 시 setPosition)하고 prefs 에 저장한다.
 Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
+  final prefs = await SharedPreferences.getInstance();
+  final scale = (prefs.getDouble(_kOverlayScale) ?? 1.0).clamp(_scaleMin, _scaleMax);
+  final initialPos = await _resolveInitialPosition(prefs, scale);
   // 배경을 불투명 다크로 — 투명 레이어드 윈도우는 일부(구형/Intel) GPU 에서
   // 합성에 실패해 '회색 빈 화면'으로 뜨는 사례가 있어, 투명 의존을 제거한다.
-  const opts = WindowOptions(
-    size: _overlaySize,
-    minimumSize: _overlaySize,
-    backgroundColor: Color(0xFF0E0E0F),
+  final opts = WindowOptions(
+    size: _sizeForScale(scale),
+    minimumSize: _sizeForScale(_scaleMin),
+    maximumSize: _sizeForScale(_scaleMax),
+    backgroundColor: const Color(0xFF0E0E0F),
     skipTaskbar: true,
     titleBarStyle: TitleBarStyle.hidden,
     windowButtonVisibility: false,
     alwaysOnTop: true,
   );
-  final prefs = await SharedPreferences.getInstance();
-  final initialPos = await _resolveInitialPosition(prefs);
   await windowManager.waitUntilReadyToShow(opts, () async {
     await windowManager.setAsFrameless();
     await windowManager.setAlwaysOnTop(true);
@@ -44,12 +51,16 @@ Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
       mainWindowId: args['mainWindowId'] as String? ?? '0',
       initial: args,
       initialPos: initialPos,
+      initialScale: scale.toDouble(),
     ),
   );
 }
 
 /// 저장된 위치가 있으면 그것을, 없으면 기본 작업영역 우상단을 반환.
-Future<Offset> _resolveInitialPosition(SharedPreferences prefs) async {
+Future<Offset> _resolveInitialPosition(
+  SharedPreferences prefs,
+  double scale,
+) async {
   final x = prefs.getDouble(_kOverlayPosX);
   final y = prefs.getDouble(_kOverlayPosY);
   if (x != null && y != null) return Offset(x, y);
@@ -58,7 +69,7 @@ Future<Offset> _resolveInitialPosition(SharedPreferences prefs) async {
     final size = display.visibleSize ?? display.size;
     final origin = display.visiblePosition ?? Offset.zero;
     return Offset(
-      origin.dx + size.width - _overlaySize.width - 12,
+      origin.dx + size.width - _sizeForScale(scale).width - 12,
       origin.dy + 12,
     );
   } catch (_) {
@@ -70,11 +81,13 @@ class DesktopOverlayApp extends StatelessWidget {
   final String mainWindowId;
   final Map<String, dynamic> initial;
   final Offset initialPos;
+  final double initialScale;
   const DesktopOverlayApp({
     super.key,
     required this.mainWindowId,
     required this.initial,
     required this.initialPos,
+    required this.initialScale,
   });
 
   @override
@@ -85,6 +98,7 @@ class DesktopOverlayApp extends StatelessWidget {
         mainWindowId: mainWindowId,
         initial: initial,
         initialPos: initialPos,
+        initialScale: initialScale,
       ),
     );
   }
@@ -94,10 +108,12 @@ class _OverlayBody extends StatefulWidget {
   final String mainWindowId;
   final Map<String, dynamic> initial;
   final Offset initialPos;
+  final double initialScale;
   const _OverlayBody({
     required this.mainWindowId,
     required this.initial,
     required this.initialPos,
+    required this.initialScale,
   });
 
   @override
@@ -122,21 +138,17 @@ class _OverlayBodyState extends State<_OverlayBody>
   DateTime _now = DateTime.now();
   Timer? _clockTimer;
   Timer? _displayTimer;
+  Timer? _topmostTimer;
   late Offset _winPos; // Dart 측에서 추적하는 창 좌상단(논리 px)
+  late double _scale; // 위젯 크기 배율
   DateTime? _displayLastTick;
   late final AnimationController _blinkCtrl;
-
-  // "다음" 버튼 2초 카운트다운 — 그 사이 다시 탭하면 취소(모바일/웹과 동일)
-  bool _nextCounting = false;
-  double _nextPct = 0.0;
-  DateTime? _nextStart;
-  Timer? _nextFrameTimer;
-  static const _nextDelay = Duration(seconds: 2);
 
   @override
   void initState() {
     super.initState();
     _winPos = widget.initialPos;
+    _scale = widget.initialScale;
     _applyState(widget.initial);
     _clockTimer = Timer.periodic(
       const Duration(milliseconds: 250),
@@ -144,6 +156,12 @@ class _OverlayBodyState extends State<_OverlayBody>
         if (mounted) setState(() => _now = DateTime.now());
       },
     );
+    // always-on-top 주기적 재확보 — 다른 창에 가려 '사라진 것처럼' 보이는 것 방지.
+    _topmostTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      try {
+        await windowManager.setAlwaysOnTop(true);
+      } catch (_) {}
+    });
     _blinkCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -246,36 +264,16 @@ class _OverlayBodyState extends State<_OverlayBody>
     } catch (_) {}
   }
 
-  // ── "다음" 2초 카운트다운(취소 가능) ──────────────────────────
-  void _startNextCountdown() {
-    setState(() {
-      _nextCounting = true;
-      _nextPct = 0.0;
-      _nextStart = DateTime.now();
-    });
-    _animNext();
-  }
-
-  void _cancelNextCountdown() {
-    _nextFrameTimer?.cancel();
-    setState(() {
-      _nextCounting = false;
-      _nextPct = 0.0;
-      _nextStart = null;
-    });
-  }
-
-  void _animNext() {
-    if (!_nextCounting || _nextStart == null || !mounted) return;
-    final elapsed = DateTime.now().difference(_nextStart!).inMilliseconds;
-    final pct = (elapsed / _nextDelay.inMilliseconds).clamp(0.0, 1.0);
-    setState(() => _nextPct = pct);
-    if (pct >= 1.0) {
-      _cancelNextCountdown();
-      _sendAction('timer_next');
-      return;
-    }
-    _nextFrameTimer = Timer(const Duration(milliseconds: 16), _animNext);
+  // ── 크기 조절 ────────────────────────────────────────────────
+  Future<void> _changeScale(double delta) async {
+    final next = (_scale + delta).clamp(_scaleMin, _scaleMax).toDouble();
+    if (next == _scale) return;
+    setState(() => _scale = next);
+    try {
+      await windowManager.setSize(_sizeForScale(next));
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_kOverlayScale, next);
+    } catch (_) {}
   }
 
   // 시계 영역 드래그 = 네이티브 startDragging 으로 부드럽게 이동(떨림 없음).
@@ -313,24 +311,38 @@ class _OverlayBodyState extends State<_OverlayBody>
   void dispose() {
     _clockTimer?.cancel();
     _displayTimer?.cancel();
-    _nextFrameTimer?.cancel();
+    _topmostTimer?.cancel();
     _blinkCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // 내용은 고정 디자인 크기(_overlayBase)로 그리고, FittedBox 로 실제 창 크기에
+    // 균일 스케일 → 크기 조절 시 시계·글자·버튼이 한꺼번에 비율대로 커지고 작아짐.
     return Material(
       color: const Color(0xFF0E0E0F),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF0E0E0F),
-          border: Border.all(color: const Color(0xFF2E2E32)),
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: SizedBox(
+          width: _overlayBase.width,
+          height: _overlayBase.height,
+          child: _buildContent(),
         ),
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0E0E0F),
+        border: Border.all(color: const Color(0xFF2E2E32)),
+      ),
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
             // 시계 영역 = 드래그로 창 이동 (서브윈도우라 위치를 직접 추적)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -362,8 +374,7 @@ class _OverlayBodyState extends State<_OverlayBody>
             _controlBar(),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _centerInfo() {
@@ -416,39 +427,23 @@ class _OverlayBodyState extends State<_OverlayBody>
     final timerColor = _effectiveTimerColor;
 
     Widget btn(IconData icon, Color color, VoidCallback onTap,
-        {double fill = 0.0}) {
-      Widget inner = Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: const Color(0xCC1A1A1C),
-          shape: BoxShape.circle,
-          border: Border.all(color: color.withValues(alpha: 0.4)),
-        ),
-        child: Icon(icon, color: color, size: 16),
-      );
-      // 카운트다운 진행률을 좌→우 fill 로 표시
-      if (fill > 0) {
-        inner = ClipOval(
-          child: SizedBox(
-            width: 34,
-            height: 34,
-            child: Stack(
-              children: [
-                inner,
-                Positioned.fill(
-                  child: FractionallySizedBox(
-                    widthFactor: fill,
-                    alignment: Alignment.centerLeft,
-                    child: Container(color: color.withValues(alpha: 0.35)),
-                  ),
-                ),
-              ],
+        {double size = 30}) {
+      return GestureDetector(
+        onTap: onTap,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: const Color(0xCC1A1A1C),
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withValues(alpha: 0.4)),
             ),
+            child: Icon(icon, color: color, size: size * 0.46),
           ),
-        );
-      }
-      return GestureDetector(onTap: onTap, child: inner);
+        ),
+      );
     }
 
     return Row(
@@ -457,19 +452,16 @@ class _OverlayBodyState extends State<_OverlayBody>
         if (_timerActive) ...[
           btn(_timerRunning ? Icons.pause : Icons.play_arrow, timerColor,
               () => _sendAction('timer_toggle')),
-          // ⏭ 탭 → 2초 카운트다운(좌→우 fill), 완료 시 다음 / 카운트 중 탭 시 취소
-          btn(
-            _nextCounting ? Icons.close : Icons.skip_next,
-            _nextCounting
-                ? const Color(0xFFFFC107)
-                : timerColor.withValues(alpha: 0.75),
-            _nextCounting ? _cancelNextCountdown : _startNextCountdown,
-            fill: _nextCounting ? _nextPct : 0.0,
-          ),
+          // ⏭ 즉시 다음(카운트다운 없음)
+          btn(Icons.skip_next, timerColor.withValues(alpha: 0.75),
+              () => _sendAction('timer_next')),
         ],
         if (_swActive || _swElapsedMs > 0)
           btn(_swRunning ? Icons.stop : Icons.play_arrow, swColor,
               () => _sendAction('sw_toggle')),
+        // 크기 조절 −/+
+        btn(Icons.remove, Colors.white54, () => _changeScale(-0.15), size: 26),
+        btn(Icons.add, Colors.white54, () => _changeScale(0.15), size: 26),
         btn(Icons.close, Colors.white54, () => _sendAction('overlay_hide')),
       ],
     );

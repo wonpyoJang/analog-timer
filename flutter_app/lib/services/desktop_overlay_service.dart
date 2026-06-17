@@ -20,6 +20,10 @@ class DesktopOverlayService {
   WindowController? _overlay;
   bool get isShown => _overlay != null;
 
+  bool _shouldShow = false; // 사용자가 위젯을 켜둔 상태인지
+  DateTime? _lastCreate;
+  int _updateFails = 0;
+
   /// 메인 윈도우에서 1회 호출 — 오버레이가 보내는 'action' 수신 핸들러 등록.
   Future<void> init() async {
     if (!isDesktop) return;
@@ -40,6 +44,7 @@ class DesktopOverlayService {
   /// 오버레이 표시 — 없으면 생성, 있으면 다시 보이기.
   Future<void> show(Map<String, dynamic> initialState) async {
     if (!isDesktop) return;
+    _shouldShow = true;
     if (_overlay != null) {
       try {
         await _overlay!.show();
@@ -47,18 +52,25 @@ class DesktopOverlayService {
       await update(initialState);
       return;
     }
+    await _create(initialState);
+  }
+
+  Future<void> _create(Map<String, dynamic> state) async {
     final args = <String, dynamic>{
-      ...initialState,
+      ...state,
       'role': 'overlay',
       'mainWindowId': selfWindowId,
     };
     _overlay = await WindowController.create(
       WindowConfiguration(arguments: jsonEncode(args), hiddenAtLaunch: true),
     );
+    _lastCreate = DateTime.now();
+    _updateFails = 0;
     // 서브윈도우가 자체적으로 window_manager 로 frameless/always-on-top 구성 후 show().
   }
 
   Future<void> hide() async {
+    _shouldShow = false;
     if (_overlay == null) return;
     try {
       await _overlay!.hide();
@@ -66,10 +78,29 @@ class DesktopOverlayService {
   }
 
   /// 타이머 상태 스냅샷을 오버레이로 push (~48ms 주기).
+  ///
+  /// 서브윈도우가 모종의 이유로 사라지면 invokeMethod 가 실패한다. 위젯이 켜진
+  /// 상태에서 연속 실패가 누적되면 오버레이를 자동 재생성해 '사라짐'을 복구한다.
   Future<void> update(Map<String, dynamic> state) async {
-    if (_overlay == null) return;
+    final ov = _overlay;
+    if (ov == null) return;
     try {
-      await _overlay!.invokeMethod('update', jsonEncode(state));
-    } catch (_) {}
+      await ov.invokeMethod('update', jsonEncode(state));
+      _updateFails = 0;
+    } catch (_) {
+      if (!_shouldShow) return;
+      // 생성 직후(엔진 준비 중) 잠깐의 실패는 무시.
+      final last = _lastCreate;
+      if (last != null &&
+          DateTime.now().difference(last) < const Duration(seconds: 2)) {
+        return;
+      }
+      // 연속 3회(≈150ms) 실패 시에만 재생성 — 일시적 오류로 인한 오작동 방지.
+      if (++_updateFails < 3) return;
+      _overlay = null;
+      try {
+        await _create(state);
+      } catch (_) {}
+    }
   }
 }
