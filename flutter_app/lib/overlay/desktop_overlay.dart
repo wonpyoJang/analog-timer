@@ -42,6 +42,12 @@ Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
     await windowManager.setAsFrameless();
     await windowManager.setAlwaysOnTop(true);
     await windowManager.setHasShadow(true);
+    // 드래그 리사이즈가 비율을 유지하도록 종횡비 고정(미지원 플랫폼은 무시).
+    try {
+      await windowManager.setAspectRatio(
+        _overlayBase.width / _overlayBase.height,
+      );
+    } catch (_) {}
     await windowManager.setPosition(initialPos);
     await windowManager.show();
     await windowManager.focus();
@@ -140,7 +146,6 @@ class _OverlayBodyState extends State<_OverlayBody>
   Timer? _displayTimer;
   Timer? _topmostTimer;
   late Offset _winPos; // Dart 측에서 추적하는 창 좌상단(논리 px)
-  late double _scale; // 위젯 크기 배율
   DateTime? _displayLastTick;
   late final AnimationController _blinkCtrl;
 
@@ -148,7 +153,6 @@ class _OverlayBodyState extends State<_OverlayBody>
   void initState() {
     super.initState();
     _winPos = widget.initialPos;
-    _scale = widget.initialScale;
     _applyState(widget.initial);
     _clockTimer = Timer.periodic(
       const Duration(milliseconds: 250),
@@ -264,16 +268,32 @@ class _OverlayBodyState extends State<_OverlayBody>
     } catch (_) {}
   }
 
-  // ── 크기 조절 ────────────────────────────────────────────────
-  Future<void> _changeScale(double delta) async {
-    final next = (_scale + delta).clamp(_scaleMin, _scaleMax).toDouble();
-    if (next == _scale) return;
-    setState(() => _scale = next);
+  // ── 크기 조절 (우하단 그립 드래그) ───────────────────────────
+  // 네이티브 startResizing 으로 부드럽게 리사이즈(종횡비 고정). 릴리즈까지
+  // await 가 블록되므로 그 후 커서 기준으로 최종 크기를 계산해 배율을 저장한다.
+  bool _resizing = false;
+  Future<void> _onResizeStart(DragStartDetails _) async {
+    if (_resizing) return;
+    _resizing = true;
     try {
-      await windowManager.setSize(_sizeForScale(next));
+      await windowManager.startResizing(ResizeEdge.bottomRight);
+    } catch (_) {
+      _resizing = false;
+      return;
+    }
+    try {
+      // 우하단 리사이즈 → 좌상단(_winPos)은 고정, 폭은 커서 − 좌상단.
+      final cursor = await screenRetriever.getCursorScreenPoint();
+      final width = (cursor.dx - _winPos.dx).clamp(
+        _sizeForScale(_scaleMin).width,
+        _sizeForScale(_scaleMax).width,
+      );
+      final scale =
+          (width / _overlayBase.width).clamp(_scaleMin, _scaleMax).toDouble();
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble(_kOverlayScale, next);
+      await prefs.setDouble(_kOverlayScale, scale);
     } catch (_) {}
+    _resizing = false;
   }
 
   // 시계 영역 드래그 = 네이티브 startDragging 으로 부드럽게 이동(떨림 없음).
@@ -322,13 +342,35 @@ class _OverlayBodyState extends State<_OverlayBody>
     // 균일 스케일 → 크기 조절 시 시계·글자·버튼이 한꺼번에 비율대로 커지고 작아짐.
     return Material(
       color: const Color(0xFF0E0E0F),
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: SizedBox(
-          width: _overlayBase.width,
-          height: _overlayBase.height,
-          child: _buildContent(),
-        ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: FittedBox(
+              fit: BoxFit.contain,
+              child: SizedBox(
+                width: _overlayBase.width,
+                height: _overlayBase.height,
+                child: _buildContent(),
+              ),
+            ),
+          ),
+          // 우하단 리사이즈 그립 — 드래그로 창 크기 조절
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanStart: _onResizeStart,
+              child: const MouseRegion(
+                cursor: SystemMouseCursors.resizeUpLeftDownRight,
+                child: Padding(
+                  padding: EdgeInsets.all(3),
+                  child: _ResizeGrip(),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -459,11 +501,32 @@ class _OverlayBodyState extends State<_OverlayBody>
         if (_swActive || _swElapsedMs > 0)
           btn(_swRunning ? Icons.stop : Icons.play_arrow, swColor,
               () => _sendAction('sw_toggle')),
-        // 크기 조절 −/+
-        btn(Icons.remove, Colors.white54, () => _changeScale(-0.15), size: 26),
-        btn(Icons.add, Colors.white54, () => _changeScale(0.15), size: 26),
         btn(Icons.close, Colors.white54, () => _sendAction('overlay_hide')),
       ],
     );
   }
+}
+
+/// 우하단 리사이즈 그립(대각선 3줄).
+class _ResizeGrip extends StatelessWidget {
+  const _ResizeGrip();
+  @override
+  Widget build(BuildContext context) =>
+      CustomPaint(size: const Size(13, 13), painter: _GripPainter());
+}
+
+class _GripPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final p = Paint()
+      ..color = const Color(0x88FFFFFF)
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(s.width, s.height * 0.35), Offset(s.width * 0.35, s.height), p);
+    canvas.drawLine(Offset(s.width, s.height * 0.62), Offset(s.width * 0.62, s.height), p);
+    canvas.drawLine(Offset(s.width, s.height * 0.88), Offset(s.width * 0.88, s.height), p);
+  }
+
+  @override
+  bool shouldRepaint(_GripPainter old) => false;
 }
