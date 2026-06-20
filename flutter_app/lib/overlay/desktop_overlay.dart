@@ -438,7 +438,7 @@ class _OverlayBodyState extends State<_OverlayBody>
                       fontSize: 13,
                       letterSpacing: 1.2,
                       color: _effectiveTimerColor.withValues(alpha: 0.75),
-                      shadows: textOutline(),
+                      shadows: textOutline(layers: 2),
                     ),
                   ),
                 Text(
@@ -447,7 +447,7 @@ class _OverlayBodyState extends State<_OverlayBody>
                     fontSize: 26,
                     color: _effectiveTimerColor,
                     letterSpacing: 1,
-                    shadows: textOutline(width: 1.8),
+                    shadows: textOutline(layers: 5),
                   ),
                 ),
               ],

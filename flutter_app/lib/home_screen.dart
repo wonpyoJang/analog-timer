@@ -729,7 +729,7 @@ class _CenterInfo extends StatelessWidget {
                 fontSize: 16,
                 letterSpacing: 1.5,
                 color: seg.color,
-                shadows: textOutline(),
+                shadows: textOutline(layers: 2),
               ),
             ),
             Text(
@@ -738,7 +738,7 @@ class _CenterInfo extends StatelessWidget {
                 fontSize: 48,
                 color: seg.color,
                 letterSpacing: 1,
-                shadows: textOutline(width: 2),
+                shadows: textOutline(layers: 5),
               ),
             ),
           ] else ...[

@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// 시계 나선·바늘 등 복잡한 배경 위에서 글자 가독성을 높이기 위한 어두운 외곽선.
+/// 시계 나선·바늘 위 글자 가독성용 — 부드러운 어두운 후광.
 ///
-/// TextStyle.shadows 에 8방향 그림자를 깔아 테두리처럼 보이게 한다(글자색과 공존).
-/// 예: `style.copyWith(shadows: textOutline())`
+/// 하드 외곽선(offset 그림자 8방향)은 작은 한글 글자의 가는 획 사이를 메워
+/// 뭉개지므로, blur 후광을 여러 겹 쌓아 글자 모양은 유지한 채 배경과만 분리한다.
+/// [layers] 가 클수록 후광이 진해진다.
 List<Shadow> textOutline({
-  Color color = const Color(0xFF0E0E0F),
-  double width = 1.6,
-}) {
-  const dirs = <Offset>[
-    Offset(-1, -1), Offset(1, -1), Offset(1, 1), Offset(-1, 1),
-    Offset(0, -1), Offset(0, 1), Offset(-1, 0), Offset(1, 0),
-  ];
-  return [for (final d in dirs) Shadow(offset: d * width, color: color)];
-}
+  Color color = const Color(0xCC060607),
+  double blur = 3,
+  int layers = 3,
+}) =>
+    [for (var i = 0; i < layers; i++) Shadow(color: color, blurRadius: blur)];
