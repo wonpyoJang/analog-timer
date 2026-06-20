@@ -19,6 +19,7 @@ class PresetBar extends StatefulWidget {
 
 class _PresetBarState extends State<PresetBar> {
   List<Preset> _userPresets = const [];
+  Set<String> _hidden = {};
   bool _loaded = false;
 
   @override
@@ -37,9 +38,11 @@ class _PresetBarState extends State<PresetBar> {
             .map(Preset.fromJson)
             .where((p) => !Preset.builtinEnNames.contains(p.name))
             .toList();
+    final hidden = (await PersistenceService.loadHiddenDefaults()).toSet();
     if (!mounted) return;
     setState(() {
       _userPresets = list;
+      _hidden = hidden;
       _loaded = true;
     });
   }
@@ -162,11 +165,12 @@ class _PresetBarState extends State<PresetBar> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           for (final p in defaults)
-            _PresetChip(
-              preset: p,
-              deletable: false,
-              onApply: () => _apply(p),
-            ),
+            if (!_hidden.contains(p.builtinKey))
+              _PresetChip(
+                preset: p,
+                deletable: false,
+                onApply: () => _apply(p),
+              ),
           for (final e in _userPresets.asMap().entries)
             _PresetChip(
               preset: e.value,

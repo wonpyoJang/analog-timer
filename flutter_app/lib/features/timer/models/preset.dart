@@ -10,7 +10,16 @@ class Preset {
   final List<Segment> segments;
   final bool loop;
 
-  const Preset({required this.name, required this.segments, required this.loop});
+  /// 기본(빌트인) 프리셋을 언어와 무관하게 식별하는 안정적 키.
+  /// 사용자 프리셋은 null. prefs에는 저장하지 않는다.
+  final String? builtinKey;
+
+  const Preset({
+    required this.name,
+    required this.segments,
+    required this.loop,
+    this.builtinKey,
+  });
 
   /// 적용할 때마다 새 [Segment] 인스턴스(=새 id)를 만들어, 같은 프리셋을
   /// 반복 적용해도 ReorderableListView 키(id)가 충돌하지 않게 한다.
@@ -38,15 +47,15 @@ class Preset {
 
   /// 현재 언어로 생성하는 기본 프리셋(집중=주황 segColors[3], 휴식=파랑 segColors[1]).
   static List<Preset> defaultsFor(AppLocalizations l) => [
-    Preset(name: l.presetPomodoro, loop: true, segments: [
+    Preset(name: l.presetPomodoro, loop: true, builtinKey: 'pomodoro', segments: [
       Segment(name: l.segFocus, minutes: 25, color: AppColors.segColors[3]),
       Segment(name: l.segBreak, minutes: 5, color: AppColors.segColors[1]),
     ]),
-    Preset(name: l.preset5217, loop: true, segments: [
+    Preset(name: l.preset5217, loop: true, builtinKey: 'fifty2seventeen', segments: [
       Segment(name: l.segFocus, minutes: 52, color: AppColors.segColors[3]),
       Segment(name: l.segBreak, minutes: 17, color: AppColors.segColors[1]),
     ]),
-    Preset(name: l.presetDeepwork, loop: false, segments: [
+    Preset(name: l.presetDeepwork, loop: false, builtinKey: 'deepwork', segments: [
       Segment(name: l.segFocus, minutes: 90, color: AppColors.segColors[3]),
       Segment(name: l.segBreak, minutes: 20, color: AppColors.segColors[1]),
     ]),

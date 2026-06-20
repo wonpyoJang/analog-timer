@@ -7,6 +7,18 @@ class PersistenceService {
   static const _kSwData = 'sw_data';
   static const _kPresets = 'presets';
   static const _kLocale = 'locale';
+  static const _kHiddenDefaults = 'hidden_default_presets';
+
+  /// 숨긴 기본 프리셋의 builtinKey 목록 저장.
+  static Future<void> saveHiddenDefaults(List<String> keys) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kHiddenDefaults, keys);
+  }
+
+  static Future<List<String>> loadHiddenDefaults() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kHiddenDefaults) ?? const [];
+  }
 
   /// 수동 선택 언어 태그 저장(null=시스템 기본값으로 되돌림). 예: 'en', 'ko', 'zh_Hant'
   static Future<void> saveLocale(String? tag) async {

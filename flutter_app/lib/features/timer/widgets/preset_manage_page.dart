@@ -15,6 +15,7 @@ class PresetManagePage extends StatefulWidget {
 
 class _PresetManagePageState extends State<PresetManagePage> {
   List<Preset> _userPresets = const [];
+  Set<String> _hidden = {};
   bool _loaded = false;
 
   @override
@@ -32,11 +33,24 @@ class _PresetManagePageState extends State<PresetManagePage> {
             .map(Preset.fromJson)
             .where((p) => !Preset.builtinEnNames.contains(p.name))
             .toList();
+    final hidden = (await PersistenceService.loadHiddenDefaults()).toSet();
     if (!mounted) return;
     setState(() {
       _userPresets = list;
+      _hidden = hidden;
       _loaded = true;
     });
+  }
+
+  Future<void> _toggleHidden(String key) async {
+    setState(() {
+      if (_hidden.contains(key)) {
+        _hidden = {..._hidden}..remove(key);
+      } else {
+        _hidden = {..._hidden, key};
+      }
+    });
+    await PersistenceService.saveHiddenDefaults(_hidden.toList());
   }
 
   Future<void> _persist() => PersistenceService.savePresets(
@@ -131,9 +145,14 @@ class _PresetManagePageState extends State<PresetManagePage> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // 기본 프리셋(읽기 전용) — 현재 언어로 생성.
+                // 기본 프리셋(읽기 전용) — 현재 언어로 생성. 숨김 토글만 가능.
                 for (final p in Preset.defaultsFor(l))
-                  _PresetCard(preset: p, builtin: true),
+                  _PresetCard(
+                    preset: p,
+                    builtin: true,
+                    hidden: _hidden.contains(p.builtinKey),
+                    onToggleHidden: () => _toggleHidden(p.builtinKey!),
+                  ),
                 // 사용자 프리셋 — 편집/삭제 가능.
                 for (final e in _userPresets.asMap().entries)
                   _PresetCard(
@@ -151,13 +170,17 @@ class _PresetManagePageState extends State<PresetManagePage> {
 class _PresetCard extends StatelessWidget {
   final Preset preset;
   final bool builtin;
+  final bool hidden;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onToggleHidden;
   const _PresetCard({
     required this.preset,
     required this.builtin,
+    this.hidden = false,
     this.onEdit,
     this.onDelete,
+    this.onToggleHidden,
   });
 
   @override
@@ -166,7 +189,7 @@ class _PresetCard extends StatelessWidget {
     final summary = preset.segments
         .map((s) => '${s.name} ${s.minutes}${l.minutesUnit}')
         .join(' · ');
-    return Container(
+    final card = Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -219,12 +242,15 @@ class _PresetCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          if (builtin)
-            const Padding(
-              padding: EdgeInsets.all(5),
-              child: Icon(Icons.lock_outline, size: 18, color: AppColors.muted),
-            )
-          else ...[
+          if (builtin) ...[
+            const Icon(Icons.lock_outline, size: 16, color: AppColors.muted),
+            const SizedBox(width: 4),
+            _IconBtn(
+              icon: hidden ? Icons.visibility_off : Icons.visibility,
+              color: AppColors.muted,
+              onTap: onToggleHidden!,
+            ),
+          ] else ...[
             _IconBtn(icon: Icons.edit_outlined, color: AppColors.text, onTap: onEdit!),
             const SizedBox(width: 4),
             _IconBtn(icon: Icons.delete_outline, color: AppColors.danger, onTap: onDelete!),
@@ -232,6 +258,8 @@ class _PresetCard extends StatelessWidget {
         ],
       ),
     );
+    // 숨김 상태인 기본 카드는 흐리게 표시(되돌릴 수 있게 사라지진 않음).
+    return Opacity(opacity: hidden ? 0.45 : 1.0, child: card);
   }
 }
 
