@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'overlay_clock_painter.dart';
 
 class TimerOverlayWidget extends StatefulWidget {
@@ -395,7 +394,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                 if (_timerLabel.isNotEmpty)
                   Text(
                     _timerLabel,
-                    style: GoogleFonts.bebasNeue(
+                    style: TextStyle(fontFamily: 'Pretendard',
                       fontSize: 15,
                       letterSpacing: 1.5,
                       color: _effectiveTimerColor.withValues(alpha: 0.75),
@@ -403,7 +402,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                   ),
                 Text(
                   _timerRemain,
-                  style: GoogleFonts.bebasNeue(
+                  style: TextStyle(fontFamily: 'Pretendard',
                     fontSize: 30,
                     color: _effectiveTimerColor,
                     letterSpacing: 1,
@@ -413,7 +412,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
               if (_swActive)
                 Text(
                   '⏲ $_swElapsed',
-                  style: GoogleFonts.bebasNeue(
+                  style: TextStyle(fontFamily: 'Pretendard',
                     fontSize: 20,
                     color: const Color(0xFF2EA84A),
                     letterSpacing: 1,
@@ -481,13 +480,14 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   }
 
   Widget _buildPillContent() {
-    final valueStyle = GoogleFonts.bebasNeue(
+    final valueStyle = TextStyle(fontFamily: 'Pretendard',
       fontSize: 24,
       letterSpacing: 1,
       height: 1,
       fontWeight: FontWeight.w400,
     );
-    final labelStyle = GoogleFonts.notoSansKr(
+    final labelStyle = const TextStyle(
+      fontFamily: 'Pretendard',
       fontSize: 12,
       letterSpacing: 0.5,
       height: 1,

@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 import 'overlay_clock_painter.dart';
+import '../widgets/date_label.dart';
 import '../widgets/text_outline.dart';
 
 const _kOverlayPosX = 'overlay_pos_x';
@@ -377,7 +377,12 @@ class _OverlayBodyState extends State<_OverlayBody>
   }
 
   Widget _buildContent() {
-    return Container(
+    // 위젯 전체를 드래그 영역으로 — 빈 곳·날짜·시계 어디를 잡아도 창이 이동.
+    // (컨트롤 바 버튼/리사이즈 그립은 자체 제스처가 우선 처리되어 예외)
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onPanStart: _onDragStart,
+      child: Container(
       decoration: BoxDecoration(
         color: const Color(0xFF0E0E0F),
         border: Border.all(color: const Color(0xFF2E2E32)),
@@ -386,6 +391,21 @@ class _OverlayBodyState extends State<_OverlayBody>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+            // 날짜·요일 — 시계 위 한 줄
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                formatDateLine(_now),
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.8,
+                  color: const Color(0xFFE8E6E0).withAlpha(0x99),
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
             // 시계 영역 = 드래그로 창 이동 (서브윈도우라 위치를 직접 추적)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -417,7 +437,8 @@ class _OverlayBodyState extends State<_OverlayBody>
             _controlBar(),
           ],
         ),
-      );
+      ),
+    );
   }
 
   Widget _centerInfo() {
@@ -438,7 +459,7 @@ class _OverlayBodyState extends State<_OverlayBody>
                     child: OutlinedText(
                       _timerLabel,
                       strokeWidth: 1.2,
-                      style: GoogleFonts.bebasNeue(
+                      style: TextStyle(fontFamily: 'Pretendard',
                         fontSize: 13,
                         letterSpacing: 1.2,
                         color: _effectiveTimerColor,
@@ -449,10 +470,11 @@ class _OverlayBodyState extends State<_OverlayBody>
                   _timerRemain,
                   strokeWidth: 2.4,
                   shadows: textOutline(offset: const Offset(0, 1.5), blur: 2.5),
-                  style: GoogleFonts.bebasNeue(
+                  style: TextStyle(fontFamily: 'Pretendard',
                     fontSize: 26,
                     color: _effectiveTimerColor,
                     letterSpacing: 1,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ],
@@ -460,10 +482,11 @@ class _OverlayBodyState extends State<_OverlayBody>
                 OutlinedText(
                   '⏲ $_swElapsed',
                   strokeWidth: 1.8,
-                  style: GoogleFonts.bebasNeue(
+                  style: TextStyle(fontFamily: 'Pretendard',
                     fontSize: 17,
                     color: const Color(0xFF2EA84A),
                     letterSpacing: 1,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
             ],

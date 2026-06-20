@@ -1,0 +1,9 @@
+feat(ui): Pretendard 폰트 적용 · 날짜 표시 · 위젯 전체 드래그
+
+- 폰트: Bebas Neue → Pretendard 전면 교체(한글 정상 렌더), otf 4종 번들
+- 큰 숫자 등폭(tabular figures)으로 카운트다운 흔들림 제거
+- 헤더 "ANALOG TIMER" 를 FittedBox 로 감싸 잘림 방지(letterSpacing 축소)
+- 날짜·요일 표시: 메인 헤더 아래 + 오버레이 시계 위 (formatDateLine 공용 추출)
+- 오버레이 위젯 전체를 드래그 영역으로 — 빈 곳·날짜·시계 어디든 잡아 이동
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

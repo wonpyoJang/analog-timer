@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'theme/app_theme.dart';
 import 'features/timer/bloc/timer_bloc.dart';
 import 'features/timer/bloc/timer_event.dart';
@@ -16,6 +15,7 @@ import 'features/timer/widgets/segment_editor.dart';
 import 'features/stopwatch/widgets/stopwatch_controls.dart';
 import 'widgets/clock_painter.dart';
 import 'widgets/bottom_panels.dart';
+import 'widgets/date_label.dart';
 import 'widgets/text_outline.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
@@ -519,13 +519,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Flexible(
-                          child: Text(
-                            '⏱ ANALOG TIMER',
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.bebasNeue(
-                              fontSize: 34,
-                              letterSpacing: 4,
-                              color: AppColors.accent,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.center,
+                            child: Text(
+                              '⏱ ANALOG TIMER',
+                              maxLines: 1,
+                              softWrap: false,
+                              style: TextStyle(fontFamily: 'Pretendard',
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 2,
+                                color: AppColors.accent,
+                              ),
                             ),
                           ),
                         ),
@@ -597,6 +603,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         ],
                       ],
                     ),
+                    const SizedBox(height: 6),
+                    _DateLine(now: _now),
                     const SizedBox(height: 16),
 
                     _ClockWidget(now: _now),
@@ -658,6 +666,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           !identical(p.segments, c.segments),
       listener: (_, state) => _onTimerTransition(state),
       child: scaffold,
+    );
+  }
+}
+
+class _DateLine extends StatelessWidget {
+  final DateTime now;
+  const _DateLine({required this.now});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      formatDateLine(now),
+      style: TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 1,
+        color: AppColors.text.withAlpha(0xAA),
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
     );
   }
 }
@@ -726,7 +754,7 @@ class _CenterInfo extends StatelessWidget {
             OutlinedText(
               seg.name,
               strokeWidth: 1.4,
-              style: GoogleFonts.bebasNeue(
+              style: TextStyle(fontFamily: 'Pretendard',
                 fontSize: 16,
                 letterSpacing: 1.5,
                 color: seg.color,
@@ -736,19 +764,21 @@ class _CenterInfo extends StatelessWidget {
               _fmtMs(timerState.segRemainMs),
               strokeWidth: 3,
               shadows: textOutline(offset: const Offset(0, 2), blur: 3),
-              style: GoogleFonts.bebasNeue(
+              style: TextStyle(fontFamily: 'Pretendard',
                 fontSize: 48,
                 color: seg.color,
                 letterSpacing: 1,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ] else ...[
             Text(
               '--:--',
-              style: GoogleFonts.bebasNeue(
+              style: TextStyle(fontFamily: 'Pretendard',
                 fontSize: 48,
                 color: AppColors.timerOrangeDark.withAlpha(0x44),
                 letterSpacing: 1,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ],
@@ -757,10 +787,11 @@ class _CenterInfo extends StatelessWidget {
               '⏱ ${_fmtMs(swState.elapsedMs)}',
               strokeWidth: 2.4,
               shadows: textOutline(offset: const Offset(0, 2), blur: 3),
-              style: GoogleFonts.bebasNeue(
+              style: TextStyle(fontFamily: 'Pretendard',
                 fontSize: 30,
                 color: AppColors.swGreen,
                 letterSpacing: 1,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
         ],

@@ -182,8 +182,8 @@ class OverlayClockPainter extends CustomPainter {
         style: TextStyle(
           color: const Color(0xFF111111),
           fontSize: R * 0.13,
-          fontWeight: FontWeight.w900,
-          fontFamily: 'BebasNeue',
+          fontWeight: FontWeight.w700,
+          fontFamily: 'Pretendard',
         ),
       );
       tp.layout();
