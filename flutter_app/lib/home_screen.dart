@@ -16,6 +16,7 @@ import 'features/timer/widgets/segment_editor.dart';
 import 'features/stopwatch/widgets/stopwatch_controls.dart';
 import 'widgets/clock_painter.dart';
 import 'widgets/bottom_panels.dart';
+import 'widgets/text_outline.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
 import 'live_activity/live_activity_service.dart';
@@ -728,6 +729,7 @@ class _CenterInfo extends StatelessWidget {
                 fontSize: 16,
                 letterSpacing: 1.5,
                 color: seg.color,
+                shadows: textOutline(),
               ),
             ),
             Text(
@@ -736,6 +738,7 @@ class _CenterInfo extends StatelessWidget {
                 fontSize: 48,
                 color: seg.color,
                 letterSpacing: 1,
+                shadows: textOutline(width: 2),
               ),
             ),
           ] else ...[
@@ -755,6 +758,7 @@ class _CenterInfo extends StatelessWidget {
                 fontSize: 30,
                 color: AppColors.swGreen,
                 letterSpacing: 1,
+                shadows: textOutline(),
               ),
             ),
         ],

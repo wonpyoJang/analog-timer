@@ -8,6 +8,7 @@ import 'package:screen_retriever/screen_retriever.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 import 'overlay_clock_painter.dart';
+import '../widgets/text_outline.dart';
 
 const _kOverlayPosX = 'overlay_pos_x';
 const _kOverlayPosY = 'overlay_pos_y';
@@ -437,6 +438,7 @@ class _OverlayBodyState extends State<_OverlayBody>
                       fontSize: 13,
                       letterSpacing: 1.2,
                       color: _effectiveTimerColor.withValues(alpha: 0.75),
+                      shadows: textOutline(),
                     ),
                   ),
                 Text(
@@ -445,6 +447,7 @@ class _OverlayBodyState extends State<_OverlayBody>
                     fontSize: 26,
                     color: _effectiveTimerColor,
                     letterSpacing: 1,
+                    shadows: textOutline(width: 1.8),
                   ),
                 ),
               ],
@@ -455,6 +458,7 @@ class _OverlayBodyState extends State<_OverlayBody>
                     fontSize: 17,
                     color: const Color(0xFF2EA84A),
                     letterSpacing: 1,
+                    shadows: textOutline(),
                   ),
                 ),
             ],
