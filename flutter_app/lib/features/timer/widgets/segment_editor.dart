@@ -50,6 +50,11 @@ class SegmentEditor extends StatelessWidget {
                       key: ValueKey(e.value.id),
                       index: e.key,
                       segment: e.value,
+                      isActive:
+                          (state.status == TimerStatus.running ||
+                              state.status == TimerStatus.paused) &&
+                          e.key == state.currentSeg,
+                      isRunning: state.status == TimerStatus.running,
                     ),
                 ],
               ),
@@ -68,7 +73,15 @@ class SegmentEditor extends StatelessWidget {
 class _SegmentRow extends StatefulWidget {
   final int index;
   final Segment segment;
-  const _SegmentRow({super.key, required this.index, required this.segment});
+  final bool isActive;
+  final bool isRunning;
+  const _SegmentRow({
+    super.key,
+    required this.index,
+    required this.segment,
+    this.isActive = false,
+    this.isRunning = false,
+  });
 
   @override
   State<_SegmentRow> createState() => _SegmentRowState();
@@ -136,12 +149,28 @@ class _SegmentRowState extends State<_SegmentRow> {
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF111113),
-        border: Border.all(color: AppColors.border),
+        // 진행 중인 세그먼트는 주황 테두리 + 옅은 배경으로 강조
+        color: widget.isActive
+            ? AppColors.timerOrange.withAlpha(0x24)
+            : const Color(0xFF111113),
+        border: Border.all(
+          color: widget.isActive ? AppColors.timerOrange : AppColors.border,
+          width: widget.isActive ? 1.5 : 1,
+        ),
         borderRadius: BorderRadius.circular(7),
       ),
       child: Row(
         children: [
+          // 진행 중 표시 — active 일 때만(재생/일시정지)
+          if (widget.isActive)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(
+                widget.isRunning ? Icons.play_arrow : Icons.pause,
+                size: 15,
+                color: AppColors.timerOrange,
+              ),
+            ),
           // 드래그 핸들 — 순서 변경
           ReorderableDragStartListener(
             index: widget.index,
