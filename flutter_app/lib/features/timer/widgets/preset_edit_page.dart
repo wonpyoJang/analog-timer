@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../models/preset.dart';
 import '../models/segment.dart';
@@ -25,7 +26,7 @@ class _PresetEditPageState extends State<PresetEditPage> {
     final init = widget.initial;
     _nameCtrl = TextEditingController(text: init?.name ?? '');
     _segs = init == null
-        ? [Segment(name: '집중', minutes: 25, color: AppColors.segColors[3])]
+        ? [Segment(name: 'Focus', minutes: 25, color: AppColors.segColors[3])]
         : [
             for (final s in init.segments)
               Segment(name: s.name, minutes: s.minutes, color: s.color),
@@ -45,7 +46,7 @@ class _PresetEditPageState extends State<PresetEditPage> {
           AppColors.segColors[_segs.length % AppColors.segColors.length];
       _segs = [
         ..._segs,
-        Segment(name: '세그먼트 ${_segs.length + 1}', minutes: 5, color: color),
+        Segment(name: 'Segment ${_segs.length + 1}', minutes: 5, color: color),
       ];
     });
   }
@@ -72,15 +73,16 @@ class _PresetEditPageState extends State<PresetEditPage> {
   }
 
   void _save() {
+    final l = AppLocalizations.of(context);
     final name = _nameCtrl.text.trim();
     final messenger = ScaffoldMessenger.of(context);
     if (name.isEmpty) {
-      messenger.showSnackBar(const SnackBar(content: Text('이름을 입력하세요')));
+      messenger.showSnackBar(SnackBar(content: Text(l.enterName)));
       return;
     }
     if (_segs.isEmpty) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('세그먼트를 1개 이상 추가하세요')),
+        SnackBar(content: Text(l.atLeastOneSegment)),
       );
       return;
     }
@@ -89,6 +91,7 @@ class _PresetEditPageState extends State<PresetEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
@@ -96,15 +99,15 @@ class _PresetEditPageState extends State<PresetEditPage> {
         foregroundColor: AppColors.text,
         elevation: 0,
         title: Text(
-          widget.initial == null ? '새 프리셋' : '프리셋 편집',
+          widget.initial == null ? l.newPreset : l.editPreset,
           style: const TextStyle(fontSize: 15, letterSpacing: 0.5),
         ),
         actions: [
           TextButton(
             onPressed: _save,
-            child: const Text(
-              '저장',
-              style: TextStyle(
+            child: Text(
+              l.save,
+              style: const TextStyle(
                 color: AppColors.timerOrange,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -117,16 +120,16 @@ class _PresetEditPageState extends State<PresetEditPage> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text(
-            '프리셋 이름',
-            style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.2),
+          Text(
+            l.presetName,
+            style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.2),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _nameCtrl,
             style: const TextStyle(color: AppColors.text, fontSize: 14),
             decoration: InputDecoration(
-              hintText: '예: 공부 50/10',
+              hintText: l.presetNameHint,
               hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -141,9 +144,9 @@ class _PresetEditPageState extends State<PresetEditPage> {
             ),
           ),
           const SizedBox(height: 22),
-          const Text(
-            '세그먼트',
-            style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.2),
+          Text(
+            l.segments,
+            style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.2),
           ),
           const SizedBox(height: 10),
           ReorderableListView(
@@ -172,10 +175,10 @@ class _PresetEditPageState extends State<PresetEditPage> {
                 border: Border.all(color: AppColors.border),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Text(
-                '+ 세그먼트 추가',
+              child: Text(
+                l.addSegment,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.muted, fontSize: 12),
+                style: const TextStyle(color: AppColors.muted, fontSize: 12),
               ),
             ),
           ),
@@ -190,9 +193,9 @@ class _PresetEditPageState extends State<PresetEditPage> {
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               const SizedBox(width: 8),
-              const Text(
-                '연속 반복',
-                style: TextStyle(color: AppColors.muted, fontSize: 13),
+              Text(
+                l.loopToggle,
+                style: const TextStyle(color: AppColors.muted, fontSize: 13),
               ),
             ],
           ),
@@ -256,6 +259,7 @@ class _EditSegRowState extends State<_EditSegRow> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -330,7 +334,7 @@ class _EditSegRowState extends State<_EditSegRow> {
             ),
           ),
           const SizedBox(width: 5),
-          const Text('분', style: TextStyle(color: AppColors.muted, fontSize: 12)),
+          Text(l.minutesUnit, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
           const SizedBox(width: 6),
           GestureDetector(
             onTap: widget.onRemove,

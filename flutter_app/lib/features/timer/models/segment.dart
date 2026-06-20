@@ -44,14 +44,14 @@ class Segment extends Equatable {
   );
 
   static List<Segment> get defaults => [
-    Segment(name: '할 것 1', minutes: 2, color: AppColors.segColors[3]),
-    Segment(name: '휴식 1', minutes: 5, color: AppColors.segColors[1]),
-    Segment(name: '할 것 2', minutes: 5, color: AppColors.segColors[3]),
-    Segment(name: '휴식 2', minutes: 5, color: AppColors.segColors[1]),
-    Segment(name: '할 것 3', minutes: 10, color: AppColors.segColors[3]),
-    Segment(name: '휴식 3', minutes: 5, color: AppColors.segColors[1]),
-    Segment(name: '할 것 4', minutes: 15, color: AppColors.segColors[3]),
-    Segment(name: '휴식 4', minutes: 5, color: AppColors.segColors[1]),
+    Segment(name: 'Task 1', minutes: 2, color: AppColors.segColors[3]),
+    Segment(name: 'Break 1', minutes: 5, color: AppColors.segColors[1]),
+    Segment(name: 'Task 2', minutes: 5, color: AppColors.segColors[3]),
+    Segment(name: 'Break 2', minutes: 5, color: AppColors.segColors[1]),
+    Segment(name: 'Task 3', minutes: 10, color: AppColors.segColors[3]),
+    Segment(name: 'Break 3', minutes: 5, color: AppColors.segColors[1]),
+    Segment(name: 'Task 4', minutes: 15, color: AppColors.segColors[3]),
+    Segment(name: 'Break 4', minutes: 5, color: AppColors.segColors[1]),
   ];
 
   // id 는 제외 — 내용(이름/분/색)이 같으면 동등하게 취급(기존 동작 유지).

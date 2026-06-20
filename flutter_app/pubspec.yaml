@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.2.0+3
+version: 0.3.0+4
 
 environment:
   sdk: ^3.12.0
@@ -30,6 +30,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
   cupertino_icons: ^1.0.8
   flutter_bloc: ^9.1.1
@@ -75,6 +78,9 @@ flutter_launcher_icons:
 
 # The following section is specific to Flutter packages.
 flutter:
+
+  # ARB 기반 다국어 코드 생성(gen-l10n)
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -137,7 +143,7 @@ msix_config:
   publisher_display_name: zero
   publisher: CN=zero
   identity_name: dev.analogtimer.AnalogTimer
-  msix_version: 0.2.0.0
+  msix_version: 0.3.0.0
   logo_path: assets/icons/app_icon.png
   capabilities: internetClient
   install_certificate: false

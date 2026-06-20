@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -101,6 +102,8 @@ class DesktopOverlayApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: _OverlayBody(
         mainWindowId: mainWindowId,
         initial: initial,
@@ -395,7 +398,10 @@ class _OverlayBodyState extends State<_OverlayBody>
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
-                formatDateLine(_now),
+                formatDateLine(
+                  _now,
+                  Localizations.localeOf(context).languageCode,
+                ),
                 style: TextStyle(
                   fontFamily: 'Pretendard',
                   fontSize: 11,

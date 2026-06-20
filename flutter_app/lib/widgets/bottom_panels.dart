@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../features/timer/bloc/timer_bloc.dart';
 import '../features/timer/bloc/timer_state.dart';
@@ -17,19 +18,40 @@ String _fmt(int ms) {
   return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
 }
 
+/// 로그 타입을 현재 언어 메시지로 변환.
+String _logMsg(AppLocalizations l, TimerLogEntry e) {
+  switch (e.type) {
+    case TimerLogType.start:
+      return l.logStart(e.segName ?? '');
+    case TimerLogType.pause:
+      return l.logPaused;
+    case TimerLogType.reset:
+      return l.logReset;
+    case TimerLogType.skip:
+      return l.logSkipped(e.segName ?? '');
+    case TimerLogType.done:
+      return l.logDone(e.segName ?? '');
+    case TimerLogType.allDone:
+      return l.logAllDone;
+    case TimerLogType.loop:
+      return l.logLoop(e.segName ?? '');
+  }
+}
+
 class LapList extends StatelessWidget {
   const LapList({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return BlocBuilder<StopwatchBloc, StopwatchState>(
       builder: (context, state) {
         return _Panel(
-          title: '⏲ 스톱워치 랩',
+          title: '⏲ ${l.stopwatchLaps}',
           child: state.laps.isEmpty
-              ? const Text(
-                  '랩 기록 없음',
-                  style: TextStyle(
+              ? Text(
+                  l.noLaps,
+                  style: const TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
@@ -46,7 +68,7 @@ class LapList extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Lap ${e.key + 1}',
+                                l.lapLabel(e.key + 1),
                                 style: const TextStyle(
                                   color: AppColors.swGreen,
                                   fontSize: 11,
@@ -83,14 +105,15 @@ class TimerLog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return BlocBuilder<TimerBloc, TimerState>(
       builder: (context, state) {
         return _Panel(
-          title: '⏱ 타이머 로그',
+          title: '⏱ ${l.timerLogTitle}',
           child: state.log.isEmpty
-              ? const Text(
-                  '이벤트 없음',
-                  style: TextStyle(
+              ? Text(
+                  l.noEvents,
+                  style: const TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
@@ -124,7 +147,7 @@ class TimerLog extends StatelessWidget {
                               ),
                               Expanded(
                                 child: Text(
-                                  e.message,
+                                  _logMsg(l, e),
                                   style: const TextStyle(
                                     color: AppColors.text,
                                     fontSize: 11,

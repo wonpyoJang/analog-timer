@@ -6,6 +6,22 @@ class PersistenceService {
   static const _kTimerData = 'timer_data';
   static const _kSwData = 'sw_data';
   static const _kPresets = 'presets';
+  static const _kLocale = 'locale';
+
+  /// 수동 선택 언어 태그 저장(null=시스템 기본값으로 되돌림). 예: 'en', 'ko', 'zh_Hant'
+  static Future<void> saveLocale(String? tag) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (tag == null) {
+      await prefs.remove(_kLocale);
+    } else {
+      await prefs.setString(_kLocale, tag);
+    }
+  }
+
+  static Future<String?> loadLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLocale);
+  }
 
   static Future<void> saveOverlayOn(bool on) async {
     final prefs = await SharedPreferences.getInstance();

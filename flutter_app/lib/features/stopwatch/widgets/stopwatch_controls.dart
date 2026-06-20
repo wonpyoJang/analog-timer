@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../bloc/stopwatch_bloc.dart';
 import '../bloc/stopwatch_event.dart';
@@ -20,6 +21,7 @@ class StopwatchControls extends StatelessWidget {
   const StopwatchControls({super.key});
 
   void _lap(BuildContext context, StopwatchState state) {
+    final l = AppLocalizations.of(context);
     final lapMs = state.elapsedMs - state.lapStartMs;
     final lapNum = state.laps.length + 1;
     context.read<StopwatchBloc>().add(const StopwatchLap());
@@ -29,7 +31,7 @@ class StopwatchControls extends StatelessWidget {
       ..showSnackBar(
         SnackBar(
           content: Text(
-            '🏁  Lap $lapNum      ${_fmt(lapMs)}',
+            '🏁  ${l.lapToast(lapNum, _fmt(lapMs))}',
             style: const TextStyle(color: AppColors.text, fontSize: 12),
           ),
           backgroundColor: AppColors.surface,
@@ -48,12 +50,13 @@ class StopwatchControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<StopwatchBloc, StopwatchState>(
       builder: (context, state) {
+        final l = AppLocalizations.of(context);
         final active = state.running || state.elapsedMs > 0;
         return Column(
           children: [
-            const Text(
-              '⏲ STOPWATCH',
-              style: TextStyle(
+            Text(
+              '⏲ ${l.stopwatchSection}',
+              style: const TextStyle(
                 color: AppColors.muted,
                 fontSize: 11,
                 letterSpacing: 1.2,
@@ -64,7 +67,7 @@ class StopwatchControls extends StatelessWidget {
               children: [
                 Expanded(
                   child: _Btn(
-                    label: state.running ? 'PAUSE' : 'START',
+                    label: state.running ? l.btnPause : l.btnStart,
                     primary: true,
                     color: AppColors.swGreen,
                     onTap: () => context.read<StopwatchBloc>().add(
@@ -75,7 +78,7 @@ class StopwatchControls extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _Btn(
-                    label: 'LAP',
+                    label: l.btnLap,
                     // 스톱워치가 시작되지 않았으면 비활성(회색) — 무반응 혼란 방지.
                     enabled: active,
                     onTap: active ? () => _lap(context, state) : null,
@@ -84,7 +87,7 @@ class StopwatchControls extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _Btn(
-                    label: 'RST',
+                    label: l.btnReset,
                     danger: true,
                     onTap: () => context.read<StopwatchBloc>().add(
                       const StopwatchReset(),

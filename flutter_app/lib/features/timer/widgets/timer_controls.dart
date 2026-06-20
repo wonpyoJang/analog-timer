@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
@@ -12,6 +13,7 @@ class TimerControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<TimerBloc, TimerState>(
       builder: (context, state) {
+        final l = AppLocalizations.of(context);
         final isRunning = state.status == TimerStatus.running;
         final isIdle =
             state.status == TimerStatus.idle ||
@@ -19,9 +21,9 @@ class TimerControls extends StatelessWidget {
 
         return Column(
           children: [
-            const Text(
-              '⏱ TIMER',
-              style: TextStyle(
+            Text(
+              '⏱ ${l.timerSection}',
+              style: const TextStyle(
                 color: AppColors.muted,
                 fontSize: 11,
                 letterSpacing: 1.2,
@@ -34,10 +36,10 @@ class TimerControls extends StatelessWidget {
                 Expanded(
                   child: _Btn(
                     label: isRunning
-                        ? 'RUNNING…'
+                        ? l.btnRunning
                         : (state.status == TimerStatus.paused
-                              ? 'RESUME'
-                              : 'START'),
+                              ? l.btnResume
+                              : l.btnStart),
                     enabled: !isRunning,
                     primary: true,
                     color: AppColors.timerOrange,
@@ -50,7 +52,7 @@ class TimerControls extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _Btn(
-                    label: 'PAUSE',
+                    label: l.btnPause,
                     enabled: isRunning,
                     onTap: isRunning
                         ? () =>
@@ -66,7 +68,7 @@ class TimerControls extends StatelessWidget {
               children: [
                 Expanded(
                   child: _Btn(
-                    label: '▶ 다음',
+                    label: '▶ ${l.btnNext}',
                     enabled: !isIdle,
                     color: AppColors.accent,
                     accentOutline: true,
@@ -78,7 +80,7 @@ class TimerControls extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _Btn(
-                    label: 'RST',
+                    label: l.btnReset,
                     danger: true,
                     onTap: () =>
                         context.read<TimerBloc>().add(const TimerReset()),

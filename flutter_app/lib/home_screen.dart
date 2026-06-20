@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'l10n/app_localizations.dart';
 import 'theme/app_theme.dart';
 import 'features/timer/bloc/timer_bloc.dart';
 import 'features/timer/bloc/timer_event.dart';
@@ -16,6 +17,7 @@ import 'features/stopwatch/widgets/stopwatch_controls.dart';
 import 'widgets/clock_painter.dart';
 import 'widgets/bottom_panels.dart';
 import 'widgets/date_label.dart';
+import 'widgets/language_picker.dart';
 import 'widgets/text_outline.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
@@ -378,6 +380,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _updateTray() {
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
     final ts = context.read<TimerBloc>().state;
     final active =
         ts.status == TimerStatus.running || ts.status == TimerStatus.paused;
@@ -387,7 +391,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         : 'Analog Timer';
     final menuStatus = active && seg != null
         ? '${seg.name} · ${_fmt(ts.segRemainMs)}'
-        : (ts.status == TimerStatus.done ? '완료' : '대기 중');
+        : (ts.status == TimerStatus.done ? l.statusDone : l.statusWaiting);
     DesktopService.instance.updateTray(tooltip: tooltip, menuStatus: menuStatus);
   }
 
@@ -397,9 +401,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final prev = _prevTimer;
     _prevTimer = cur;
     if (prev == null) return;
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
 
     if (cur.status == TimerStatus.done && prev.status != TimerStatus.done) {
-      DesktopNotificationService.notify('타이머 완료', '모든 세그먼트를 마쳤습니다 🎉');
+      DesktopNotificationService.notify(
+        l.notifyTimerDoneTitle,
+        l.notifyTimerDoneBody,
+      );
     } else if (cur.currentSeg != prev.currentSeg &&
         cur.status == TimerStatus.running &&
         prev.status == TimerStatus.running) {
@@ -407,7 +416,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ? prev.segments[prev.currentSeg].name
           : '';
       final curName = cur.currentSegment?.name ?? '';
-      DesktopNotificationService.notify('세그먼트 완료', '$prevName 완료 · 다음: $curName');
+      DesktopNotificationService.notify(
+        l.notifySegmentDoneTitle,
+        l.notifySegmentDoneBody(prevName, curName),
+      );
     }
   }
 
@@ -502,6 +514,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final scaffold = Scaffold(
       backgroundColor: AppColors.bg,
       body: GestureDetector(
@@ -523,7 +536,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.center,
                             child: Text(
-                              '⏱ ANALOG TIMER',
+                              '⏱ ${l.appTitle}',
                               maxLines: 1,
                               softWrap: false,
                               style: TextStyle(fontFamily: 'Pretendard',
@@ -556,7 +569,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                _overlayOn ? '위젯 ON' : '위젯',
+                                _overlayOn ? l.widgetOn : l.widget,
                                 style: TextStyle(
                                   color: _overlayOn
                                       ? AppColors.accent
@@ -589,7 +602,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                _desktopOverlayOn ? '위젯 ON' : '위젯',
+                                _desktopOverlayOn ? l.widgetOn : l.widget,
                                 style: TextStyle(
                                   color: _desktopOverlayOn
                                       ? AppColors.accent
@@ -601,6 +614,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ),
                           ),
                         ],
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () => showLanguagePicker(context),
+                          child: Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              border: Border.all(color: AppColors.border),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.language,
+                              size: 16,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -615,9 +645,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       children: [
                         _Legend(
                           color: AppColors.timerOrange,
-                          label: '타이머 — 안쪽 나선',
+                          label: l.legendTimer,
                         ),
-                        _Legend(color: AppColors.swGreen, label: '스톱워치 — 바깥 링'),
+                        _Legend(color: AppColors.swGreen, label: l.legendStopwatch),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -677,7 +707,7 @@ class _DateLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      formatDateLine(now),
+      formatDateLine(now, Localizations.localeOf(context).languageCode),
       style: TextStyle(
         fontFamily: 'Pretendard',
         fontSize: 14,

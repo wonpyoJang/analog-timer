@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 
 /// 세그먼트 색상 선택 팔레트. 선택한 색을 반환(취소 시 null).
 /// segment_editor 와 프리셋 편집에서 공용.
 Future<Color?> showSegColorPicker(BuildContext context, Color current) {
+  final l = AppLocalizations.of(context);
   final cur = current.toARGB32();
   return showDialog<Color>(
     context: context,
@@ -19,9 +21,9 @@ Future<Color?> showSegColorPicker(BuildContext context, Color current) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '세그먼트 색상',
-              style: TextStyle(
+            Text(
+              l.segmentColor,
+              style: const TextStyle(
                 color: AppColors.text,
                 fontSize: 13,
                 letterSpacing: 0.5,

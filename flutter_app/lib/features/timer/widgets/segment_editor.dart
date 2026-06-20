@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
@@ -15,6 +16,7 @@ class SegmentEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<TimerBloc, TimerState>(
       builder: (context, state) {
+        final l = AppLocalizations.of(context);
         return Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
@@ -25,9 +27,9 @@ class SegmentEditor extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'TIMER SEGMENTS',
-                style: TextStyle(
+              Text(
+                l.timerSegments,
+                style: const TextStyle(
                   color: AppColors.muted,
                   fontSize: 11,
                   letterSpacing: 1.2,
@@ -129,6 +131,7 @@ class _SegmentRowState extends State<_SegmentRow> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -212,9 +215,9 @@ class _SegmentRowState extends State<_SegmentRow> {
             ),
           ),
           const SizedBox(width: 4),
-          const Text(
-            '분',
-            style: TextStyle(color: AppColors.muted, fontSize: 12),
+          Text(
+            l.minutesUnit,
+            style: const TextStyle(color: AppColors.muted, fontSize: 12),
           ),
           const SizedBox(width: 4),
           GestureDetector(
@@ -232,6 +235,7 @@ class _SegmentRowState extends State<_SegmentRow> {
 class _AddButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return GestureDetector(
       onTap: () => context.read<TimerBloc>().add(const TimerSegmentAdded()),
       child: Container(
@@ -245,10 +249,10 @@ class _AddButton extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(6),
         ),
-        child: const Text(
-          '+ 세그먼트 추가',
+        child: Text(
+          l.addSegment,
           textAlign: TextAlign.center,
-          style: TextStyle(color: AppColors.muted, fontSize: 11),
+          style: const TextStyle(color: AppColors.muted, fontSize: 11),
         ),
       ),
     );
@@ -261,6 +265,7 @@ class _LoopToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Row(
       children: [
         Switch(
@@ -271,9 +276,9 @@ class _LoopToggle extends StatelessWidget {
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
         const SizedBox(width: 8),
-        const Text(
-          '연속 반복',
-          style: TextStyle(color: AppColors.muted, fontSize: 12),
+        Text(
+          l.loopToggle,
+          style: const TextStyle(color: AppColors.muted, fontSize: 12),
         ),
       ],
     );

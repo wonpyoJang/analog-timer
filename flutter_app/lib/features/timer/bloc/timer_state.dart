@@ -3,11 +3,18 @@ import '../models/segment.dart';
 
 enum TimerStatus { idle, running, paused, done }
 
+/// 로그 이벤트 종류 — 표시 시점에 현지화하기 위해 문자열 대신 타입으로 저장한다.
+enum TimerLogType { start, pause, reset, skip, done, allDone, loop }
+
 class TimerLogEntry {
   final DateTime time;
-  final String message;
+  final TimerLogType type;
   final int colorValue;
-  const TimerLogEntry(this.time, this.message, this.colorValue);
+
+  /// start/skip/done 처럼 세그먼트 이름이 필요한 타입에만 사용.
+  final String? segName;
+
+  const TimerLogEntry(this.time, this.type, this.colorValue, {this.segName});
 }
 
 class TimerState extends Equatable {

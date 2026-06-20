@@ -2,7 +2,10 @@ import 'dart:convert';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:window_manager/window_manager.dart';
+import 'l10n/app_localizations.dart';
+import 'services/persistence_service.dart';
 import 'theme/app_theme.dart';
 import 'features/timer/bloc/timer_bloc.dart';
 import 'features/stopwatch/bloc/stopwatch_bloc.dart';
@@ -15,6 +18,8 @@ import 'services/desktop_overlay_service.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  // 로케일별 날짜·요일 포맷용 심볼 초기화(메인/오버레이 진입점 모두 커버).
+  await initializeDateFormatting();
 
   // 데스크톱: 이 엔진이 오버레이 서브윈도우로 띄워졌는지 판별.
   if (isDesktop) {
@@ -58,8 +63,51 @@ void overlayMain() {
   );
 }
 
-class AnalogTimerApp extends StatelessWidget {
+/// 'en' / 'ko' / 'zh_Hant' 같은 태그를 Locale 로 파싱.
+Locale parseLocaleTag(String tag) {
+  final parts = tag.split(RegExp('[_-]'));
+  if (parts.length >= 2) {
+    return Locale.fromSubtags(languageCode: parts[0], scriptCode: parts[1]);
+  }
+  return Locale(parts[0]);
+}
+
+class AnalogTimerApp extends StatefulWidget {
   const AnalogTimerApp({super.key});
+
+  /// 자식 위젯에서 언어를 바꿀 때 호출(null=시스템 기본값).
+  static void setLocale(BuildContext context, Locale? locale) {
+    context.findAncestorStateOfType<_AnalogTimerAppState>()?._apply(locale);
+  }
+
+  @override
+  State<AnalogTimerApp> createState() => _AnalogTimerAppState();
+}
+
+class _AnalogTimerAppState extends State<AnalogTimerApp> {
+  Locale? _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocale();
+  }
+
+  Future<void> _loadLocale() async {
+    final tag = await PersistenceService.loadLocale();
+    if (tag != null && mounted) setState(() => _locale = parseLocaleTag(tag));
+  }
+
+  void _apply(Locale? locale) {
+    setState(() => _locale = locale);
+    // scriptCode 가 있으면 'zh_Hant' 형태로 저장.
+    final tag = locale == null
+        ? null
+        : (locale.scriptCode != null
+              ? '${locale.languageCode}_${locale.scriptCode}'
+              : locale.languageCode);
+    PersistenceService.saveLocale(tag);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +120,9 @@ class AnalogTimerApp extends StatelessWidget {
         title: 'Analog Timer',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark,
+        locale: _locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: const HomeScreen(),
       ),
     );

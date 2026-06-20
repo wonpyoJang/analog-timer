@@ -37,8 +37,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
           ...state.log,
           TimerLogEntry(
             DateTime.now(),
-            '시작: ${state.segments[0].name}',
+            TimerLogType.start,
             state.segments[0].color.toARGB32(),
+            segName: state.segments[0].name,
           ),
         ],
       );
@@ -55,7 +56,11 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         status: TimerStatus.paused,
         log: [
           ...state.log,
-          TimerLogEntry(DateTime.now(), '일시정지', AppColors.muted.toARGB32()),
+          TimerLogEntry(
+            DateTime.now(),
+            TimerLogType.pause,
+            AppColors.muted.toARGB32(),
+          ),
         ],
       ),
     );
@@ -71,7 +76,11 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         loopCount: 0,
         log: [
           ...state.log,
-          TimerLogEntry(DateTime.now(), '리셋', AppColors.muted.toARGB32()),
+          TimerLogEntry(
+            DateTime.now(),
+            TimerLogType.reset,
+            AppColors.muted.toARGB32(),
+          ),
         ],
       ),
     );
@@ -86,8 +95,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       ...state.log,
       TimerLogEntry(
         DateTime.now(),
-        '건너뜀: ${cur.name}',
+        TimerLogType.skip,
         AppColors.accent.toARGB32(),
+        segName: cur.name,
       ),
     ];
 
@@ -104,8 +114,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
               ...log,
               TimerLogEntry(
                 DateTime.now(),
-                '🔁 루프 ${state.loopCount + 1}회 완료',
+                TimerLogType.loop,
                 AppColors.accent.toARGB32(),
+                segName: '${state.loopCount + 1}',
               ),
             ],
           ),
@@ -121,7 +132,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
               ...log,
               TimerLogEntry(
                 DateTime.now(),
-                '모든 세그먼트 완료 🎉',
+                TimerLogType.allDone,
                 AppColors.accent.toARGB32(),
               ),
             ],
@@ -139,8 +150,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
             ...log,
             TimerLogEntry(
               DateTime.now(),
-              '시작: ${state.segments[nextSeg].name}',
+              TimerLogType.start,
               state.segments[nextSeg].color.toARGB32(),
+              segName: state.segments[nextSeg].name,
             ),
           ],
         ),
@@ -158,8 +170,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         ...state.log,
         TimerLogEntry(
           DateTime.now(),
-          '완료: ${state.currentSegment?.name ?? ''}',
+          TimerLogType.done,
           state.currentSegment?.color.toARGB32() ?? 0,
+          segName: state.currentSegment?.name ?? '',
         ),
       ];
       final nextSeg = state.currentSeg + 1;
@@ -174,13 +187,15 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
                 ...doneLog,
                 TimerLogEntry(
                   DateTime.now(),
-                  '🔁 루프 ${state.loopCount + 1}회 완료',
+                  TimerLogType.loop,
                   AppColors.accent.toARGB32(),
+                  segName: '${state.loopCount + 1}',
                 ),
                 TimerLogEntry(
                   DateTime.now(),
-                  '시작: ${state.segments[0].name}',
+                  TimerLogType.start,
                   state.segments[0].color.toARGB32(),
+                  segName: state.segments[0].name,
                 ),
               ],
             ),
@@ -195,7 +210,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
                 ...doneLog,
                 TimerLogEntry(
                   DateTime.now(),
-                  '모든 세그먼트 완료 🎉',
+                  TimerLogType.allDone,
                   AppColors.accent.toARGB32(),
                 ),
               ],
@@ -211,8 +226,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
               ...doneLog,
               TimerLogEntry(
                 DateTime.now(),
-                '시작: ${state.segments[nextSeg].name}',
+                TimerLogType.start,
                 state.segments[nextSeg].color.toARGB32(),
+                segName: state.segments[nextSeg].name,
               ),
             ],
           ),
@@ -233,7 +249,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     final segs = [
       ...state.segments,
       Segment(
-        name: '세그먼트 ${state.segments.length + 1}',
+        name: 'Segment ${state.segments.length + 1}',
         minutes: 5,
         color: color,
       ),

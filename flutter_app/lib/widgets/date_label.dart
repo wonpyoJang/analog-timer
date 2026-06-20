@@ -1,8 +1,8 @@
-/// 날짜·요일 한 줄 라벨. 예: 6/20 (SAT)
-///
-/// 메인 화면과 데스크톱 오버레이 위젯이 공용으로 쓴다.
-const _weekdays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+import 'package:intl/intl.dart';
 
-/// [now] 를 'M/D (요일)' 형식 문자열로. weekday: 1=월 … 7=일.
-String formatDateLine(DateTime now) =>
-    '${now.month}/${now.day} (${_weekdays[now.weekday - 1]})';
+/// 날짜·요일 한 줄 라벨. 예: 6/20 (Sat) / 6/20 (토) / 6/20 (土)
+///
+/// 요일 약자는 [localeName](언어 코드)에 따라 현지화된다.
+/// 메인 화면과 데스크톱 오버레이 위젯이 공용으로 쓴다.
+String formatDateLine(DateTime now, String localeName) =>
+    DateFormat('M/d (EEE)', localeName).format(now);

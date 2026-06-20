@@ -1,3 +1,4 @@
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import 'segment.dart';
 
@@ -32,31 +33,22 @@ class Preset {
         .toList(),
   );
 
-  /// 처음 실행 시 미리 제공되는 기본 프리셋. (집중=주황, 휴식=파랑)
-  static List<Preset> get defaults => [
-    Preset(
-      name: '뽀모도로 25/5',
-      loop: true,
-      segments: [
-        Segment(name: '집중', minutes: 25, color: AppColors.segColors[3]),
-        Segment(name: '휴식', minutes: 5, color: AppColors.segColors[1]),
-      ],
-    ),
-    Preset(
-      name: '52/17',
-      loop: true,
-      segments: [
-        Segment(name: '집중', minutes: 52, color: AppColors.segColors[3]),
-        Segment(name: '휴식', minutes: 17, color: AppColors.segColors[1]),
-      ],
-    ),
-    Preset(
-      name: '딥워크 90/20',
-      loop: false,
-      segments: [
-        Segment(name: '집중', minutes: 90, color: AppColors.segColors[3]),
-        Segment(name: '휴식', minutes: 20, color: AppColors.segColors[1]),
-      ],
-    ),
+  /// 기존(영어 중립) 기본 프리셋 이름 — prefs 마이그레이션에서 걸러내는 용도.
+  static const builtinEnNames = {'Pomodoro 25/5', '52/17', 'Deep work 90/20'};
+
+  /// 현재 언어로 생성하는 기본 프리셋(집중=주황 segColors[3], 휴식=파랑 segColors[1]).
+  static List<Preset> defaultsFor(AppLocalizations l) => [
+    Preset(name: l.presetPomodoro, loop: true, segments: [
+      Segment(name: l.segFocus, minutes: 25, color: AppColors.segColors[3]),
+      Segment(name: l.segBreak, minutes: 5, color: AppColors.segColors[1]),
+    ]),
+    Preset(name: l.preset5217, loop: true, segments: [
+      Segment(name: l.segFocus, minutes: 52, color: AppColors.segColors[3]),
+      Segment(name: l.segBreak, minutes: 17, color: AppColors.segColors[1]),
+    ]),
+    Preset(name: l.presetDeepwork, loop: false, segments: [
+      Segment(name: l.segFocus, minutes: 90, color: AppColors.segColors[3]),
+      Segment(name: l.segBreak, minutes: 20, color: AppColors.segColors[1]),
+    ]),
   ];
 }
