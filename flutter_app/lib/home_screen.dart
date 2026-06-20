@@ -723,22 +723,23 @@ class _CenterInfo extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isActive && seg != null) ...[
-            Text(
+            OutlinedText(
               seg.name,
+              strokeWidth: 1.4,
               style: GoogleFonts.bebasNeue(
                 fontSize: 16,
                 letterSpacing: 1.5,
                 color: seg.color,
-                shadows: textOutline(layers: 2),
               ),
             ),
-            Text(
+            OutlinedText(
               _fmtMs(timerState.segRemainMs),
+              strokeWidth: 3,
+              shadows: textOutline(offset: const Offset(0, 2), blur: 3),
               style: GoogleFonts.bebasNeue(
                 fontSize: 48,
                 color: seg.color,
                 letterSpacing: 1,
-                shadows: textOutline(layers: 5),
               ),
             ),
           ] else ...[
@@ -752,13 +753,14 @@ class _CenterInfo extends StatelessWidget {
             ),
           ],
           if (swState.running || swState.elapsedMs > 0)
-            Text(
+            OutlinedText(
               '⏱ ${_fmtMs(swState.elapsedMs)}',
+              strokeWidth: 2.4,
+              shadows: textOutline(offset: const Offset(0, 2), blur: 3),
               style: GoogleFonts.bebasNeue(
                 fontSize: 30,
                 color: AppColors.swGreen,
                 letterSpacing: 1,
-                shadows: textOutline(),
               ),
             ),
         ],

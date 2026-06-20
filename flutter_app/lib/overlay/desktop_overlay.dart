@@ -432,33 +432,38 @@ class _OverlayBodyState extends State<_OverlayBody>
             children: [
               if (_timerActive) ...[
                 if (_timerLabel.isNotEmpty)
-                  Text(
-                    _timerLabel,
-                    style: GoogleFonts.bebasNeue(
-                      fontSize: 13,
-                      letterSpacing: 1.2,
-                      color: _effectiveTimerColor.withValues(alpha: 0.75),
-                      shadows: textOutline(layers: 2),
+                  // 은은한 느낌은 라벨 전체 Opacity 로 준다(그림자도 같이 흐려짐).
+                  Opacity(
+                    opacity: 0.75,
+                    child: OutlinedText(
+                      _timerLabel,
+                      strokeWidth: 1.2,
+                      style: GoogleFonts.bebasNeue(
+                        fontSize: 13,
+                        letterSpacing: 1.2,
+                        color: _effectiveTimerColor,
+                      ),
                     ),
                   ),
-                Text(
+                OutlinedText(
                   _timerRemain,
+                  strokeWidth: 2.4,
+                  shadows: textOutline(offset: const Offset(0, 1.5), blur: 2.5),
                   style: GoogleFonts.bebasNeue(
                     fontSize: 26,
                     color: _effectiveTimerColor,
                     letterSpacing: 1,
-                    shadows: textOutline(layers: 5),
                   ),
                 ),
               ],
               if (_swActive)
-                Text(
+                OutlinedText(
                   '⏲ $_swElapsed',
+                  strokeWidth: 1.8,
                   style: GoogleFonts.bebasNeue(
                     fontSize: 17,
                     color: const Color(0xFF2EA84A),
                     letterSpacing: 1,
-                    shadows: textOutline(),
                   ),
                 ),
             ],
