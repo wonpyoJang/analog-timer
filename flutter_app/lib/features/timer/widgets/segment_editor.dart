@@ -5,6 +5,8 @@ import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
 import '../bloc/timer_state.dart';
 import '../models/segment.dart';
+import 'color_picker_dialog.dart';
+import 'preset_bar.dart';
 
 class SegmentEditor extends StatelessWidget {
   const SegmentEditor({super.key});
@@ -32,6 +34,7 @@ class SegmentEditor extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
+              const PresetBar(),
               ReorderableListView(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -108,69 +111,7 @@ class _SegmentRowState extends State<_SegmentRow> {
 
   Future<void> _pickColor(BuildContext context) async {
     final bloc = context.read<TimerBloc>();
-    final current = widget.segment.color.toARGB32();
-    final picked = await showDialog<Color>(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: AppColors.border),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '세그먼트 색상',
-                style: TextStyle(
-                  color: AppColors.text,
-                  fontSize: 13,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 14,
-                runSpacing: 14,
-                children: [
-                  for (final c in AppColors.segColors)
-                    GestureDetector(
-                      onTap: () => Navigator.pop(ctx, c),
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: c,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: c.toARGB32() == current
-                                  ? AppColors.text
-                                  : Colors.transparent,
-                              width: 2,
-                            ),
-                          ),
-                          child: c.toARGB32() == current
-                              ? const Icon(
-                                  Icons.check,
-                                  size: 18,
-                                  color: Colors.white,
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    final picked = await showSegColorPicker(context, widget.segment.color);
     if (picked != null) {
       final mins = int.tryParse(_minCtrl.text) ?? widget.segment.minutes;
       bloc.add(
