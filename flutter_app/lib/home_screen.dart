@@ -678,6 +678,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     if (_overlayOn) {
       await OverlayService.hide();
+      if (!mounted) return;
       setState(() => _overlayOn = false);
       _syncHealthTimer();
       PersistenceService.saveOverlayOn(false);
