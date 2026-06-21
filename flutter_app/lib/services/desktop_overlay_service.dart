@@ -97,6 +97,10 @@ class DesktopOverlayService {
       }
       // 연속 3회(≈150ms) 실패 시에만 재생성 — 일시적 오류로 인한 오작동 방지.
       if (++_updateFails < 3) return;
+      // NOTE: desktop_multi_window 0.3.0 은 서브윈도우 파괴 API(close)를 제공하지
+      // 않아, 강제 종료 후 재생성을 반복하면 네이티브 엔진/핸들이 누수된다(라이브러리
+      // 한계). 정상 사용에선 위젯이 죽지 않아 재생성이 사실상 일어나지 않으므로 영향이
+      // 없지만, 완전 해결하려면 라이브러리에 window_close 를 추가해야 한다.
       _overlay = null;
       try {
         await _create(state);
