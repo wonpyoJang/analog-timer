@@ -5,7 +5,6 @@
   "cancel": "Cancel",
   "delete": "Delete",
   "manage": "Manage",
-
   "timerSection": "TIMER",
   "btnStart": "START",
   "btnPause": "PAUSE",
@@ -13,28 +12,33 @@
   "btnRunning": "RUNNING…",
   "btnNext": "NEXT",
   "btnReset": "RST",
-
   "stopwatchSection": "STOPWATCH",
   "btnLap": "LAP",
   "lapToast": "Lap {num}    {time}",
   "@lapToast": {
     "placeholders": {
-      "num": { "type": "int" },
-      "time": { "type": "String" }
+      "num": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
-
   "timerSegments": "TIMER SEGMENTS",
   "addSegment": "+ Add segment",
   "loopToggle": "Loop",
   "minutesUnit": "min",
   "segmentColor": "Segment color",
   "segments": "Segments",
-
   "savePresetChip": "Save current",
   "presetApplied": "Preset added · {name}",
   "@presetApplied": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "noSegmentsToSave": "No segments to save",
   "savePresetTitle": "Save preset",
@@ -46,65 +50,94 @@
   "deletePresetTitle": "Delete preset",
   "deletePresetConfirm": "Delete '{name}'?",
   "@deletePresetConfirm": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "noPresets": "No saved presets.\nAdd one with \"New preset\" at the top right.",
   "enterName": "Please enter a name",
   "atLeastOneSegment": "Add at least one segment",
-
   "legendTimer": "Timer — inner spiral",
   "legendStopwatch": "Stopwatch — outer ring",
   "statusDone": "Done",
   "statusWaiting": "Ready",
   "widget": "Widget",
   "widgetOn": "Widget ON",
-
   "notifyTimerDoneTitle": "Timer complete",
   "notifyTimerDoneBody": "All segments finished 🎉",
   "notifySegmentDoneTitle": "Segment complete",
   "notifySegmentDoneBody": "{prev} done · Next: {next}",
   "@notifySegmentDoneBody": {
     "placeholders": {
-      "prev": { "type": "String" },
-      "next": { "type": "String" }
+      "prev": {
+        "type": "String"
+      },
+      "next": {
+        "type": "String"
+      }
     }
   },
-
   "language": "Language",
   "languageSystem": "System default",
-
   "presetPomodoro": "Pomodoro 25/5",
   "preset5217": "52/17",
   "presetDeepwork": "Deep work 90/20",
   "segFocus": "Focus",
   "segBreak": "Break",
-
   "stopwatchLaps": "Stopwatch laps",
   "noLaps": "No laps yet",
   "timerLogTitle": "Timer log",
   "noEvents": "No events",
   "lapLabel": "Lap {num}",
   "@lapLabel": {
-    "placeholders": { "num": { "type": "int" } }
+    "placeholders": {
+      "num": {
+        "type": "int"
+      }
+    }
   },
-
   "logStart": "Start: {name}",
   "@logStart": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "logPaused": "Paused",
   "logReset": "Reset",
   "logSkipped": "Skipped: {name}",
   "@logSkipped": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "logDone": "Done: {name}",
   "@logDone": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "logAllDone": "All segments done 🎉",
   "logLoop": "🔁 Loop {count} done",
   "@logLoop": {
-    "placeholders": { "count": { "type": "String" } }
-  }
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "batteryLow": "Battery low — please charge",
+  "batteryMon": "Battery",
+  "batteryMonOn": "Battery ON",
+  "settings": "Settings",
+  "settingsBattery": "Battery monitoring",
+  "settingsBatteryDesc": "Warn when battery drops to 20% or below",
+  "settingsLanguage": "Language"
 }

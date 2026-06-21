@@ -5,7 +5,6 @@
   "cancel": "रद्द करें",
   "delete": "हटाएँ",
   "manage": "प्रबंधित करें",
-
   "timerSection": "टाइमर",
   "btnStart": "शुरू",
   "btnPause": "रोकें",
@@ -13,18 +12,15 @@
   "btnRunning": "चल रहा है…",
   "btnNext": "अगला",
   "btnReset": "रीसेट",
-
   "stopwatchSection": "स्टॉपवॉच",
   "btnLap": "लैप",
   "lapToast": "लैप {num}    {time}",
-
   "timerSegments": "टाइमर सेगमेंट",
   "addSegment": "+ सेगमेंट जोड़ें",
   "loopToggle": "लूप",
   "minutesUnit": "मिनट",
   "segmentColor": "सेगमेंट का रंग",
   "segments": "सेगमेंट",
-
   "savePresetChip": "वर्तमान सहेजें",
   "presetApplied": "प्रीसेट जोड़ा गया · {name}",
   "noSegmentsToSave": "सहेजने के लिए कोई सेगमेंट नहीं",
@@ -39,39 +35,40 @@
   "noPresets": "कोई सहेजा गया प्रीसेट नहीं।\nऊपर दाईं ओर \"नया प्रीसेट\" से एक जोड़ें।",
   "enterName": "कृपया एक नाम दर्ज करें",
   "atLeastOneSegment": "कम से कम एक सेगमेंट जोड़ें",
-
   "legendTimer": "टाइमर — भीतरी सर्पिल",
   "legendStopwatch": "स्टॉपवॉच — बाहरी वलय",
   "statusDone": "पूर्ण",
   "statusWaiting": "तैयार",
   "widget": "विजेट",
   "widgetOn": "विजेट चालू",
-
   "notifyTimerDoneTitle": "टाइमर पूर्ण",
   "notifyTimerDoneBody": "सभी सेगमेंट समाप्त 🎉",
   "notifySegmentDoneTitle": "सेगमेंट पूर्ण",
   "notifySegmentDoneBody": "{prev} पूर्ण · अगला: {next}",
-
   "language": "भाषा",
   "languageSystem": "सिस्टम डिफ़ॉल्ट",
-
   "presetPomodoro": "पोमोडोरो 25/5",
   "preset5217": "52/17",
   "presetDeepwork": "गहन कार्य 90/20",
   "segFocus": "फोकस",
   "segBreak": "विराम",
-
   "stopwatchLaps": "स्टॉपवॉच लैप",
   "noLaps": "अभी कोई लैप नहीं",
   "timerLogTitle": "टाइमर लॉग",
   "noEvents": "कोई इवेंट नहीं",
   "lapLabel": "लैप {num}",
-
   "logStart": "शुरू: {name}",
   "logPaused": "रोका गया",
   "logReset": "रीसेट",
   "logSkipped": "छोड़ा गया: {name}",
   "logDone": "पूर्ण: {name}",
   "logAllDone": "सभी सेगमेंट पूर्ण 🎉",
-  "logLoop": "🔁 लूप {count} पूर्ण"
+  "logLoop": "🔁 लूप {count} पूर्ण",
+  "batteryLow": "बैटरी कम — कृपया चार्ज करें",
+  "batteryMon": "बैटरी",
+  "batteryMonOn": "बैटरी ON",
+  "settings": "सेटिंग्स",
+  "settingsBattery": "बैटरी निगरानी",
+  "settingsBatteryDesc": "जब बैटरी 20% या कम हो तो चेतावनी दें",
+  "settingsLanguage": "भाषा"
 }

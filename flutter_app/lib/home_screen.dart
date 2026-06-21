@@ -17,11 +17,12 @@ import 'features/stopwatch/widgets/stopwatch_controls.dart';
 import 'widgets/clock_painter.dart';
 import 'widgets/bottom_panels.dart';
 import 'widgets/date_label.dart';
-import 'widgets/language_picker.dart';
+import 'settings_screen.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
 import 'live_activity/live_activity_service.dart';
 import 'pip/pip_service.dart';
+import 'services/battery_service.dart';
 import 'services/persistence_service.dart';
 import 'services/native_widget_service.dart';
 import 'services/desktop_service.dart';
@@ -76,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _persistTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) _saveState();
     });
+    BatteryService.instance.start(); // async — 내부에서 prefs 로드 후 모니터 시작
   }
 
   Future<void> _loadIosWidgetPref() async {
@@ -411,6 +413,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _persistTimer?.cancel();
     _overlayHealthTimer?.cancel();
     _trayTimer?.cancel();
+    BatteryService.instance.stop();
     super.dispose();
   }
 
@@ -490,6 +493,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       'segRemainMs': timerState.segRemainMs,
       'swElapsedMs': swState.elapsedMs,
       'swStartAngleRad': swState.startAngleRadians,
+      'batteryLow': BatteryService.instance.lowBattery.value,
+      'batteryLevel': BatteryService.instance.level.value,
     };
   }
 
@@ -665,6 +670,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       screenWidthDp: screenW,
       screenHeightDp: screenH,
       localeTag: _currentLocaleTag(context),
+      batteryLow: BatteryService.instance.lowBattery.value,
+      batteryLevel: BatteryService.instance.level.value,
     );
   }
 
@@ -725,168 +732,220 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: Column(
-                  children: [
-                    // Title + overlay toggle + language picker
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              '⏱ ${l.appTitle}',
-                              style: const TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: 28,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 2,
-                                color: AppColors.accent,
-                              ),
-                            ),
+          child: Column(
+            children: [
+              ValueListenableBuilder<bool>(
+                valueListenable: BatteryService.instance.lowBattery,
+                builder: (bCtx, isLow, bChild) {
+                  if (!isLow) return const SizedBox.shrink();
+                  return Material(
+                    color: const Color(0xFFB45309),
+                    child: ValueListenableBuilder<int>(
+                      valueListenable: BatteryService.instance.level,
+                      builder: (lvlCtx, lvl, lvlChild) => ListTile(
+                        dense: true,
+                        leading: const Icon(
+                          Icons.battery_alert,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        title: Text(
+                          lvl >= 0 ? '${l.batteryLow} ($lvl%)' : l.batteryLow,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        if (Platform.isAndroid || Platform.isIOS) ...[
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: _toggleOverlay,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _overlayOn
-                                    ? AppColors.accent.withAlpha(0x33)
-                                    : AppColors.surface,
-                                border: Border.all(
-                                  color: _overlayOn
-                                      ? AppColors.accent
-                                      : AppColors.border,
+                        trailing: IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          onPressed: BatteryService.instance.dismiss,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 24,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: Column(
+                        children: [
+                          // Title + overlay toggle + language picker
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    '⏱ ${l.appTitle}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Pretendard',
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 2,
+                                      color: AppColors.accent,
+                                    ),
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(
-                                _overlayOn ? l.widgetOn : l.widget,
-                                style: TextStyle(
-                                  color: _overlayOn
-                                      ? AppColors.accent
-                                      : AppColors.muted,
-                                  fontSize: 11,
-                                  letterSpacing: 0.6,
+                              if (Platform.isAndroid || Platform.isIOS) ...[
+                                const SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: _toggleOverlay,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _overlayOn
+                                          ? AppColors.accent.withAlpha(0x33)
+                                          : AppColors.surface,
+                                      border: Border.all(
+                                        color: _overlayOn
+                                            ? AppColors.accent
+                                            : AppColors.border,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      _overlayOn ? l.widgetOn : l.widget,
+                                      style: TextStyle(
+                                        color: _overlayOn
+                                            ? AppColors.accent
+                                            : AppColors.muted,
+                                        fontSize: 11,
+                                        letterSpacing: 0.6,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (isDesktop) ...[
+                                const SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: _toggleDesktopOverlay,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _desktopOverlayOn
+                                          ? AppColors.accent.withAlpha(0x33)
+                                          : AppColors.surface,
+                                      border: Border.all(
+                                        color: _desktopOverlayOn
+                                            ? AppColors.accent
+                                            : AppColors.border,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      _desktopOverlayOn ? l.widgetOn : l.widget,
+                                      style: TextStyle(
+                                        color: _desktopOverlayOn
+                                            ? AppColors.accent
+                                            : AppColors.muted,
+                                        fontSize: 11,
+                                        letterSpacing: 0.6,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(width: 10),
+                              GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const SettingsScreen(),
+                                  ),
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(7),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    border: Border.all(color: AppColors.border),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.settings,
+                                    size: 16,
+                                    color: AppColors.muted,
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          _DateLine(now: _now),
+                          const SizedBox(height: 16),
+
+                          _ClockWidget(now: _now),
+                          const SizedBox(height: 8),
+
+                          Wrap(
+                            spacing: 16,
+                            children: [
+                              _Legend(
+                                color: AppColors.timerOrange,
+                                label: l.legendTimer,
+                              ),
+                              _Legend(
+                                color: AppColors.swGreen,
+                                label: l.legendStopwatch,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+
+                          _ProgressBar(),
+                          const SizedBox(height: 20),
+
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Expanded(child: TimerControls()),
+                              SizedBox(width: 16),
+                              Expanded(child: StopwatchControls()),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          const SegmentEditor(),
+                          const SizedBox(height: 12),
+
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Expanded(child: LapList()),
+                              SizedBox(width: 10),
+                              Expanded(child: TimerLog()),
+                            ],
                           ),
                         ],
-                        if (isDesktop) ...[
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: _toggleDesktopOverlay,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _desktopOverlayOn
-                                    ? AppColors.accent.withAlpha(0x33)
-                                    : AppColors.surface,
-                                border: Border.all(
-                                  color: _desktopOverlayOn
-                                      ? AppColors.accent
-                                      : AppColors.border,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                _desktopOverlayOn ? l.widgetOn : l.widget,
-                                style: TextStyle(
-                                  color: _desktopOverlayOn
-                                      ? AppColors.accent
-                                      : AppColors.muted,
-                                  fontSize: 11,
-                                  letterSpacing: 0.6,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(width: 10),
-                        GestureDetector(
-                          onTap: () => showLanguagePicker(context),
-                          child: Container(
-                            padding: const EdgeInsets.all(7),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              border: Border.all(color: AppColors.border),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.language,
-                              size: 16,
-                              color: AppColors.muted,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 6),
-                    _DateLine(now: _now),
-                    const SizedBox(height: 16),
-
-                    _ClockWidget(now: _now),
-                    const SizedBox(height: 8),
-
-                    Wrap(
-                      spacing: 16,
-                      children: [
-                        _Legend(
-                          color: AppColors.timerOrange,
-                          label: l.legendTimer,
-                        ),
-                        _Legend(
-                          color: AppColors.swGreen,
-                          label: l.legendStopwatch,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-
-                    _ProgressBar(),
-                    const SizedBox(height: 20),
-
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Expanded(child: TimerControls()),
-                        SizedBox(width: 16),
-                        Expanded(child: StopwatchControls()),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    const SegmentEditor(),
-                    const SizedBox(height: 12),
-
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Expanded(child: LapList()),
-                        SizedBox(width: 10),
-                        Expanded(child: TimerLog()),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),

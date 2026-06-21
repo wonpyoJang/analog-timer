@@ -218,4 +218,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 Цикл $count завершён';
   }
+
+  @override
+  String get batteryLow => 'Заряд батареи мал — зарядите';
+
+  @override
+  String get batteryMon => 'Батарея';
+
+  @override
+  String get batteryMonOn => 'Батарея ON';
+
+  @override
+  String get settings => 'Настройки';
+
+  @override
+  String get settingsBattery => 'Мониторинг батареи';
+
+  @override
+  String get settingsBatteryDesc =>
+      'Предупреждать при уровне заряда 20 % и ниже';
+
+  @override
+  String get settingsLanguage => 'Язык';
 }

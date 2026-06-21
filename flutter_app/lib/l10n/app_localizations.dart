@@ -506,6 +506,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'🔁 Loop {count} done'**
   String logLoop(String count);
+
+  /// No description provided for @batteryLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery low — please charge'**
+  String get batteryLow;
+
+  /// No description provided for @batteryMon.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get batteryMon;
+
+  /// No description provided for @batteryMonOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery ON'**
+  String get batteryMonOn;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @settingsBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery monitoring'**
+  String get settingsBattery;
+
+  /// No description provided for @settingsBatteryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn when battery drops to 20% or below'**
+  String get settingsBatteryDesc;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
 }
 
 class _AppLocalizationsDelegate

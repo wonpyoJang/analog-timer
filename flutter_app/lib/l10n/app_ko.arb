@@ -5,7 +5,6 @@
   "cancel": "취소",
   "delete": "삭제",
   "manage": "관리",
-
   "timerSection": "타이머",
   "btnStart": "시작",
   "btnPause": "일시정지",
@@ -13,18 +12,15 @@
   "btnRunning": "진행 중…",
   "btnNext": "다음",
   "btnReset": "초기화",
-
   "stopwatchSection": "스톱워치",
   "btnLap": "랩",
   "lapToast": "랩 {num}    {time}",
-
   "timerSegments": "타이머 세그먼트",
   "addSegment": "+ 세그먼트 추가",
   "loopToggle": "연속 반복",
   "minutesUnit": "분",
   "segmentColor": "세그먼트 색상",
   "segments": "세그먼트",
-
   "savePresetChip": "현재 구성 저장",
   "presetApplied": "프리셋 추가 · {name}",
   "noSegmentsToSave": "저장할 세그먼트가 없습니다",
@@ -39,39 +35,40 @@
   "noPresets": "저장된 프리셋이 없습니다.\n우측 상단 \"새 프리셋\" 으로 추가하세요.",
   "enterName": "이름을 입력하세요",
   "atLeastOneSegment": "세그먼트를 1개 이상 추가하세요",
-
   "legendTimer": "타이머 — 안쪽 나선",
   "legendStopwatch": "스톱워치 — 바깥 링",
   "statusDone": "완료",
   "statusWaiting": "대기 중",
   "widget": "위젯",
   "widgetOn": "위젯 ON",
-
   "notifyTimerDoneTitle": "타이머 완료",
   "notifyTimerDoneBody": "모든 세그먼트를 마쳤습니다 🎉",
   "notifySegmentDoneTitle": "세그먼트 완료",
   "notifySegmentDoneBody": "{prev} 완료 · 다음: {next}",
-
   "language": "언어",
   "languageSystem": "시스템 기본값",
-
   "presetPomodoro": "뽀모도로 25/5",
   "preset5217": "52/17",
   "presetDeepwork": "딥워크 90/20",
   "segFocus": "집중",
   "segBreak": "휴식",
-
   "stopwatchLaps": "스톱워치 랩",
   "noLaps": "랩 기록 없음",
   "timerLogTitle": "타이머 로그",
   "noEvents": "이벤트 없음",
   "lapLabel": "랩 {num}",
-
   "logStart": "시작: {name}",
   "logPaused": "일시정지",
   "logReset": "리셋",
   "logSkipped": "건너뜀: {name}",
   "logDone": "완료: {name}",
   "logAllDone": "모든 세그먼트 완료 🎉",
-  "logLoop": "🔁 루프 {count}회 완료"
+  "logLoop": "🔁 루프 {count}회 완료",
+  "batteryLow": "배터리 부족 — 충전해 주세요",
+  "batteryMon": "배터리",
+  "batteryMonOn": "배터리 ON",
+  "settings": "설정",
+  "settingsBattery": "배터리 모니터링",
+  "settingsBatteryDesc": "배터리가 20% 이하로 내려가면 경고",
+  "settingsLanguage": "언어"
 }

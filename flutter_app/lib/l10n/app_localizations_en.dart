@@ -218,4 +218,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 Loop $count done';
   }
+
+  @override
+  String get batteryLow => 'Battery low — please charge';
+
+  @override
+  String get batteryMon => 'Battery';
+
+  @override
+  String get batteryMonOn => 'Battery ON';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get settingsBattery => 'Battery monitoring';
+
+  @override
+  String get settingsBatteryDesc => 'Warn when battery drops to 20% or below';
+
+  @override
+  String get settingsLanguage => 'Language';
 }

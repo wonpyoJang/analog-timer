@@ -68,6 +68,8 @@ class OverlayService {
     int screenWidthDp = 400,
     int screenHeightDp = 800,
     String? localeTag,
+    bool batteryLow = false,
+    int batteryLevel = -1,
   }) async {
     if (!Platform.isAndroid) return;
     await FlutterOverlayWindow.shareData(
@@ -89,6 +91,8 @@ class OverlayService {
         'screenWidthDp': screenWidthDp,
         'screenHeightDp': screenHeightDp,
         if (localeTag != null) 'localeTag': localeTag,
+        'batteryLow': batteryLow,
+        'batteryLevel': batteryLevel,
       }),
     );
   }

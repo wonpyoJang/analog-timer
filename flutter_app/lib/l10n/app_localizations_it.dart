@@ -218,4 +218,26 @@ class AppLocalizationsIt extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 Ciclo $count completato';
   }
+
+  @override
+  String get batteryLow => 'Batteria scarica — ricarica';
+
+  @override
+  String get batteryMon => 'Batteria';
+
+  @override
+  String get batteryMonOn => 'Batteria ON';
+
+  @override
+  String get settings => 'Impostazioni';
+
+  @override
+  String get settingsBattery => 'Monitoraggio batteria';
+
+  @override
+  String get settingsBatteryDesc =>
+      'Avvisa quando la batteria scende al 20% o meno';
+
+  @override
+  String get settingsLanguage => 'Lingua';
 }

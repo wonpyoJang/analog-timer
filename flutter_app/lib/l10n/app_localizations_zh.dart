@@ -217,6 +217,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 第 $count 轮完成';
   }
+
+  @override
+  String get batteryLow => '电量不足 — 请充电';
+
+  @override
+  String get batteryMon => '电量';
+
+  @override
+  String get batteryMonOn => '电量 ON';
+
+  @override
+  String get settings => '设置';
+
+  @override
+  String get settingsBattery => '电量监控';
+
+  @override
+  String get settingsBatteryDesc => '电量低于20%时发出警告';
+
+  @override
+  String get settingsLanguage => '语言';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -432,4 +453,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String logLoop(String count) {
     return '🔁 第 $count 輪完成';
   }
+
+  @override
+  String get batteryLow => '電量不足 — 請充電';
+
+  @override
+  String get batteryMon => '電量';
+
+  @override
+  String get batteryMonOn => '電量 ON';
+
+  @override
+  String get settings => '設定';
+
+  @override
+  String get settingsBattery => '電量監控';
+
+  @override
+  String get settingsBatteryDesc => '電量低於20%時發出警告';
+
+  @override
+  String get settingsLanguage => '語言';
 }

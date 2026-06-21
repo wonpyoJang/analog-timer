@@ -217,4 +217,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 루프 $count회 완료';
   }
+
+  @override
+  String get batteryLow => '배터리 부족 — 충전해 주세요';
+
+  @override
+  String get batteryMon => '배터리';
+
+  @override
+  String get batteryMonOn => '배터리 ON';
+
+  @override
+  String get settings => '설정';
+
+  @override
+  String get settingsBattery => '배터리 모니터링';
+
+  @override
+  String get settingsBatteryDesc => '배터리가 20% 이하로 내려가면 경고';
+
+  @override
+  String get settingsLanguage => '언어';
 }

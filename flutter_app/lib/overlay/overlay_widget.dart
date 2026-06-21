@@ -31,6 +31,10 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   bool _ending = false;
   double? _swStartAngleRad;
 
+  // 배터리 경고
+  bool _batteryLow = false;
+  int _batteryLevel = -1;
+
   // IPC 앵커 — IPC 수신 시각 + 그 시점의 값. 이후 경과 시간으로 현재값 계산
   int _ipcSegRemainMs = 0;
   int _ipcSwElapsedMs = 0;
@@ -95,6 +99,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
 
   late AnimationController _chaseCtrl;
   late AnimationController _blinkCtrl;
+  late AnimationController _batteryBlinkCtrl;
 
   @override
   void initState() {
@@ -119,6 +124,10 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     _blinkCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
+    );
+    _batteryBlinkCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
     );
 
     FlutterOverlayWindow.overlayListener.listen((data) async {
@@ -157,6 +166,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         }
 
         final wasEnding = _ending;
+        final wasBatteryLow = _batteryLow;
         final newTimerActive = map['timerActive'] as bool? ?? false;
         final newTimerDone = map['timerDone'] as bool? ?? false;
         final ipcNow = DateTime.now();
@@ -178,6 +188,8 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
           _swStartAngleRad = (map['swStartAngleRad'] as num?)?.toDouble();
           _screenWidthDp = map['screenWidthDp'] as int? ?? _screenWidthDp;
           _screenHeightDp = map['screenHeightDp'] as int? ?? _screenHeightDp;
+          _batteryLow = map['batteryLow'] as bool? ?? false;
+          _batteryLevel = map['batteryLevel'] as int? ?? -1;
         });
         // 타이머가 비활성/완료되면 진행 중인 다음 카운트다운 취소
         if (!newTimerActive && !newTimerDone && _nextCounting) {
@@ -187,6 +199,13 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
           _blinkCtrl.repeat(reverse: true);
         } else if (!_ending && wasEnding) {
           _blinkCtrl
+            ..stop()
+            ..value = 1.0;
+        }
+        if (_batteryLow && !wasBatteryLow) {
+          _batteryBlinkCtrl.repeat(reverse: true);
+        } else if (!_batteryLow && wasBatteryLow) {
+          _batteryBlinkCtrl
             ..stop()
             ..value = 1.0;
         }
@@ -235,6 +254,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     _nextFrameTimer?.cancel();
     _chaseCtrl.dispose();
     _blinkCtrl.dispose();
+    _batteryBlinkCtrl.dispose();
     super.dispose();
   }
 
@@ -557,7 +577,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
 
   Widget _buildClockCenterInfo() {
     return AnimatedBuilder(
-      animation: _blinkCtrl,
+      animation: Listenable.merge([_blinkCtrl, _batteryBlinkCtrl]),
       builder: (context, _) {
         final opacity = _ending ? _blinkCtrl.value : 1.0;
         return Opacity(
@@ -565,6 +585,17 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (_batteryLow)
+                FadeTransition(
+                  opacity: Tween<double>(
+                    begin: 0.25,
+                    end: 1.0,
+                  ).animate(_batteryBlinkCtrl),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: _BatteryBadge(level: _batteryLevel),
+                  ),
+                ),
               if (_timerActive) ...[
                 if (_timerLabel.isNotEmpty)
                   Text(
@@ -764,13 +795,67 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
       );
     }
 
-    if (timerSection != null && swSection != null) {
-      return Row(
+    final content = (timerSection != null && swSection != null)
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [timerSection, const SizedBox(width: 12), swSection],
+          )
+        : (timerSection ?? swSection ?? const SizedBox.shrink());
+
+    if (!_batteryLow) return content;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        content,
+        const SizedBox(width: 8),
+        FadeTransition(
+          opacity: Tween<double>(
+            begin: 0.25,
+            end: 1.0,
+          ).animate(_batteryBlinkCtrl),
+          child: _BatteryBadge(level: _batteryLevel),
+        ),
+      ],
+    );
+  }
+}
+
+class _BatteryBadge extends StatelessWidget {
+  final int level;
+  const _BatteryBadge({required this.level});
+
+  static const _amber = Color(0xFFB45309);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: _amber.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: _amber.withValues(alpha: 0.6), width: 1),
+      ),
+      child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [timerSection, const SizedBox(width: 12), swSection],
-      );
-    }
-    return timerSection ?? swSection ?? const SizedBox.shrink();
+        children: [
+          const Icon(Icons.battery_alert, size: 12, color: _amber),
+          if (level >= 0) ...[
+            const SizedBox(width: 2),
+            Text(
+              '$level%',
+              style: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: _amber,
+                height: 1,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 

@@ -218,4 +218,25 @@ class AppLocalizationsTr extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 Döngü $count tamamlandı';
   }
+
+  @override
+  String get batteryLow => 'Pil az — lütfen şarj edin';
+
+  @override
+  String get batteryMon => 'Pil';
+
+  @override
+  String get batteryMonOn => 'Pil ON';
+
+  @override
+  String get settings => 'Ayarlar';
+
+  @override
+  String get settingsBattery => 'Pil izleme';
+
+  @override
+  String get settingsBatteryDesc => 'Pil %20 veya altına düştüğünde uyar';
+
+  @override
+  String get settingsLanguage => 'Dil';
 }

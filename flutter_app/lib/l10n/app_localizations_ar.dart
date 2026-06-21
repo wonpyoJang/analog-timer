@@ -218,4 +218,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 اكتملت الدورة $count';
   }
+
+  @override
+  String get batteryLow => 'البطارية منخفضة — يرجى الشحن';
+
+  @override
+  String get batteryMon => 'بطارية';
+
+  @override
+  String get batteryMonOn => 'بطارية ON';
+
+  @override
+  String get settings => 'الإعدادات';
+
+  @override
+  String get settingsBattery => 'مراقبة البطارية';
+
+  @override
+  String get settingsBatteryDesc => 'تحذير عند انخفاض البطارية إلى 20٪ أو أقل';
+
+  @override
+  String get settingsLanguage => 'اللغة';
 }

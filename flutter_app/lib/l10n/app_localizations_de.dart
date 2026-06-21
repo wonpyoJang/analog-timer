@@ -218,4 +218,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 Schleife $count fertig';
   }
+
+  @override
+  String get batteryLow => 'Akku schwach — bitte laden';
+
+  @override
+  String get batteryMon => 'Akku';
+
+  @override
+  String get batteryMonOn => 'Akku AN';
+
+  @override
+  String get settings => 'Einstellungen';
+
+  @override
+  String get settingsBattery => 'Akku-Überwachung';
+
+  @override
+  String get settingsBatteryDesc =>
+      'Warnen wenn Akku auf 20 % oder darunter fällt';
+
+  @override
+  String get settingsLanguage => 'Sprache';
 }

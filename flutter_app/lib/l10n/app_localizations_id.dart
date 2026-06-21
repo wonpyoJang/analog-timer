@@ -218,4 +218,26 @@ class AppLocalizationsId extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 Putaran $count selesai';
   }
+
+  @override
+  String get batteryLow => 'Baterai lemah — silakan isi daya';
+
+  @override
+  String get batteryMon => 'Baterai';
+
+  @override
+  String get batteryMonOn => 'Baterai ON';
+
+  @override
+  String get settings => 'Pengaturan';
+
+  @override
+  String get settingsBattery => 'Pemantauan baterai';
+
+  @override
+  String get settingsBatteryDesc =>
+      'Peringatkan jika baterai turun ke 20% atau lebih rendah';
+
+  @override
+  String get settingsLanguage => 'Bahasa';
 }
