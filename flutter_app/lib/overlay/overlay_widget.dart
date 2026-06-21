@@ -538,6 +538,13 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     );
   }
 
+  static const _kTextHalo = [
+    Shadow(offset: Offset(-1.5, 0), blurRadius: 3, color: Colors.white),
+    Shadow(offset: Offset(1.5, 0), blurRadius: 3, color: Colors.white),
+    Shadow(offset: Offset(0, -1.5), blurRadius: 3, color: Colors.white),
+    Shadow(offset: Offset(0, 1.5), blurRadius: 3, color: Colors.white),
+  ];
+
   Widget _buildClockCenterInfo() {
     return AnimatedBuilder(
       animation: _blinkCtrl,
@@ -557,6 +564,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: _effectiveTimerColor.withValues(alpha: 0.75),
+                      shadows: _kTextHalo,
                     ),
                   ),
                 Text(
@@ -567,6 +575,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                     fontWeight: FontWeight.w700,
                     color: _effectiveTimerColor,
                     fontFeatures: const [FontFeature.tabularFigures()],
+                    shadows: _kTextHalo,
                   ),
                 ),
               ],
@@ -579,6 +588,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF2EA84A),
                     fontFeatures: [FontFeature.tabularFigures()],
+                    shadows: _kTextHalo,
                   ),
                 ),
             ],

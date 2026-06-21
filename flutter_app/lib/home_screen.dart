@@ -935,6 +935,13 @@ class _ClockWidget extends StatelessWidget {
   }
 }
 
+const _kTextHalo = [
+  Shadow(offset: Offset(-1.5, 0), blurRadius: 3, color: Colors.white),
+  Shadow(offset: Offset(1.5, 0), blurRadius: 3, color: Colors.white),
+  Shadow(offset: Offset(0, -1.5), blurRadius: 3, color: Colors.white),
+  Shadow(offset: Offset(0, 1.5), blurRadius: 3, color: Colors.white),
+];
+
 class _CenterInfo extends StatelessWidget {
   final TimerState timerState;
   final StopwatchState swState;
@@ -972,6 +979,7 @@ class _CenterInfo extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1,
                 color: seg.color,
+                shadows: _kTextHalo,
               ),
             ),
             Text(
@@ -982,6 +990,7 @@ class _CenterInfo extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 color: seg.color,
                 fontFeatures: const [FontFeature.tabularFigures()],
+                shadows: _kTextHalo,
               ),
             ),
           ] else ...[
@@ -1005,6 +1014,7 @@ class _CenterInfo extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 color: AppColors.swGreen,
                 fontFeatures: [FontFeature.tabularFigures()],
+                shadows: _kTextHalo,
               ),
             ),
         ],
