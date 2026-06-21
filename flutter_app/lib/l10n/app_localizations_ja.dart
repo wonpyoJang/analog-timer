@@ -238,4 +238,31 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsLanguage => '言語';
+
+  @override
+  String get modeLabelLog => 'ログ';
+
+  @override
+  String get modeLabelToday => '今日';
+
+  @override
+  String get modeLabelPlan => '予定';
+
+  @override
+  String get dayLogTitle => '当日の記録';
+
+  @override
+  String get dayLogEmpty => 'この日の記録はありません';
+
+  @override
+  String get dayPlanTitle => '当日の予定';
+
+  @override
+  String get dayPlanEmpty => 'この日の予定はありません';
+
+  @override
+  String get planSaveAsCurrent => '計画として保存';
+
+  @override
+  String get planLoadIntoTimer => 'タイマーに読み込む';
 }

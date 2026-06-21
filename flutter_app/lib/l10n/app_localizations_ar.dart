@@ -239,4 +239,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsLanguage => 'اللغة';
+
+  @override
+  String get modeLabelLog => 'سجل';
+
+  @override
+  String get modeLabelToday => 'اليوم';
+
+  @override
+  String get modeLabelPlan => 'خطة';
+
+  @override
+  String get dayLogTitle => 'سجل اليوم';
+
+  @override
+  String get dayLogEmpty => 'لا توجد أنشطة مسجلة لهذا اليوم';
+
+  @override
+  String get dayPlanTitle => 'خطة اليوم';
+
+  @override
+  String get dayPlanEmpty => 'لا توجد خطة لهذا اليوم';
+
+  @override
+  String get planSaveAsCurrent => 'حفظ كخطة';
+
+  @override
+  String get planLoadIntoTimer => 'تحميل في المؤقت';
 }

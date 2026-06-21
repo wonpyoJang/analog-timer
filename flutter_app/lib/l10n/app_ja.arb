@@ -70,5 +70,14 @@
   "settings": "設定",
   "settingsBattery": "バッテリー監視",
   "settingsBatteryDesc": "バッテリーが20%以下になったら警告",
-  "settingsLanguage": "言語"
+  "settingsLanguage": "言語",
+  "modeLabelLog": "ログ",
+  "modeLabelToday": "今日",
+  "modeLabelPlan": "予定",
+  "dayLogTitle": "当日の記録",
+  "dayLogEmpty": "この日の記録はありません",
+  "dayPlanTitle": "当日の予定",
+  "dayPlanEmpty": "この日の予定はありません",
+  "planSaveAsCurrent": "計画として保存",
+  "planLoadIntoTimer": "タイマーに読み込む"
 }

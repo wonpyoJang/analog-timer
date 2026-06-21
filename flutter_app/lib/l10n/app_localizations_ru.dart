@@ -240,4 +240,31 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsLanguage => 'Язык';
+
+  @override
+  String get modeLabelLog => 'Журнал';
+
+  @override
+  String get modeLabelToday => 'Сегодня';
+
+  @override
+  String get modeLabelPlan => 'План';
+
+  @override
+  String get dayLogTitle => 'Журнал дня';
+
+  @override
+  String get dayLogEmpty => 'Нет записей за этот день';
+
+  @override
+  String get dayPlanTitle => 'План дня';
+
+  @override
+  String get dayPlanEmpty => 'Нет плана на этот день';
+
+  @override
+  String get planSaveAsCurrent => 'Сохранить как план';
+
+  @override
+  String get planLoadIntoTimer => 'Загрузить в таймер';
 }

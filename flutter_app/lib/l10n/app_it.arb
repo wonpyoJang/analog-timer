@@ -70,5 +70,14 @@
   "settings": "Impostazioni",
   "settingsBattery": "Monitoraggio batteria",
   "settingsBatteryDesc": "Avvisa quando la batteria scende al 20% o meno",
-  "settingsLanguage": "Lingua"
+  "settingsLanguage": "Lingua",
+  "modeLabelLog": "Registro",
+  "modeLabelToday": "Oggi",
+  "modeLabelPlan": "Piano",
+  "dayLogTitle": "Registro giornaliero",
+  "dayLogEmpty": "Nessuna attività registrata per questo giorno",
+  "dayPlanTitle": "Piano del giorno",
+  "dayPlanEmpty": "Nessun piano per questo giorno",
+  "planSaveAsCurrent": "Salva come piano",
+  "planLoadIntoTimer": "Carica nel timer"
 }

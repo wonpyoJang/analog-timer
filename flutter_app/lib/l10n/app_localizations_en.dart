@@ -239,4 +239,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLanguage => 'Language';
+
+  @override
+  String get modeLabelLog => 'Log';
+
+  @override
+  String get modeLabelToday => 'Today';
+
+  @override
+  String get modeLabelPlan => 'Plan';
+
+  @override
+  String get dayLogTitle => 'Activity Log';
+
+  @override
+  String get dayLogEmpty => 'No activity recorded for this day';
+
+  @override
+  String get dayPlanTitle => 'Day Plan';
+
+  @override
+  String get dayPlanEmpty => 'No plan set for this day';
+
+  @override
+  String get planSaveAsCurrent => 'Save as plan';
+
+  @override
+  String get planLoadIntoTimer => 'Load into timer';
 }

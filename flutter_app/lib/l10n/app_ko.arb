@@ -70,5 +70,14 @@
   "settings": "설정",
   "settingsBattery": "배터리 모니터링",
   "settingsBatteryDesc": "배터리가 20% 이하로 내려가면 경고",
-  "settingsLanguage": "언어"
+  "settingsLanguage": "언어",
+  "modeLabelLog": "로그",
+  "modeLabelToday": "오늘",
+  "modeLabelPlan": "계획",
+  "dayLogTitle": "이 날의 기록",
+  "dayLogEmpty": "이 날에는 기록이 없습니다",
+  "dayPlanTitle": "이 날의 계획",
+  "dayPlanEmpty": "이 날에는 계획이 없습니다",
+  "planSaveAsCurrent": "현재 세그먼트로 저장",
+  "planLoadIntoTimer": "타이머에 불러오기"
 }

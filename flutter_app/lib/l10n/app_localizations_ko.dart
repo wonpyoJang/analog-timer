@@ -238,4 +238,31 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsLanguage => '언어';
+
+  @override
+  String get modeLabelLog => '로그';
+
+  @override
+  String get modeLabelToday => '오늘';
+
+  @override
+  String get modeLabelPlan => '계획';
+
+  @override
+  String get dayLogTitle => '이 날의 기록';
+
+  @override
+  String get dayLogEmpty => '이 날에는 기록이 없습니다';
+
+  @override
+  String get dayPlanTitle => '이 날의 계획';
+
+  @override
+  String get dayPlanEmpty => '이 날에는 계획이 없습니다';
+
+  @override
+  String get planSaveAsCurrent => '현재 세그먼트로 저장';
+
+  @override
+  String get planLoadIntoTimer => '타이머에 불러오기';
 }

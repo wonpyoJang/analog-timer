@@ -239,4 +239,31 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsLanguage => 'Dil';
+
+  @override
+  String get modeLabelLog => 'Günlük';
+
+  @override
+  String get modeLabelToday => 'Bugün';
+
+  @override
+  String get modeLabelPlan => 'Plan';
+
+  @override
+  String get dayLogTitle => 'Günlük Kaydı';
+
+  @override
+  String get dayLogEmpty => 'Bu gün için kayıt yok';
+
+  @override
+  String get dayPlanTitle => 'Günlük Plan';
+
+  @override
+  String get dayPlanEmpty => 'Bu gün için plan yok';
+
+  @override
+  String get planSaveAsCurrent => 'Plan olarak kaydet';
+
+  @override
+  String get planLoadIntoTimer => 'Zamanlayıcıya yükle';
 }

@@ -70,5 +70,14 @@
   "settings": "Ayarlar",
   "settingsBattery": "Pil izleme",
   "settingsBatteryDesc": "Pil %20 veya altına düştüğünde uyar",
-  "settingsLanguage": "Dil"
+  "settingsLanguage": "Dil",
+  "modeLabelLog": "Günlük",
+  "modeLabelToday": "Bugün",
+  "modeLabelPlan": "Plan",
+  "dayLogTitle": "Günlük Kaydı",
+  "dayLogEmpty": "Bu gün için kayıt yok",
+  "dayPlanTitle": "Günlük Plan",
+  "dayPlanEmpty": "Bu gün için plan yok",
+  "planSaveAsCurrent": "Plan olarak kaydet",
+  "planLoadIntoTimer": "Zamanlayıcıya yükle"
 }

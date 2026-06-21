@@ -16,7 +16,6 @@ import 'features/timer/widgets/segment_editor.dart';
 import 'features/stopwatch/widgets/stopwatch_controls.dart';
 import 'widgets/clock_painter.dart';
 import 'widgets/bottom_panels.dart';
-import 'widgets/date_label.dart';
 import 'settings_screen.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
@@ -28,7 +27,11 @@ import 'services/native_widget_service.dart';
 import 'services/desktop_service.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
+import 'services/daily_record_service.dart';
 import 'features/timer/models/segment.dart';
+import 'widgets/date_nav.dart';
+import 'widgets/day_log_view.dart';
+import 'widgets/day_plan_view.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -42,6 +45,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Timer? _persistTimer;
   Timer? _overlayHealthTimer;
   DateTime _now = DateTime.now();
+  late DateTime _viewDate;
+  int _lastTimerLogCount = 0;
   bool _overlayOn = false;
   bool _overlayShowInFlight = false; // concurrent show() race guard
   bool _pendingOverlayEnable = false; // permission 요청 후 복귀 시 자동 시작 플래그
@@ -57,9 +62,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   TimerState? _prevTimer;
   bool _desktopOverlayOn = false;
 
+  DateTime get _today => DateTime(_now.year, _now.month, _now.day);
+
+  bool get _isViewingToday {
+    final t = _today;
+    return _viewDate.year == t.year &&
+        _viewDate.month == t.month &&
+        _viewDate.day == t.day;
+  }
+
   @override
   void initState() {
     super.initState();
+    final now = DateTime.now();
+    _viewDate = DateTime(now.year, now.month, now.day);
     WidgetsBinding.instance.addObserver(this);
     LiveActivityService.init();
     _prevTimer = context.read<TimerBloc>().state;
@@ -545,6 +561,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  void _onLogUpdate(BuildContext ctx, TimerState cur) {
+    if (cur.log.length < _lastTimerLogCount) {
+      // 로그가 초기화됨 (restore / replace)
+      _lastTimerLogCount = 0;
+      return;
+    }
+    if (cur.log.length <= _lastTimerLogCount) return;
+    final newEntries = cur.log.skip(_lastTimerLogCount).toList();
+    _lastTimerLogCount = cur.log.length;
+    final today = DateTime.now();
+    for (final e in newEntries) {
+      DailyRecordService.appendLogEntry(today, {
+        'type': e.type.name,
+        'segName': e.segName ?? '',
+        'colorValue': e.colorValue,
+        'timeMs': e.time.millisecondsSinceEpoch,
+      });
+    }
+  }
+
   String _fmt(int ms) {
     if (ms <= 0) return '00:00';
     final total = (ms / 1000).truncate();
@@ -894,7 +930,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ],
                           ),
                           const SizedBox(height: 6),
-                          _DateLine(now: _now),
+                          DateNav(
+                            selectedDate: _viewDate,
+                            today: _today,
+                            onPrev: () => setState(
+                              () => _viewDate = _viewDate.subtract(
+                                const Duration(days: 1),
+                              ),
+                            ),
+                            onNext: () => setState(
+                              () => _viewDate = _viewDate.add(
+                                const Duration(days: 1),
+                              ),
+                            ),
+                            onToday: () => setState(() => _viewDate = _today),
+                          ),
                           const SizedBox(height: 16),
 
                           _ClockWidget(now: _now),
@@ -928,17 +978,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ),
                           const SizedBox(height: 16),
 
-                          const SegmentEditor(),
-                          const SizedBox(height: 12),
-
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Expanded(child: LapList()),
-                              SizedBox(width: 10),
-                              Expanded(child: TimerLog()),
-                            ],
-                          ),
+                          if (_isViewingToday) ...[
+                            const SegmentEditor(),
+                            const SizedBox(height: 12),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Expanded(child: LapList()),
+                                SizedBox(width: 10),
+                                Expanded(child: TimerLog()),
+                              ],
+                            ),
+                          ] else if (_viewDate.isBefore(_today))
+                            DayLogView(date: _viewDate)
+                          else
+                            DayPlanView(date: _viewDate),
                         ],
                       ),
                     ),
@@ -951,7 +1005,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
     );
 
-    if (!isDesktop) return scaffold;
+    // 타이머 로그 자동 저장 — 새 항목이 추가될 때마다 당일 기록으로 보존
+    final withAutoLog = BlocListener<TimerBloc, TimerState>(
+      listenWhen: (p, c) => c.log.length != p.log.length,
+      listener: _onLogUpdate,
+      child: scaffold,
+    );
+
+    if (!isDesktop) return withAutoLog;
     // 데스크톱: 타이머 상태 전이를 감지해 알림/동기화 발신. segRemainMs 만
     // 바뀌는 매 프레임은 무시하고 status/세그먼트/loop 변화에만 반응한다.
     return BlocListener<TimerBloc, TimerState>(
@@ -961,27 +1022,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           p.loop != c.loop ||
           !identical(p.segments, c.segments),
       listener: (_, state) => _onTimerTransition(state),
-      child: scaffold,
-    );
-  }
-}
-
-class _DateLine extends StatelessWidget {
-  final DateTime now;
-  const _DateLine({required this.now});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      formatDateLine(now, Localizations.localeOf(context).languageCode),
-      style: TextStyle(
-        fontFamily: 'Pretendard',
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 1,
-        color: AppColors.text.withAlpha(0xAA),
-        fontFeatures: const [FontFeature.tabularFigures()],
-      ),
+      child: withAutoLog,
     );
   }
 }

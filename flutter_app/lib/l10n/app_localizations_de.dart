@@ -240,4 +240,31 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsLanguage => 'Sprache';
+
+  @override
+  String get modeLabelLog => 'Log';
+
+  @override
+  String get modeLabelToday => 'Heute';
+
+  @override
+  String get modeLabelPlan => 'Plan';
+
+  @override
+  String get dayLogTitle => 'Tagesprotokoll';
+
+  @override
+  String get dayLogEmpty => 'Keine Aktivitäten für diesen Tag';
+
+  @override
+  String get dayPlanTitle => 'Tagesplan';
+
+  @override
+  String get dayPlanEmpty => 'Kein Plan für diesen Tag';
+
+  @override
+  String get planSaveAsCurrent => 'Als Plan speichern';
+
+  @override
+  String get planLoadIntoTimer => 'In Timer laden';
 }

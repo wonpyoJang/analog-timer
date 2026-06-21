@@ -239,4 +239,31 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settingsLanguage => 'भाषा';
+
+  @override
+  String get modeLabelLog => 'लॉग';
+
+  @override
+  String get modeLabelToday => 'आज';
+
+  @override
+  String get modeLabelPlan => 'योजना';
+
+  @override
+  String get dayLogTitle => 'दिनचर्या लॉग';
+
+  @override
+  String get dayLogEmpty => 'इस दिन के लिए कोई गतिविधि दर्ज नहीं';
+
+  @override
+  String get dayPlanTitle => 'दिन की योजना';
+
+  @override
+  String get dayPlanEmpty => 'इस दिन के लिए कोई योजना नहीं';
+
+  @override
+  String get planSaveAsCurrent => 'योजना के रूप में सहेजें';
+
+  @override
+  String get planLoadIntoTimer => 'टाइमर में लोड करें';
 }

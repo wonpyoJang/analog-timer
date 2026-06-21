@@ -70,5 +70,14 @@
   "settings": "设置",
   "settingsBattery": "电量监控",
   "settingsBatteryDesc": "电量低于20%时发出警告",
-  "settingsLanguage": "语言"
+  "settingsLanguage": "语言",
+  "modeLabelLog": "日志",
+  "modeLabelToday": "今天",
+  "modeLabelPlan": "计划",
+  "dayLogTitle": "当日记录",
+  "dayLogEmpty": "这一天没有活动记录",
+  "dayPlanTitle": "当日计划",
+  "dayPlanEmpty": "这一天没有计划",
+  "planSaveAsCurrent": "保存为计划",
+  "planLoadIntoTimer": "载入计时器"
 }

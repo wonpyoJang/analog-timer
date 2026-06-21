@@ -238,6 +238,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsLanguage => '语言';
+
+  @override
+  String get modeLabelLog => '日志';
+
+  @override
+  String get modeLabelToday => '今天';
+
+  @override
+  String get modeLabelPlan => '计划';
+
+  @override
+  String get dayLogTitle => '当日记录';
+
+  @override
+  String get dayLogEmpty => '这一天没有活动记录';
+
+  @override
+  String get dayPlanTitle => '当日计划';
+
+  @override
+  String get dayPlanEmpty => '这一天没有计划';
+
+  @override
+  String get planSaveAsCurrent => '保存为计划';
+
+  @override
+  String get planLoadIntoTimer => '载入计时器';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -474,4 +501,31 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsLanguage => '語言';
+
+  @override
+  String get modeLabelLog => '紀錄';
+
+  @override
+  String get modeLabelToday => '今天';
+
+  @override
+  String get modeLabelPlan => '計畫';
+
+  @override
+  String get dayLogTitle => '當日紀錄';
+
+  @override
+  String get dayLogEmpty => '這天沒有活動紀錄';
+
+  @override
+  String get dayPlanTitle => '當日計畫';
+
+  @override
+  String get dayPlanEmpty => '這天沒有計畫';
+
+  @override
+  String get planSaveAsCurrent => '儲存為計畫';
+
+  @override
+  String get planLoadIntoTimer => '載入計時器';
 }

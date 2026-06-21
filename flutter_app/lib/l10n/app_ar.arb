@@ -70,5 +70,14 @@
   "settings": "الإعدادات",
   "settingsBattery": "مراقبة البطارية",
   "settingsBatteryDesc": "تحذير عند انخفاض البطارية إلى 20٪ أو أقل",
-  "settingsLanguage": "اللغة"
+  "settingsLanguage": "اللغة",
+  "modeLabelLog": "سجل",
+  "modeLabelToday": "اليوم",
+  "modeLabelPlan": "خطة",
+  "dayLogTitle": "سجل اليوم",
+  "dayLogEmpty": "لا توجد أنشطة مسجلة لهذا اليوم",
+  "dayPlanTitle": "خطة اليوم",
+  "dayPlanEmpty": "لا توجد خطة لهذا اليوم",
+  "planSaveAsCurrent": "حفظ كخطة",
+  "planLoadIntoTimer": "تحميل في المؤقت"
 }

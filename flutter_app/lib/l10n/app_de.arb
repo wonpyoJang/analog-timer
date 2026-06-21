@@ -70,5 +70,14 @@
   "settings": "Einstellungen",
   "settingsBattery": "Akku-Überwachung",
   "settingsBatteryDesc": "Warnen wenn Akku auf 20 % oder darunter fällt",
-  "settingsLanguage": "Sprache"
+  "settingsLanguage": "Sprache",
+  "modeLabelLog": "Log",
+  "modeLabelToday": "Heute",
+  "modeLabelPlan": "Plan",
+  "dayLogTitle": "Tagesprotokoll",
+  "dayLogEmpty": "Keine Aktivitäten für diesen Tag",
+  "dayPlanTitle": "Tagesplan",
+  "dayPlanEmpty": "Kein Plan für diesen Tag",
+  "planSaveAsCurrent": "Als Plan speichern",
+  "planLoadIntoTimer": "In Timer laden"
 }

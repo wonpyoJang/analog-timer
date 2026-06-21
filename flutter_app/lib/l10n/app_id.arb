@@ -70,5 +70,14 @@
   "settings": "Pengaturan",
   "settingsBattery": "Pemantauan baterai",
   "settingsBatteryDesc": "Peringatkan jika baterai turun ke 20% atau lebih rendah",
-  "settingsLanguage": "Bahasa"
+  "settingsLanguage": "Bahasa",
+  "modeLabelLog": "Log",
+  "modeLabelToday": "Hari Ini",
+  "modeLabelPlan": "Rencana",
+  "dayLogTitle": "Log Aktivitas",
+  "dayLogEmpty": "Tidak ada aktivitas yang dicatat untuk hari ini",
+  "dayPlanTitle": "Rencana Hari",
+  "dayPlanEmpty": "Tidak ada rencana untuk hari ini",
+  "planSaveAsCurrent": "Simpan sebagai rencana",
+  "planLoadIntoTimer": "Muat ke timer"
 }

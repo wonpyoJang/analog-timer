@@ -70,5 +70,14 @@
   "settings": "Paramètres",
   "settingsBattery": "Surveillance batterie",
   "settingsBatteryDesc": "Avertir quand la batterie descend à 20 % ou moins",
-  "settingsLanguage": "Langue"
+  "settingsLanguage": "Langue",
+  "modeLabelLog": "Journal",
+  "modeLabelToday": "Aujourd'hui",
+  "modeLabelPlan": "Plan",
+  "dayLogTitle": "Journal du jour",
+  "dayLogEmpty": "Aucune activité enregistrée pour ce jour",
+  "dayPlanTitle": "Plan du jour",
+  "dayPlanEmpty": "Aucun plan pour ce jour",
+  "planSaveAsCurrent": "Enregistrer comme plan",
+  "planLoadIntoTimer": "Charger dans la minuterie"
 }

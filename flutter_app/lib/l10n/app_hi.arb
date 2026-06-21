@@ -70,5 +70,14 @@
   "settings": "सेटिंग्स",
   "settingsBattery": "बैटरी निगरानी",
   "settingsBatteryDesc": "जब बैटरी 20% या कम हो तो चेतावनी दें",
-  "settingsLanguage": "भाषा"
+  "settingsLanguage": "भाषा",
+  "modeLabelLog": "लॉग",
+  "modeLabelToday": "आज",
+  "modeLabelPlan": "योजना",
+  "dayLogTitle": "दिनचर्या लॉग",
+  "dayLogEmpty": "इस दिन के लिए कोई गतिविधि दर्ज नहीं",
+  "dayPlanTitle": "दिन की योजना",
+  "dayPlanEmpty": "इस दिन के लिए कोई योजना नहीं",
+  "planSaveAsCurrent": "योजना के रूप में सहेजें",
+  "planLoadIntoTimer": "टाइमर में लोड करें"
 }

@@ -70,5 +70,14 @@
   "settings": "Настройки",
   "settingsBattery": "Мониторинг батареи",
   "settingsBatteryDesc": "Предупреждать при уровне заряда 20 % и ниже",
-  "settingsLanguage": "Язык"
+  "settingsLanguage": "Язык",
+  "modeLabelLog": "Журнал",
+  "modeLabelToday": "Сегодня",
+  "modeLabelPlan": "План",
+  "dayLogTitle": "Журнал дня",
+  "dayLogEmpty": "Нет записей за этот день",
+  "dayPlanTitle": "План дня",
+  "dayPlanEmpty": "Нет плана на этот день",
+  "planSaveAsCurrent": "Сохранить как план",
+  "planLoadIntoTimer": "Загрузить в таймер"
 }

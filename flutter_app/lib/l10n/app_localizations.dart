@@ -548,6 +548,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language'**
   String get settingsLanguage;
+
+  /// No description provided for @modeLabelLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get modeLabelLog;
+
+  /// No description provided for @modeLabelToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get modeLabelToday;
+
+  /// No description provided for @modeLabelPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get modeLabelPlan;
+
+  /// No description provided for @dayLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Log'**
+  String get dayLogTitle;
+
+  /// No description provided for @dayLogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity recorded for this day'**
+  String get dayLogEmpty;
+
+  /// No description provided for @dayPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Plan'**
+  String get dayPlanTitle;
+
+  /// No description provided for @dayPlanEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No plan set for this day'**
+  String get dayPlanEmpty;
+
+  /// No description provided for @planSaveAsCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as plan'**
+  String get planSaveAsCurrent;
+
+  /// No description provided for @planLoadIntoTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Load into timer'**
+  String get planLoadIntoTimer;
 }
 
 class _AppLocalizationsDelegate
