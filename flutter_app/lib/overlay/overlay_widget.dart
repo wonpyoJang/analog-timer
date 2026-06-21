@@ -49,7 +49,8 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   double? _pinchInitW; // 핀치 시작 시 기준 너비
   bool _resizeInFlight = false;
 
-  static const _minOverlayW = 120;
+  // 컨트롤 버튼(36dp×3) + 여백 기준 최소 사용 가능 너비
+  static const _minOverlayW = 160;
   // 핸들 탭으로 순환할 프리셋 (화면 너비 대비 비율)
   static const _sizePresets = [0.42, 0.58, 0.75];
 
