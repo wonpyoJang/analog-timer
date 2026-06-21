@@ -15,6 +15,7 @@ import 'overlay/desktop_overlay.dart';
 import 'services/desktop_service.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
+import 'services/telemetry_service.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +38,23 @@ Future<void> main(List<String> args) async {
   await DesktopNotificationService.init();
   await DesktopService.instance.init();
   await DesktopOverlayService.instance.init();
+  await TelemetryService.instance.init();
+  _installErrorHandlers();
   runApp(const AnalogTimerApp());
+}
+
+/// Dart 레벨 에러(위젯 빌드/프레임워크/비동기)를 텔레메트리로 전송.
+/// 네이티브 크래시는 여기서 못 잡으며, 다음 실행의 비정상종료 감지가 담당한다.
+void _installErrorHandlers() {
+  final prev = FlutterError.onError;
+  FlutterError.onError = (details) {
+    prev?.call(details); // 콘솔 출력 등 기본 동작 보존
+    TelemetryService.instance.reportDartError(details.exception, details.stack);
+  };
+  WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+    TelemetryService.instance.reportDartError(error, stack);
+    return true;
+  };
 }
 
 /// 현재 엔진이 desktop_multi_window 서브윈도우(오버레이)면 그 인자 맵을, 아니면 null.

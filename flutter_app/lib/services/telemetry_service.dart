@@ -1,0 +1,204 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// 크래시·환경 텔레메트리. 데스크톱(Windows/macOS) 전용 — web/mobile 에선 no-op.
+///
+/// 핵심: 네이티브 크래시(앱이 통째로 죽는 경우)는 Dart 가 그 순간을 못 잡으므로,
+/// "정상 종료 플래그"를 두고 **다음 실행 시** 비정상 종료를 감지해 리포트한다.
+/// 첫 실행 1회 동의(consent) 전에는 아무것도 전송하지 않고 보류한다.
+class TelemetryService {
+  TelemetryService._();
+  static final TelemetryService instance = TelemetryService._();
+
+  static const String _endpoint =
+      'https://analog-timer-kappa.vercel.app/api/telemetry';
+  static const String _appVersion = '0.3.0+4';
+
+  static const String _kConsent = 'telemetry_consent'; // bool? (null=미정)
+  static const String _kDeviceId = 'telemetry_device_id';
+  static const String _kLastState = 'telemetry_last_state';
+  static const String _kPending = 'telemetry_pending_crash';
+
+  /// 정상 종료 마커 — 네이티브 종료 직전(main.cpp)과 Dart 양쪽이 남긴다.
+  /// 시작 시 존재하면 직전 세션이 정상 종료된 것. 없으면 크래시(첫 실행 제외).
+  File get _cleanFlag =>
+      File('${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_clean.flag');
+
+  bool _enabled = false;
+  String? _deviceId;
+  Map<String, dynamic> _env = {};
+
+  bool get supported =>
+      !kIsWeb && (Platform.isWindows || Platform.isMacOS);
+
+  /// 동의 상태 — true/false/null(아직 안 물음).
+  Future<bool?> consent() async {
+    if (!supported) return false;
+    final p = await SharedPreferences.getInstance();
+    return p.containsKey(_kConsent) ? p.getBool(_kConsent) : null;
+  }
+
+  /// 동의 설정(첫 실행 다이얼로그 / 설정 토글). true 면 보류된 크래시도 전송.
+  Future<void> setConsent(bool v) async {
+    if (!supported) return;
+    final p = await SharedPreferences.getInstance();
+    await p.setBool(_kConsent, v);
+    _enabled = v;
+    if (v) await _flushPending();
+  }
+
+  /// 앱 시작 직후 호출 — 비정상 종료 감지 + 환경 수집.
+  Future<void> init() async {
+    if (!supported) return;
+    final p = await SharedPreferences.getInstance();
+    _enabled = p.getBool(_kConsent) ?? false;
+    final existedId = p.getString(_kDeviceId);
+    final firstRun = existedId == null;
+    _deviceId = existedId ?? _genId();
+    if (firstRun) await p.setString(_kDeviceId, _deviceId!);
+
+    // 직전 종료 판정: 마커가 있으면 정상 종료, 없으면 크래시(첫 실행은 제외).
+    bool cleanLast;
+    try {
+      cleanLast = await _cleanFlag.exists();
+    } catch (_) {
+      cleanLast = true; // 판정 불가 시 오탐 방지
+    }
+    try {
+      if (cleanLast) await _cleanFlag.delete();
+    } catch (_) {}
+
+    unawaited(_collectEnv()); // 백그라운드 환경 수집
+
+    if (!cleanLast && !firstRun) {
+      final lastStateRaw = p.getString(_kLastState);
+      final crash = <String, dynamic>{
+        'type': 'crash',
+        'crashKind': 'native',
+        'message':
+            '비정상 종료 감지 — 이전 세션이 정상 종료 플래그를 남기지 못함(네이티브 크래시 가능성)',
+        'lastState': lastStateRaw != null ? jsonDecode(lastStateRaw) : null,
+      };
+      await p.setString(_kPending, jsonEncode(crash));
+      if (_enabled) await _flushPending();
+    }
+  }
+
+  /// 정상 종료 — 마커 생성(네이티브 main.cpp 가 주 경로, 이건 보조 안전망).
+  Future<void> markCleanExit() async {
+    if (!supported) return;
+    try {
+      await _cleanFlag.create();
+    } catch (_) {}
+  }
+
+  /// 크래시 시 함께 올릴 마지막 상태(위젯 on/off, 타이머 running 등). 주기적으로 저장.
+  Future<void> saveLastState(Map<String, dynamic> state) async {
+    if (!supported) return;
+    final p = await SharedPreferences.getInstance();
+    await p.setString(_kLastState, jsonEncode(state));
+  }
+
+  /// Dart 레벨 에러(FlutterError / PlatformDispatcher) 리포트.
+  Future<void> reportDartError(Object error, StackTrace? stack,
+      {Map<String, dynamic>? lastState}) async {
+    if (!supported) return;
+    await _send({
+      'type': 'crash',
+      'crashKind': 'dart',
+      'message': error.toString(),
+      'stack': stack?.toString(),
+      if (lastState != null) 'lastState': lastState,
+    });
+  }
+
+  Future<void> _flushPending() async {
+    if (!_enabled || !supported) return;
+    final p = await SharedPreferences.getInstance();
+    final pend = p.getString(_kPending);
+    if (pend == null) return;
+    final crash = jsonDecode(pend) as Map<String, dynamic>;
+    crash['eventLog'] = await _collectEventLog();
+    if (await _send(crash)) await p.remove(_kPending);
+  }
+
+  Future<bool> _send(Map<String, dynamic> body) async {
+    if (!_enabled || !supported) return false;
+    HttpClient? client;
+    try {
+      if (_env.isEmpty) await _collectEnv();
+      final payload = <String, dynamic>{
+        'deviceId': _deviceId,
+        'appVersion': _appVersion,
+        ..._env,
+        ...body,
+      };
+      client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
+      final req = await client.postUrl(Uri.parse(_endpoint));
+      req.headers.contentType = ContentType.json;
+      req.add(utf8.encode(jsonEncode(payload)));
+      final res = await req.close().timeout(const Duration(seconds: 10));
+      await res.drain<void>();
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    } finally {
+      client?.close(force: true);
+    }
+  }
+
+  Future<void> _collectEnv() async {
+    if (!supported) return;
+    try {
+      _env = {
+        'platform': Platform.isWindows
+            ? 'windows'
+            : Platform.isMacOS
+                ? 'macos'
+                : 'other',
+        'osVersion': Platform.operatingSystemVersion,
+      };
+      if (Platform.isWindows) {
+        final r = await Process.run('powershell', [
+          '-NoProfile',
+          '-Command',
+          '(Get-CimInstance Win32_VideoController | '
+              'Select-Object -ExpandProperty Name) -join ", "',
+        ]).timeout(const Duration(seconds: 8));
+        final gpu = (r.stdout as String).trim();
+        if (gpu.isNotEmpty) _env['gpu'] = gpu;
+      }
+    } catch (_) {
+      // 환경 수집 실패해도 osVersion 만으로 진행
+    }
+  }
+
+  /// 최근 1시간 Application 오류 이벤트 중 앱 관련 항목(크래시 단서).
+  Future<String> _collectEventLog() async {
+    if (!Platform.isWindows) return '';
+    try {
+      const ps =
+          r"Get-WinEvent -FilterHashtable @{LogName='Application';Level=2;StartTime=(Get-Date).AddHours(-1)} "
+          r"-MaxEvents 25 -ErrorAction SilentlyContinue | "
+          r"Where-Object { $_.Message -match 'analog_timer|flutter|0xc0000005|0xc0000409' } | "
+          r"Select-Object -First 6 | "
+          r"ForEach-Object { '[' + $_.TimeCreated.ToString('HH:mm:ss') + '] ' + $_.ProviderName + ': ' + ($_.Message.Split([char]10))[0] }";
+      final r = await Process.run(
+              'powershell', ['-NoProfile', '-Command', ps])
+          .timeout(const Duration(seconds: 10));
+      return (r.stdout as String).trim();
+    } catch (_) {
+      return '';
+    }
+  }
+
+  String _genId() {
+    final rnd = Random.secure();
+    return List.generate(
+        16, (_) => rnd.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+  }
+}

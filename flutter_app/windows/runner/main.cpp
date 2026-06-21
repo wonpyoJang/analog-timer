@@ -75,6 +75,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // teardown 이 레이스를 일으켜 0xC0000005(액세스 위반) 크래시 + '창 없는
   // 좀비 프로세스'가 남는 사례가 있었다. 정리 코드를 건너뛰고 프로세스를
   // 즉시 강제 종료해 X 한 번에 확실히·깨끗이 닫히도록 한다.
+  //
+  // 메시지 루프가 정상적으로 끝났다 = 사용자가 X 로 '정상 종료'했다는 뜻이므로,
+  // 텔레메트리용 clean-exit 마커를 남긴다. 이 마커가 없으면 다음 실행이 직전
+  // 세션을 '비정상 종료(네이티브 크래시)'로 간주해 리포트한다.
+  // (경로는 Dart TelemetryService 의 Directory.systemTemp 와 일치)
+  {
+    wchar_t marker[MAX_PATH];
+    DWORD n = ::GetTempPathW(MAX_PATH, marker);
+    if (n > 0 && n < MAX_PATH - 30) {
+      ::lstrcatW(marker, L"analog_timer_clean.flag");
+      HANDLE h = ::CreateFileW(marker, GENERIC_WRITE, 0, nullptr,
+                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+      if (h != INVALID_HANDLE_VALUE) ::CloseHandle(h);
+    }
+  }
   ::TerminateProcess(::GetCurrentProcess(), 0);
 
   ::CoUninitialize();

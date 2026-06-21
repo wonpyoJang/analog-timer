@@ -1,5 +1,4 @@
 ﻿import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +25,8 @@ import 'services/persistence_service.dart';
 import 'services/desktop_service.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
+import 'services/telemetry_service.dart';
+import 'widgets/telemetry_consent.dart';
 import 'features/timer/models/segment.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -55,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     LiveActivityService.init();
     _prevTimer = context.read<TimerBloc>().state;
     _startTimer();
-    if (Platform.isAndroid) {
+    if (isAndroid) {
       _listenOverlayCommands();
       _restoreState();
     } else if (isDesktop) {
@@ -64,7 +65,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
     // 30초마다 자동 저장 — 앱 강제 종료 직전 저장 실패를 보완
     _persistTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) _saveState();
+      if (mounted) {
+        _saveState();
+        _saveTelemetrySnapshot();
+      }
     });
   }
 
@@ -322,6 +326,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (mounted) _updateTray();
     });
     _updateTray();
+    // 첫 실행 1회 진단 동의 + 초기 상태 스냅샷(크래시 맥락용).
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      _saveTelemetrySnapshot();
+      if (TelemetryService.instance.supported &&
+          (await TelemetryService.instance.consent()) == null &&
+          mounted) {
+        await showTelemetryConsent(context);
+      }
+    });
+  }
+
+  /// 크래시 리포트에 함께 올릴 마지막 상태(위젯 on/off, 타이머 상태) 저장.
+  void _saveTelemetrySnapshot() {
+    if (!TelemetryService.instance.supported) return;
+    TelemetryService.instance.saveLastState({
+      'overlayOn': _desktopOverlayOn,
+      'timerStatus': context.read<TimerBloc>().state.status.name,
+    });
   }
 
   /// 플로팅 오버레이 위젯(항상 위) 토글.
@@ -333,6 +356,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await DesktopOverlayService.instance.show(_overlayStateMap());
       setState(() => _desktopOverlayOn = true);
     }
+    _saveTelemetrySnapshot();
   }
 
   /// 오버레이 서브윈도우 버튼에서 올라온 액션을 메인 타이머/스톱워치에 반영.
@@ -443,7 +467,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _syncLiveActivity() {
-    if (!Platform.isIOS) return;
+    if (!isIOS) return;
     final timerState = context.read<TimerBloc>().state;
     final swState = context.read<StopwatchBloc>().state;
     final timerActive =
@@ -465,7 +489,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _syncOverlay() {
-    if (!_overlayOn || !Platform.isAndroid) return;
+    if (!_overlayOn || !isAndroid) return;
     final timerState = context.read<TimerBloc>().state;
     final swState = context.read<StopwatchBloc>().state;
     final timerActive =
@@ -503,7 +527,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleOverlay() async {
-    if (!Platform.isAndroid) return;
+    if (!isAndroid) return;
     if (!await OverlayService.isPermissionGranted) {
       await OverlayService.requestPermission();
       return;
@@ -556,7 +580,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ),
                           ),
                         ),
-                        if (Platform.isAndroid) ...[
+                        if (isAndroid) ...[
                           const SizedBox(width: 10),
                           GestureDetector(
                             onTap: _toggleOverlay,
@@ -639,6 +663,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ),
                           ),
                         ),
+                        if (TelemetryService.instance.supported) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => showTelemetrySettings(context),
+                            child: Container(
+                              padding: const EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                border: Border.all(color: AppColors.border),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.bug_report_outlined,
+                                size: 16,
+                                color: AppColors.muted,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 6),

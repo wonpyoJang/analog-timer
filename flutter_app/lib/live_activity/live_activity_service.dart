@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:live_activities/live_activities.dart';
+import '../services/platform_info.dart';
 
 const _appGroupId = 'group.dev.analogtimer.analogTimer';
 const _activityId = 'analog_timer_activity';
@@ -10,7 +10,7 @@ class LiveActivityService {
   static bool _active = false;
 
   static Future<void> init() async {
-    if (!Platform.isIOS || _initialized) return;
+    if (!isIOS || _initialized) return;
     await _plugin.init(appGroupId: _appGroupId);
     _initialized = true;
   }
@@ -22,7 +22,7 @@ class LiveActivityService {
     required bool swActive,
     required String swElapsed,
   }) async {
-    if (!Platform.isIOS) return;
+    if (!isIOS) return;
     if (!_initialized) await init();
 
     final data = {
@@ -53,7 +53,7 @@ class LiveActivityService {
   }
 
   static Future<void> end() async {
-    if (!Platform.isIOS || !_initialized) return;
+    if (!isIOS || !_initialized) return;
     await _plugin.endAllActivities();
     _active = false;
   }

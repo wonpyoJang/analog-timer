@@ -1,20 +1,20 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import '../services/platform_info.dart';
 
 class OverlayService {
   static Future<bool> get isPermissionGranted async {
-    if (!Platform.isAndroid) return false;
+    if (!isAndroid) return false;
     return FlutterOverlayWindow.isPermissionGranted();
   }
 
   static Future<void> requestPermission() async {
-    if (!Platform.isAndroid) return;
+    if (!isAndroid) return;
     await FlutterOverlayWindow.requestPermission();
   }
 
   static Future<void> show({int screenWidthDp = 400}) async {
-    if (!Platform.isAndroid) return;
+    if (!isAndroid) return;
     if (!await FlutterOverlayWindow.isPermissionGranted()) return;
 
     final expandedW = (screenWidthDp * 0.42).round().clamp(150, screenWidthDp);
@@ -42,7 +42,7 @@ class OverlayService {
   }
 
   static Future<void> hide() async {
-    if (!Platform.isAndroid) return;
+    if (!isAndroid) return;
     if (!await FlutterOverlayWindow.isActive()) return;
     // closeOverlay 금지 — 재오픈 시 JNI SIGSEGV 유발
     // 오버레이 위젯에 hide 명령 전달 → 위젯이 resizeOverlay(1,1) 호출
@@ -66,7 +66,7 @@ class OverlayService {
     int screenWidthDp = 400,
     int screenHeightDp = 800,
   }) async {
-    if (!Platform.isAndroid) return;
+    if (!isAndroid) return;
     await FlutterOverlayWindow.shareData(
       jsonEncode({
         'timerActive': timerActive,
