@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# gen-l10n 생성물 (빌드 시 재생성)
+lib/l10n/app_localizations*.dart

@@ -1,60 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
 import '../bloc/timer_state.dart';
 
-class TimerControls extends StatefulWidget {
+class TimerControls extends StatelessWidget {
   const TimerControls({super.key});
-
-  @override
-  State<TimerControls> createState() => _TimerControlsState();
-}
-
-class _TimerControlsState extends State<TimerControls> {
-  bool _nextCounting = false;
-  double _nextPct = 0;
-  static const _nextDelay = Duration(seconds: 2);
-  DateTime? _nextStart;
-
-  void _startNextCountdown() {
-    setState(() {
-      _nextCounting = true;
-      _nextPct = 0;
-      _nextStart = DateTime.now();
-    });
-    _animNext();
-  }
-
-  void _cancelNext() {
-    setState(() {
-      _nextCounting = false;
-      _nextPct = 0;
-      _nextStart = null;
-    });
-  }
-
-  void _animNext() {
-    if (!_nextCounting || _nextStart == null) return;
-    final elapsed = DateTime.now().difference(_nextStart!);
-    final pct = (elapsed.inMilliseconds / _nextDelay.inMilliseconds).clamp(
-      0.0,
-      1.0,
-    );
-    setState(() => _nextPct = pct);
-    if (pct >= 1.0) {
-      _cancelNext();
-      context.read<TimerBloc>().add(const TimerNext());
-      return;
-    }
-    Future.delayed(const Duration(milliseconds: 16), _animNext);
-  }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TimerBloc, TimerState>(
       builder: (context, state) {
+        final l = AppLocalizations.of(context);
         final isRunning = state.status == TimerStatus.running;
         final isIdle =
             state.status == TimerStatus.idle ||
@@ -62,9 +21,9 @@ class _TimerControlsState extends State<TimerControls> {
 
         return Column(
           children: [
-            const Text(
-              '⏱ TIMER',
-              style: TextStyle(
+            Text(
+              '⏱ ${l.timerSection}',
+              style: const TextStyle(
                 color: AppColors.muted,
                 fontSize: 11,
                 letterSpacing: 1.2,
@@ -77,10 +36,10 @@ class _TimerControlsState extends State<TimerControls> {
                 Expanded(
                   child: _Btn(
                     label: isRunning
-                        ? 'RUNNING…'
+                        ? l.btnRunning
                         : (state.status == TimerStatus.paused
-                              ? 'RESUME'
-                              : 'START'),
+                              ? l.btnResume
+                              : l.btnStart),
                     enabled: !isRunning,
                     primary: true,
                     color: AppColors.timerOrange,
@@ -93,7 +52,7 @@ class _TimerControlsState extends State<TimerControls> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _Btn(
-                    label: 'PAUSE',
+                    label: l.btnPause,
                     enabled: isRunning,
                     onTap: isRunning
                         ? () =>
@@ -104,34 +63,27 @@ class _TimerControlsState extends State<TimerControls> {
               ],
             ),
             const SizedBox(height: 8),
-            // 2행: NEXT (카운트다운) + RST
+            // 2행: NEXT (즉시 다음) + RST
             Row(
               children: [
                 Expanded(
-                  child: _NextBtn(
-                    counting: _nextCounting,
-                    pct: _nextPct,
+                  child: _Btn(
+                    label: '▶ ${l.btnNext}',
                     enabled: !isIdle,
+                    color: AppColors.accent,
+                    accentOutline: true,
                     onTap: !isIdle
-                        ? () {
-                            if (_nextCounting) {
-                              _cancelNext();
-                            } else {
-                              _startNextCountdown();
-                            }
-                          }
+                        ? () => context.read<TimerBloc>().add(const TimerNext())
                         : null,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _Btn(
-                    label: 'RST',
+                    label: l.btnReset,
                     danger: true,
-                    onTap: () {
-                      _cancelNext();
-                      context.read<TimerBloc>().add(const TimerReset());
-                    },
+                    onTap: () =>
+                        context.read<TimerBloc>().add(const TimerReset()),
                   ),
                 ),
               ],
@@ -148,6 +100,9 @@ class _Btn extends StatelessWidget {
   final bool enabled;
   final bool primary;
   final bool danger;
+
+  /// 강조 윤곽선(다음 버튼) — 배경은 어둡게, 글자/테두리는 accent.
+  final bool accentOutline;
   final Color? color;
   final VoidCallback? onTap;
 
@@ -156,6 +111,7 @@ class _Btn extends StatelessWidget {
     this.enabled = true,
     this.primary = false,
     this.danger = false,
+    this.accentOutline = false,
     this.color,
     this.onTap,
   });
@@ -168,6 +124,10 @@ class _Btn extends StatelessWidget {
     if (primary && color != null) {
       bg = color!;
       fg = Colors.white;
+      border = color!;
+    } else if (accentOutline && color != null) {
+      bg = const Color(0xFF2E2E38);
+      fg = color!;
       border = color!;
     } else if (danger) {
       fg = AppColors.danger;
@@ -193,60 +153,6 @@ class _Btn extends StatelessWidget {
           style: TextStyle(color: fg, fontSize: 11, letterSpacing: 0.8),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
-        ),
-      ),
-    );
-  }
-}
-
-class _NextBtn extends StatelessWidget {
-  final bool counting;
-  final double pct;
-  final bool enabled;
-  final VoidCallback? onTap;
-  const _NextBtn({
-    required this.counting,
-    required this.pct,
-    required this.enabled,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2E2E38),
-                border: Border.all(color: AppColors.accent),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                counting ? '✕ 취소' : '▶ 다음',
-                style: TextStyle(
-                  color: counting ? Colors.white : AppColors.accent,
-                  fontSize: 11,
-                  letterSpacing: 0.8,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
-            if (counting)
-              Positioned.fill(
-                child: FractionallySizedBox(
-                  widthFactor: pct,
-                  alignment: Alignment.centerLeft,
-                  child: Container(color: AppColors.accent.withAlpha(0xAA)),
-                ),
-              ),
-          ],
         ),
       ),
     );

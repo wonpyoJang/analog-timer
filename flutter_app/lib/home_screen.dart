@@ -1,9 +1,9 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'l10n/app_localizations.dart';
 import 'theme/app_theme.dart';
 import 'features/timer/bloc/timer_bloc.dart';
 import 'features/timer/bloc/timer_event.dart';
@@ -16,10 +16,16 @@ import 'features/timer/widgets/segment_editor.dart';
 import 'features/stopwatch/widgets/stopwatch_controls.dart';
 import 'widgets/clock_painter.dart';
 import 'widgets/bottom_panels.dart';
+import 'widgets/date_label.dart';
+import 'widgets/language_picker.dart';
+import 'widgets/text_outline.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
 import 'live_activity/live_activity_service.dart';
 import 'services/persistence_service.dart';
+import 'services/desktop_service.dart';
+import 'services/desktop_notification_service.dart';
+import 'services/desktop_overlay_service.dart';
 import 'features/timer/models/segment.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -37,14 +43,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _syncTick = 0;
   bool _inBackground = false;
 
+  // 데스크톱 전용 — 트레이 / 알림 / 플로팅 오버레이 위젯
+  Timer? _trayTimer;
+  TimerState? _prevTimer;
+  bool _desktopOverlayOn = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     LiveActivityService.init();
+    _prevTimer = context.read<TimerBloc>().state;
     _startTimer();
     if (Platform.isAndroid) {
       _listenOverlayCommands();
+      _restoreState();
+    } else if (isDesktop) {
+      _initDesktop();
       _restoreState();
     }
     // 30초마다 자동 저장 — 앱 강제 종료 직전 저장 실패를 보완
@@ -132,6 +147,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // 이전 세션 잔류 상태를 반환해 레이스 컨디션 발생 가능
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      // 데스크톱: 위젯(오버레이 서브윈도우)이 켜져 있던 상태면 시작 시 복원.
+      if (isDesktop) {
+        if (overlayOn) {
+          await DesktopOverlayService.instance.show(_overlayStateMap());
+          if (mounted) setState(() => _desktopOverlayOn = true);
+        }
+        return;
+      }
       if (overlayOn && await OverlayService.isPermissionGranted) {
         final screenW = MediaQuery.of(context).size.width.round();
         await OverlayService.show(screenWidthDp: screenW);
@@ -257,6 +280,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (_syncTick == 0) {
         _syncOverlay();
         _syncLiveActivity();
+        _syncDesktopOverlay();
       }
     });
   }
@@ -281,7 +305,130 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _clockTimer?.cancel();
     _persistTimer?.cancel();
+    _trayTimer?.cancel();
     super.dispose();
+  }
+
+  // ── 데스크톱 통합 ────────────────────────────────────────────
+  Future<void> _initDesktop() async {
+    // 오버레이(서브윈도우) 버튼 → 메인으로 전달되는 액션 처리
+    DesktopOverlayService.instance.onAction = _handleOverlayAction;
+    // 종료 직전 상태 저장만 — 실제 종료(exit)와 오버레이 정리는
+    // DesktopService.quit() 및 프로세스 종료가 담당한다.
+    DesktopService.instance.onQuit = () async {
+      await _saveState();
+    };
+    _trayTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) _updateTray();
+    });
+    _updateTray();
+  }
+
+  /// 플로팅 오버레이 위젯(항상 위) 토글.
+  Future<void> _toggleDesktopOverlay() async {
+    if (_desktopOverlayOn) {
+      await DesktopOverlayService.instance.hide();
+      setState(() => _desktopOverlayOn = false);
+    } else {
+      await DesktopOverlayService.instance.show(_overlayStateMap());
+      setState(() => _desktopOverlayOn = true);
+    }
+  }
+
+  /// 오버레이 서브윈도우 버튼에서 올라온 액션을 메인 타이머/스톱워치에 반영.
+  void _handleOverlayAction(String action) {
+    if (!mounted) return;
+    switch (action) {
+      case 'timer_toggle':
+        final s = context.read<TimerBloc>().state;
+        if (s.status == TimerStatus.running) {
+          context.read<TimerBloc>().add(const TimerPause());
+        } else if (s.status == TimerStatus.paused ||
+            s.status == TimerStatus.idle ||
+            s.status == TimerStatus.done) {
+          context.read<TimerBloc>().add(const TimerStart());
+        }
+      case 'timer_next':
+        context.read<TimerBloc>().add(const TimerNext());
+      case 'sw_toggle':
+        context.read<StopwatchBloc>().add(const StopwatchToggle());
+      case 'overlay_hide':
+        DesktopOverlayService.instance.hide();
+        setState(() => _desktopOverlayOn = false);
+    }
+  }
+
+  /// 오버레이로 보낼 현재 타이머/스톱워치 상태 스냅샷.
+  Map<String, dynamic> _overlayStateMap() {
+    final timerState = context.read<TimerBloc>().state;
+    final swState = context.read<StopwatchBloc>().state;
+    final timerActive = timerState.status == TimerStatus.running ||
+        timerState.status == TimerStatus.paused;
+    final swActive = swState.running || swState.elapsedMs > 0;
+    final seg = timerState.currentSegment;
+    final segTotalMs = seg?.duration.inMilliseconds ?? 1;
+    final timerFrac = (timerActive && segTotalMs > 0)
+        ? (timerState.segRemainMs / segTotalMs).clamp(0.0, 1.0)
+        : 0.0;
+    return {
+      'timerActive': timerActive,
+      'timerRunning': timerState.status == TimerStatus.running,
+      'timerLabel': seg?.name ?? '',
+      'timerRemain': timerActive ? _fmt(timerState.segRemainMs) : '--:--',
+      'swActive': swActive,
+      'swRunning': swState.running,
+      'swElapsed': swActive ? _fmt(swState.elapsedMs) : '',
+      'timerColorValue': seg?.color.toARGB32() ?? 0xFFE07A52,
+      'timerFrac': timerFrac,
+      'ending': timerActive && timerState.segRemainMs <= 10000,
+      'segRemainMs': timerState.segRemainMs,
+      'swElapsedMs': swState.elapsedMs,
+      'swStartAngleRad': swState.startAngleRadians,
+    };
+  }
+
+  void _updateTray() {
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    final ts = context.read<TimerBloc>().state;
+    final active =
+        ts.status == TimerStatus.running || ts.status == TimerStatus.paused;
+    final seg = ts.currentSegment;
+    final tooltip = active && seg != null
+        ? 'Analog Timer — ${seg.name} ${_fmt(ts.segRemainMs)}'
+        : 'Analog Timer';
+    final menuStatus = active && seg != null
+        ? '${seg.name} · ${_fmt(ts.segRemainMs)}'
+        : (ts.status == TimerStatus.done ? l.statusDone : l.statusWaiting);
+    DesktopService.instance.updateTray(tooltip: tooltip, menuStatus: menuStatus);
+  }
+
+  /// 타이머 상태 전이 시 세그먼트 완료 / 전체 완료 데스크톱 알림.
+  /// segRemainMs 만 바뀌는 매 틱은 listenWhen 에서 걸러진다.
+  void _onTimerTransition(TimerState cur) {
+    final prev = _prevTimer;
+    _prevTimer = cur;
+    if (prev == null) return;
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+
+    if (cur.status == TimerStatus.done && prev.status != TimerStatus.done) {
+      DesktopNotificationService.notify(
+        l.notifyTimerDoneTitle,
+        l.notifyTimerDoneBody,
+      );
+    } else if (cur.currentSeg != prev.currentSeg &&
+        cur.status == TimerStatus.running &&
+        prev.status == TimerStatus.running) {
+      final prevName = prev.currentSeg < prev.segments.length
+          ? prev.segments[prev.currentSeg].name
+          : '';
+      final curName = cur.currentSegment?.name ?? '';
+      DesktopNotificationService.notify(
+        l.notifySegmentDoneTitle,
+        l.notifySegmentDoneBody(prevName, curName),
+      );
+    }
   }
 
   String _fmt(int ms) {
@@ -310,6 +457,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       swActive: swActive,
       swElapsed: swActive ? _fmt(swState.elapsedMs) : '',
     );
+  }
+
+  void _syncDesktopOverlay() {
+    if (!_desktopOverlayOn || !isDesktop) return;
+    DesktopOverlayService.instance.update(_overlayStateMap());
   }
 
   void _syncOverlay() {
@@ -370,7 +522,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final l = AppLocalizations.of(context);
+    final scaffold = Scaffold(
       backgroundColor: AppColors.bg,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
@@ -387,13 +540,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Flexible(
-                          child: Text(
-                            '⏱ ANALOG TIMER',
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.bebasNeue(
-                              fontSize: 34,
-                              letterSpacing: 4,
-                              color: AppColors.accent,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.center,
+                            child: Text(
+                              '⏱ ${l.appTitle}',
+                              maxLines: 1,
+                              softWrap: false,
+                              style: TextStyle(fontFamily: 'Pretendard',
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 2,
+                                color: AppColors.accent,
+                              ),
                             ),
                           ),
                         ),
@@ -418,7 +577,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                _overlayOn ? '위젯 ON' : '위젯',
+                                _overlayOn ? l.widgetOn : l.widget,
                                 style: TextStyle(
                                   color: _overlayOn
                                       ? AppColors.accent
@@ -430,8 +589,60 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ),
                           ),
                         ],
+                        if (isDesktop) ...[
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: _toggleDesktopOverlay,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _desktopOverlayOn
+                                    ? AppColors.accent.withAlpha(0x33)
+                                    : AppColors.surface,
+                                border: Border.all(
+                                  color: _desktopOverlayOn
+                                      ? AppColors.accent
+                                      : AppColors.border,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                _desktopOverlayOn ? l.widgetOn : l.widget,
+                                style: TextStyle(
+                                  color: _desktopOverlayOn
+                                      ? AppColors.accent
+                                      : AppColors.muted,
+                                  fontSize: 11,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () => showLanguagePicker(context),
+                          child: Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              border: Border.all(color: AppColors.border),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.language,
+                              size: 16,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
+                    const SizedBox(height: 6),
+                    _DateLine(now: _now),
                     const SizedBox(height: 16),
 
                     _ClockWidget(now: _now),
@@ -442,9 +653,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       children: [
                         _Legend(
                           color: AppColors.timerOrange,
-                          label: '타이머 — 안쪽 나선',
+                          label: l.legendTimer,
                         ),
-                        _Legend(color: AppColors.swGreen, label: '스톱워치 — 바깥 링'),
+                        _Legend(color: AppColors.swGreen, label: l.legendStopwatch),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -479,6 +690,39 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
           ),
         ),
+      ),
+    );
+
+    if (!isDesktop) return scaffold;
+    // 데스크톱: 타이머 상태 전이를 감지해 알림/동기화 발신. segRemainMs 만
+    // 바뀌는 매 프레임은 무시하고 status/세그먼트/loop 변화에만 반응한다.
+    return BlocListener<TimerBloc, TimerState>(
+      listenWhen: (p, c) =>
+          p.status != c.status ||
+          p.currentSeg != c.currentSeg ||
+          p.loop != c.loop ||
+          !identical(p.segments, c.segments),
+      listener: (_, state) => _onTimerTransition(state),
+      child: scaffold,
+    );
+  }
+}
+
+class _DateLine extends StatelessWidget {
+  final DateTime now;
+  const _DateLine({required this.now});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      formatDateLine(now, Localizations.localeOf(context).languageCode),
+      style: TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 1,
+        color: AppColors.text.withAlpha(0xAA),
+        fontFeatures: const [FontFeature.tabularFigures()],
       ),
     );
   }
@@ -545,39 +789,47 @@ class _CenterInfo extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isActive && seg != null) ...[
-            Text(
+            OutlinedText(
               seg.name,
-              style: GoogleFonts.bebasNeue(
+              strokeWidth: 1.4,
+              style: TextStyle(fontFamily: 'Pretendard',
                 fontSize: 16,
                 letterSpacing: 1.5,
                 color: seg.color,
               ),
             ),
-            Text(
+            OutlinedText(
               _fmtMs(timerState.segRemainMs),
-              style: GoogleFonts.bebasNeue(
+              strokeWidth: 3,
+              shadows: textOutline(offset: const Offset(0, 2), blur: 3),
+              style: TextStyle(fontFamily: 'Pretendard',
                 fontSize: 48,
                 color: seg.color,
                 letterSpacing: 1,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ] else ...[
             Text(
               '--:--',
-              style: GoogleFonts.bebasNeue(
+              style: TextStyle(fontFamily: 'Pretendard',
                 fontSize: 48,
                 color: AppColors.timerOrangeDark.withAlpha(0x44),
                 letterSpacing: 1,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ],
           if (swState.running || swState.elapsedMs > 0)
-            Text(
+            OutlinedText(
               '⏱ ${_fmtMs(swState.elapsedMs)}',
-              style: GoogleFonts.bebasNeue(
+              strokeWidth: 2.4,
+              shadows: textOutline(offset: const Offset(0, 2), blur: 3),
+              style: TextStyle(fontFamily: 'Pretendard',
                 fontSize: 30,
                 color: AppColors.swGreen,
                 letterSpacing: 1,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
         ],
