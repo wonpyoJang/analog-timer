@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'l10n/app_localizations.dart';
 import 'theme/app_theme.dart';
 import 'features/timer/bloc/timer_bloc.dart';
@@ -527,9 +526,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 alignment: Alignment.centerLeft,
                                 child: Text(
                                   '⏱ ${l.appTitle}',
-                                  style: GoogleFonts.bebasNeue(
-                                    fontSize: 34,
-                                    letterSpacing: 4,
+                                  style: const TextStyle(
+                                    fontFamily: 'Pretendard',
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 2,
                                     color: AppColors.accent,
                                   ),
                                 ),
@@ -743,39 +744,47 @@ class _CenterInfo extends StatelessWidget {
           if (isActive && seg != null) ...[
             _strokeText(
               seg.name,
-              GoogleFonts.bebasNeue(
-                fontSize: 16,
-                letterSpacing: 1.5,
+              TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1,
                 color: seg.color,
               ),
               strokeWidth: 2.0,
             ),
             _strokeText(
               _fmtMs(timerState.segRemainMs),
-              GoogleFonts.bebasNeue(
-                fontSize: 48,
+              TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 44,
+                fontWeight: FontWeight.w700,
                 color: seg.color,
-                letterSpacing: 1,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
               strokeWidth: 4.0,
             ),
           ] else ...[
             Text(
               '--:--',
-              style: GoogleFonts.bebasNeue(
-                fontSize: 48,
-                color: AppColors.timerOrangeDark.withAlpha(0x44),
-                letterSpacing: 1,
+              style: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 44,
+                fontWeight: FontWeight.w700,
+                color: Color(0x44E07A52),
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
           ],
           if (swState.running || swState.elapsedMs > 0)
             _strokeText(
               '⏱ ${_fmtMs(swState.elapsedMs)}',
-              GoogleFonts.bebasNeue(
-                fontSize: 30,
+              const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
                 color: AppColors.swGreen,
-                letterSpacing: 1,
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
               strokeWidth: 3.0,
             ),
