@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../l10n/app_localizations.dart';
@@ -22,7 +24,7 @@ class DayPlanView extends StatefulWidget {
 class _DayPlanViewState extends State<DayPlanView> {
   List<Segment>? _segments;
   bool _loading = true;
-  bool _dirty = false;
+  Timer? _saveDebounce;
 
   @override
   void initState() {
@@ -40,11 +42,15 @@ class _DayPlanViewState extends State<DayPlanView> {
     }
   }
 
+  @override
+  void dispose() {
+    _saveDebounce?.cancel();
+    super.dispose();
+  }
+
   Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _dirty = false;
-    });
+    _saveDebounce?.cancel();
+    setState(() => _loading = true);
     final plan = await DailyRecordService.loadPlan(widget.date);
     if (mounted) {
       setState(() {
@@ -54,18 +60,20 @@ class _DayPlanViewState extends State<DayPlanView> {
     }
   }
 
-  Future<void> _save() async {
-    final segs = _segments;
-    if (segs == null) return;
-    await DailyRecordService.savePlan(widget.date, segs);
-    if (mounted) setState(() => _dirty = false);
+  void _scheduleSave() {
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(milliseconds: 500), () {
+      final segs = _segments;
+      if (segs != null) DailyRecordService.savePlan(widget.date, segs);
+    });
   }
 
   Future<void> _loadIntoTimer() async {
-    await _save();
-    if (!mounted) return;
+    _saveDebounce?.cancel();
     final segs = _segments;
     if (segs == null || segs.isEmpty) return;
+    await DailyRecordService.savePlan(widget.date, segs);
+    if (!mounted) return;
     context.read<TimerBloc>().add(TimerSegmentsReplaced(segs));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -77,10 +85,8 @@ class _DayPlanViewState extends State<DayPlanView> {
   }
 
   void _appendPreset(List<Segment> segs) {
-    setState(() {
-      _segments = [...(_segments ?? []), ...segs];
-      _dirty = true;
-    });
+    setState(() => _segments = [...(_segments ?? []), ...segs]);
+    _scheduleSave();
   }
 
   void _addSegment() {
@@ -90,28 +96,21 @@ class _DayPlanViewState extends State<DayPlanView> {
       minutes: 5,
       color: AppColors.segColors[segs.length % AppColors.segColors.length],
     );
-    setState(() {
-      _segments = [...segs, newSeg];
-      _dirty = true;
-    });
+    setState(() => _segments = [...segs, newSeg]);
+    _scheduleSave();
   }
 
   void _removeSegment(int index) {
-    final segs = List<Segment>.from(_segments ?? []);
-    segs.removeAt(index);
-    setState(() {
-      _segments = segs;
-      _dirty = true;
-    });
+    final segs = List<Segment>.from(_segments ?? [])..removeAt(index);
+    setState(() => _segments = segs);
+    _scheduleSave();
   }
 
   void _updateSegment(int index, Segment updated) {
     final segs = List<Segment>.from(_segments ?? []);
     segs[index] = updated;
-    setState(() {
-      _segments = segs;
-      _dirty = true;
-    });
+    setState(() => _segments = segs);
+    _scheduleSave();
   }
 
   @override
@@ -140,18 +139,6 @@ class _DayPlanViewState extends State<DayPlanView> {
                 ),
               ),
               const Spacer(),
-              if (_dirty)
-                GestureDetector(
-                  onTap: _save,
-                  child: Text(
-                    l.planSave,
-                    style: const TextStyle(
-                      color: AppColors.accent,
-                      fontSize: 10,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
             ],
           ),
           const SizedBox(height: 10),
