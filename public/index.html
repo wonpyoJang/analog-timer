@@ -41,17 +41,6 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="flutter.js" defer></script>
-  <script>
-    // CanvasKit를 번들 대신 gstatic CDN에서 로드 → 배포 용량 ~30MB 절감.
-    window.addEventListener('load', function () {
-      _flutter.loader.load({
-        config: {
-          canvasKitBaseUrl:
-            "https://www.gstatic.com/flutter-canvaskit/c416acfeb8126e097f758c664aaa3da929e27da0/"
-        }
-      });
-    });
-  </script>
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
