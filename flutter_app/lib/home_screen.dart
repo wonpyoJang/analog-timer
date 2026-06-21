@@ -37,6 +37,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Timer? _clockTimer;
   Timer? _persistTimer;
+  Timer? _overlayHealthTimer;
   DateTime _now = DateTime.now();
   bool _overlayOn = false;
   int _syncTick = 0;
@@ -149,7 +150,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (overlayOn && await OverlayService.isPermissionGranted) {
         final screenW = MediaQuery.of(context).size.width.round();
         await OverlayService.show(screenWidthDp: screenW);
-        if (mounted) setState(() => _overlayOn = true);
+        if (mounted) {
+          setState(() => _overlayOn = true);
+          _syncHealthTimer();
+        }
       } else {
         _prewarmOverlay();
       }
@@ -238,6 +242,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           case 'overlay_hide':
             OverlayService.hide();
             setState(() => _overlayOn = false);
+            _syncHealthTimer();
             PersistenceService.saveOverlayOn(false);
             NativeWidgetService.cancelNotification();
         }
@@ -307,11 +312,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  // 인-포어그라운드 OOM kill 감지 — 포커스 전환 없이 서비스가 죽는 경우를
+  // resumed 이벤트가 잡지 못하므로 10초 주기로 직접 확인
+  void _syncHealthTimer() {
+    if (_overlayOn && Platform.isAndroid) {
+      _overlayHealthTimer ??= Timer.periodic(
+        const Duration(seconds: 10),
+        (_) => _restoreOverlayIfDead(),
+      );
+    } else {
+      _overlayHealthTimer?.cancel();
+      _overlayHealthTimer = null;
+    }
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _clockTimer?.cancel();
     _persistTimer?.cancel();
+    _overlayHealthTimer?.cancel();
     super.dispose();
   }
 
@@ -469,11 +489,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (_overlayOn) {
       await OverlayService.hide();
       setState(() => _overlayOn = false);
+      _syncHealthTimer();
       PersistenceService.saveOverlayOn(false);
     } else {
       final screenW = MediaQuery.of(context).size.width.round();
       await OverlayService.show(screenWidthDp: screenW);
       setState(() => _overlayOn = true);
+      _syncHealthTimer();
       PersistenceService.saveOverlayOn(true);
     }
   }

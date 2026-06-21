@@ -41,10 +41,31 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
 
   // UI 상태
   bool _expanded = true;
+  bool _wasDragging = false;
+  Offset? _dragStartPos;
+
+  // 크기 조절
+  int? _customExpandedW; // null = 기본 42% 공식
+  double? _pinchInitW; // 핀치 시작 시 기준 너비
+  bool _resizeInFlight = false;
+  Offset? _handleDragStart; // 핸들 드래그 시작 위치 (스크린 절대좌표)
+  int? _handleInitW; // 핸들 드래그 시작 시 너비
+  // 내부 핸들 Listener가 외부 onPointerDown보다 먼저 실행되므로 이 플래그로 탭 억제
+  bool _handleDownInProgress = false;
+
+  static const _minOverlayW = 120;
+
+  int get _effectiveExpandedW {
+    final custom = _customExpandedW;
+    if (custom != null) {
+      return custom.clamp(_minOverlayW, (_screenWidthDp * 0.9).round());
+    }
+    return (_screenWidthDp * 0.42).round().clamp(_minOverlayW, _screenWidthDp);
+  }
+
+  int get _effectiveExpandedH => _effectiveExpandedW + 56;
+
   bool _nextCounting = false;
-  // 오버레이 창 위치 추적 (dp) — show 커맨드 기준으로 초기화
-  double _winX = 0.0;
-  double _winY = 53.0;
   double _nextPct = 0.0;
   DateTime? _nextStart;
   static const _nextDelay = Duration(seconds: 2);
@@ -94,20 +115,20 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         // command 처리 — 메인 앱에서 resizeOverlay를 직접 못 하므로 위젯이 대신 실행
         final command = map['command'] as String?;
         if (command == 'hide') {
-          await FlutterOverlayWindow.resizeOverlay(1, 1, false);
+          await FlutterOverlayWindow.resizeOverlay(1, 1, true);
           return;
         }
         if (command == 'show') {
           final w = map['screenWidthDp'] as int? ?? _screenWidthDp;
-          final expandedW = (w * 0.42).round().clamp(150, w);
-          final expandedH = expandedW + 56;
           setState(() {
             _screenWidthDp = w;
             _expanded = true;
-            _winX = 0.0;
-            _winY = 53.0;
           });
-          await FlutterOverlayWindow.resizeOverlay(expandedW, expandedH, false);
+          await FlutterOverlayWindow.resizeOverlay(
+            _effectiveExpandedW,
+            _effectiveExpandedH,
+            true,
+          );
           await _moveOverlay(0, 53);
           return;
         }
@@ -265,29 +286,68 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     } catch (_) {}
   }
 
-  Future<void> _onPanUpdate(DragUpdateDetails d) async {
-    _winX += d.delta.dx;
-    _winY += d.delta.dy;
-    await _moveOverlay(_winX, _winY);
+  Future<void> _resetPosition() => _moveOverlay(0, 53);
+
+  Future<void> _setOverlaySize(int w, int h) async {
+    if (_resizeInFlight) return;
+    _resizeInFlight = true;
+    setState(() => _customExpandedW = w);
+    try {
+      await FlutterOverlayWindow.resizeOverlay(w, h, true);
+    } finally {
+      _resizeInFlight = false;
+    }
+  }
+
+  void _onScaleStart(ScaleStartDetails d) {
+    if (d.pointerCount >= 2) _pinchInitW = _effectiveExpandedW.toDouble();
+  }
+
+  void _onScaleUpdate(ScaleUpdateDetails d) {
+    if (d.pointerCount < 2 || _pinchInitW == null) return;
+    final maxW = (_screenWidthDp * 0.9).round();
+    final newW = (_pinchInitW! * d.scale)
+        .clamp(_minOverlayW.toDouble(), maxW.toDouble())
+        .round();
+    _setOverlaySize(newW, newW + 56);
+  }
+
+  void _onScaleEnd(ScaleEndDetails _) => _pinchInitW = null;
+
+  void _onPointerDown(PointerDownEvent e) {
+    final handleActive = _handleDownInProgress;
+    _handleDownInProgress = false;
+    if (handleActive) {
+      // 핸들 영역 터치 — 외부 onTap이 _toggleExpanded를 호출하지 않도록 억제
+      _wasDragging = true;
+      _dragStartPos = null;
+    } else {
+      _wasDragging = false;
+      _dragStartPos = e.position;
+    }
+  }
+
+  void _onPointerMove(PointerMoveEvent e) {
+    if (_dragStartPos != null && !_wasDragging) {
+      if ((e.position - _dragStartPos!).distance > 8.0) {
+        _wasDragging = true;
+      }
+    }
   }
 
   Future<void> _toggleExpanded(BuildContext ctx) async {
-    final expandedW = (_screenWidthDp * 0.42).round().clamp(
-      150,
-      _screenWidthDp,
-    );
-    final expandedH = expandedW + 56;
-
     if (!_expanded) {
       setState(() => _expanded = true);
-      await FlutterOverlayWindow.resizeOverlay(expandedW, expandedH, false);
+      await FlutterOverlayWindow.resizeOverlay(
+        _effectiveExpandedW,
+        _effectiveExpandedH,
+        true,
+      );
     } else {
       setState(() {
         _expanded = false;
-        _winX = 0.0;
-        _winY = 53.0;
       });
-      await FlutterOverlayWindow.resizeOverlay(_screenWidthDp, 150, false);
+      await FlutterOverlayWindow.resizeOverlay(_screenWidthDp, 150, true);
       await _moveOverlay(0, 53);
     }
   }
@@ -298,9 +358,19 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: _expanded ? _buildLargeView(context) : _buildSmallPill(context),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 1×1dp 프리웜 상태에서 overflow 방지
+        if (constraints.maxWidth < 60 || constraints.maxHeight < 60) {
+          return const SizedBox.shrink();
+        }
+        return Material(
+          color: Colors.transparent,
+          child: _expanded
+              ? _buildLargeView(context)
+              : _buildSmallPill(context),
+        );
+      },
     );
   }
 
@@ -310,31 +380,87 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 시계 (탭 → 축소, 드래그 → 오버레이 이동)
-        GestureDetector(
-          onTap: () => _toggleExpanded(context),
-          onPanUpdate: _onPanUpdate,
-          behavior: HitTestBehavior.translucent,
-          child: AspectRatio(
-            aspectRatio: 1,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CustomPaint(
-                  painter: _OverlayClockPainter(
-                    now: _now,
-                    timerActive: _timerActive,
-                    segRemainMs: _segRemainMs,
-                    segColor: _effectiveTimerColor,
-                    swActive: _swActive,
-                    swElapsedMs: _swElapsedMs,
-                    swStartAngleRad: _swStartAngleRad,
+        // 시계 (탭 → 축소 / 더블탭 → 정위치 / 네이티브 드래그가 이동 담당)
+        // Listener: 스크린 절대좌표로 드래그 감지 → 드래그 후 onTap 오발 억제
+        Listener(
+          onPointerDown: _onPointerDown,
+          onPointerMove: _onPointerMove,
+          child: GestureDetector(
+            onTap: () {
+              if (!_wasDragging) _toggleExpanded(context);
+            },
+            onDoubleTap: _resetPosition,
+            onScaleStart: _onScaleStart,
+            onScaleUpdate: _onScaleUpdate,
+            onScaleEnd: _onScaleEnd,
+            behavior: HitTestBehavior.translucent,
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CustomPaint(
+                    painter: _OverlayClockPainter(
+                      now: _now,
+                      timerActive: _timerActive,
+                      segRemainMs: _segRemainMs,
+                      segColor: _effectiveTimerColor,
+                      swActive: _swActive,
+                      swElapsedMs: _swElapsedMs,
+                      swStartAngleRad: _swStartAngleRad,
+                    ),
+                    child: const SizedBox.expand(),
                   ),
-                  child: const SizedBox.expand(),
-                ),
-                if (_timerActive || _swActive)
-                  IgnorePointer(child: _buildClockCenterInfo()),
-              ],
+                  if (_timerActive || _swActive)
+                    IgnorePointer(child: _buildClockCenterInfo()),
+                  // 드래그 핸들 (우하단, 스크린 절대좌표로 리사이즈)
+                  Positioned(
+                    right: 4,
+                    bottom: 4,
+                    child: Listener(
+                      onPointerDown: (e) {
+                        // 내부 Listener가 외부 Listener보다 먼저 실행됨
+                        // 외부 _onPointerDown이 이 플래그를 보고 wasDragging=true 설정
+                        _handleDownInProgress = true;
+                        _handleDragStart = e.position;
+                        _handleInitW = _effectiveExpandedW;
+                      },
+                      onPointerMove: (e) {
+                        if (_handleDragStart == null || _handleInitW == null)
+                          return;
+                        final delta =
+                            (e.position.dx -
+                                _handleDragStart!.dx +
+                                e.position.dy -
+                                _handleDragStart!.dy) /
+                            2;
+                        final maxW = (_screenWidthDp * 0.9).round();
+                        final newW = (_handleInitW! + delta)
+                            .clamp(_minOverlayW.toDouble(), maxW.toDouble())
+                            .round();
+                        _setOverlaySize(newW, newW + 56);
+                      },
+                      onPointerUp: (_) {
+                        _handleDragStart = null;
+                        _handleInitW = null;
+                      },
+                      onPointerCancel: (_) {
+                        _handleDownInProgress = false;
+                        _handleDragStart = null;
+                        _handleInitW = null;
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.open_in_full,
+                          color: Colors.white.withValues(alpha: 0.45),
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -493,40 +619,48 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
 
     return Align(
       alignment: Alignment.topCenter,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => _toggleExpanded(context),
-        onPanUpdate: _onPanUpdate,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_chaseCtrl, _blinkCtrl]),
-            builder: (context, child) {
-              return CustomPaint(
-                foregroundPainter: _PillBorderPainter(
-                  mode: borderMode,
-                  frac: _timerFrac,
-                  timerColor: _effectiveTimerColor,
-                  chasePhase: _chaseCtrl.value,
-                ),
-                child: child,
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-              decoration: BoxDecoration(
-                color: const Color(0xEE1A1A1C),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFF2E2E32), width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+      child: Listener(
+        onPointerDown: _onPointerDown,
+        onPointerMove: _onPointerMove,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onDoubleTap: () {
+            if (!_wasDragging) _toggleExpanded(context);
+          },
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+            child: AnimatedBuilder(
+              animation: Listenable.merge([_chaseCtrl, _blinkCtrl]),
+              builder: (context, child) {
+                return CustomPaint(
+                  foregroundPainter: _PillBorderPainter(
+                    mode: borderMode,
+                    frac: _timerFrac,
+                    timerColor: _effectiveTimerColor,
+                    chasePhase: _chaseCtrl.value,
                   ),
-                ],
+                  child: child,
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xEE1A1A1C),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFF2E2E32), width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: _buildPillContent(),
               ),
-              child: _buildPillContent(),
             ),
           ),
         ),
@@ -914,6 +1048,7 @@ class _OverlayClockPainter extends CustomPainter {
   }
 
   void _drawNumbers(Canvas canvas, double cx, double cy, double R) {
+    if (R < 10) return; // 1×1px 프리웜 상태에서 음수 fontSize 방지
     final tp = TextPainter(textDirection: TextDirection.ltr);
     for (int i = 1; i <= 12; i++) {
       final angle = (i / 12) * 2 * pi - pi / 2;
@@ -921,7 +1056,7 @@ class _OverlayClockPainter extends CustomPainter {
         text: '$i',
         style: TextStyle(
           color: const Color(0xFF111111),
-          fontSize: R * 0.13,
+          fontSize: (R * 0.13).clamp(1.0, double.infinity),
           fontWeight: FontWeight.w900,
           fontFamily: 'Pretendard',
         ),

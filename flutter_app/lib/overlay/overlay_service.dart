@@ -27,7 +27,7 @@ class OverlayService {
         width: expandedW,
         alignment: OverlayAlignment.topCenter,
         positionGravity: PositionGravity.none,
-        enableDrag: false,
+        enableDrag: true,
         flag: OverlayFlag.focusPointer,
         overlayTitle: 'Analog Timer',
       );
