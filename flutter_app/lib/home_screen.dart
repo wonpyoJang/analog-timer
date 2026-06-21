@@ -522,13 +522,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Flexible(
-                              child: Text(
-                                '⏱ ${l.appTitle}',
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.bebasNeue(
-                                  fontSize: 34,
-                                  letterSpacing: 4,
-                                  color: AppColors.accent,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '⏱ ${l.appTitle}',
+                                  style: GoogleFonts.bebasNeue(
+                                    fontSize: 34,
+                                    letterSpacing: 4,
+                                    color: AppColors.accent,
+                                  ),
                                 ),
                               ),
                             ),
