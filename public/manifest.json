@@ -1,11 +1,11 @@
 {
-    "name": "analog_timer",
-    "short_name": "analog_timer",
+    "name": "Analog Timer",
+    "short_name": "Analog Timer",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0E0E0F",
+    "theme_color": "#0E0E0F",
+    "description": "아날로그 시계 위 세그먼트 타이머 + 스톱워치",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
