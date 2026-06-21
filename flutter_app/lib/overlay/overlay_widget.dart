@@ -538,36 +538,6 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     );
   }
 
-  // 시계 배경(흰 면판·링·침)과 겹치는 텍스트 시인성 향상 — 흰색 외곽선 stroke
-  Widget _strokeText(
-    String text,
-    TextStyle fillStyle, {
-    Color strokeColor = Colors.white,
-    double strokeWidth = 2.0,
-  }) {
-    return Stack(
-      children: [
-        Text(
-          text,
-          style: TextStyle(
-            fontFamily: fillStyle.fontFamily,
-            fontSize: fillStyle.fontSize,
-            fontWeight: fillStyle.fontWeight,
-            fontFeatures: fillStyle.fontFeatures,
-            letterSpacing: fillStyle.letterSpacing,
-            height: fillStyle.height,
-            foreground: Paint()
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = strokeWidth
-              ..strokeJoin = StrokeJoin.round
-              ..color = strokeColor,
-          ),
-        ),
-        Text(text, style: fillStyle),
-      ],
-    );
-  }
-
   Widget _buildClockCenterInfo() {
     return AnimatedBuilder(
       animation: _blinkCtrl,
@@ -575,46 +545,50 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         final opacity = _ending ? _blinkCtrl.value : 1.0;
         return Opacity(
           opacity: opacity.clamp(0.3, 1.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_timerActive) ...[
-                if (_timerLabel.isNotEmpty)
-                  _strokeText(
-                    _timerLabel,
-                    TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: _effectiveTimerColor.withValues(alpha: 0.75),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(0xCC),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_timerActive) ...[
+                  if (_timerLabel.isNotEmpty)
+                    Text(
+                      _timerLabel,
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _effectiveTimerColor.withValues(alpha: 0.75),
+                      ),
                     ),
-                    strokeWidth: 1.5,
+                  Text(
+                    _timerRemain,
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                      color: _effectiveTimerColor,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
-                _strokeText(
-                  _timerRemain,
-                  TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 30,
-                    fontWeight: FontWeight.w700,
-                    color: _effectiveTimerColor,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                ],
+                if (_swActive)
+                  Text(
+                    '⏲ $_swElapsed',
+                    style: const TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2EA84A),
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
                   ),
-                  strokeWidth: 3.0,
-                ),
               ],
-              if (_swActive)
-                _strokeText(
-                  '⏲ $_swElapsed',
-                  const TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF2EA84A),
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                  strokeWidth: 2.0,
-                ),
-            ],
+            ),
           ),
         );
       },

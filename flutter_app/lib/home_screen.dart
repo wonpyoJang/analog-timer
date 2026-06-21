@@ -935,35 +935,6 @@ class _ClockWidget extends StatelessWidget {
   }
 }
 
-// 시계 배경(면판·링·침) 위 텍스트 시인성 향상 — 흰색 외곽선 stroke
-Widget _strokeText(
-  String text,
-  TextStyle fillStyle, {
-  Color strokeColor = Colors.white,
-  double strokeWidth = 2.0,
-}) {
-  return Stack(
-    children: [
-      Text(
-        text,
-        style: TextStyle(
-          fontFamily: fillStyle.fontFamily,
-          fontSize: fillStyle.fontSize,
-          fontWeight: fillStyle.fontWeight,
-          letterSpacing: fillStyle.letterSpacing,
-          height: fillStyle.height,
-          foreground: Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = strokeWidth
-            ..strokeJoin = StrokeJoin.round
-            ..color = strokeColor,
-        ),
-      ),
-      Text(text, style: fillStyle),
-    ],
-  );
-}
-
 class _CenterInfo extends StatelessWidget {
   final TimerState timerState;
   final StopwatchState swState;
@@ -989,57 +960,61 @@ class _CenterInfo extends StatelessWidget {
         timerState.status == TimerStatus.paused;
 
     return IgnorePointer(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isActive && seg != null) ...[
-            _strokeText(
-              seg.name,
-              TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1,
-                color: seg.color,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(0xCC),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isActive && seg != null) ...[
+              Text(
+                seg.name,
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
+                  color: seg.color,
+                ),
               ),
-              strokeWidth: 2.0,
-            ),
-            _strokeText(
-              _fmtMs(timerState.segRemainMs),
-              TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 44,
-                fontWeight: FontWeight.w700,
-                color: seg.color,
-                fontFeatures: const [FontFeature.tabularFigures()],
+              Text(
+                _fmtMs(timerState.segRemainMs),
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 44,
+                  fontWeight: FontWeight.w700,
+                  color: seg.color,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
-              strokeWidth: 4.0,
-            ),
-          ] else ...[
-            Text(
-              '--:--',
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 44,
-                fontWeight: FontWeight.w700,
-                color: Color(0x44E07A52),
-                fontFeatures: [FontFeature.tabularFigures()],
+            ] else ...[
+              Text(
+                '--:--',
+                style: const TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 44,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0x44E07A52),
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
               ),
-            ),
+            ],
+            if (swState.running || swState.elapsedMs > 0)
+              Text(
+                '⏱ ${_fmtMs(swState.elapsedMs)}',
+                style: const TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.swGreen,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
           ],
-          if (swState.running || swState.elapsedMs > 0)
-            _strokeText(
-              '⏱ ${_fmtMs(swState.elapsedMs)}',
-              const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: AppColors.swGreen,
-                fontFeatures: [FontFeature.tabularFigures()],
-              ),
-              strokeWidth: 3.0,
-            ),
-        ],
+        ),
       ),
     );
   }
