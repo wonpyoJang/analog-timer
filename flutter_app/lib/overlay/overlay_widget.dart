@@ -48,12 +48,10 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   int? _customExpandedW; // null = 기본 42% 공식
   double? _pinchInitW; // 핀치 시작 시 기준 너비
   bool _resizeInFlight = false;
-  Offset? _handleDragStart; // 핸들 드래그 시작 위치 (스크린 절대좌표)
-  int? _handleInitW; // 핸들 드래그 시작 시 너비
-  // 내부 핸들 Listener가 외부 onPointerDown보다 먼저 실행되므로 이 플래그로 탭 억제
-  bool _handleDownInProgress = false;
 
   static const _minOverlayW = 120;
+  // 핸들 탭으로 순환할 프리셋 (화면 너비 대비 비율)
+  static const _sizePresets = [0.42, 0.58, 0.75];
 
   int get _effectiveExpandedW {
     final custom = _customExpandedW;
@@ -315,16 +313,29 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   void _onScaleEnd(ScaleEndDetails _) => _pinchInitW = null;
 
   void _onPointerDown(PointerDownEvent e) {
-    final handleActive = _handleDownInProgress;
-    _handleDownInProgress = false;
-    if (handleActive) {
-      // 핸들 영역 터치 — 외부 onTap이 _toggleExpanded를 호출하지 않도록 억제
-      _wasDragging = true;
-      _dragStartPos = null;
-    } else {
-      _wasDragging = false;
-      _dragStartPos = e.position;
+    _wasDragging = false;
+    _dragStartPos = e.position;
+  }
+
+  void _cycleOverlaySize() {
+    final currentW = _effectiveExpandedW;
+    final screenW = _screenWidthDp;
+    // 현재 크기에 가장 가까운 프리셋 인덱스 찾기
+    int curIdx = 0;
+    double minDiff = double.infinity;
+    for (int i = 0; i < _sizePresets.length; i++) {
+      final diff = (currentW - screenW * _sizePresets[i]).abs();
+      if (diff < minDiff) {
+        minDiff = diff;
+        curIdx = i;
+      }
     }
+    final nextIdx = (curIdx + 1) % _sizePresets.length;
+    final newW = (screenW * _sizePresets[nextIdx]).round().clamp(
+      _minOverlayW,
+      (screenW * 0.9).round(),
+    );
+    _setOverlaySize(newW, newW + 56);
   }
 
   void _onPointerMove(PointerMoveEvent e) {
@@ -413,42 +424,14 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                   ),
                   if (_timerActive || _swActive)
                     IgnorePointer(child: _buildClockCenterInfo()),
-                  // 드래그 핸들 (우하단, 스크린 절대좌표로 리사이즈)
+                  // 크기 순환 버튼 — enableDrag:true로 인해 드래그는 항상 윈도우 이동,
+                  // 탭으로 프리셋(42%→58%→75%)을 순환하는 방식으로 대체
                   Positioned(
                     right: 4,
                     bottom: 4,
-                    child: Listener(
-                      onPointerDown: (e) {
-                        // 내부 Listener가 외부 Listener보다 먼저 실행됨
-                        // 외부 _onPointerDown이 이 플래그를 보고 wasDragging=true 설정
-                        _handleDownInProgress = true;
-                        _handleDragStart = e.position;
-                        _handleInitW = _effectiveExpandedW;
-                      },
-                      onPointerMove: (e) {
-                        if (_handleDragStart == null || _handleInitW == null)
-                          return;
-                        final delta =
-                            (e.position.dx -
-                                _handleDragStart!.dx +
-                                e.position.dy -
-                                _handleDragStart!.dy) /
-                            2;
-                        final maxW = (_screenWidthDp * 0.9).round();
-                        final newW = (_handleInitW! + delta)
-                            .clamp(_minOverlayW.toDouble(), maxW.toDouble())
-                            .round();
-                        _setOverlaySize(newW, newW + 56);
-                      },
-                      onPointerUp: (_) {
-                        _handleDragStart = null;
-                        _handleInitW = null;
-                      },
-                      onPointerCancel: (_) {
-                        _handleDownInProgress = false;
-                        _handleDragStart = null;
-                        _handleInitW = null;
-                      },
+                    child: GestureDetector(
+                      onTap: _cycleOverlaySize,
+                      behavior: HitTestBehavior.opaque,
                       child: Padding(
                         padding: const EdgeInsets.all(8),
                         child: Icon(
