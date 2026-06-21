@@ -147,6 +147,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // 이전 세션 잔류 상태를 반환해 레이스 컨디션 발생 가능
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      // 데스크톱: 위젯(오버레이 서브윈도우)이 켜져 있던 상태면 시작 시 복원.
+      if (isDesktop) {
+        if (overlayOn) {
+          await DesktopOverlayService.instance.show(_overlayStateMap());
+          if (mounted) setState(() => _desktopOverlayOn = true);
+        }
+        return;
+      }
       if (overlayOn && await OverlayService.isPermissionGranted) {
         final screenW = MediaQuery.of(context).size.width.round();
         await OverlayService.show(screenWidthDp: screenW);
