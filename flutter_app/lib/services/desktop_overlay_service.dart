@@ -24,6 +24,13 @@ class DesktopOverlayService {
   DateTime? _lastCreate;
   int _updateFails = 0;
 
+  // 재생성 폭주(cascading failure) 방지 — 위젯이 비정상적으로 반복해서 죽는
+  // 환경(예: GPU 드라이버 반복 크래시)에서 무한 재생성으로 핸들이 폭증하는 것을
+  // 차단한다. 30초 내 재생성이 임계를 넘으면 일정 시간 백오프한다.
+  DateTime? _recreateWindowStart;
+  int _recreateCount = 0;
+  DateTime? _backoffUntil;
+
   /// 메인 윈도우에서 1회 호출 — 오버레이가 보내는 'action' 수신 핸들러 등록.
   Future<void> init() async {
     if (!isDesktop) return;
@@ -97,10 +104,30 @@ class DesktopOverlayService {
       }
       // 연속 3회(≈150ms) 실패 시에만 재생성 — 일시적 오류로 인한 오작동 방지.
       if (++_updateFails < 3) return;
-      // NOTE: desktop_multi_window 0.3.0 은 서브윈도우 파괴 API(close)를 제공하지
-      // 않아, 강제 종료 후 재생성을 반복하면 네이티브 엔진/핸들이 누수된다(라이브러리
-      // 한계). 정상 사용에선 위젯이 죽지 않아 재생성이 사실상 일어나지 않으므로 영향이
-      // 없지만, 완전 해결하려면 라이브러리에 window_close 를 추가해야 한다.
+
+      // NOTE: 위젯이 죽은 뒤 재생성을 "반복"하면 핸들이 누수된다(~3/cycle). 근본
+      // 원인은 desktop_multi_window 가 아니라, 서브윈도우가 닫힐 때 Flutter 의
+      // FlutterViewController(엔진)가 소멸하며 핸들을 완전히 회수하지 못하는 Flutter
+      // Windows 엔진 레벨 이슈다. 라이브러리에 window_close 를 추가해도 결국 같은
+      // DestroyWindow→WM_DESTROY→OnDestroy 소멸 경로를 타므로 해결되지 않는다.
+      // 정상 작동에선 위젯이 죽지 않아 재생성이 0회 → 누수 노출 없음(검증됨).
+      final now = DateTime.now();
+
+      // 백오프 중이면 재생성 보류 — 폭주로 인한 핸들 누적 차단.
+      if (_backoffUntil != null && now.isBefore(_backoffUntil!)) return;
+
+      // 30초 윈도우 내 재생성 횟수 집계. 임계(5회) 초과 시 60초 백오프.
+      if (_recreateWindowStart == null ||
+          now.difference(_recreateWindowStart!) > const Duration(seconds: 30)) {
+        _recreateWindowStart = now;
+        _recreateCount = 0;
+      }
+      if (++_recreateCount > 5) {
+        _backoffUntil = now.add(const Duration(seconds: 60));
+        _recreateCount = 0;
+        return;
+      }
+
       _overlay = null;
       try {
         await _create(state);
