@@ -292,6 +292,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
+  // STT-08 헬퍼: 권한이 실제 허용된 경우에만 overlay 시작 (requestPermission 호출 없음)
+  Future<void> _startOverlayIfPermitted() async {
+    if (!await OverlayService.isPermissionGranted) return;
+    if (!mounted || _overlayOn) return;
+    final screenW = MediaQuery.of(context).size.width.round();
+    await OverlayService.show(screenWidthDp: screenW);
+    if (!mounted) return;
+    setState(() => _overlayOn = true);
+    _syncHealthTimer();
+    PersistenceService.saveOverlayOn(true);
+  }
+
   void _startTimer() {
     _clockTimer?.cancel();
     _clockTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
@@ -328,9 +340,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (_clockTimer == null) _startTimer();
       if (_overlayOn && Platform.isAndroid) _restoreOverlayIfDead();
       // STT-08: 권한 요청 화면에서 돌아왔을 때 권한이 허용됐으면 자동 시작
+      // _toggleOverlay() 직접 호출 금지 — 거부 시 _pendingOverlayEnable=true 재설정 후
+      // requestPermission() 재호출 → paused/resumed 무한 루프 발생
       if (_pendingOverlayEnable && Platform.isAndroid) {
         _pendingOverlayEnable = false;
-        _toggleOverlay();
+        unawaited(_startOverlayIfPermitted());
       }
     }
   }
