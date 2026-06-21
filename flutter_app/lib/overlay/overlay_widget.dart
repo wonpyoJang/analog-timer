@@ -98,9 +98,9 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     );
 
     FlutterOverlayWindow.overlayListener.listen((data) async {
-      if (data == null || !mounted) return;
+      if (data == null || data is! String || !mounted) return;
       try {
-        final map = jsonDecode(data as String) as Map<String, dynamic>;
+        final map = jsonDecode(data) as Map<String, dynamic>;
 
         // 오버레이가 보낸 action이 릴레이돼 돌아온 경우 — 상태 초기화 방지
         if (map.containsKey('action')) return;
@@ -358,7 +358,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
       setState(() {
         _expanded = false;
       });
-      await FlutterOverlayWindow.resizeOverlay(_screenWidthDp, 150, true);
+      await FlutterOverlayWindow.resizeOverlay(_effectiveExpandedW, 150, true);
       await _moveOverlay(0, 53);
     }
   }

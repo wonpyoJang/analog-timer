@@ -43,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   DateTime _now = DateTime.now();
   bool _overlayOn = false;
   bool _overlayShowInFlight = false; // concurrent show() race guard
+  bool _pendingOverlayEnable = false; // permission 요청 후 복귀 시 자동 시작 플래그
   int _syncTick = 0;
   int _nativeTick = 0;
   bool _inBackground = false;
@@ -325,8 +326,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       _inBackground = false;
       if (_clockTimer == null) _startTimer();
-      // 백그라운드에서 서비스가 죽었을 경우 복원
       if (_overlayOn && Platform.isAndroid) _restoreOverlayIfDead();
+      // STT-08: 권한 요청 화면에서 돌아왔을 때 권한이 허용됐으면 자동 시작
+      if (_pendingOverlayEnable && Platform.isAndroid) {
+        _pendingOverlayEnable = false;
+        _toggleOverlay();
+      }
     }
   }
 
@@ -651,6 +656,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
     if (!Platform.isAndroid) return;
     if (!await OverlayService.isPermissionGranted) {
+      _pendingOverlayEnable = true;
       await OverlayService.requestPermission();
       return;
     }
