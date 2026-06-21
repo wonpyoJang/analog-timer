@@ -2,5 +2,9 @@
 .vercel
 node_modules/
 build/
+dist/
 firebase-debug.log
 package-lock.json
+
+# 임시 커밋 메시지 파일
+.commitmsg*.txt
