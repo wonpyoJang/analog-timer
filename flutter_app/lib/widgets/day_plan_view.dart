@@ -3,10 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/daily_record_service.dart';
+import '../services/persistence_service.dart';
+import '../features/timer/models/preset.dart';
 import '../features/timer/models/segment.dart';
 import '../features/timer/bloc/timer_bloc.dart';
 import '../features/timer/bloc/timer_event.dart';
 import '../features/timer/widgets/color_picker_dialog.dart';
+import '../features/timer/widgets/preset_manage_page.dart';
 
 class DayPlanView extends StatefulWidget {
   final DateTime date;
@@ -71,6 +74,13 @@ class _DayPlanViewState extends State<DayPlanView> {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  void _appendPreset(List<Segment> segs) {
+    setState(() {
+      _segments = [...(_segments ?? []), ...segs];
+      _dirty = true;
+    });
   }
 
   void _addSegment() {
@@ -145,6 +155,11 @@ class _DayPlanViewState extends State<DayPlanView> {
             ],
           ),
           const SizedBox(height: 10),
+          if (!_loading)
+            _PlanPresetBar(
+              currentSegments: _segments ?? [],
+              onAppend: _appendPreset,
+            ),
           if (_loading)
             const Center(
               child: Padding(
@@ -217,6 +232,327 @@ class _DayPlanViewState extends State<DayPlanView> {
             ],
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _PlanPresetBar extends StatefulWidget {
+  final List<Segment> currentSegments;
+  final ValueChanged<List<Segment>> onAppend;
+
+  const _PlanPresetBar({required this.currentSegments, required this.onAppend});
+
+  @override
+  State<_PlanPresetBar> createState() => _PlanPresetBarState();
+}
+
+class _PlanPresetBarState extends State<_PlanPresetBar> {
+  List<Preset> _userPresets = const [];
+  Set<String> _hidden = {};
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final raw = await PersistenceService.loadPresets();
+    final list = raw == null
+        ? <Preset>[]
+        : raw
+              .map(Preset.fromJson)
+              .where((p) => !Preset.builtinEnNames.contains(p.name))
+              .toList();
+    final hidden = (await PersistenceService.loadHiddenDefaults()).toSet();
+    if (!mounted) return;
+    setState(() {
+      _userPresets = list;
+      _hidden = hidden;
+      _loaded = true;
+    });
+  }
+
+  Future<void> _persist() => PersistenceService.savePresets(
+    _userPresets.map((p) => p.toJson()).toList(),
+  );
+
+  void _apply(Preset p) {
+    widget.onAppend(p.freshSegments());
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).presetApplied(p.name)),
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+
+  Future<void> _saveCurrent() async {
+    final l = AppLocalizations.of(context);
+    final segs = widget.currentSegments;
+    if (segs.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.noSegmentsToSave)));
+      return;
+    }
+    final name = await _promptName();
+    if (!mounted || name == null || name.trim().isEmpty) return;
+    final preset = Preset(
+      name: name.trim(),
+      loop: false,
+      segments: [
+        for (final s in segs)
+          Segment(name: s.name, minutes: s.minutes, color: s.color),
+      ],
+    );
+    setState(() => _userPresets = [..._userPresets, preset]);
+    await _persist();
+  }
+
+  Future<String?> _promptName() {
+    final l = AppLocalizations.of(context);
+    final ctrl = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        title: Text(
+          l.savePresetTitle,
+          style: const TextStyle(color: AppColors.text, fontSize: 15),
+        ),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          style: const TextStyle(color: AppColors.text, fontSize: 13),
+          decoration: InputDecoration(
+            hintText: l.presetNameHint,
+            hintStyle: const TextStyle(color: AppColors.muted, fontSize: 13),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.timerOrange),
+            ),
+          ),
+          onSubmitted: (v) => Navigator.pop(ctx, v),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: Text(
+              l.cancel,
+              style: const TextStyle(color: AppColors.muted),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text),
+            child: Text(
+              l.save,
+              style: const TextStyle(color: AppColors.timerOrange),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openManage() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PresetManagePage()),
+    );
+    if (mounted) _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_loaded) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
+    final defaults = Preset.defaultsFor(l);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          for (final p in defaults)
+            if (!_hidden.contains(p.builtinKey))
+              _PlanPresetChip(
+                preset: p,
+                deletable: false,
+                onApply: () => _apply(p),
+              ),
+          for (final e in _userPresets.asMap().entries)
+            _PlanPresetChip(
+              preset: e.value,
+              deletable: true,
+              onApply: () => _apply(e.value),
+              onDelete: () async {
+                setState(() {
+                  final next = [..._userPresets]..removeAt(e.key);
+                  _userPresets = next;
+                });
+                await _persist();
+              },
+            ),
+          _PlanSaveChip(onTap: _saveCurrent),
+          _PlanManageChip(onTap: _openManage),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlanPresetChip extends StatelessWidget {
+  final Preset preset;
+  final VoidCallback onApply;
+  final VoidCallback? onDelete;
+  final bool deletable;
+
+  const _PlanPresetChip({
+    required this.preset,
+    required this.onApply,
+    this.onDelete,
+    required this.deletable,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dot = preset.segments.isNotEmpty
+        ? preset.segments.first.color
+        : AppColors.muted;
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF111113),
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      padding: const EdgeInsets.only(left: 10, right: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: onApply,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 9,
+                    height: 9,
+                    decoration: BoxDecoration(
+                      color: dot,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 7),
+                  Text(
+                    preset.name,
+                    style: const TextStyle(color: AppColors.text, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (deletable) ...[
+            const SizedBox(width: 2),
+            GestureDetector(
+              onTap: onDelete,
+              behavior: HitTestBehavior.opaque,
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(Icons.close, size: 14, color: AppColors.muted),
+              ),
+            ),
+          ] else
+            const SizedBox(width: 6),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlanSaveChip extends StatelessWidget {
+  final VoidCallback onTap;
+  const _PlanSaveChip({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.timerOrange.withAlpha(0x88)),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.bookmark_add_outlined,
+              size: 14,
+              color: AppColors.timerOrange,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              l.savePresetChip,
+              style: const TextStyle(
+                color: AppColors.timerOrange,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlanManageChip extends StatelessWidget {
+  final VoidCallback onTap;
+  const _PlanManageChip({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.tune, size: 14, color: AppColors.muted),
+            const SizedBox(width: 5),
+            Text(
+              l.manage,
+              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }
