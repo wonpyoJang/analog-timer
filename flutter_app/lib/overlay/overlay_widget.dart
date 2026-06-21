@@ -662,7 +662,11 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
             if (!_wasDragging) _toggleExpanded(context);
           },
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+            constraints: BoxConstraints(
+              minHeight: 44,
+              minWidth: 44,
+              maxWidth: _effectiveExpandedW.toDouble(),
+            ),
             child: AnimatedBuilder(
               animation: Listenable.merge([_chaseCtrl, _blinkCtrl]),
               builder: (context, child) {
@@ -693,7 +697,11 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                     ),
                   ],
                 ),
-                child: _buildPillContent(),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
+                  child: _buildPillContent(),
+                ),
               ),
             ),
           ),
@@ -804,18 +812,20 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
 
     if (!_batteryLow) return content;
 
-    return Row(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        content,
-        const SizedBox(width: 8),
         FadeTransition(
           opacity: Tween<double>(
             begin: 0.25,
             end: 1.0,
           ).animate(_batteryBlinkCtrl),
-          child: _BatteryBadge(level: _batteryLevel),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: _BatteryBadge(level: _batteryLevel),
+          ),
         ),
+        content,
       ],
     );
   }
