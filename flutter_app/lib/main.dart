@@ -17,15 +17,50 @@ Future<void> main() async {
 
 // 오버레이 isolate 진입점 — flutter_overlay_window가 별도로 호출
 @pragma('vm:entry-point')
-void overlayMain() {
-  runApp(
-    MaterialApp(
+void overlayMain() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting();
+  final tag = await PersistenceService.loadLocale();
+  final locale = tag != null ? parseLocaleTag(tag) : null;
+  runApp(OverlayApp(initialLocale: locale));
+}
+
+/// 오버레이 전용 앱 — shareData로 locale을 동적 변경 가능
+class OverlayApp extends StatefulWidget {
+  final Locale? initialLocale;
+  const OverlayApp({this.initialLocale});
+
+  static OverlayAppState? _instance;
+  static void updateLocale(Locale? locale) => _instance?._apply(locale);
+
+  @override
+  State<OverlayApp> createState() => OverlayAppState();
+}
+
+class OverlayAppState extends State<OverlayApp> {
+  Locale? _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _locale = widget.initialLocale;
+    OverlayApp._instance = this;
+  }
+
+  void _apply(Locale? locale) {
+    if (mounted) setState(() => _locale = locale);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      locale: _locale,
       home: const TimerOverlayWidget(),
-    ),
-  );
+    );
+  }
 }
 
 /// 'en' / 'ko' / 'zh_Hant' 같은 태그를 Locale로 파싱.

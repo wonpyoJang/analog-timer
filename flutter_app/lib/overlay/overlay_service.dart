@@ -67,6 +67,7 @@ class OverlayService {
     double? swStartAngleRad,
     int screenWidthDp = 400,
     int screenHeightDp = 800,
+    String? localeTag,
   }) async {
     if (!Platform.isAndroid) return;
     await FlutterOverlayWindow.shareData(
@@ -87,6 +88,7 @@ class OverlayService {
         'swStartAngleRad': swStartAngleRad,
         'screenWidthDp': screenWidthDp,
         'screenHeightDp': screenHeightDp,
+        if (localeTag != null) 'localeTag': localeTag,
       }),
     );
   }

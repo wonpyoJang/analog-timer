@@ -433,7 +433,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       swStartAngleRad: swState.startAngleRadians,
       screenWidthDp: screenW,
       screenHeightDp: screenH,
+      localeTag: _currentLocaleTag(context),
     );
+  }
+
+  /// 현재 앱 locale → 'ko' / 'zh_Hant' 형태 태그
+  static String _currentLocaleTag(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    if (locale.scriptCode != null) {
+      return '${locale.languageCode}_${locale.scriptCode}';
+    }
+    return locale.languageCode;
   }
 
   Future<void> _toggleOverlay() async {

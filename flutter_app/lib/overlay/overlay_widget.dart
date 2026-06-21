@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../main.dart' show parseLocaleTag, OverlayApp;
 
 class TimerOverlayWidget extends StatefulWidget {
   const TimerOverlayWidget({super.key});
@@ -84,6 +84,12 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
 
         // 오버레이가 보낸 action이 릴레이돼 돌아온 경우 — 상태 초기화 방지
         if (map.containsKey('action')) return;
+
+        // locale 동기화 — 메인 앱 언어 변경 즉시 반영
+        final localeTag = map['localeTag'] as String?;
+        if (localeTag != null) {
+          OverlayApp.updateLocale(parseLocaleTag(localeTag));
+        }
 
         // command 처리 — 메인 앱에서 resizeOverlay를 직접 못 하므로 위젯이 대신 실행
         final command = map['command'] as String?;
@@ -437,28 +443,33 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                 if (_timerLabel.isNotEmpty)
                   Text(
                     _timerLabel,
-                    style: GoogleFonts.bebasNeue(
-                      fontSize: 15,
-                      letterSpacing: 1.5,
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                       color: _effectiveTimerColor.withValues(alpha: 0.75),
                     ),
                   ),
                 Text(
                   _timerRemain,
-                  style: GoogleFonts.bebasNeue(
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
                     fontSize: 30,
+                    fontWeight: FontWeight.w700,
                     color: _effectiveTimerColor,
-                    letterSpacing: 1,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ],
               if (_swActive)
                 Text(
                   '⏲ $_swElapsed',
-                  style: GoogleFonts.bebasNeue(
+                  style: const TextStyle(
+                    fontFamily: 'Pretendard',
                     fontSize: 20,
-                    color: const Color(0xFF2EA84A),
-                    letterSpacing: 1,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2EA84A),
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
             ],
@@ -524,17 +535,19 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   }
 
   Widget _buildPillContent() {
-    final valueStyle = GoogleFonts.bebasNeue(
+    const valueStyle = TextStyle(
+      fontFamily: 'Pretendard',
       fontSize: 24,
-      letterSpacing: 1,
       height: 1,
-      fontWeight: FontWeight.w400,
+      fontWeight: FontWeight.w700,
+      fontFeatures: [FontFeature.tabularFigures()],
     );
-    final labelStyle = GoogleFonts.notoSansKr(
+    const labelStyle = TextStyle(
+      fontFamily: 'Pretendard',
       fontSize: 12,
       letterSpacing: 0.5,
       height: 1,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w600,
     );
 
     if (!_timerActive && !_swActive) {
@@ -910,7 +923,7 @@ class _OverlayClockPainter extends CustomPainter {
           color: const Color(0xFF111111),
           fontSize: R * 0.13,
           fontWeight: FontWeight.w900,
-          fontFamily: 'BebasNeue',
+          fontFamily: 'Pretendard',
         ),
       );
       tp.layout();
