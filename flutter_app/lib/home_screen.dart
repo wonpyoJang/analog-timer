@@ -169,6 +169,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return;
       }
       if (overlayOn && await OverlayService.isPermissionGranted) {
+        if (!mounted) return;
         final screenW = MediaQuery.of(context).size.width.round();
         await OverlayService.show(screenWidthDp: screenW);
         if (mounted) {
@@ -674,6 +675,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await OverlayService.requestPermission();
       return;
     }
+    if (!mounted) return;
     if (_overlayOn) {
       await OverlayService.hide();
       setState(() => _overlayOn = false);
@@ -682,6 +684,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } else {
       final screenW = MediaQuery.of(context).size.width.round();
       await OverlayService.show(screenWidthDp: screenW);
+      if (!mounted) return;
       setState(() => _overlayOn = true);
       _syncHealthTimer();
       PersistenceService.saveOverlayOn(true);
@@ -966,7 +969,8 @@ class _CenterInfo extends StatelessWidget {
   const _CenterInfo({required this.timerState, required this.swState});
 
   String _fmtMs(int ms) {
-    final total = (ms.clamp(0, ms) / 1000).truncate();
+    if (ms <= 0) return '00:00';
+    final total = ms ~/ 1000;
     final h = total ~/ 3600;
     final m = (total % 3600) ~/ 60;
     final s = total % 60;
@@ -1092,26 +1096,6 @@ class _ProgressBar extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _DateLine extends StatelessWidget {
-  final DateTime now;
-  const _DateLine({required this.now});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      formatDateLine(now, Localizations.localeOf(context).languageCode),
-      style: TextStyle(
-        fontFamily: 'Pretendard',
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 1,
-        color: AppColors.text.withAlpha(0xAA),
-        fontFeatures: const [FontFeature.tabularFigures()],
-      ),
     );
   }
 }
