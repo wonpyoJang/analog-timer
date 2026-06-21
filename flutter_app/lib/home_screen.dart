@@ -238,6 +238,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           case 'overlay_hide':
             OverlayService.hide();
             setState(() => _overlayOn = false);
+            PersistenceService.saveOverlayOn(false);
             NativeWidgetService.cancelNotification();
         }
       } catch (_) {}
@@ -291,6 +292,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       _inBackground = false;
       if (_clockTimer == null) _startTimer();
+      // 백그라운드에서 서비스가 죽었을 경우 복원
+      if (_overlayOn && Platform.isAndroid) _restoreOverlayIfDead();
+    }
+  }
+
+  // isActive()가 stale-true인 경우: 서비스가 살아있다고 판단했지만 실제론 죽은 상태.
+  // resume 시 isActive()를 재확인해서 false면 show()로 재시작.
+  Future<void> _restoreOverlayIfDead() async {
+    if (!await FlutterOverlayWindow.isActive()) {
+      if (!mounted) return;
+      final screenW = MediaQuery.of(context).size.width.round();
+      await OverlayService.show(screenWidthDp: screenW);
     }
   }
 

@@ -31,8 +31,8 @@ class OverlayService {
         flag: OverlayFlag.focusPointer,
         overlayTitle: 'Analog Timer',
       );
-      // 오버레이 Flutter 엔진이 ready 될 때까지 대기
-      await Future.delayed(const Duration(milliseconds: 300));
+      // 오버레이 Flutter 엔진이 ready 될 때까지 대기 (저사양 기기 대응)
+      await Future.delayed(const Duration(milliseconds: 800));
     }
 
     // isActive 여부에 관계없이 항상 'show' 전달
