@@ -681,6 +681,35 @@ class _ClockWidget extends StatelessWidget {
   }
 }
 
+// 시계 배경(면판·링·침) 위 텍스트 시인성 향상 — 흰색 외곽선 stroke
+Widget _strokeText(
+  String text,
+  TextStyle fillStyle, {
+  Color strokeColor = Colors.white,
+  double strokeWidth = 2.0,
+}) {
+  return Stack(
+    children: [
+      Text(
+        text,
+        style: TextStyle(
+          fontFamily: fillStyle.fontFamily,
+          fontSize: fillStyle.fontSize,
+          fontWeight: fillStyle.fontWeight,
+          letterSpacing: fillStyle.letterSpacing,
+          height: fillStyle.height,
+          foreground: Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = strokeWidth
+            ..strokeJoin = StrokeJoin.round
+            ..color = strokeColor,
+        ),
+      ),
+      Text(text, style: fillStyle),
+    ],
+  );
+}
+
 class _CenterInfo extends StatelessWidget {
   final TimerState timerState;
   final StopwatchState swState;
@@ -709,21 +738,23 @@ class _CenterInfo extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isActive && seg != null) ...[
-            Text(
+            _strokeText(
               seg.name,
-              style: GoogleFonts.bebasNeue(
+              GoogleFonts.bebasNeue(
                 fontSize: 16,
                 letterSpacing: 1.5,
                 color: seg.color,
               ),
+              strokeWidth: 2.0,
             ),
-            Text(
+            _strokeText(
               _fmtMs(timerState.segRemainMs),
-              style: GoogleFonts.bebasNeue(
+              GoogleFonts.bebasNeue(
                 fontSize: 48,
                 color: seg.color,
                 letterSpacing: 1,
               ),
+              strokeWidth: 4.0,
             ),
           ] else ...[
             Text(
@@ -736,13 +767,14 @@ class _CenterInfo extends StatelessWidget {
             ),
           ],
           if (swState.running || swState.elapsedMs > 0)
-            Text(
+            _strokeText(
               '⏱ ${_fmtMs(swState.elapsedMs)}',
-              style: GoogleFonts.bebasNeue(
+              GoogleFonts.bebasNeue(
                 fontSize: 30,
                 color: AppColors.swGreen,
                 letterSpacing: 1,
               ),
+              strokeWidth: 3.0,
             ),
         ],
       ),
