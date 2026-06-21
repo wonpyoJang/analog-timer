@@ -39,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Timer? _overlayHealthTimer;
   DateTime _now = DateTime.now();
   bool _overlayOn = false;
+  bool _overlayShowInFlight = false; // concurrent show() race guard
   int _syncTick = 0;
   int _nativeTick = 0;
   bool _inBackground = false;
@@ -239,7 +240,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               if (mounted) _syncOverlay();
             });
           case 'overlay_hide':
-            OverlayService.hide();
+            // hide는 fire-and-forget OK — resizeOverlay(1,1)이므로 실패해도 health timer가 복원
+            unawaited(OverlayService.hide());
             setState(() => _overlayOn = false);
             _syncHealthTimer();
             PersistenceService.saveOverlayOn(false);
@@ -253,12 +255,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _prewarmOverlay() async {
     if (!await OverlayService.isPermissionGranted) return;
     if (await FlutterOverlayWindow.isActive()) return;
+    // focusPointer, enableDrag 는 showOverlay 시 WindowManager에 등록되며
+    // resizeOverlay로는 변경 불가 — show()와 동일하게 맞춰야 버튼 탭이 동작함
     await FlutterOverlayWindow.showOverlay(
       height: 1,
       width: 1,
       alignment: OverlayAlignment.topCenter,
       positionGravity: PositionGravity.none,
-      enableDrag: false,
+      enableDrag: true,
+      flag: OverlayFlag.focusPointer,
       overlayTitle: 'Analog Timer',
     );
   }
@@ -303,11 +308,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   // isActive()가 stale-true인 경우: 서비스가 살아있다고 판단했지만 실제론 죽은 상태.
   // resume 시 isActive()를 재확인해서 false면 show()로 재시작.
+  // _overlayShowInFlight: health timer와 resumed 이벤트의 동시 호출 race 방지
   Future<void> _restoreOverlayIfDead() async {
+    if (_overlayShowInFlight) return;
     if (!await FlutterOverlayWindow.isActive()) {
       if (!mounted) return;
-      final screenW = MediaQuery.of(context).size.width.round();
-      await OverlayService.show(screenWidthDp: screenW);
+      _overlayShowInFlight = true;
+      try {
+        final screenW = MediaQuery.of(context).size.width.round();
+        await OverlayService.show(screenWidthDp: screenW);
+      } finally {
+        _overlayShowInFlight = false;
+      }
     }
   }
 
@@ -335,7 +347,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   String _fmt(int ms) {
-    final total = (ms.clamp(0, ms) / 1000).truncate();
+    if (ms <= 0) return '00:00';
+    final total = (ms / 1000).truncate();
     final h = total ~/ 3600;
     final m = (total % 3600) ~/ 60;
     final s = total % 60;

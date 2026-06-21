@@ -98,7 +98,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     );
 
     FlutterOverlayWindow.overlayListener.listen((data) async {
-      if (data == null) return;
+      if (data == null || !mounted) return;
       try {
         final map = jsonDecode(data as String) as Map<String, dynamic>;
 
@@ -215,7 +215,8 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   }
 
   String _fmtMs(int ms) {
-    final total = (ms.clamp(0, ms) ~/ 1000);
+    if (ms <= 0) return '00:00';
+    final total = ms ~/ 1000;
     final h = total ~/ 3600;
     final m = (total % 3600) ~/ 60;
     final s = total % 60;
@@ -229,24 +230,22 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     final shouldRun = _timerRunning || _swRunning;
     if (shouldRun) {
       _displayLastTick = DateTime.now();
-      if (_displayTimer == null) {
-        _displayTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
-          if (!mounted) return;
-          final now = DateTime.now();
-          final elapsed = now.difference(_displayLastTick!).inMilliseconds;
-          _displayLastTick = now;
-          setState(() {
-            if (_timerRunning && _segRemainMs > 0) {
-              _segRemainMs = max(0, _segRemainMs - elapsed);
-              _timerRemain = _fmtMs(_segRemainMs);
-            }
-            if (_swRunning) {
-              _swElapsedMs += elapsed;
-              _swElapsed = _fmtMs(_swElapsedMs);
-            }
-          });
+      _displayTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
+        if (!mounted) return;
+        final now = DateTime.now();
+        final elapsed = now.difference(_displayLastTick ?? now).inMilliseconds;
+        _displayLastTick = now;
+        setState(() {
+          if (_timerRunning && _segRemainMs > 0) {
+            _segRemainMs = max(0, _segRemainMs - elapsed);
+            _timerRemain = _fmtMs(_segRemainMs);
+          }
+          if (_swRunning) {
+            _swElapsedMs += elapsed;
+            _swElapsed = _fmtMs(_swElapsedMs);
+          }
         });
-      }
+      });
     } else if (_displayTimer != null) {
       _displayTimer?.cancel();
       _displayTimer = null;
