@@ -200,7 +200,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           return (segments.length - 1, 0, TimerStatus.done);
         }
       }
-      remain += segments[seg].duration.inMilliseconds;
+      final dur = segments[seg].duration.inMilliseconds;
+      // 0ms 세그먼트는 무한 루프를 유발하므로 즉시 완료 처리
+      if (dur <= 0) return (seg, 0, TimerStatus.done);
+      remain += dur;
     }
 
     return (seg, remain, TimerStatus.running);
