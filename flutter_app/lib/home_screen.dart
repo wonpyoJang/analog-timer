@@ -960,61 +960,54 @@ class _CenterInfo extends StatelessWidget {
         timerState.status == TimerStatus.paused;
 
     return IgnorePointer(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.white.withAlpha(0xCC),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isActive && seg != null) ...[
-              Text(
-                seg.name,
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1,
-                  color: seg.color,
-                ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isActive && seg != null) ...[
+            Text(
+              seg.name,
+              style: TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1,
+                color: seg.color,
               ),
-              Text(
-                _fmtMs(timerState.segRemainMs),
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 44,
-                  fontWeight: FontWeight.w700,
-                  color: seg.color,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
+            ),
+            Text(
+              _fmtMs(timerState.segRemainMs),
+              style: TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 44,
+                fontWeight: FontWeight.w700,
+                color: seg.color,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
-            ] else ...[
-              Text(
-                '--:--',
-                style: const TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 44,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0x44E07A52),
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
+            ),
+          ] else ...[
+            Text(
+              '--:--',
+              style: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 44,
+                fontWeight: FontWeight.w700,
+                color: Color(0x44E07A52),
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
-            ],
-            if (swState.running || swState.elapsedMs > 0)
-              Text(
-                '⏱ ${_fmtMs(swState.elapsedMs)}',
-                style: const TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.swGreen,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              ),
+            ),
           ],
-        ),
+          if (swState.running || swState.elapsedMs > 0)
+            Text(
+              '⏱ ${_fmtMs(swState.elapsedMs)}',
+              style: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: AppColors.swGreen,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+        ],
       ),
     );
   }

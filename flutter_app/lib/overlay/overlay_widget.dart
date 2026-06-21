@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -545,50 +545,43 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         final opacity = _ending ? _blinkCtrl.value : 1.0;
         return Opacity(
           opacity: opacity.clamp(0.3, 1.0),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: Colors.white.withAlpha(0xCC),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_timerActive) ...[
-                  if (_timerLabel.isNotEmpty)
-                    Text(
-                      _timerLabel,
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _effectiveTimerColor.withValues(alpha: 0.75),
-                      ),
-                    ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_timerActive) ...[
+                if (_timerLabel.isNotEmpty)
                   Text(
-                    _timerRemain,
+                    _timerLabel,
                     style: TextStyle(
                       fontFamily: 'Pretendard',
-                      fontSize: 30,
-                      fontWeight: FontWeight.w700,
-                      color: _effectiveTimerColor,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _effectiveTimerColor.withValues(alpha: 0.75),
                     ),
                   ),
-                ],
-                if (_swActive)
-                  Text(
-                    '⏲ $_swElapsed',
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF2EA84A),
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
+                Text(
+                  _timerRemain,
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 30,
+                    fontWeight: FontWeight.w700,
+                    color: _effectiveTimerColor,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
+                ),
               ],
-            ),
+              if (_swActive)
+                Text(
+                  '⏲ $_swElapsed',
+                  style: const TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2EA84A),
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+            ],
           ),
         );
       },
