@@ -9,7 +9,7 @@ import 'services/persistence_service.dart';
 import 'theme/app_theme.dart';
 import 'features/timer/bloc/timer_bloc.dart';
 import 'features/stopwatch/bloc/stopwatch_bloc.dart';
-import 'home_screen.dart';
+import 'splash_screen.dart';
 import 'overlay/overlay_widget.dart';
 import 'overlay/desktop_overlay.dart';
 import 'services/desktop_service.dart';
@@ -155,7 +155,7 @@ class _AnalogTimerAppState extends State<AnalogTimerApp> {
         locale: _locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const HomeScreen(),
+        home: const SplashScreen(),
       ),
     );
   }
