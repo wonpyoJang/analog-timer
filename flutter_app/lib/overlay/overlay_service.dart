@@ -28,10 +28,11 @@ class OverlayService {
         alignment: OverlayAlignment.topCenter,
         positionGravity: PositionGravity.none,
         enableDrag: true,
+        flag: OverlayFlag.focusPointer,
         overlayTitle: 'Analog Timer',
       );
-      // 오버레이 Flutter 엔진이 ready 될 때까지 대기
-      await Future.delayed(const Duration(milliseconds: 300));
+      // 오버레이 Flutter 엔진이 ready 될 때까지 대기 (저사양 기기 대응)
+      await Future.delayed(const Duration(milliseconds: 800));
     }
 
     // isActive 여부에 관계없이 항상 'show' 전달
@@ -54,6 +55,7 @@ class OverlayService {
     required bool timerRunning,
     required String timerLabel,
     required String timerRemain,
+    bool timerDone = false,
     required bool swActive,
     required bool swRunning,
     required String swElapsed,
@@ -65,6 +67,7 @@ class OverlayService {
     double? swStartAngleRad,
     int screenWidthDp = 400,
     int screenHeightDp = 800,
+    String? localeTag,
   }) async {
     if (!Platform.isAndroid) return;
     await FlutterOverlayWindow.shareData(
@@ -73,6 +76,7 @@ class OverlayService {
         'timerRunning': timerRunning,
         'timerLabel': timerLabel,
         'timerRemain': timerRemain,
+        'timerDone': timerDone,
         'swActive': swActive,
         'swRunning': swRunning,
         'swElapsed': swElapsed,
@@ -84,6 +88,7 @@ class OverlayService {
         'swStartAngleRad': swStartAngleRad,
         'screenWidthDp': screenWidthDp,
         'screenHeightDp': screenHeightDp,
+        if (localeTag != null) 'localeTag': localeTag,
       }),
     );
   }

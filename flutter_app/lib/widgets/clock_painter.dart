@@ -200,6 +200,7 @@ class ClockPainter extends CustomPainter {
   }
 
   void _drawNumbers(Canvas canvas, double cx, double cy, double R) {
+    if (R < 10) return;
     final tp = TextPainter(textDirection: TextDirection.ltr);
     for (int i = 1; i <= 12; i++) {
       final angle = (i / 12) * 2 * pi - pi / 2;
@@ -207,7 +208,7 @@ class ClockPainter extends CustomPainter {
         text: '$i',
         style: TextStyle(
           color: const Color(0xFF111111),
-          fontSize: R * 0.13,
+          fontSize: (R * 0.13).clamp(1.0, double.infinity),
           fontWeight: FontWeight.w700,
           fontFamily: 'Pretendard',
         ),
