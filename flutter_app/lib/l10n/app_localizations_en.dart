@@ -218,4 +218,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 Loop $count done';
   }
+
+  @override
+  String get batteryLow => 'Battery low — please charge';
+
+  @override
+  String get batteryMon => 'Battery';
+
+  @override
+  String get batteryMonOn => 'Battery ON';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get settingsBattery => 'Battery monitoring';
+
+  @override
+  String get settingsBatteryDesc => 'Warn when battery drops to 20% or below';
+
+  @override
+  String get settingsLanguage => 'Language';
+
+  @override
+  String get modeLabelLog => 'Log';
+
+  @override
+  String get modeLabelToday => 'Today';
+
+  @override
+  String get modeLabelPlan => 'Plan';
+
+  @override
+  String get dayLogTitle => 'Activity Log';
+
+  @override
+  String get dayLogEmpty => 'No activity recorded for this day';
+
+  @override
+  String get dayPlanTitle => 'Day Plan';
+
+  @override
+  String get dayPlanEmpty => 'No plan set for this day';
+
+  @override
+  String get planSaveAsCurrent => 'Save as plan';
+
+  @override
+  String get planLoadIntoTimer => 'Load into timer';
+
+  @override
+  String get planSave => 'Save';
 }

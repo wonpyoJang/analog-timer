@@ -218,4 +218,55 @@ class AppLocalizationsHi extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 लूप $count पूर्ण';
   }
+
+  @override
+  String get batteryLow => 'बैटरी कम — कृपया चार्ज करें';
+
+  @override
+  String get batteryMon => 'बैटरी';
+
+  @override
+  String get batteryMonOn => 'बैटरी ON';
+
+  @override
+  String get settings => 'सेटिंग्स';
+
+  @override
+  String get settingsBattery => 'बैटरी निगरानी';
+
+  @override
+  String get settingsBatteryDesc => 'जब बैटरी 20% या कम हो तो चेतावनी दें';
+
+  @override
+  String get settingsLanguage => 'भाषा';
+
+  @override
+  String get modeLabelLog => 'लॉग';
+
+  @override
+  String get modeLabelToday => 'आज';
+
+  @override
+  String get modeLabelPlan => 'योजना';
+
+  @override
+  String get dayLogTitle => 'दिनचर्या लॉग';
+
+  @override
+  String get dayLogEmpty => 'इस दिन के लिए कोई गतिविधि दर्ज नहीं';
+
+  @override
+  String get dayPlanTitle => 'दिन की योजना';
+
+  @override
+  String get dayPlanEmpty => 'इस दिन के लिए कोई योजना नहीं';
+
+  @override
+  String get planSaveAsCurrent => 'योजना के रूप में सहेजें';
+
+  @override
+  String get planLoadIntoTimer => 'टाइमर में लोड करें';
+
+  @override
+  String get planSave => 'सहेजें';
 }

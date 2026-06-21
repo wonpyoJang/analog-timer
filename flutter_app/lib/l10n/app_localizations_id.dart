@@ -218,4 +218,56 @@ class AppLocalizationsId extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 Putaran $count selesai';
   }
+
+  @override
+  String get batteryLow => 'Baterai lemah — silakan isi daya';
+
+  @override
+  String get batteryMon => 'Baterai';
+
+  @override
+  String get batteryMonOn => 'Baterai ON';
+
+  @override
+  String get settings => 'Pengaturan';
+
+  @override
+  String get settingsBattery => 'Pemantauan baterai';
+
+  @override
+  String get settingsBatteryDesc =>
+      'Peringatkan jika baterai turun ke 20% atau lebih rendah';
+
+  @override
+  String get settingsLanguage => 'Bahasa';
+
+  @override
+  String get modeLabelLog => 'Log';
+
+  @override
+  String get modeLabelToday => 'Hari Ini';
+
+  @override
+  String get modeLabelPlan => 'Rencana';
+
+  @override
+  String get dayLogTitle => 'Log Aktivitas';
+
+  @override
+  String get dayLogEmpty => 'Tidak ada aktivitas yang dicatat untuk hari ini';
+
+  @override
+  String get dayPlanTitle => 'Rencana Hari';
+
+  @override
+  String get dayPlanEmpty => 'Tidak ada rencana untuk hari ini';
+
+  @override
+  String get planSaveAsCurrent => 'Simpan sebagai rencana';
+
+  @override
+  String get planLoadIntoTimer => 'Muat ke timer';
+
+  @override
+  String get planSave => 'Simpan';
 }

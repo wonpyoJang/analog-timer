@@ -218,4 +218,56 @@ class AppLocalizationsFr extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 Boucle $count terminée';
   }
+
+  @override
+  String get batteryLow => 'Batterie faible — veuillez charger';
+
+  @override
+  String get batteryMon => 'Batterie';
+
+  @override
+  String get batteryMonOn => 'Batterie ON';
+
+  @override
+  String get settings => 'Paramètres';
+
+  @override
+  String get settingsBattery => 'Surveillance batterie';
+
+  @override
+  String get settingsBatteryDesc =>
+      'Avertir quand la batterie descend à 20 % ou moins';
+
+  @override
+  String get settingsLanguage => 'Langue';
+
+  @override
+  String get modeLabelLog => 'Journal';
+
+  @override
+  String get modeLabelToday => 'Aujourd\'hui';
+
+  @override
+  String get modeLabelPlan => 'Plan';
+
+  @override
+  String get dayLogTitle => 'Journal du jour';
+
+  @override
+  String get dayLogEmpty => 'Aucune activité enregistrée pour ce jour';
+
+  @override
+  String get dayPlanTitle => 'Plan du jour';
+
+  @override
+  String get dayPlanEmpty => 'Aucun plan pour ce jour';
+
+  @override
+  String get planSaveAsCurrent => 'Enregistrer comme plan';
+
+  @override
+  String get planLoadIntoTimer => 'Charger dans la minuterie';
+
+  @override
+  String get planSave => 'Sauvegarder';
 }

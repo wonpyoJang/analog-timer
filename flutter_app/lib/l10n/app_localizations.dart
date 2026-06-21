@@ -506,6 +506,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'🔁 Loop {count} done'**
   String logLoop(String count);
+
+  /// No description provided for @batteryLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery low — please charge'**
+  String get batteryLow;
+
+  /// No description provided for @batteryMon.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get batteryMon;
+
+  /// No description provided for @batteryMonOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery ON'**
+  String get batteryMonOn;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @settingsBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery monitoring'**
+  String get settingsBattery;
+
+  /// No description provided for @settingsBatteryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn when battery drops to 20% or below'**
+  String get settingsBatteryDesc;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
+
+  /// No description provided for @modeLabelLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get modeLabelLog;
+
+  /// No description provided for @modeLabelToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get modeLabelToday;
+
+  /// No description provided for @modeLabelPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get modeLabelPlan;
+
+  /// No description provided for @dayLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Log'**
+  String get dayLogTitle;
+
+  /// No description provided for @dayLogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity recorded for this day'**
+  String get dayLogEmpty;
+
+  /// No description provided for @dayPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Plan'**
+  String get dayPlanTitle;
+
+  /// No description provided for @dayPlanEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No plan set for this day'**
+  String get dayPlanEmpty;
+
+  /// No description provided for @planSaveAsCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as plan'**
+  String get planSaveAsCurrent;
+
+  /// No description provided for @planLoadIntoTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Load into timer'**
+  String get planLoadIntoTimer;
+
+  /// No description provided for @planSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get planSave;
 }
 
 class _AppLocalizationsDelegate

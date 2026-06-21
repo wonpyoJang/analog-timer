@@ -57,6 +57,14 @@ class TimerSegmentUpdated extends TimerEvent {
   List<Object?> get props => [index, segment];
 }
 
+/// 날짜 계획 불러오기 — 세그먼트 목록을 완전히 교체하고 타이머를 idle 상태로 초기화.
+class TimerSegmentsReplaced extends TimerEvent {
+  final List<Segment> segments;
+  const TimerSegmentsReplaced(this.segments);
+  @override
+  List<Object?> get props => [segments];
+}
+
 /// 프리셋 적용 — 현재 세그먼트 목록 끝에 덧붙인다(교체 아님).
 class TimerSegmentsAppended extends TimerEvent {
   final List<Segment> segments;

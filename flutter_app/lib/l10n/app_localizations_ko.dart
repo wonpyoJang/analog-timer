@@ -217,4 +217,55 @@ class AppLocalizationsKo extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 루프 $count회 완료';
   }
+
+  @override
+  String get batteryLow => '배터리 부족 — 충전해 주세요';
+
+  @override
+  String get batteryMon => '배터리';
+
+  @override
+  String get batteryMonOn => '배터리 ON';
+
+  @override
+  String get settings => '설정';
+
+  @override
+  String get settingsBattery => '배터리 모니터링';
+
+  @override
+  String get settingsBatteryDesc => '배터리가 20% 이하로 내려가면 경고';
+
+  @override
+  String get settingsLanguage => '언어';
+
+  @override
+  String get modeLabelLog => '로그';
+
+  @override
+  String get modeLabelToday => '오늘';
+
+  @override
+  String get modeLabelPlan => '계획';
+
+  @override
+  String get dayLogTitle => '이 날의 기록';
+
+  @override
+  String get dayLogEmpty => '이 날에는 기록이 없습니다';
+
+  @override
+  String get dayPlanTitle => '이 날의 계획';
+
+  @override
+  String get dayPlanEmpty => '이 날에는 계획이 없습니다';
+
+  @override
+  String get planSaveAsCurrent => '현재 세그먼트로 저장';
+
+  @override
+  String get planLoadIntoTimer => '타이머에 불러오기';
+
+  @override
+  String get planSave => '저장';
 }

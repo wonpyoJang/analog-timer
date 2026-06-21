@@ -218,4 +218,55 @@ class AppLocalizationsTr extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 Döngü $count tamamlandı';
   }
+
+  @override
+  String get batteryLow => 'Pil az — lütfen şarj edin';
+
+  @override
+  String get batteryMon => 'Pil';
+
+  @override
+  String get batteryMonOn => 'Pil ON';
+
+  @override
+  String get settings => 'Ayarlar';
+
+  @override
+  String get settingsBattery => 'Pil izleme';
+
+  @override
+  String get settingsBatteryDesc => 'Pil %20 veya altına düştüğünde uyar';
+
+  @override
+  String get settingsLanguage => 'Dil';
+
+  @override
+  String get modeLabelLog => 'Günlük';
+
+  @override
+  String get modeLabelToday => 'Bugün';
+
+  @override
+  String get modeLabelPlan => 'Plan';
+
+  @override
+  String get dayLogTitle => 'Günlük Kaydı';
+
+  @override
+  String get dayLogEmpty => 'Bu gün için kayıt yok';
+
+  @override
+  String get dayPlanTitle => 'Günlük Plan';
+
+  @override
+  String get dayPlanEmpty => 'Bu gün için plan yok';
+
+  @override
+  String get planSaveAsCurrent => 'Plan olarak kaydet';
+
+  @override
+  String get planLoadIntoTimer => 'Zamanlayıcıya yükle';
+
+  @override
+  String get planSave => 'Kaydet';
 }

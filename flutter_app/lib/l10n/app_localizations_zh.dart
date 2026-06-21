@@ -217,6 +217,57 @@ class AppLocalizationsZh extends AppLocalizations {
   String logLoop(String count) {
     return '🔁 第 $count 轮完成';
   }
+
+  @override
+  String get batteryLow => '电量不足 — 请充电';
+
+  @override
+  String get batteryMon => '电量';
+
+  @override
+  String get batteryMonOn => '电量 ON';
+
+  @override
+  String get settings => '设置';
+
+  @override
+  String get settingsBattery => '电量监控';
+
+  @override
+  String get settingsBatteryDesc => '电量低于20%时发出警告';
+
+  @override
+  String get settingsLanguage => '语言';
+
+  @override
+  String get modeLabelLog => '日志';
+
+  @override
+  String get modeLabelToday => '今天';
+
+  @override
+  String get modeLabelPlan => '计划';
+
+  @override
+  String get dayLogTitle => '当日记录';
+
+  @override
+  String get dayLogEmpty => '这一天没有活动记录';
+
+  @override
+  String get dayPlanTitle => '当日计划';
+
+  @override
+  String get dayPlanEmpty => '这一天没有计划';
+
+  @override
+  String get planSaveAsCurrent => '保存为计划';
+
+  @override
+  String get planLoadIntoTimer => '载入计时器';
+
+  @override
+  String get planSave => '保存';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -432,4 +483,55 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String logLoop(String count) {
     return '🔁 第 $count 輪完成';
   }
+
+  @override
+  String get batteryLow => '電量不足 — 請充電';
+
+  @override
+  String get batteryMon => '電量';
+
+  @override
+  String get batteryMonOn => '電量 ON';
+
+  @override
+  String get settings => '設定';
+
+  @override
+  String get settingsBattery => '電量監控';
+
+  @override
+  String get settingsBatteryDesc => '電量低於20%時發出警告';
+
+  @override
+  String get settingsLanguage => '語言';
+
+  @override
+  String get modeLabelLog => '紀錄';
+
+  @override
+  String get modeLabelToday => '今天';
+
+  @override
+  String get modeLabelPlan => '計畫';
+
+  @override
+  String get dayLogTitle => '當日紀錄';
+
+  @override
+  String get dayLogEmpty => '這天沒有活動紀錄';
+
+  @override
+  String get dayPlanTitle => '當日計畫';
+
+  @override
+  String get dayPlanEmpty => '這天沒有計畫';
+
+  @override
+  String get planSaveAsCurrent => '儲存為計畫';
+
+  @override
+  String get planLoadIntoTimer => '載入計時器';
+
+  @override
+  String get planSave => '儲存';
 }

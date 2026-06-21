@@ -182,11 +182,18 @@ public class FlutterOverlayWindowPlugin implements
 
     @Override
     public void onMessage(@Nullable Object message, @NonNull BasicMessageChannel.Reply reply) {
-        BasicMessageChannel overlayMessageChannel = new BasicMessageChannel(
-                FlutterEngineCache.getInstance().get(OverlayConstants.CACHED_TAG)
-                        .getDartExecutor(),
+        // 즉시 main app 차단 해제 — round-trip 대기 없이 shareData() Future 완료
+        reply.reply(null);
+
+        // overlay engine에 fire-and-forget 전달
+        io.flutter.embedding.engine.FlutterEngine overlayEngine =
+                FlutterEngineCache.getInstance().get(OverlayConstants.CACHED_TAG);
+        if (overlayEngine == null) return;
+
+        BasicMessageChannel<Object> overlayMessageChannel = new BasicMessageChannel<>(
+                overlayEngine.getDartExecutor(),
                 OverlayConstants.MESSENGER_TAG, JSONMessageCodec.INSTANCE);
-        overlayMessageChannel.send(message, reply);
+        overlayMessageChannel.send(message, replyData -> { /* 응답 무시 */ });
     }
 
     private boolean checkOverlayPermission() {

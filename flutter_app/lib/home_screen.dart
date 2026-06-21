@@ -16,18 +16,22 @@ import 'features/timer/widgets/segment_editor.dart';
 import 'features/stopwatch/widgets/stopwatch_controls.dart';
 import 'widgets/clock_painter.dart';
 import 'widgets/bottom_panels.dart';
-import 'widgets/date_label.dart';
-import 'widgets/language_picker.dart';
+import 'settings_screen.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
 import 'live_activity/live_activity_service.dart';
 import 'pip/pip_service.dart';
+import 'services/battery_service.dart';
 import 'services/persistence_service.dart';
 import 'services/native_widget_service.dart';
 import 'services/desktop_service.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
+import 'services/daily_record_service.dart';
 import 'features/timer/models/segment.dart';
+import 'widgets/date_nav.dart';
+import 'widgets/day_log_view.dart';
+import 'widgets/day_plan_view.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -41,20 +45,37 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Timer? _persistTimer;
   Timer? _overlayHealthTimer;
   DateTime _now = DateTime.now();
+  late DateTime _viewDate;
+  int _lastTimerLogCount = 0;
   bool _overlayOn = false;
   bool _overlayShowInFlight = false; // concurrent show() race guard
+  bool _pendingOverlayEnable = false; // permission 요청 후 복귀 시 자동 시작 플래그
   int _syncTick = 0;
   int _nativeTick = 0;
   bool _inBackground = false;
+  int? _lastOverlaySeg;
+  TimerStatus? _lastOverlayStatus;
+  bool? _lastOverlaySwRunning;
 
   // 데스크톱 전용 — 트레이 / 알림 / 플로팅 오버레이 위젯
   Timer? _trayTimer;
   TimerState? _prevTimer;
   bool _desktopOverlayOn = false;
 
+  DateTime get _today => DateTime(_now.year, _now.month, _now.day);
+
+  bool get _isViewingToday {
+    final t = _today;
+    return _viewDate.year == t.year &&
+        _viewDate.month == t.month &&
+        _viewDate.day == t.day;
+  }
+
   @override
   void initState() {
     super.initState();
+    final now = DateTime.now();
+    _viewDate = DateTime(now.year, now.month, now.day);
     WidgetsBinding.instance.addObserver(this);
     LiveActivityService.init();
     _prevTimer = context.read<TimerBloc>().state;
@@ -72,6 +93,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _persistTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) _saveState();
     });
+    BatteryService.instance.start(); // async — 내부에서 prefs 로드 후 모니터 시작
   }
 
   Future<void> _loadIosWidgetPref() async {
@@ -168,11 +190,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return;
       }
       if (overlayOn && await OverlayService.isPermissionGranted) {
+        if (!mounted) return;
         final screenW = MediaQuery.of(context).size.width.round();
         await OverlayService.show(screenWidthDp: screenW);
         if (mounted) {
           setState(() => _overlayOn = true);
           _syncHealthTimer();
+          // 첫 heartbeat(~1s) 전에 즉시 상태 동기화 → "UI 무너짐" 방지
+          _syncOverlay();
         }
       } else {
         _prewarmOverlay();
@@ -200,7 +225,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           return (segments.length - 1, 0, TimerStatus.done);
         }
       }
-      remain += segments[seg].duration.inMilliseconds;
+      final dur = segments[seg].duration.inMilliseconds;
+      // 0ms 세그먼트는 무한 루프를 유발하므로 즉시 완료 처리
+      if (dur <= 0) return (seg, 0, TimerStatus.done);
+      remain += dur;
     }
 
     return (seg, remain, TimerStatus.running);
@@ -288,6 +316,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
+  // STT-08 헬퍼: 권한이 실제 허용된 경우에만 overlay 시작 (requestPermission 호출 없음)
+  Future<void> _startOverlayIfPermitted() async {
+    if (!await OverlayService.isPermissionGranted) return;
+    if (!mounted || _overlayOn) return;
+    final screenW = MediaQuery.of(context).size.width.round();
+    await OverlayService.show(screenWidthDp: screenW);
+    if (!mounted) return;
+    setState(() => _overlayOn = true);
+    _syncHealthTimer();
+    PersistenceService.saveOverlayOn(true);
+  }
+
   void _startTimer() {
     _clockTimer?.cancel();
     _clockTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
@@ -299,7 +339,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       } else {
         setState(() => _now = now);
       }
-      _syncTick = (_syncTick + 1) % 3;
+      // 상태 변화 즉시 동기화
+      if (_overlayOn && Platform.isAndroid) {
+        final ts = context.read<TimerBloc>().state;
+        final sw = context.read<StopwatchBloc>().state;
+        if (ts.currentSeg != _lastOverlaySeg ||
+            ts.status != _lastOverlayStatus ||
+            sw.running != _lastOverlaySwRunning) {
+          _lastOverlaySeg = ts.currentSeg;
+          _lastOverlayStatus = ts.status;
+          _lastOverlaySwRunning = sw.running;
+          _syncOverlay();
+          _syncTick = 0; // 다음 heartbeat 주기 리셋
+        }
+      }
+      // heartbeat 1s — fire-and-forget IPC 후 round-trip 없으므로 큐 누적 없음
+      // 1s 간격으로 overlay 이벤트루프 주기적 wake-up → 표시 지연 ≤1s
+      _syncTick = (_syncTick + 1) % 62;
       if (_syncTick == 0) {
         _syncOverlay();
         _syncLiveActivity();
@@ -322,8 +378,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       _inBackground = false;
       if (_clockTimer == null) _startTimer();
-      // 백그라운드에서 서비스가 죽었을 경우 복원
       if (_overlayOn && Platform.isAndroid) _restoreOverlayIfDead();
+      // STT-08: 권한 요청 화면에서 돌아왔을 때 권한이 허용됐으면 자동 시작
+      // _toggleOverlay() 직접 호출 금지 — 거부 시 _pendingOverlayEnable=true 재설정 후
+      // requestPermission() 재호출 → paused/resumed 무한 루프 발생
+      if (_pendingOverlayEnable && Platform.isAndroid) {
+        _pendingOverlayEnable = false;
+        unawaited(_startOverlayIfPermitted());
+      }
     }
   }
 
@@ -338,6 +400,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       try {
         final screenW = MediaQuery.of(context).size.width.round();
         await OverlayService.show(screenWidthDp: screenW);
+        // 재시작 후 즉시 상태 동기화 — 다음 heartbeat 전까지 기본값 표시 방지
+        if (mounted) _syncOverlay();
       } finally {
         _overlayShowInFlight = false;
       }
@@ -365,6 +429,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _persistTimer?.cancel();
     _overlayHealthTimer?.cancel();
     _trayTimer?.cancel();
+    BatteryService.instance.stop();
     super.dispose();
   }
 
@@ -444,6 +509,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       'segRemainMs': timerState.segRemainMs,
       'swElapsedMs': swState.elapsedMs,
       'swStartAngleRad': swState.startAngleRadians,
+      'batteryLow': BatteryService.instance.lowBattery.value,
+      'batteryLevel': BatteryService.instance.level.value,
     };
   }
 
@@ -491,6 +558,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         l.notifySegmentDoneTitle,
         l.notifySegmentDoneBody(prevName, curName),
       );
+    }
+  }
+
+  void _onLogUpdate(BuildContext ctx, TimerState cur) {
+    if (cur.log.length < _lastTimerLogCount) {
+      // 로그가 초기화됨 (restore / replace)
+      _lastTimerLogCount = 0;
+      return;
+    }
+    if (cur.log.length <= _lastTimerLogCount) return;
+    final newEntries = cur.log.skip(_lastTimerLogCount).toList();
+    _lastTimerLogCount = cur.log.length;
+    final today = DateTime.now();
+    for (final e in newEntries) {
+      DailyRecordService.appendLogEntry(today, {
+        'type': e.type.name,
+        'segName': e.segName ?? '',
+        'colorValue': e.colorValue,
+        'timeMs': e.time.millisecondsSinceEpoch,
+      });
     }
   }
 
@@ -619,6 +706,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       screenWidthDp: screenW,
       screenHeightDp: screenH,
       localeTag: _currentLocaleTag(context),
+      batteryLow: BatteryService.instance.lowBattery.value,
+      batteryLevel: BatteryService.instance.level.value,
     );
   }
 
@@ -648,20 +737,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
     if (!Platform.isAndroid) return;
     if (!await OverlayService.isPermissionGranted) {
+      _pendingOverlayEnable = true;
       await OverlayService.requestPermission();
       return;
     }
+    if (!mounted) return;
     if (_overlayOn) {
       await OverlayService.hide();
+      if (!mounted) return;
       setState(() => _overlayOn = false);
       _syncHealthTimer();
       PersistenceService.saveOverlayOn(false);
     } else {
       final screenW = MediaQuery.of(context).size.width.round();
       await OverlayService.show(screenWidthDp: screenW);
+      if (!mounted) return;
       setState(() => _overlayOn = true);
       _syncHealthTimer();
       PersistenceService.saveOverlayOn(true);
+      // 즉시 상태 전송 — 첫 heartbeat(~1s) 전까지 기본값 노출 방지
+      _syncOverlay();
     }
   }
 
@@ -673,174 +768,251 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: Column(
-                  children: [
-                    // Title + overlay toggle + language picker
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              '⏱ ${l.appTitle}',
-                              style: const TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: 28,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 2,
-                                color: AppColors.accent,
-                              ),
-                            ),
+          child: Column(
+            children: [
+              ValueListenableBuilder<bool>(
+                valueListenable: BatteryService.instance.lowBattery,
+                builder: (bCtx, isLow, bChild) {
+                  if (!isLow) return const SizedBox.shrink();
+                  return Material(
+                    color: const Color(0xFFB45309),
+                    child: ValueListenableBuilder<int>(
+                      valueListenable: BatteryService.instance.level,
+                      builder: (lvlCtx, lvl, lvlChild) => ListTile(
+                        dense: true,
+                        leading: const Icon(
+                          Icons.battery_alert,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        title: Text(
+                          lvl >= 0 ? '${l.batteryLow} ($lvl%)' : l.batteryLow,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        if (Platform.isAndroid || Platform.isIOS) ...[
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: _toggleOverlay,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _overlayOn
-                                    ? AppColors.accent.withAlpha(0x33)
-                                    : AppColors.surface,
-                                border: Border.all(
-                                  color: _overlayOn
-                                      ? AppColors.accent
-                                      : AppColors.border,
+                        trailing: IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          onPressed: BatteryService.instance.dismiss,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 24,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: Column(
+                        children: [
+                          // Title + overlay toggle + language picker
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    '⏱ ${l.appTitle}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Pretendard',
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 2,
+                                      color: AppColors.accent,
+                                    ),
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(
-                                _overlayOn ? l.widgetOn : l.widget,
-                                style: TextStyle(
-                                  color: _overlayOn
-                                      ? AppColors.accent
-                                      : AppColors.muted,
-                                  fontSize: 11,
-                                  letterSpacing: 0.6,
+                              if (Platform.isAndroid || Platform.isIOS) ...[
+                                const SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: _toggleOverlay,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _overlayOn
+                                          ? AppColors.accent.withAlpha(0x33)
+                                          : AppColors.surface,
+                                      border: Border.all(
+                                        color: _overlayOn
+                                            ? AppColors.accent
+                                            : AppColors.border,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      _overlayOn ? l.widgetOn : l.widget,
+                                      style: TextStyle(
+                                        color: _overlayOn
+                                            ? AppColors.accent
+                                            : AppColors.muted,
+                                        fontSize: 11,
+                                        letterSpacing: 0.6,
+                                      ),
+                                    ),
+                                  ),
                                 ),
+                              ],
+                              if (isDesktop) ...[
+                                const SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: _toggleDesktopOverlay,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _desktopOverlayOn
+                                          ? AppColors.accent.withAlpha(0x33)
+                                          : AppColors.surface,
+                                      border: Border.all(
+                                        color: _desktopOverlayOn
+                                            ? AppColors.accent
+                                            : AppColors.border,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      _desktopOverlayOn ? l.widgetOn : l.widget,
+                                      style: TextStyle(
+                                        color: _desktopOverlayOn
+                                            ? AppColors.accent
+                                            : AppColors.muted,
+                                        fontSize: 11,
+                                        letterSpacing: 0.6,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(width: 10),
+                              GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const SettingsScreen(),
+                                  ),
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(7),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    border: Border.all(color: AppColors.border),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.settings,
+                                    size: 16,
+                                    color: AppColors.muted,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          DateNav(
+                            selectedDate: _viewDate,
+                            today: _today,
+                            onPrev: () => setState(
+                              () => _viewDate = _viewDate.subtract(
+                                const Duration(days: 1),
                               ),
                             ),
+                            onNext: () => setState(
+                              () => _viewDate = _viewDate.add(
+                                const Duration(days: 1),
+                              ),
+                            ),
+                            onToday: () => setState(() => _viewDate = _today),
                           ),
+                          const SizedBox(height: 16),
+
+                          _ClockWidget(now: _now),
+                          const SizedBox(height: 8),
+
+                          Wrap(
+                            spacing: 16,
+                            children: [
+                              _Legend(
+                                color: AppColors.timerOrange,
+                                label: l.legendTimer,
+                              ),
+                              _Legend(
+                                color: AppColors.swGreen,
+                                label: l.legendStopwatch,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+
+                          _ProgressBar(),
+                          const SizedBox(height: 20),
+
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Expanded(child: TimerControls()),
+                              SizedBox(width: 16),
+                              Expanded(child: StopwatchControls()),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          if (_isViewingToday) ...[
+                            const SegmentEditor(),
+                            const SizedBox(height: 12),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Expanded(child: LapList()),
+                                SizedBox(width: 10),
+                                Expanded(child: TimerLog()),
+                              ],
+                            ),
+                          ] else if (_viewDate.isBefore(_today))
+                            DayLogView(date: _viewDate)
+                          else
+                            DayPlanView(date: _viewDate),
                         ],
-                        if (isDesktop) ...[
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: _toggleDesktopOverlay,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _desktopOverlayOn
-                                    ? AppColors.accent.withAlpha(0x33)
-                                    : AppColors.surface,
-                                border: Border.all(
-                                  color: _desktopOverlayOn
-                                      ? AppColors.accent
-                                      : AppColors.border,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                _desktopOverlayOn ? l.widgetOn : l.widget,
-                                style: TextStyle(
-                                  color: _desktopOverlayOn
-                                      ? AppColors.accent
-                                      : AppColors.muted,
-                                  fontSize: 11,
-                                  letterSpacing: 0.6,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(width: 10),
-                        GestureDetector(
-                          onTap: () => showLanguagePicker(context),
-                          child: Container(
-                            padding: const EdgeInsets.all(7),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              border: Border.all(color: AppColors.border),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.language,
-                              size: 16,
-                              color: AppColors.muted,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 6),
-                    _DateLine(now: _now),
-                    const SizedBox(height: 16),
-
-                    _ClockWidget(now: _now),
-                    const SizedBox(height: 8),
-
-                    Wrap(
-                      spacing: 16,
-                      children: [
-                        _Legend(
-                          color: AppColors.timerOrange,
-                          label: l.legendTimer,
-                        ),
-                        _Legend(
-                          color: AppColors.swGreen,
-                          label: l.legendStopwatch,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-
-                    _ProgressBar(),
-                    const SizedBox(height: 20),
-
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Expanded(child: TimerControls()),
-                        SizedBox(width: 16),
-                        Expanded(child: StopwatchControls()),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    const SegmentEditor(),
-                    const SizedBox(height: 12),
-
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Expanded(child: LapList()),
-                        SizedBox(width: 10),
-                        Expanded(child: TimerLog()),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
 
-    if (!isDesktop) return scaffold;
+    // 타이머 로그 자동 저장 — 새 항목이 추가될 때마다 당일 기록으로 보존
+    final withAutoLog = BlocListener<TimerBloc, TimerState>(
+      listenWhen: (p, c) => c.log.length != p.log.length,
+      listener: _onLogUpdate,
+      child: scaffold,
+    );
+
+    if (!isDesktop) return withAutoLog;
     // 데스크톱: 타이머 상태 전이를 감지해 알림/동기화 발신. segRemainMs 만
     // 바뀌는 매 프레임은 무시하고 status/세그먼트/loop 변화에만 반응한다.
     return BlocListener<TimerBloc, TimerState>(
@@ -850,27 +1022,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           p.loop != c.loop ||
           !identical(p.segments, c.segments),
       listener: (_, state) => _onTimerTransition(state),
-      child: scaffold,
-    );
-  }
-}
-
-class _DateLine extends StatelessWidget {
-  final DateTime now;
-  const _DateLine({required this.now});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      formatDateLine(now, Localizations.localeOf(context).languageCode),
-      style: TextStyle(
-        fontFamily: 'Pretendard',
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 1,
-        color: AppColors.text.withAlpha(0xAA),
-        fontFeatures: const [FontFeature.tabularFigures()],
-      ),
+      child: withAutoLog,
     );
   }
 }
@@ -908,34 +1060,12 @@ class _ClockWidget extends StatelessWidget {
   }
 }
 
-// 시계 배경(면판·링·침) 위 텍스트 시인성 향상 — 흰색 외곽선 stroke
-Widget _strokeText(
-  String text,
-  TextStyle fillStyle, {
-  Color strokeColor = Colors.white,
-  double strokeWidth = 2.0,
-}) {
-  return Stack(
-    children: [
-      Text(
-        text,
-        style: TextStyle(
-          fontFamily: fillStyle.fontFamily,
-          fontSize: fillStyle.fontSize,
-          fontWeight: fillStyle.fontWeight,
-          letterSpacing: fillStyle.letterSpacing,
-          height: fillStyle.height,
-          foreground: Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = strokeWidth
-            ..strokeJoin = StrokeJoin.round
-            ..color = strokeColor,
-        ),
-      ),
-      Text(text, style: fillStyle),
-    ],
-  );
-}
+const _kTextHalo = [
+  Shadow(offset: Offset(-1.5, 0), blurRadius: 3, color: Colors.white),
+  Shadow(offset: Offset(1.5, 0), blurRadius: 3, color: Colors.white),
+  Shadow(offset: Offset(0, -1.5), blurRadius: 3, color: Colors.white),
+  Shadow(offset: Offset(0, 1.5), blurRadius: 3, color: Colors.white),
+];
 
 class _CenterInfo extends StatelessWidget {
   final TimerState timerState;
@@ -943,7 +1073,8 @@ class _CenterInfo extends StatelessWidget {
   const _CenterInfo({required this.timerState, required this.swState});
 
   String _fmtMs(int ms) {
-    final total = (ms.clamp(0, ms) / 1000).truncate();
+    if (ms <= 0) return '00:00';
+    final total = ms ~/ 1000;
     final h = total ~/ 3600;
     final m = (total % 3600) ~/ 60;
     final s = total % 60;
@@ -965,27 +1096,27 @@ class _CenterInfo extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isActive && seg != null) ...[
-            _strokeText(
+            Text(
               seg.name,
-              TextStyle(
+              style: TextStyle(
                 fontFamily: 'Pretendard',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1,
                 color: seg.color,
+                shadows: _kTextHalo,
               ),
-              strokeWidth: 2.0,
             ),
-            _strokeText(
+            Text(
               _fmtMs(timerState.segRemainMs),
-              TextStyle(
+              style: TextStyle(
                 fontFamily: 'Pretendard',
                 fontSize: 44,
                 fontWeight: FontWeight.w700,
                 color: seg.color,
                 fontFeatures: const [FontFeature.tabularFigures()],
+                shadows: _kTextHalo,
               ),
-              strokeWidth: 4.0,
             ),
           ] else ...[
             Text(
@@ -1000,16 +1131,16 @@ class _CenterInfo extends StatelessWidget {
             ),
           ],
           if (swState.running || swState.elapsedMs > 0)
-            _strokeText(
+            Text(
               '⏱ ${_fmtMs(swState.elapsedMs)}',
-              const TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Pretendard',
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
                 color: AppColors.swGreen,
                 fontFeatures: [FontFeature.tabularFigures()],
+                shadows: _kTextHalo,
               ),
-              strokeWidth: 3.0,
             ),
         ],
       ),
@@ -1069,26 +1200,6 @@ class _ProgressBar extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _DateLine extends StatelessWidget {
-  final DateTime now;
-  const _DateLine({required this.now});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      formatDateLine(now, Localizations.localeOf(context).languageCode),
-      style: TextStyle(
-        fontFamily: 'Pretendard',
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 1,
-        color: AppColors.text.withAlpha(0xAA),
-        fontFeatures: const [FontFeature.tabularFigures()],
-      ),
     );
   }
 }
