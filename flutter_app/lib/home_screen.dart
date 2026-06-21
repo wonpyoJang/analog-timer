@@ -47,6 +47,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _syncTick = 0;
   int _nativeTick = 0;
   bool _inBackground = false;
+  int? _lastOverlaySeg;
+  TimerStatus? _lastOverlayStatus;
+  bool? _lastOverlaySwRunning;
 
   // 데스크톱 전용 — 트레이 / 알림 / 플로팅 오버레이 위젯
   Timer? _trayTimer;
@@ -175,6 +178,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         if (mounted) {
           setState(() => _overlayOn = true);
           _syncHealthTimer();
+          // 첫 heartbeat(~1s) 전에 즉시 상태 동기화 → "UI 무너짐" 방지
+          _syncOverlay();
         }
       } else {
         _prewarmOverlay();
@@ -316,7 +321,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       } else {
         setState(() => _now = now);
       }
-      _syncTick = (_syncTick + 1) % 3;
+      // 상태 변화 즉시 동기화
+      if (_overlayOn && Platform.isAndroid) {
+        final ts = context.read<TimerBloc>().state;
+        final sw = context.read<StopwatchBloc>().state;
+        if (ts.currentSeg != _lastOverlaySeg ||
+            ts.status != _lastOverlayStatus ||
+            sw.running != _lastOverlaySwRunning) {
+          _lastOverlaySeg = ts.currentSeg;
+          _lastOverlayStatus = ts.status;
+          _lastOverlaySwRunning = sw.running;
+          _syncOverlay();
+          _syncTick = 0; // 다음 heartbeat 주기 리셋
+        }
+      }
+      // heartbeat 1s — fire-and-forget IPC 후 round-trip 없으므로 큐 누적 없음
+      // 1s 간격으로 overlay 이벤트루프 주기적 wake-up → 표시 지연 ≤1s
+      _syncTick = (_syncTick + 1) % 62;
       if (_syncTick == 0) {
         _syncOverlay();
         _syncLiveActivity();
@@ -361,6 +382,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       try {
         final screenW = MediaQuery.of(context).size.width.round();
         await OverlayService.show(screenWidthDp: screenW);
+        // 재시작 후 즉시 상태 동기화 — 다음 heartbeat 전까지 기본값 표시 방지
+        if (mounted) _syncOverlay();
       } finally {
         _overlayShowInFlight = false;
       }
@@ -689,6 +712,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       setState(() => _overlayOn = true);
       _syncHealthTimer();
       PersistenceService.saveOverlayOn(true);
+      // 즉시 상태 전송 — 첫 heartbeat(~1s) 전까지 기본값 노출 방지
+      _syncOverlay();
     }
   }
 

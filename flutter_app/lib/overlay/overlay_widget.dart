@@ -25,15 +25,36 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   bool _swActive = false;
   bool _swRunning = false; // sw 실제 실행 여부 (active=버튼 표시, running=아이콘)
   String _timerLabel = '';
-  String _timerRemain = '--:--';
-  String _swElapsed = '';
   String _clockTime = '';
   Color _timerColor = const Color(0xFFE07A52);
   double _timerFrac = 0.0;
   bool _ending = false;
-  int _segRemainMs = 0;
-  int _swElapsedMs = 0;
   double? _swStartAngleRad;
+
+  // IPC 앵커 — IPC 수신 시각 + 그 시점의 값. 이후 경과 시간으로 현재값 계산
+  int _ipcSegRemainMs = 0;
+  int _ipcSwElapsedMs = 0;
+  DateTime? _ipcTimerReceivedAt;
+  DateTime? _ipcSwReceivedAt;
+
+  int get _segRemainMs {
+    if (_ipcTimerReceivedAt == null) return _ipcSegRemainMs;
+    if (!_timerRunning) return _ipcSegRemainMs;
+    final elapsed = DateTime.now()
+        .difference(_ipcTimerReceivedAt!)
+        .inMilliseconds;
+    return max(0, _ipcSegRemainMs - elapsed);
+  }
+
+  int get _swElapsedMs {
+    if (_ipcSwReceivedAt == null) return _ipcSwElapsedMs;
+    if (!_swRunning) return _ipcSwElapsedMs;
+    final elapsed = DateTime.now().difference(_ipcSwReceivedAt!).inMilliseconds;
+    return _ipcSwElapsedMs + elapsed;
+  }
+
+  String get _timerRemain => _fmtMs(_segRemainMs);
+  String get _swElapsed => _fmtMs(_swElapsedMs);
 
   // 메인 앱이 shareData로 전달한 실제 화면 크기 (dp)
   int _screenWidthDp = 400;
@@ -71,9 +92,6 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
 
   Timer? _clockTimer;
   Timer? _nextFrameTimer;
-  Timer? _displayTimer;
-  DateTime? _displayLastTick;
-  DateTime _now = DateTime.now();
 
   late AnimationController _chaseCtrl;
   late AnimationController _blinkCtrl;
@@ -86,11 +104,17 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
       const Duration(seconds: 1),
       (_) => _updateClock(),
     );
-
-    _chaseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    )..repeat();
+    _chaseCtrl =
+        AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 2000),
+          )
+          ..repeat()
+          // vsync 드리븐 리스너 — Dart Timer.periodic은 오버레이 isolate 스로틀링 시 동작 안 함.
+          // Choreographer 기반 AnimationController는 스로틀링 무관하게 매 프레임마다 실행됨.
+          ..addListener(() {
+            if (mounted) setState(() {});
+          });
 
     _blinkCtrl = AnimationController(
       vsync: this,
@@ -135,21 +159,22 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         final wasEnding = _ending;
         final newTimerActive = map['timerActive'] as bool? ?? false;
         final newTimerDone = map['timerDone'] as bool? ?? false;
+        final ipcNow = DateTime.now();
         setState(() {
           _timerActive = newTimerActive || newTimerDone; // done 상태도 컨트롤 표시
           _timerDone = newTimerDone;
           _timerRunning = map['timerRunning'] as bool? ?? false;
           _timerLabel = map['timerLabel'] as String? ?? '';
-          _timerRemain = map['timerRemain'] as String? ?? '--:--';
           _swActive = map['swActive'] as bool? ?? false;
           _swRunning = map['swRunning'] as bool? ?? false;
-          _swElapsed = map['swElapsed'] as String? ?? '';
           final colorVal = map['timerColorValue'] as int?;
           if (colorVal != null) _timerColor = Color(colorVal);
           _timerFrac = (map['timerFrac'] as num?)?.toDouble() ?? 0.0;
           _ending = map['ending'] as bool? ?? false;
-          _segRemainMs = map['segRemainMs'] as int? ?? 0;
-          _swElapsedMs = map['swElapsedMs'] as int? ?? 0;
+          _ipcSegRemainMs = map['segRemainMs'] as int? ?? 0;
+          _ipcSwElapsedMs = map['swElapsedMs'] as int? ?? 0;
+          _ipcTimerReceivedAt = ipcNow;
+          _ipcSwReceivedAt = ipcNow;
           _swStartAngleRad = (map['swStartAngleRad'] as num?)?.toDouble();
           _screenWidthDp = map['screenWidthDp'] as int? ?? _screenWidthDp;
           _screenHeightDp = map['screenHeightDp'] as int? ?? _screenHeightDp;
@@ -208,7 +233,6 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   void dispose() {
     _clockTimer?.cancel();
     _nextFrameTimer?.cancel();
-    _displayTimer?.cancel();
     _chaseCtrl.dispose();
     _blinkCtrl.dispose();
     super.dispose();
@@ -226,38 +250,13 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  void _syncDisplayTimer() {
-    final shouldRun = _timerRunning || _swRunning;
-    if (shouldRun) {
-      _displayLastTick = DateTime.now();
-      _displayTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
-        if (!mounted) return;
-        final now = DateTime.now();
-        final elapsed = now.difference(_displayLastTick ?? now).inMilliseconds;
-        _displayLastTick = now;
-        setState(() {
-          if (_timerRunning && _segRemainMs > 0) {
-            _segRemainMs = max(0, _segRemainMs - elapsed);
-            _timerRemain = _fmtMs(_segRemainMs);
-          }
-          if (_swRunning) {
-            _swElapsedMs += elapsed;
-            _swElapsed = _fmtMs(_swElapsedMs);
-          }
-        });
-      });
-    } else if (_displayTimer != null) {
-      _displayTimer?.cancel();
-      _displayTimer = null;
-      _displayLastTick = null;
-    }
-  }
+  // displayTimer는 initState에서 시작해 항상 실행 — 호출 불필요 (호환성 유지)
+  void _syncDisplayTimer() {}
 
   void _updateClock() {
     if (!mounted) return;
     final now = DateTime.now();
     setState(() {
-      _now = now;
       _clockTime =
           '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     });
@@ -412,7 +411,6 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                 children: [
                   CustomPaint(
                     painter: _OverlayClockPainter(
-                      now: _now,
                       timerActive: _timerActive,
                       segRemainMs: _segRemainMs,
                       segColor: _effectiveTimerColor,
@@ -511,7 +509,14 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                 : (_timerRunning ? Icons.pause : Icons.play_arrow),
             timerColor,
             () {
-              if (!_timerDone) setState(() => _timerRunning = !_timerRunning);
+              if (!_timerDone) {
+                final now = DateTime.now();
+                setState(() {
+                  _ipcSegRemainMs = _segRemainMs;
+                  _timerRunning = !_timerRunning;
+                  _ipcTimerReceivedAt = now;
+                });
+              }
               _syncDisplayTimer();
               _sendAction('timer_toggle');
             },
@@ -529,7 +534,12 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         ],
         if (_swActive || _swElapsedMs > 0)
           btn(_swRunning ? Icons.stop : Icons.play_arrow, swColor, () {
-            setState(() => _swRunning = !_swRunning);
+            final now = DateTime.now();
+            setState(() {
+              _ipcSwElapsedMs = _swElapsedMs;
+              _swRunning = !_swRunning;
+              _ipcSwReceivedAt = now;
+            });
             _syncDisplayTimer();
             _sendAction('sw_toggle');
           }),
@@ -863,7 +873,6 @@ class _PillBorderPainter extends CustomPainter {
 
 // ─── 확장 클록 페인터 — 메인 앱 ClockPainter와 동일한 디자인 ──────────────────
 class _OverlayClockPainter extends CustomPainter {
-  final DateTime now;
   final bool timerActive;
   final int segRemainMs;
   final Color segColor;
@@ -872,7 +881,6 @@ class _OverlayClockPainter extends CustomPainter {
   final double? swStartAngleRad;
 
   const _OverlayClockPainter({
-    required this.now,
     required this.timerActive,
     required this.segRemainMs,
     required this.segColor,
@@ -881,7 +889,7 @@ class _OverlayClockPainter extends CustomPainter {
     required this.swStartAngleRad,
   });
 
-  double _minuteHandAngle() {
+  double _minuteHandAngle(DateTime now) {
     final m = now.minute;
     final s = now.second;
     final ms = now.millisecond;
@@ -908,10 +916,16 @@ class _OverlayClockPainter extends CustomPainter {
     );
   }
 
-  void _drawTimerSpiral(Canvas canvas, double cx, double cy, double R) {
+  void _drawTimerSpiral(
+    Canvas canvas,
+    double cx,
+    double cy,
+    double R,
+    DateTime now,
+  ) {
     if (!timerActive || segRemainMs <= 0) return;
     final remainMin = segRemainMs / 60000.0;
-    final minAngle = _minuteHandAngle();
+    final minAngle = _minuteHandAngle(now);
     final ringW = R * 0.100; // 16px at R=160
     final gap = R * 0.019; // 3px  at R=160
     final step = ringW + gap;
@@ -959,7 +973,13 @@ class _OverlayClockPainter extends CustomPainter {
     }
   }
 
-  void _drawStopwatchRings(Canvas canvas, double cx, double cy, double R) {
+  void _drawStopwatchRings(
+    Canvas canvas,
+    double cx,
+    double cy,
+    double R,
+    DateTime now,
+  ) {
     if (!swActive || swElapsedMs <= 0) return;
     final elapsedMin = swElapsedMs / 60000.0;
     final ringW = R * 0.081; // 13px at R=160
@@ -970,7 +990,7 @@ class _OverlayClockPainter extends CustomPainter {
     final maxRings = ((outermost - innerLimit) / step).floor();
     final fullLaps = elapsedMin ~/ 60;
     final partialMin = elapsedMin % 60;
-    final startAngle = swStartAngleRad ?? _minuteHandAngle();
+    final startAngle = swStartAngleRad ?? _minuteHandAngle(now);
     const swColor = Color(0xFF2EA84A);
     for (int ring = 0; ring < min(fullLaps, maxRings); ring++) {
       final r = outermost - ring * step - ringW / 2;
@@ -1081,7 +1101,7 @@ class _OverlayClockPainter extends CustomPainter {
     );
   }
 
-  void _drawHands(Canvas canvas, double cx, double cy, double R) {
+  void _drawHands(Canvas canvas, double cx, double cy, double R, DateTime now) {
     final h = now.hour % 12;
     final m = now.minute;
     final s = now.second;
@@ -1139,25 +1159,19 @@ class _OverlayClockPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // _clockTimer 미작동 시에도 항상 실시간 시각 사용
+    final now = DateTime.now();
     final cx = size.width / 2;
     final cy = size.height / 2;
     final R = size.width / 2 - 4;
     _drawFace(canvas, cx, cy, R);
-    _drawTimerSpiral(canvas, cx, cy, R);
-    _drawStopwatchRings(canvas, cx, cy, R);
+    _drawTimerSpiral(canvas, cx, cy, R, now);
+    _drawStopwatchRings(canvas, cx, cy, R, now);
     _drawTicks(canvas, cx, cy, R);
     _drawNumbers(canvas, cx, cy, R);
-    _drawHands(canvas, cx, cy, R);
+    _drawHands(canvas, cx, cy, R, now);
   }
 
   @override
-  bool shouldRepaint(_OverlayClockPainter old) =>
-      old.now.second != now.second ||
-      old.now.millisecond != now.millisecond ||
-      old.timerActive != timerActive ||
-      old.segRemainMs != segRemainMs ||
-      old.segColor != segColor ||
-      old.swActive != swActive ||
-      old.swElapsedMs != swElapsedMs ||
-      old.swStartAngleRad != swStartAngleRad;
+  bool shouldRepaint(_OverlayClockPainter old) => true;
 }
