@@ -27,7 +27,8 @@ class OverlayService {
         width: expandedW,
         alignment: OverlayAlignment.topCenter,
         positionGravity: PositionGravity.none,
-        enableDrag: true,
+        enableDrag: false,
+        flag: OverlayFlag.focusPointer,
         overlayTitle: 'Analog Timer',
       );
       // 오버레이 Flutter 엔진이 ready 될 때까지 대기

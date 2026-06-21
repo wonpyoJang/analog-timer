@@ -19,6 +19,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     on<TimerSegmentAdded>(_onSegmentAdded);
     on<TimerSegmentRemoved>(_onSegmentRemoved);
     on<TimerSegmentUpdated>(_onSegmentUpdated);
+    on<TimerSegmentReordered>(_onSegmentReordered);
+    on<TimerSegmentsAppended>(_onSegmentsAppended);
     on<TimerRestore>(_onRestore);
   }
 
@@ -35,8 +37,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
           ...state.log,
           TimerLogEntry(
             DateTime.now(),
-            '시작: ${state.segments[0].name}',
+            TimerLogType.start,
             state.segments[0].color.toARGB32(),
+            segName: state.segments[0].name,
           ),
         ],
       );
@@ -53,7 +56,11 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         status: TimerStatus.paused,
         log: [
           ...state.log,
-          TimerLogEntry(DateTime.now(), '일시정지', AppColors.muted.toARGB32()),
+          TimerLogEntry(
+            DateTime.now(),
+            TimerLogType.pause,
+            AppColors.muted.toARGB32(),
+          ),
         ],
       ),
     );
@@ -69,7 +76,11 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         loopCount: 0,
         log: [
           ...state.log,
-          TimerLogEntry(DateTime.now(), '리셋', AppColors.muted.toARGB32()),
+          TimerLogEntry(
+            DateTime.now(),
+            TimerLogType.reset,
+            AppColors.muted.toARGB32(),
+          ),
         ],
       ),
     );
@@ -84,8 +95,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       ...state.log,
       TimerLogEntry(
         DateTime.now(),
-        '건너뜀: ${cur.name}',
+        TimerLogType.skip,
         AppColors.accent.toARGB32(),
+        segName: cur.name,
       ),
     ];
 
@@ -102,8 +114,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
               ...log,
               TimerLogEntry(
                 DateTime.now(),
-                '🔁 루프 ${state.loopCount + 1}회 완료',
+                TimerLogType.loop,
                 AppColors.accent.toARGB32(),
+                segName: '${state.loopCount + 1}',
               ),
             ],
           ),
@@ -119,7 +132,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
               ...log,
               TimerLogEntry(
                 DateTime.now(),
-                '모든 세그먼트 완료 🎉',
+                TimerLogType.allDone,
                 AppColors.accent.toARGB32(),
               ),
             ],
@@ -137,8 +150,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
             ...log,
             TimerLogEntry(
               DateTime.now(),
-              '시작: ${state.segments[nextSeg].name}',
+              TimerLogType.start,
               state.segments[nextSeg].color.toARGB32(),
+              segName: state.segments[nextSeg].name,
             ),
           ],
         ),
@@ -156,8 +170,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         ...state.log,
         TimerLogEntry(
           DateTime.now(),
-          '완료: ${state.currentSegment?.name ?? ''}',
+          TimerLogType.done,
           state.currentSegment?.color.toARGB32() ?? 0,
+          segName: state.currentSegment?.name ?? '',
         ),
       ];
       final nextSeg = state.currentSeg + 1;
@@ -172,13 +187,15 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
                 ...doneLog,
                 TimerLogEntry(
                   DateTime.now(),
-                  '🔁 루프 ${state.loopCount + 1}회 완료',
+                  TimerLogType.loop,
                   AppColors.accent.toARGB32(),
+                  segName: '${state.loopCount + 1}',
                 ),
                 TimerLogEntry(
                   DateTime.now(),
-                  '시작: ${state.segments[0].name}',
+                  TimerLogType.start,
                   state.segments[0].color.toARGB32(),
+                  segName: state.segments[0].name,
                 ),
               ],
             ),
@@ -193,7 +210,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
                 ...doneLog,
                 TimerLogEntry(
                   DateTime.now(),
-                  '모든 세그먼트 완료 🎉',
+                  TimerLogType.allDone,
                   AppColors.accent.toARGB32(),
                 ),
               ],
@@ -209,8 +226,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
               ...doneLog,
               TimerLogEntry(
                 DateTime.now(),
-                '시작: ${state.segments[nextSeg].name}',
+                TimerLogType.start,
                 state.segments[nextSeg].color.toARGB32(),
+                segName: state.segments[nextSeg].name,
               ),
             ],
           ),
@@ -231,7 +249,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     final segs = [
       ...state.segments,
       Segment(
-        name: '세그먼트 ${state.segments.length + 1}',
+        name: 'Segment ${state.segments.length + 1}',
         minutes: 5,
         color: color,
       ),
@@ -249,6 +267,42 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     final segs = List<Segment>.from(state.segments);
     if (event.index < segs.length) segs[event.index] = event.segment;
     emit(state.copyWith(segments: segs));
+  }
+
+  void _onSegmentsAppended(
+    TimerSegmentsAppended event,
+    Emitter<TimerState> emit,
+  ) {
+    if (event.segments.isEmpty) return;
+    // 현재 진행/표시 상태는 그대로 두고 목록 끝에만 덧붙인다.
+    emit(state.copyWith(segments: [...state.segments, ...event.segments]));
+  }
+
+  void _onSegmentReordered(
+    TimerSegmentReordered event,
+    Emitter<TimerState> emit,
+  ) {
+    final old = event.oldIndex;
+    if (old < 0 || old >= state.segments.length) return;
+    // onReorderItem: newIndex 는 이미 '제거 후' 기준이라 추가 보정 불필요.
+    final to = event.newIndex;
+    if (to == old) return;
+
+    final segs = List<Segment>.from(state.segments);
+    final moved = segs.removeAt(old);
+    segs.insert(to, moved);
+
+    // 진행/일시정지 중인 현재 세그먼트 인덱스를 이동에 맞춰 보정.
+    int cur = state.currentSeg;
+    if (cur == old) {
+      cur = to;
+    } else {
+      if (old < cur) cur -= 1; // 앞에서 빠지면 한 칸 당겨짐
+      if (to <= cur) cur += 1; // 앞에 끼어들면 한 칸 밀림
+    }
+    cur = cur.clamp(0, segs.length - 1);
+
+    emit(state.copyWith(segments: segs, currentSeg: cur));
   }
 
   void _onRestore(TimerRestore event, Emitter<TimerState> emit) {

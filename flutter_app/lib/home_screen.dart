@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'l10n/app_localizations.dart';
 import 'theme/app_theme.dart';
 import 'features/timer/bloc/timer_bloc.dart';
 import 'features/timer/bloc/timer_event.dart';
@@ -16,9 +17,12 @@ import 'features/timer/widgets/segment_editor.dart';
 import 'features/stopwatch/widgets/stopwatch_controls.dart';
 import 'widgets/clock_painter.dart';
 import 'widgets/bottom_panels.dart';
+import 'widgets/date_label.dart';
+import 'widgets/language_picker.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
 import 'live_activity/live_activity_service.dart';
+import 'pip/pip_service.dart';
 import 'services/persistence_service.dart';
 import 'services/native_widget_service.dart';
 import 'features/timer/models/segment.dart';
@@ -48,11 +52,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (Platform.isAndroid) {
       _listenOverlayCommands();
       _restoreState();
+    } else if (Platform.isIOS) {
+      _loadIosWidgetPref();
     }
     // 30초마다 자동 저장 — 앱 강제 종료 직전 저장 실패를 보완
     _persistTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) _saveState();
     });
+  }
+
+  Future<void> _loadIosWidgetPref() async {
+    final on = await PersistenceService.loadOverlayOn();
+    if (mounted) setState(() => _overlayOn = on);
+    if (on) await PipService.start();
   }
 
   Future<void> _restoreState() async {
@@ -302,19 +314,53 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _syncLiveActivity() {
-    if (!Platform.isIOS) return;
+    if (!Platform.isIOS || !_overlayOn) return;
     final timerState = context.read<TimerBloc>().state;
     final swState = context.read<StopwatchBloc>().state;
     final timerActive =
         timerState.status == TimerStatus.running ||
         timerState.status == TimerStatus.paused;
+    final timerDone = timerState.status == TimerStatus.done;
     final swActive = swState.running || swState.elapsedMs > 0;
+    final seg = timerState.currentSegment;
+    final segTotalMs = seg?.duration.inMilliseconds ?? 1;
+    final timerFrac = (timerActive && segTotalMs > 0)
+        ? (timerState.segRemainMs / segTotalMs).clamp(0.0, 1.0)
+        : 0.0;
+    final timerColorValue = seg?.color.toARGB32() ?? 0xFFE07A52;
+    final timerLabel = seg?.name ?? '';
+    final timerRemain = timerActive ? _fmt(timerState.segRemainMs) : '--:--';
+    final ending = timerActive && timerState.segRemainMs <= 10000;
+    final swElapsed = swActive ? _fmt(swState.elapsedMs) : '';
+
     LiveActivityService.update(
       timerActive: timerActive,
-      timerLabel: timerState.currentSegment?.name ?? '',
-      timerRemain: timerActive ? _fmt(timerState.segRemainMs) : '--:--',
+      timerRunning: timerState.status == TimerStatus.running,
+      timerDone: timerDone,
+      timerLabel: timerLabel,
+      timerRemain: timerRemain,
+      timerColorValue: timerColorValue,
+      timerFrac: timerFrac,
+      ending: ending,
+      segRemainMs: timerState.segRemainMs,
       swActive: swActive,
-      swElapsed: swActive ? _fmt(swState.elapsedMs) : '',
+      swRunning: swState.running,
+      swElapsed: swElapsed,
+      swElapsedMs: swState.elapsedMs,
+    );
+
+    PipService.update(
+      timerActive: timerActive,
+      timerRunning: timerState.status == TimerStatus.running,
+      timerDone: timerDone,
+      timerLabel: timerLabel,
+      timerRemain: timerRemain,
+      timerColorValue: timerColorValue,
+      timerFrac: timerFrac,
+      ending: ending,
+      swActive: swActive,
+      swRunning: swState.running,
+      swElapsed: swElapsed,
     );
   }
 
@@ -378,6 +424,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleOverlay() async {
+    if (Platform.isIOS) {
+      if (_overlayOn) {
+        await PipService.stop();
+        await LiveActivityService.end();
+        setState(() => _overlayOn = false);
+        PersistenceService.saveOverlayOn(false);
+      } else {
+        setState(() => _overlayOn = true);
+        PersistenceService.saveOverlayOn(true);
+        await PipService.start();
+        _syncLiveActivity();
+      }
+      return;
+    }
     if (!Platform.isAndroid) return;
     if (!await OverlayService.isPermissionGranted) {
       await OverlayService.requestPermission();
@@ -409,70 +469,102 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 constraints: const BoxConstraints(maxWidth: 560),
                 child: Column(
                   children: [
-                    // Title + overlay toggle
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            '⏱ ANALOG TIMER',
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.bebasNeue(
-                              fontSize: 34,
-                              letterSpacing: 4,
-                              color: AppColors.accent,
-                            ),
-                          ),
-                        ),
-                        if (Platform.isAndroid) ...[
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: _toggleOverlay,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _overlayOn
-                                    ? AppColors.accent.withAlpha(0x33)
-                                    : AppColors.surface,
-                                border: Border.all(
-                                  color: _overlayOn
-                                      ? AppColors.accent
-                                      : AppColors.border,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
+                    // Title + overlay toggle + language picker
+                    Builder(
+                      builder: (context) {
+                        final l = AppLocalizations.of(context);
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
                               child: Text(
-                                _overlayOn ? '위젯 ON' : '위젯',
-                                style: TextStyle(
-                                  color: _overlayOn
-                                      ? AppColors.accent
-                                      : AppColors.muted,
-                                  fontSize: 11,
-                                  letterSpacing: 0.6,
+                                '⏱ ${l.appTitle}',
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.bebasNeue(
+                                  fontSize: 34,
+                                  letterSpacing: 4,
+                                  color: AppColors.accent,
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ],
+                            if (Platform.isAndroid || Platform.isIOS) ...[
+                              const SizedBox(width: 10),
+                              GestureDetector(
+                                onTap: _toggleOverlay,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _overlayOn
+                                        ? AppColors.accent.withAlpha(0x33)
+                                        : AppColors.surface,
+                                    border: Border.all(
+                                      color: _overlayOn
+                                          ? AppColors.accent
+                                          : AppColors.border,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    _overlayOn ? l.widgetOn : l.widget,
+                                    style: TextStyle(
+                                      color: _overlayOn
+                                          ? AppColors.accent
+                                          : AppColors.muted,
+                                      fontSize: 11,
+                                      letterSpacing: 0.6,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: () => showLanguagePicker(context),
+                              child: Container(
+                                padding: const EdgeInsets.all(7),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  border: Border.all(color: AppColors.border),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.language,
+                                  size: 16,
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
+                    const SizedBox(height: 6),
+                    _DateLine(now: _now),
                     const SizedBox(height: 16),
 
                     _ClockWidget(now: _now),
                     const SizedBox(height: 8),
 
-                    Wrap(
-                      spacing: 16,
-                      children: [
-                        _Legend(
-                          color: AppColors.timerOrange,
-                          label: '타이머 — 안쪽 나선',
-                        ),
-                        _Legend(color: AppColors.swGreen, label: '스톱워치 — 바깥 링'),
-                      ],
+                    Builder(
+                      builder: (context) {
+                        final l = AppLocalizations.of(context);
+                        return Wrap(
+                          spacing: 16,
+                          children: [
+                            _Legend(
+                              color: AppColors.timerOrange,
+                              label: l.legendTimer,
+                            ),
+                            _Legend(
+                              color: AppColors.swGreen,
+                              label: l.legendStopwatch,
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 8),
 
@@ -665,6 +757,26 @@ class _ProgressBar extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _DateLine extends StatelessWidget {
+  final DateTime now;
+  const _DateLine({required this.now});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      formatDateLine(now, Localizations.localeOf(context).languageCode),
+      style: TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 1,
+        color: AppColors.text.withAlpha(0xAA),
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
     );
   }
 }

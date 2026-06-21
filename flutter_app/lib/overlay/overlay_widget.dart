@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -14,6 +15,9 @@ class TimerOverlayWidget extends StatefulWidget {
 
 class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     with TickerProviderStateMixin {
+  // 오버레이 엔진에서 직접 호출 가능한 채널 (moveOverlay는 메인앱 채널이라 사용 불가)
+  static const _overlayCh = MethodChannel('x-slayer/overlay');
+
   // IPC 상태
   bool _timerActive = false;
   bool _timerDone = false;
@@ -38,6 +42,9 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   // UI 상태
   bool _expanded = true;
   bool _nextCounting = false;
+  // 오버레이 창 위치 추적 (dp) — show 커맨드 기준으로 초기화
+  double _winX = 0.0;
+  double _winY = 53.0;
   double _nextPct = 0.0;
   DateTime? _nextStart;
   static const _nextDelay = Duration(seconds: 2);
@@ -91,9 +98,11 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
           setState(() {
             _screenWidthDp = w;
             _expanded = true;
+            _winX = 0.0;
+            _winY = 53.0;
           });
-          await FlutterOverlayWindow.resizeOverlay(expandedW, expandedH, true);
-          await FlutterOverlayWindow.moveOverlay(const OverlayPosition(0, 53));
+          await FlutterOverlayWindow.resizeOverlay(expandedW, expandedH, false);
+          await _moveOverlay(0, 53);
           return;
         }
 
@@ -241,21 +250,39 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     );
   }
 
+  Future<void> _moveOverlay(double x, double y) async {
+    try {
+      await _overlayCh.invokeMethod<bool>('updateOverlayPosition', {
+        'x': x.round(),
+        'y': y.round(),
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _onPanUpdate(DragUpdateDetails d) async {
+    _winX += d.delta.dx;
+    _winY += d.delta.dy;
+    await _moveOverlay(_winX, _winY);
+  }
+
   Future<void> _toggleExpanded(BuildContext ctx) async {
     final expandedW = (_screenWidthDp * 0.42).round().clamp(
       150,
       _screenWidthDp,
     );
-    // 시계(정사각형) + 컨트롤 버튼 행(48dp) + 간격(8dp)
     final expandedH = expandedW + 56;
 
     if (!_expanded) {
       setState(() => _expanded = true);
-      await FlutterOverlayWindow.resizeOverlay(expandedW, expandedH, true);
+      await FlutterOverlayWindow.resizeOverlay(expandedW, expandedH, false);
     } else {
-      setState(() => _expanded = false);
-      await FlutterOverlayWindow.resizeOverlay(_screenWidthDp, 150, true);
-      await FlutterOverlayWindow.moveOverlay(const OverlayPosition(0, 53));
+      setState(() {
+        _expanded = false;
+        _winX = 0.0;
+        _winY = 53.0;
+      });
+      await FlutterOverlayWindow.resizeOverlay(_screenWidthDp, 150, false);
+      await _moveOverlay(0, 53);
     }
   }
 
@@ -277,9 +304,10 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 시계 (탭 → 축소)
+        // 시계 (탭 → 축소, 드래그 → 오버레이 이동)
         GestureDetector(
           onTap: () => _toggleExpanded(context),
+          onPanUpdate: _onPanUpdate,
           behavior: HitTestBehavior.translucent,
           child: AspectRatio(
             aspectRatio: 1,
@@ -457,6 +485,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => _toggleExpanded(context),
+        onPanUpdate: _onPanUpdate,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
           child: AnimatedBuilder(

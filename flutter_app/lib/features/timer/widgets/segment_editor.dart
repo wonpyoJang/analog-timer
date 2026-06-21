@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
 import '../bloc/timer_state.dart';
 import '../models/segment.dart';
+import 'color_picker_dialog.dart';
+import 'preset_bar.dart';
 
 class SegmentEditor extends StatelessWidget {
   const SegmentEditor({super.key});
@@ -13,6 +16,7 @@ class SegmentEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<TimerBloc, TimerState>(
       builder: (context, state) {
+        final l = AppLocalizations.of(context);
         return Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
@@ -23,17 +27,36 @@ class SegmentEditor extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'TIMER SEGMENTS',
-                style: TextStyle(
+              Text(
+                l.timerSegments,
+                style: const TextStyle(
                   color: AppColors.muted,
                   fontSize: 11,
                   letterSpacing: 1.2,
                 ),
               ),
               const SizedBox(height: 10),
-              ...state.segments.asMap().entries.map(
-                (e) => _SegmentRow(index: e.key, segment: e.value),
+              const PresetBar(),
+              ReorderableListView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                onReorderItem: (oldIndex, newIndex) => context
+                    .read<TimerBloc>()
+                    .add(TimerSegmentReordered(oldIndex, newIndex)),
+                children: [
+                  for (final e in state.segments.asMap().entries)
+                    _SegmentRow(
+                      key: ValueKey(e.value.id),
+                      index: e.key,
+                      segment: e.value,
+                      isActive:
+                          (state.status == TimerStatus.running ||
+                              state.status == TimerStatus.paused) &&
+                          e.key == state.currentSeg,
+                      isRunning: state.status == TimerStatus.running,
+                    ),
+                ],
               ),
               const SizedBox(height: 6),
               _AddButton(),
@@ -50,7 +73,15 @@ class SegmentEditor extends StatelessWidget {
 class _SegmentRow extends StatefulWidget {
   final int index;
   final Segment segment;
-  const _SegmentRow({required this.index, required this.segment});
+  final bool isActive;
+  final bool isRunning;
+  const _SegmentRow({
+    super.key,
+    required this.index,
+    required this.segment,
+    this.isActive = false,
+    this.isRunning = false,
+  });
 
   @override
   State<_SegmentRow> createState() => _SegmentRowState();
@@ -83,7 +114,7 @@ class _SegmentRowState extends State<_SegmentRow> {
     super.dispose();
   }
 
-  void _updateName(BuildContext context) {
+  void _update(BuildContext context) {
     final mins = int.tryParse(_minCtrl.text) ?? widget.segment.minutes;
     context.read<TimerBloc>().add(
       TimerSegmentUpdated(
@@ -93,38 +124,91 @@ class _SegmentRowState extends State<_SegmentRow> {
     );
   }
 
-  void _updateMinutes(BuildContext context) {
-    final mins = int.tryParse(_minCtrl.text);
-    if (mins == null || mins <= 0) return; // 빈 필드 무시 — 이전 BLoC 값 보존
-    context.read<TimerBloc>().add(
-      TimerSegmentUpdated(
-        widget.index,
-        widget.segment.copyWith(name: _nameCtrl.text, minutes: mins),
-      ),
-    );
+  Future<void> _pickColor(BuildContext context) async {
+    final bloc = context.read<TimerBloc>();
+    final picked = await showSegColorPicker(context, widget.segment.color);
+    if (picked != null) {
+      final mins = int.tryParse(_minCtrl.text) ?? widget.segment.minutes;
+      bloc.add(
+        TimerSegmentUpdated(
+          widget.index,
+          widget.segment.copyWith(
+            name: _nameCtrl.text,
+            minutes: mins,
+            color: picked,
+          ),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF111113),
-        border: Border.all(color: AppColors.border),
+        // 진행 중인 세그먼트는 주황 테두리 + 옅은 배경으로 강조
+        color: widget.isActive
+            ? AppColors.timerOrange.withAlpha(0x24)
+            : const Color(0xFF111113),
+        border: Border.all(
+          color: widget.isActive ? AppColors.timerOrange : AppColors.border,
+          width: widget.isActive ? 1.5 : 1,
+        ),
         borderRadius: BorderRadius.circular(7),
       ),
       child: Row(
         children: [
-          Container(
-            width: 11,
-            height: 11,
-            decoration: BoxDecoration(
-              color: widget.segment.color,
-              shape: BoxShape.circle,
+          // 진행 중 표시 — active 일 때만(재생/일시정지)
+          if (widget.isActive)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(
+                widget.isRunning ? Icons.play_arrow : Icons.pause,
+                size: 15,
+                color: AppColors.timerOrange,
+              ),
+            ),
+          // 드래그 핸들 — 순서 변경
+          ReorderableDragStartListener(
+            index: widget.index,
+            child: const MouseRegion(
+              cursor: SystemMouseCursors.grab,
+              child: Padding(
+                padding: EdgeInsets.only(right: 6),
+                child: Icon(
+                  Icons.drag_indicator,
+                  size: 16,
+                  color: AppColors.muted,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 8),
+          // 색상 점 = 탭하면 팔레트에서 색 변경
+          GestureDetector(
+            onTap: () => _pickColor(context),
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                child: Container(
+                  width: 13,
+                  height: 13,
+                  decoration: BoxDecoration(
+                    color: widget.segment.color,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.text.withAlpha(0x33),
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
           Expanded(
             child: TextField(
               controller: _nameCtrl,
@@ -134,7 +218,7 @@ class _SegmentRowState extends State<_SegmentRow> {
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
               ),
-              onChanged: (_) => _updateName(context),
+              onChanged: (_) => _update(context),
             ),
           ),
           SizedBox(
@@ -156,13 +240,13 @@ class _SegmentRowState extends State<_SegmentRow> {
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 4),
               ),
-              onChanged: (_) => _updateMinutes(context),
+              onChanged: (_) => _update(context),
             ),
           ),
           const SizedBox(width: 4),
-          const Text(
-            '분',
-            style: TextStyle(color: AppColors.muted, fontSize: 12),
+          Text(
+            l.minutesUnit,
+            style: const TextStyle(color: AppColors.muted, fontSize: 12),
           ),
           const SizedBox(width: 4),
           GestureDetector(
@@ -180,6 +264,7 @@ class _SegmentRowState extends State<_SegmentRow> {
 class _AddButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return GestureDetector(
       onTap: () => context.read<TimerBloc>().add(const TimerSegmentAdded()),
       child: Container(
@@ -193,10 +278,10 @@ class _AddButton extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(6),
         ),
-        child: const Text(
-          '+ 세그먼트 추가',
+        child: Text(
+          l.addSegment,
           textAlign: TextAlign.center,
-          style: TextStyle(color: AppColors.muted, fontSize: 11),
+          style: const TextStyle(color: AppColors.muted, fontSize: 11),
         ),
       ),
     );
@@ -209,6 +294,7 @@ class _LoopToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Row(
       children: [
         Switch(
@@ -219,9 +305,9 @@ class _LoopToggle extends StatelessWidget {
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
         const SizedBox(width: 8),
-        const Text(
-          '연속 반복',
-          style: TextStyle(color: AppColors.muted, fontSize: 12),
+        Text(
+          l.loopToggle,
+          style: const TextStyle(color: AppColors.muted, fontSize: 12),
         ),
       ],
     );

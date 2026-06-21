@@ -5,6 +5,35 @@ class PersistenceService {
   static const _kOverlayOn = 'overlay_on';
   static const _kTimerData = 'timer_data';
   static const _kSwData = 'sw_data';
+  static const _kPresets = 'presets';
+  static const _kLocale = 'locale';
+  static const _kHiddenDefaults = 'hidden_default_presets';
+
+  /// 숨긴 기본 프리셋의 builtinKey 목록 저장.
+  static Future<void> saveHiddenDefaults(List<String> keys) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kHiddenDefaults, keys);
+  }
+
+  static Future<List<String>> loadHiddenDefaults() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kHiddenDefaults) ?? const [];
+  }
+
+  /// 수동 선택 언어 태그 저장(null=시스템 기본값으로 되돌림). 예: 'en', 'ko', 'zh_Hant'
+  static Future<void> saveLocale(String? tag) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (tag == null) {
+      await prefs.remove(_kLocale);
+    } else {
+      await prefs.setString(_kLocale, tag);
+    }
+  }
+
+  static Future<String?> loadLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLocale);
+  }
 
   static Future<void> saveOverlayOn(bool on) async {
     final prefs = await SharedPreferences.getInstance();
@@ -71,6 +100,24 @@ class PersistenceService {
     if (str == null) return null;
     try {
       return jsonDecode(str) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 프리셋(세그먼트 템플릿) 목록 저장. 각 원소는 Preset.toJson() 결과.
+  static Future<void> savePresets(List<Map<String, dynamic>> presets) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kPresets, jsonEncode(presets));
+  }
+
+  /// 저장된 프리셋 목록. 한 번도 저장된 적 없으면 null(=기본 프리셋으로 시드).
+  static Future<List<Map<String, dynamic>>?> loadPresets() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString(_kPresets);
+    if (str == null) return null;
+    try {
+      return (jsonDecode(str) as List).cast<Map<String, dynamic>>();
     } catch (_) {
       return null;
     }
