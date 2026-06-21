@@ -265,4 +265,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => '타이머에 불러오기';
+
+  @override
+  String get planSave => '저장';
 }

@@ -79,5 +79,6 @@
   "dayPlanTitle": "Rencana Hari",
   "dayPlanEmpty": "Tidak ada rencana untuk hari ini",
   "planSaveAsCurrent": "Simpan sebagai rencana",
-  "planLoadIntoTimer": "Muat ke timer"
+  "planLoadIntoTimer": "Muat ke timer",
+  "planSave": "Simpan"
 }

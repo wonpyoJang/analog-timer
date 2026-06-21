@@ -265,4 +265,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => 'タイマーに読み込む';
+
+  @override
+  String get planSave => '保存';
 }

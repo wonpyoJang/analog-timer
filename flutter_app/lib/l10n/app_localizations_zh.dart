@@ -265,6 +265,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => '载入计时器';
+
+  @override
+  String get planSave => '保存';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -528,4 +531,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get planLoadIntoTimer => '載入計時器';
+
+  @override
+  String get planSave => '儲存';
 }

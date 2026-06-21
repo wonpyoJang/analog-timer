@@ -79,5 +79,6 @@
   "dayPlanTitle": "दिन की योजना",
   "dayPlanEmpty": "इस दिन के लिए कोई योजना नहीं",
   "planSaveAsCurrent": "योजना के रूप में सहेजें",
-  "planLoadIntoTimer": "टाइमर में लोड करें"
+  "planLoadIntoTimer": "टाइमर में लोड करें",
+  "planSave": "सहेजें"
 }

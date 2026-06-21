@@ -266,4 +266,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => 'Load into timer';
+
+  @override
+  String get planSave => 'Save';
 }

@@ -267,4 +267,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => 'Загрузить в таймер';
+
+  @override
+  String get planSave => 'Сохранить';
 }

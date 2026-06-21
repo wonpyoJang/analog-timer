@@ -79,5 +79,6 @@
   "dayPlanTitle": "Tagesplan",
   "dayPlanEmpty": "Kein Plan für diesen Tag",
   "planSaveAsCurrent": "Als Plan speichern",
-  "planLoadIntoTimer": "In Timer laden"
+  "planLoadIntoTimer": "In Timer laden",
+  "planSave": "Speichern"
 }

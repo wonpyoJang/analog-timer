@@ -79,5 +79,6 @@
   "dayPlanTitle": "이 날의 계획",
   "dayPlanEmpty": "이 날에는 계획이 없습니다",
   "planSaveAsCurrent": "현재 세그먼트로 저장",
-  "planLoadIntoTimer": "타이머에 불러오기"
+  "planLoadIntoTimer": "타이머에 불러오기",
+  "planSave": "저장"
 }

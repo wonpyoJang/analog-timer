@@ -79,5 +79,6 @@
   "dayPlanTitle": "خطة اليوم",
   "dayPlanEmpty": "لا توجد خطة لهذا اليوم",
   "planSaveAsCurrent": "حفظ كخطة",
-  "planLoadIntoTimer": "تحميل في المؤقت"
+  "planLoadIntoTimer": "تحميل في المؤقت",
+  "planSave": "حفظ"
 }

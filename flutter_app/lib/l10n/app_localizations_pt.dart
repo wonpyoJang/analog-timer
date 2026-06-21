@@ -267,4 +267,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => 'Carregar no temporizador';
+
+  @override
+  String get planSave => 'Salvar';
 }

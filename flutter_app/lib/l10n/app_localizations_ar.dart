@@ -266,4 +266,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => 'تحميل في المؤقت';
+
+  @override
+  String get planSave => 'حفظ';
 }

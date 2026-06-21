@@ -267,4 +267,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => 'Muat ke timer';
+
+  @override
+  String get planSave => 'Simpan';
 }

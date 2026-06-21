@@ -79,5 +79,6 @@
   "dayPlanTitle": "Piano del giorno",
   "dayPlanEmpty": "Nessun piano per questo giorno",
   "planSaveAsCurrent": "Salva come piano",
-  "planLoadIntoTimer": "Carica nel timer"
+  "planLoadIntoTimer": "Carica nel timer",
+  "planSave": "Salva"
 }

@@ -79,5 +79,6 @@
   "dayPlanTitle": "План дня",
   "dayPlanEmpty": "Нет плана на этот день",
   "planSaveAsCurrent": "Сохранить как план",
-  "planLoadIntoTimer": "Загрузить в таймер"
+  "planLoadIntoTimer": "Загрузить в таймер",
+  "planSave": "Сохранить"
 }

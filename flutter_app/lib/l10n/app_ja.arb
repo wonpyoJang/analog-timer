@@ -79,5 +79,6 @@
   "dayPlanTitle": "当日の予定",
   "dayPlanEmpty": "この日の予定はありません",
   "planSaveAsCurrent": "計画として保存",
-  "planLoadIntoTimer": "タイマーに読み込む"
+  "planLoadIntoTimer": "タイマーに読み込む",
+  "planSave": "保存"
 }

@@ -79,5 +79,6 @@
   "dayPlanTitle": "當日計畫",
   "dayPlanEmpty": "這天沒有計畫",
   "planSaveAsCurrent": "儲存為計畫",
-  "planLoadIntoTimer": "載入計時器"
+  "planLoadIntoTimer": "載入計時器",
+  "planSave": "儲存"
 }

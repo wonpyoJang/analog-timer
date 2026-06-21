@@ -266,4 +266,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => 'टाइमर में लोड करें';
+
+  @override
+  String get planSave => 'सहेजें';
 }

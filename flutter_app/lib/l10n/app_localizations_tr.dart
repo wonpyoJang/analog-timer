@@ -266,4 +266,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => 'Zamanlayıcıya yükle';
+
+  @override
+  String get planSave => 'Kaydet';
 }

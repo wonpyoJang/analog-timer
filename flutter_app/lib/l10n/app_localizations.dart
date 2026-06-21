@@ -602,6 +602,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Load into timer'**
   String get planLoadIntoTimer;
+
+  /// No description provided for @planSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get planSave;
 }
 
 class _AppLocalizationsDelegate

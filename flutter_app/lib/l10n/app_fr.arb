@@ -79,5 +79,6 @@
   "dayPlanTitle": "Plan du jour",
   "dayPlanEmpty": "Aucun plan pour ce jour",
   "planSaveAsCurrent": "Enregistrer comme plan",
-  "planLoadIntoTimer": "Charger dans la minuterie"
+  "planLoadIntoTimer": "Charger dans la minuterie",
+  "planSave": "Sauvegarder"
 }

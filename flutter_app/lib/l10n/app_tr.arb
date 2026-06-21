@@ -79,5 +79,6 @@
   "dayPlanTitle": "Günlük Plan",
   "dayPlanEmpty": "Bu gün için plan yok",
   "planSaveAsCurrent": "Plan olarak kaydet",
-  "planLoadIntoTimer": "Zamanlayıcıya yükle"
+  "planLoadIntoTimer": "Zamanlayıcıya yükle",
+  "planSave": "Kaydet"
 }

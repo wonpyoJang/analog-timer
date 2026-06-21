@@ -267,4 +267,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => 'Charger dans la minuterie';
+
+  @override
+  String get planSave => 'Sauvegarder';
 }

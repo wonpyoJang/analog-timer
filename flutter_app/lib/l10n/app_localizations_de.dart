@@ -267,4 +267,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get planLoadIntoTimer => 'In Timer laden';
+
+  @override
+  String get planSave => 'Speichern';
 }
