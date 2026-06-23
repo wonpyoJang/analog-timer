@@ -224,11 +224,16 @@ class _OverlayBodyState extends State<_OverlayBody>
   }
 
   // push 사이(48ms)를 보간해 숫자가 부드럽게 흐르도록.
+  //
+  // 33ms(≈30fps) 보간 — 이 위젯은 별도 Flutter 엔진(두 번째 ViewController)이라
+  // 60fps 지속 렌더는 일부 GPU/드라이버에서 누적 부하로 TDR(드라이버 타임아웃 리셋)
+  // → 위젯/프로세스 크래시를 유발할 수 있다. 30fps 로도 숫자 흐름은 충분히 매끄럽고
+  // GPU 부담은 절반으로 준다.
   void _syncDisplayTimer() {
     final shouldRun = _timerRunning || _swRunning;
     if (shouldRun) {
       _displayLastTick = DateTime.now();
-      _displayTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
+      _displayTimer ??= Timer.periodic(const Duration(milliseconds: 33), (_) {
         if (!mounted) return;
         final now = DateTime.now();
         final elapsed = now.difference(_displayLastTick!).inMilliseconds;

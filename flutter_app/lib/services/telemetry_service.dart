@@ -180,20 +180,34 @@ class TelemetryService {
   /// 최근 1시간 Application 오류 이벤트 중 앱 관련 항목(크래시 단서).
   Future<String> _collectEventLog() async {
     if (!Platform.isWindows) return '';
+    final out = <String>[];
+    // 1) Application 오류(앱 크래시 — 예외코드/죽은 모듈)
     try {
       const ps =
           r"Get-WinEvent -FilterHashtable @{LogName='Application';Level=2;StartTime=(Get-Date).AddHours(-1)} "
           r"-MaxEvents 25 -ErrorAction SilentlyContinue | "
           r"Where-Object { $_.Message -match 'analog_timer|flutter|0xc0000005|0xc0000409' } | "
           r"Select-Object -First 6 | "
-          r"ForEach-Object { '[' + $_.TimeCreated.ToString('HH:mm:ss') + '] ' + $_.ProviderName + ': ' + ($_.Message.Split([char]10))[0] }";
-      final r = await Process.run(
-              'powershell', ['-NoProfile', '-Command', ps])
+          r"ForEach-Object { '[APP] ' + $_.TimeCreated.ToString('HH:mm:ss') + ' ' + $_.ProviderName + ': ' + ($_.Message.Split([char]10))[0] }";
+      final r = await Process.run('powershell', ['-NoProfile', '-Command', ps])
           .timeout(const Duration(seconds: 10));
-      return (r.stdout as String).trim();
-    } catch (_) {
-      return '';
-    }
+      final s = (r.stdout as String).trim();
+      if (s.isNotEmpty) out.add(s);
+    } catch (_) {}
+    // 2) System: GPU TDR(디스플레이 드라이버 타임아웃 리셋) — '갑자기·반복' 크래시의
+    //    핵심 후보. 4101=드라이버 복구됨, 4099/4100=TDR, 14=nvlddmkm 등 드라이버 오류.
+    try {
+      const ps =
+          r"Get-WinEvent -FilterHashtable @{LogName='System';Id=4101,4099,4100,14;StartTime=(Get-Date).AddHours(-2)} "
+          r"-MaxEvents 8 -ErrorAction SilentlyContinue | "
+          r"Select-Object -First 8 | "
+          r"ForEach-Object { '[TDR/' + $_.Id + '] ' + $_.TimeCreated.ToString('HH:mm:ss') + ' ' + $_.ProviderName + ': ' + ($_.Message.Split([char]10))[0] }";
+      final r = await Process.run('powershell', ['-NoProfile', '-Command', ps])
+          .timeout(const Duration(seconds: 10));
+      final s = (r.stdout as String).trim();
+      if (s.isNotEmpty) out.add(s);
+    } catch (_) {}
+    return out.join('\n');
   }
 
   String _genId() {
