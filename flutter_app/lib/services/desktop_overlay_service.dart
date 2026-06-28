@@ -133,11 +133,16 @@ class DesktopOverlayService {
       // 위젯이 혼자 사라짐 — 앱 프로세스는 생존하므로 네이티브 크래시 마커로는
       // 안 잡힌다. 이 순간 직접 텔레메트리 전송(그 시점 GPU TDR/이벤트로그 포함)해
       // '위젯 단독 사라짐'을 어드민에서 볼 수 있게 한다.
-      unawaited(TelemetryService.instance.reportWidgetGone(lastState: {
-        'overlayOn': true,
-        'event': 'auto_recreate',
-        'recreateCount': _recreateCount,
-      }));
+      // 위젯 재생성 직전에 breadcrumb 를 읽어둔다(재생성 중엔 파일 접근이 깨짐).
+      final crumbs = await TelemetryService.instance.snapshotCrumbs();
+      unawaited(TelemetryService.instance.reportWidgetGone(
+        lastState: {
+          'overlayOn': true,
+          'event': 'auto_recreate',
+          'recreateCount': _recreateCount,
+        },
+        breadcrumbsOverride: crumbs,
+      ));
 
       _overlay = null;
       try {

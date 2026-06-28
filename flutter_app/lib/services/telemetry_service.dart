@@ -22,19 +22,37 @@ class TelemetryService {
   static const String _kDeviceId = 'telemetry_device_id';
   static const String _kLastState = 'telemetry_last_state';
   static const String _kPending = 'telemetry_pending_crash';
-  static const String _kBreadcrumbs = 'telemetry_breadcrumbs';
 
   /// 정상 종료 마커 — 네이티브 종료 직전(main.cpp)과 Dart 양쪽이 남긴다.
   /// 시작 시 존재하면 직전 세션이 정상 종료된 것. 없으면 크래시(첫 실행 제외).
   File get _cleanFlag =>
       File('${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_clean.flag');
 
+  /// breadcrumb 전용 파일 — SharedPreferences 는 메인/위젯 엔진이 각자 캐시를
+  /// 통째로 파일에 flush 하므로, 위젯이 prefs 를 쓰면(위치/스케일) 메인이 추가한
+  /// breadcrumb 가 날아간다. 메인만 쓰는 별도 파일로 분리해 그 race 를 피한다.
+  File get _crumbFile {
+    // systemTemp 는 위젯 엔진 teardown 시 Flutter 가 정리하며 같이 지워질 수 있어,
+    // 앱 데이터 디렉토리(prefs 옆)에 둔다.
+    final base = (Platform.isWindows && Platform.environment['APPDATA'] != null)
+        ? '${Platform.environment['APPDATA']}\\dev.analogtimer\\analog_timer'
+        : Directory.systemTemp.path;
+    return File('$base${Platform.pathSeparator}analog_timer_breadcrumbs.json');
+  }
+
+  Future<List<Map<String, dynamic>>> _readCrumbs() async {
+    try {
+      if (await _crumbFile.exists()) {
+        return (jsonDecode(await _crumbFile.readAsString()) as List)
+            .cast<Map<String, dynamic>>();
+      }
+    } catch (_) {}
+    return <Map<String, dynamic>>[];
+  }
+
   bool _enabled = false;
   String? _deviceId;
   Map<String, dynamic> _env = {};
-  // 최근 사용자 행동·상태 변화(breadcrumb) — 크래시 직전 맥락. prefs 에도 저장해
-  // 네이티브 크래시 후 다음 실행에서 복원·전송한다(최근 25개 유지).
-  final List<Map<String, dynamic>> _breadcrumbs = [];
 
   bool get supported =>
       !kIsWeb && (Platform.isWindows || Platform.isMacOS);
@@ -79,8 +97,10 @@ class TelemetryService {
     unawaited(_collectEnv()); // 백그라운드 환경 수집
 
     // 이전 세션의 breadcrumb(크래시 직전 행동 맥락) 로드 후, 새 세션 위해 비운다.
-    final prevCrumbsRaw = p.getString(_kBreadcrumbs);
-    await p.remove(_kBreadcrumbs);
+    final prevCrumbs = await _readCrumbs();
+    try {
+      if (await _crumbFile.exists()) await _crumbFile.delete();
+    } catch (_) {}
 
     if (!cleanLast && !firstRun) {
       final lastStateRaw = p.getString(_kLastState);
@@ -90,7 +110,7 @@ class TelemetryService {
         'message':
             '비정상 종료 감지 — 이전 세션이 정상 종료 플래그를 남기지 못함(네이티브 크래시 가능성)',
         'lastState': lastStateRaw != null ? jsonDecode(lastStateRaw) : null,
-        'breadcrumbs': prevCrumbsRaw != null ? jsonDecode(prevCrumbsRaw) : null,
+        'breadcrumbs': prevCrumbs.isNotEmpty ? prevCrumbs : null,
       };
       await p.setString(_kPending, jsonEncode(crash));
       if (_enabled) await _flushPending();
@@ -117,17 +137,17 @@ class TelemetryService {
   /// consent 무관하게 로컬 수집(전송만 동의 필요) — 빈도 낮은 이벤트만 심는다.
   Future<void> logEvent(String event, [Map<String, dynamic>? detail]) async {
     if (!supported) return;
-    _breadcrumbs.add({
-      't': DateTime.now().millisecondsSinceEpoch,
-      'e': event,
-      if (detail != null) 'd': detail,
-    });
-    while (_breadcrumbs.length > 25) {
-      _breadcrumbs.removeAt(0);
-    }
     try {
-      final p = await SharedPreferences.getInstance();
-      await p.setString(_kBreadcrumbs, jsonEncode(_breadcrumbs));
+      final list = await _readCrumbs();
+      list.add({
+        't': DateTime.now().millisecondsSinceEpoch,
+        'e': event,
+        if (detail != null) 'd': detail,
+      });
+      while (list.length > 25) {
+        list.removeAt(0);
+      }
+      await _crumbFile.writeAsString(jsonEncode(list));
     } catch (_) {}
   }
 
@@ -148,7 +168,9 @@ class TelemetryService {
   /// 크래시 감지(마커)에 안 걸리므로, 이 순간 직접 리포트한다(그 시점 GPU TDR/
   /// 이벤트로그 포함). 친구 증상 "위젯 혼자 반복적으로 사라짐"을 실시간 캡처하는 경로.
   DateTime? _lastWidgetReport;
-  Future<void> reportWidgetGone({Map<String, dynamic>? lastState}) async {
+  Future<void> reportWidgetGone(
+      {Map<String, dynamic>? lastState,
+      List<Map<String, dynamic>>? breadcrumbsOverride}) async {
     if (!supported || !_enabled) return;
     // 반복 재생성 환경에서 과도한 전송 방지 — 최소 30초 간격.
     final now = DateTime.now();
@@ -157,14 +179,21 @@ class TelemetryService {
       return;
     }
     _lastWidgetReport = now;
+    // 위젯 재생성 중엔 메인 엔진의 파일 접근이 일시적으로 깨지므로, 호출측이 재생성
+    // 직전에 읽어 넘긴 breadcrumbsOverride 를 우선 사용한다.
+    final crumbs = breadcrumbsOverride ?? await _readCrumbs();
     await _send({
       'type': 'widget_gone',
       'crashKind': 'widget',
       'message': '위젯(오버레이)이 사라져 재생성됨 — 앱 프로세스는 생존',
       'eventLog': await _collectEventLog(),
+      'breadcrumbs': crumbs,
       if (lastState != null) 'lastState': lastState,
     });
   }
+
+  /// 위젯 재생성 직전에 호출측이 breadcrumb 를 읽어두기 위한 public 접근자.
+  Future<List<Map<String, dynamic>>> snapshotCrumbs() => _readCrumbs();
 
   Future<void> _flushPending() async {
     if (!_enabled || !supported) return;
@@ -181,13 +210,17 @@ class TelemetryService {
     HttpClient? client;
     try {
       if (_env.isEmpty) await _collectEnv();
+      // breadcrumbs: crash(pending)는 body 에 이전 세션 것이 이미 있고, 그 외
+      // (widget_gone/dart)는 현재 prefs 에서 읽어 채운다. prefs 는 메인/위젯 엔진이
+      // 공유하므로 어느 엔진의 logEvent 든 모두 포함된다.
+      if (!body.containsKey('breadcrumbs')) {
+        final list = await _readCrumbs();
+        if (list.isNotEmpty) body['breadcrumbs'] = list;
+      }
       final payload = <String, dynamic>{
         'deviceId': _deviceId,
         'appVersion': _appVersion,
         ..._env,
-        // 현재 세션 breadcrumb(widget_gone/dart 용). native crash 는 body 에 이전
-        // 세션 breadcrumb 가 들어있어 이 값을 덮어쓴다.
-        'breadcrumbs': _breadcrumbs,
         ...body,
       };
       client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
