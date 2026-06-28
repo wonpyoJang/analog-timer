@@ -352,9 +352,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (_desktopOverlayOn) {
       await DesktopOverlayService.instance.hide();
       setState(() => _desktopOverlayOn = false);
+      unawaited(TelemetryService.instance.logEvent('overlay_off'));
     } else {
       await DesktopOverlayService.instance.show(_overlayStateMap());
       setState(() => _desktopOverlayOn = true);
+      unawaited(TelemetryService.instance.logEvent('overlay_on'));
     }
     _saveTelemetrySnapshot();
   }

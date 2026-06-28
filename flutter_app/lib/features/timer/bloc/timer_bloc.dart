@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../theme/app_theme.dart';
 import '../models/segment.dart';
+import '../../../services/telemetry_service.dart';
 import 'timer_event.dart';
 import 'timer_state.dart';
 
@@ -46,6 +47,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     }
     emit(next.copyWith(status: TimerStatus.running));
     _startTicker();
+    unawaited(TelemetryService.instance
+        .logEvent('timer_start', {'seg': state.currentSegment?.name}));
   }
 
   void _onPause(TimerPause event, Emitter<TimerState> emit) {
@@ -64,6 +67,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         ],
       ),
     );
+    unawaited(TelemetryService.instance.logEvent('timer_pause'));
   }
 
   void _onReset(TimerReset event, Emitter<TimerState> emit) {
@@ -84,6 +88,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         ],
       ),
     );
+    unawaited(TelemetryService.instance.logEvent('timer_reset'));
   }
 
   void _onNext(TimerNext event, Emitter<TimerState> emit) {
@@ -159,6 +164,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       );
       if (!wasRunning) _startTicker();
     }
+    unawaited(TelemetryService.instance.logEvent('timer_skip'));
   }
 
   void _onTick(TimerTick event, Emitter<TimerState> emit) {
@@ -166,6 +172,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     int remain = state.segRemainMs - event.elapsedMs;
 
     if (remain <= 0) {
+      unawaited(TelemetryService.instance
+          .logEvent('segment_done', {'seg': state.currentSegment?.name}));
       final doneLog = [
         ...state.log,
         TimerLogEntry(

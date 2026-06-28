@@ -22,6 +22,7 @@ class TelemetryService {
   static const String _kDeviceId = 'telemetry_device_id';
   static const String _kLastState = 'telemetry_last_state';
   static const String _kPending = 'telemetry_pending_crash';
+  static const String _kBreadcrumbs = 'telemetry_breadcrumbs';
 
   /// 정상 종료 마커 — 네이티브 종료 직전(main.cpp)과 Dart 양쪽이 남긴다.
   /// 시작 시 존재하면 직전 세션이 정상 종료된 것. 없으면 크래시(첫 실행 제외).
@@ -31,6 +32,9 @@ class TelemetryService {
   bool _enabled = false;
   String? _deviceId;
   Map<String, dynamic> _env = {};
+  // 최근 사용자 행동·상태 변화(breadcrumb) — 크래시 직전 맥락. prefs 에도 저장해
+  // 네이티브 크래시 후 다음 실행에서 복원·전송한다(최근 25개 유지).
+  final List<Map<String, dynamic>> _breadcrumbs = [];
 
   bool get supported =>
       !kIsWeb && (Platform.isWindows || Platform.isMacOS);
@@ -74,6 +78,10 @@ class TelemetryService {
 
     unawaited(_collectEnv()); // 백그라운드 환경 수집
 
+    // 이전 세션의 breadcrumb(크래시 직전 행동 맥락) 로드 후, 새 세션 위해 비운다.
+    final prevCrumbsRaw = p.getString(_kBreadcrumbs);
+    await p.remove(_kBreadcrumbs);
+
     if (!cleanLast && !firstRun) {
       final lastStateRaw = p.getString(_kLastState);
       final crash = <String, dynamic>{
@@ -82,6 +90,7 @@ class TelemetryService {
         'message':
             '비정상 종료 감지 — 이전 세션이 정상 종료 플래그를 남기지 못함(네이티브 크래시 가능성)',
         'lastState': lastStateRaw != null ? jsonDecode(lastStateRaw) : null,
+        'breadcrumbs': prevCrumbsRaw != null ? jsonDecode(prevCrumbsRaw) : null,
       };
       await p.setString(_kPending, jsonEncode(crash));
       if (_enabled) await _flushPending();
@@ -101,6 +110,25 @@ class TelemetryService {
     if (!supported) return;
     final p = await SharedPreferences.getInstance();
     await p.setString(_kLastState, jsonEncode(state));
+  }
+
+  /// 사용자 행동·상태 변화 기록(breadcrumb). 크래시 시 직전 맥락으로 함께 전송한다.
+  /// 예: timer_start / timer_next / segment_change / overlay_on / overlay_drag.
+  /// consent 무관하게 로컬 수집(전송만 동의 필요) — 빈도 낮은 이벤트만 심는다.
+  Future<void> logEvent(String event, [Map<String, dynamic>? detail]) async {
+    if (!supported) return;
+    _breadcrumbs.add({
+      't': DateTime.now().millisecondsSinceEpoch,
+      'e': event,
+      if (detail != null) 'd': detail,
+    });
+    while (_breadcrumbs.length > 25) {
+      _breadcrumbs.removeAt(0);
+    }
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.setString(_kBreadcrumbs, jsonEncode(_breadcrumbs));
+    } catch (_) {}
   }
 
   /// Dart 레벨 에러(FlutterError / PlatformDispatcher) 리포트.
@@ -157,6 +185,9 @@ class TelemetryService {
         'deviceId': _deviceId,
         'appVersion': _appVersion,
         ..._env,
+        // 현재 세션 breadcrumb(widget_gone/dart 용). native crash 는 body 에 이전
+        // 세션 breadcrumb 가 들어있어 이 값을 덮어쓴다.
+        'breadcrumbs': _breadcrumbs,
         ...body,
       };
       client = HttpClient()..connectionTimeout = const Duration(seconds: 8);

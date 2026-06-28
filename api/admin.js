@@ -40,6 +40,7 @@ export default function handler(req, res) {
   <span style="flex:1"></span>
   <input id="tok" type="password" placeholder="ADMIN_TOKEN" value="${token.replace(/"/g, '&quot;')}">
   <button onclick="load()">새로고침</button>
+  <button onclick="clearAll()" style="border-color:#553">전체 지우기</button>
 </header>
 <div class="wrap">
   <div class="agg" id="agg"></div>
@@ -51,6 +52,7 @@ const fmt=t=>{const d=new Date(t);return d.toLocaleString('ko-KR');};
 function badge(r){
   if(r.type==='env') return '<span class="badge env">ENV</span>';
   if(r.crashKind==='native') return '<span class="badge native">NATIVE 크래시</span>';
+  if(r.crashKind==='widget') return '<span class="badge native">위젯 단독 사라짐</span>';
   return '<span class="badge crash">'+esc((r.crashKind||'crash').toUpperCase())+'</span>';
 }
 function agg(reports){
@@ -75,10 +77,16 @@ function render(reports){
     let det='';
     if(r.message) det+='<details open><summary>message</summary><pre>'+esc(r.message)+'</pre></details>';
     if(r.lastState) det+='<details><summary>마지막 상태</summary><pre>'+esc(JSON.stringify(r.lastState,null,2))+'</pre></details>';
+    if(r.breadcrumbs&&r.breadcrumbs.length) det+='<details open><summary>직전 행동 '+r.breadcrumbs.length+'개 (크래시 전 사용 흐름)</summary><pre>'+esc(r.breadcrumbs.map(function(b){return new Date(b.t).toLocaleTimeString("ko-KR")+"  "+b.e+(b.d?" "+JSON.stringify(b.d):"");}).join("\\n"))+'</pre></details>';
     if(r.eventLog) det+='<details><summary>Windows 이벤트로그</summary><pre>'+esc(r.eventLog)+'</pre></details>';
     if(r.stack) det+='<details><summary>스택</summary><pre>'+esc(r.stack)+'</pre></details>';
     return '<div class="card"><div class="row1">'+badge(r)+'<span class="muted">'+fmt(r.receivedAt)+'</span></div><div class="meta">'+meta+'</div>'+det+'</div>';
   }).join('');
+}
+async function clearAll(){
+  if(!confirm('모든 리포트를 삭제할까요? 되돌릴 수 없습니다.')) return;
+  const t=document.getElementById('tok').value.trim();
+  try{ const r=await fetch('/api/telemetry?token='+encodeURIComponent(t),{method:'DELETE'}); if(r.status===401){alert('인증 실패 — ADMIN_TOKEN 확인');return;} load(); }catch(e){ alert('실패: '+e.message); }
 }
 async function load(){
   const t=document.getElementById('tok').value.trim();
