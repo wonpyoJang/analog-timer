@@ -27,6 +27,8 @@ import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
 import 'services/telemetry_service.dart';
 import 'widgets/telemetry_consent.dart';
+import 'widgets/sync_connect_page.dart';
+import 'services/sync_service.dart';
 import 'features/timer/models/segment.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -678,6 +680,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               ),
                               child: const Icon(
                                 Icons.bug_report_outlined,
+                                size: 16,
+                                color: AppColors.muted,
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (SyncService.instance.supported) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const SyncConnectPage()),
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                border: Border.all(color: AppColors.border),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.devices,
                                 size: 16,
                                 color: AppColors.muted,
                               ),

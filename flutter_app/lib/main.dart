@@ -16,6 +16,7 @@ import 'services/desktop_service.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
 import 'services/telemetry_service.dart';
+import 'services/sync_service.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,7 @@ Future<void> main(List<String> args) async {
   await DesktopService.instance.init();
   await DesktopOverlayService.instance.init();
   await TelemetryService.instance.init();
+  await SyncService.instance.init();
   _installErrorHandlers();
   runApp(const AnalogTimerApp());
 }
