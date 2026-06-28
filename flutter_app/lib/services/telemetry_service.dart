@@ -116,6 +116,28 @@ class TelemetryService {
     });
   }
 
+  /// 위젯(오버레이)이 혼자 사라져 재생성될 때 — 앱 프로세스는 살아있어 네이티브
+  /// 크래시 감지(마커)에 안 걸리므로, 이 순간 직접 리포트한다(그 시점 GPU TDR/
+  /// 이벤트로그 포함). 친구 증상 "위젯 혼자 반복적으로 사라짐"을 실시간 캡처하는 경로.
+  DateTime? _lastWidgetReport;
+  Future<void> reportWidgetGone({Map<String, dynamic>? lastState}) async {
+    if (!supported || !_enabled) return;
+    // 반복 재생성 환경에서 과도한 전송 방지 — 최소 30초 간격.
+    final now = DateTime.now();
+    if (_lastWidgetReport != null &&
+        now.difference(_lastWidgetReport!) < const Duration(seconds: 30)) {
+      return;
+    }
+    _lastWidgetReport = now;
+    await _send({
+      'type': 'widget_gone',
+      'crashKind': 'widget',
+      'message': '위젯(오버레이)이 사라져 재생성됨 — 앱 프로세스는 생존',
+      'eventLog': await _collectEventLog(),
+      if (lastState != null) 'lastState': lastState,
+    });
+  }
+
   Future<void> _flushPending() async {
     if (!_enabled || !supported) return;
     final p = await SharedPreferences.getInstance();

@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'desktop_service.dart';
+import 'telemetry_service.dart';
 
 /// 메인 윈도우에서 always-on-top 플로팅 오버레이(별도 서브윈도우)를 제어한다.
 ///
@@ -127,6 +129,15 @@ class DesktopOverlayService {
         _recreateCount = 0;
         return;
       }
+
+      // 위젯이 혼자 사라짐 — 앱 프로세스는 생존하므로 네이티브 크래시 마커로는
+      // 안 잡힌다. 이 순간 직접 텔레메트리 전송(그 시점 GPU TDR/이벤트로그 포함)해
+      // '위젯 단독 사라짐'을 어드민에서 볼 수 있게 한다.
+      unawaited(TelemetryService.instance.reportWidgetGone(lastState: {
+        'overlayOn': true,
+        'event': 'auto_recreate',
+        'recreateCount': _recreateCount,
+      }));
 
       _overlay = null;
       try {
