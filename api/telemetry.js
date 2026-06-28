@@ -10,7 +10,7 @@ const MAX_BODY = 64 * 1024;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Token');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -39,6 +39,7 @@ export default async function handler(req, res) {
       stack: typeof body.stack === 'string' ? body.stack.slice(0, 8000) : null,
       lastState: body.lastState ?? null, // 위젯 on/off, 타이머 상태 등
       eventLog: typeof body.eventLog === 'string' ? body.eventLog.slice(0, 8000) : null,
+      breadcrumbs: Array.isArray(body.breadcrumbs) ? body.breadcrumbs.slice(0, 40) : null,
       extra: body.extra ?? null,
     };
 
@@ -57,6 +58,16 @@ export default async function handler(req, res) {
     const raw = await redis.lrange(KEY, 0, limit - 1);
     const reports = raw.map((r) => (typeof r === 'string' ? JSON.parse(r) : r));
     return res.status(200).json({ count: reports.length, reports });
+  }
+
+  // ── 전체 삭제 (어드민, 비밀키) — 테스트/누적 데이터 정리용 ──────
+  if (req.method === 'DELETE') {
+    const token = req.headers['x-admin-token'] || req.query.token;
+    if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) {
+      return res.status(401).json({ error: 'unauthorized' });
+    }
+    await redis.del(KEY);
+    return res.status(200).json({ ok: true, cleared: true });
   }
 
   res.status(405).json({ error: 'method not allowed' });
