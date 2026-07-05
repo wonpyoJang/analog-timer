@@ -463,6 +463,30 @@ class _OverlayBodyState extends State<_OverlayBody>
               ),
             ),
           ),
+          // 좌하단 투명도 토글 — 타이머 조작이 아닌 '창 크롬' 컨트롤이므로
+          // 컨트롤 행이 아니라 리사이즈 그립과 동급의 작은 코너 아이콘으로 둔다.
+          Positioned(
+            left: 0,
+            bottom: 0,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _cycleOpacity,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.opacity,
+                    size: 12,
+                    // 투명도를 낮춰둔 상태면 살짝 밝게 — 활성 상태 힌트
+                    color: _opacity < 0.99
+                        ? const Color(0xAAFFFFFF)
+                        : const Color(0x55FFFFFF),
+                  ),
+                ),
+              ),
+            ),
+          ),
           // 우하단 리사이즈 그립 — 드래그로 창 크기 조절
           Positioned(
             right: 0,
@@ -645,7 +669,6 @@ class _OverlayBodyState extends State<_OverlayBody>
         if (_swActive || _swElapsedMs > 0)
           btn(_swRunning ? Icons.stop : Icons.play_arrow, swColor,
               () => _sendAction('sw_toggle')),
-        btn(Icons.opacity, Colors.white54, _cycleOpacity),
         btn(Icons.close, Colors.white54, () => _sendAction('overlay_hide')),
       ],
     );
