@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../theme/app_theme.dart';
 import '../models/segment.dart';
+import '../../../services/telemetry_service.dart';
 import 'timer_event.dart';
 import 'timer_state.dart';
 
@@ -47,6 +48,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     }
     emit(next.copyWith(status: TimerStatus.running));
     _startTicker();
+    unawaited(TelemetryService.instance
+        .logEvent('timer_start', {'seg': state.currentSegment?.name}));
   }
 
   void _onPause(TimerPause event, Emitter<TimerState> emit) {
@@ -65,6 +68,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         ],
       ),
     );
+    unawaited(TelemetryService.instance.logEvent('timer_pause'));
   }
 
   void _onReset(TimerReset event, Emitter<TimerState> emit) {
@@ -85,6 +89,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         ],
       ),
     );
+    unawaited(TelemetryService.instance.logEvent('timer_reset'));
   }
 
   void _onNext(TimerNext event, Emitter<TimerState> emit) {
@@ -160,85 +165,84 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       );
       if (!wasRunning) _startTicker();
     }
+    unawaited(TelemetryService.instance.logEvent('timer_skip'));
   }
 
   void _onTick(TimerTick event, Emitter<TimerState> emit) {
     if (state.status != TimerStatus.running) return;
     int remain = state.segRemainMs - event.elapsedMs;
 
-    if (remain <= 0) {
-      final doneLog = [
-        ...state.log,
-        TimerLogEntry(
-          DateTime.now(),
-          TimerLogType.done,
-          state.currentSegment?.color.toARGB32() ?? 0,
-          segName: state.currentSegment?.name ?? '',
-        ),
-      ];
-      final nextSeg = state.currentSeg + 1;
-      if (nextSeg >= state.segments.length) {
+    if (remain > 0) {
+      emit(state.copyWith(segRemainMs: remain));
+      return;
+    }
+
+    // 세그먼트 경계 통과. 절전/최대절전/프로세스 일시정지 복귀 시 elapsed 가
+    // 여러 세그먼트를 한 번에 관통할 수 있으므로, 복원 경로(_advanceTimer)와
+    // 동일하게 초과분을 이월하며 따라잡는다(이전엔 한 세그먼트만 소비하고
+    // 나머지를 버려 절전 후 타이머가 실제보다 덜 진행되는 버그).
+    unawaited(TelemetryService.instance
+        .logEvent('segment_done', {'seg': state.currentSegment?.name}));
+    final log = [
+      ...state.log,
+      TimerLogEntry(
+        DateTime.now(),
+        TimerLogType.done,
+        state.currentSegment?.color.toARGB32() ?? 0,
+        segName: state.currentSegment?.name ?? '',
+      ),
+    ];
+    var seg = state.currentSeg;
+    var loopCount = state.loopCount;
+
+    while (remain <= 0) {
+      seg++;
+      if (seg >= state.segments.length) {
         if (state.loop) {
-          emit(
-            state.copyWith(
-              currentSeg: 0,
-              segRemainMs: state.segments[0].duration.inMilliseconds,
-              loopCount: state.loopCount + 1,
-              log: [
-                ...doneLog,
-                TimerLogEntry(
-                  DateTime.now(),
-                  TimerLogType.loop,
-                  AppColors.accent.toARGB32(),
-                  segName: '${state.loopCount + 1}',
-                ),
-                TimerLogEntry(
-                  DateTime.now(),
-                  TimerLogType.start,
-                  state.segments[0].color.toARGB32(),
-                  segName: state.segments[0].name,
-                ),
-              ],
-            ),
-          );
+          seg = 0;
+          loopCount++;
+          log.add(TimerLogEntry(
+            DateTime.now(),
+            TimerLogType.loop,
+            AppColors.accent.toARGB32(),
+            segName: '$loopCount',
+          ));
         } else {
           _stopTicker();
-          emit(
-            state.copyWith(
-              status: TimerStatus.done,
-              segRemainMs: 0,
-              log: [
-                ...doneLog,
-                TimerLogEntry(
-                  DateTime.now(),
-                  TimerLogType.allDone,
-                  AppColors.accent.toARGB32(),
-                ),
-              ],
-            ),
-          );
+          log.add(TimerLogEntry(
+            DateTime.now(),
+            TimerLogType.allDone,
+            AppColors.accent.toARGB32(),
+          ));
+          emit(state.copyWith(
+            status: TimerStatus.done,
+            segRemainMs: 0,
+            log: _capLog(log),
+          ));
+          return;
         }
-      } else {
-        emit(
-          state.copyWith(
-            currentSeg: nextSeg,
-            segRemainMs: state.segments[nextSeg].duration.inMilliseconds,
-            log: [
-              ...doneLog,
-              TimerLogEntry(
-                DateTime.now(),
-                TimerLogType.start,
-                state.segments[nextSeg].color.toARGB32(),
-                segName: state.segments[nextSeg].name,
-              ),
-            ],
-          ),
-        );
       }
-    } else {
-      emit(state.copyWith(segRemainMs: remain));
+      final segMs = state.segments[seg].duration.inMilliseconds;
+      remain += segMs;
+      log.add(TimerLogEntry(
+        DateTime.now(),
+        remain <= 0 ? TimerLogType.done : TimerLogType.start,
+        state.segments[seg].color.toARGB32(),
+        segName: state.segments[seg].name,
+      ));
     }
+
+    emit(state.copyWith(
+      currentSeg: seg,
+      segRemainMs: remain,
+      loopCount: loopCount,
+      log: _capLog(log),
+    ));
   }
+
+  /// 로그 무한 축적 방지 — loop 타이머를 밤새 돌려도 최근 300개만 유지.
+  List<TimerLogEntry> _capLog(List<TimerLogEntry> log) =>
+      log.length > 300 ? log.sublist(log.length - 300) : log;
 
   void _onLoopToggled(TimerLoopToggled event, Emitter<TimerState> emit) {
     emit(state.copyWith(loop: event.loop));
@@ -348,6 +352,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       final now = DateTime.now();
       final elapsed = now.difference(_lastTick!).inMilliseconds;
       _lastTick = now;
+      // 시계 역행(수동 변경/NTP 보정/DST) 시 음수 elapsed 로 타이머가 거꾸로
+      // 가는 것을 방지 — 해당 tick 은 건너뛴다.
+      if (elapsed <= 0) return;
       add(TimerTick(elapsed));
     });
   }

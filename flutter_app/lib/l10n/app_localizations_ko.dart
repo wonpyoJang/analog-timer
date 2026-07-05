@@ -268,4 +268,20 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get planSave => '저장';
+
+  @override
+  String get telemetryConsentTitle => 'Analog Timer 개선에 참여';
+
+  @override
+  String get telemetryConsentBody =>
+      '앱이 예기치 않게 종료되면, 원인 파악을 위해 익명 진단 정보(기기 환경·오류 로그)를 개발자에게 보냅니다. 개인정보나 타이머 내용은 포함되지 않습니다. 설정에서 언제든 끌 수 있습니다.';
+
+  @override
+  String get telemetryAllow => '허용';
+
+  @override
+  String get telemetryDeny => '보내지 않음';
+
+  @override
+  String get telemetryReportSetting => '진단 데이터 전송';
 }

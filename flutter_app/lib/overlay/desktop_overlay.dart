@@ -65,13 +65,21 @@ Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
 }
 
 /// 저장된 위치가 있으면 그것을, 없으면 기본 작업영역 우상단을 반환.
+///
+/// 저장 위치는 **현재 연결된 모니터 위에 있는지 검증**한다 — 외부 모니터에
+/// 위젯을 두고 모니터를 분리하면 위젯이 화면 밖에 떠서 '사라진 것처럼' 보이는
+/// 문제 방지(멀티모니터 사용자의 고전적 함정).
 Future<Offset> _resolveInitialPosition(
   SharedPreferences prefs,
   double scale,
 ) async {
   final x = prefs.getDouble(_kOverlayPosX);
   final y = prefs.getDouble(_kOverlayPosY);
-  if (x != null && y != null) return Offset(x, y);
+  if (x != null && y != null) {
+    final saved = Offset(x, y);
+    if (await _isOnAnyDisplay(saved, scale)) return saved;
+    // 화면 밖 → 기본 위치로 폴백(아래로 진행)
+  }
   try {
     final display = await screenRetriever.getPrimaryDisplay();
     final size = display.visibleSize ?? display.size;
@@ -82,6 +90,28 @@ Future<Offset> _resolveInitialPosition(
     );
   } catch (_) {
     return const Offset(60, 60);
+  }
+}
+
+/// 위젯 사각형이 현재 연결된 모니터 중 하나와 의미있게(드래그 가능한 상단부
+/// 40px 이상) 겹치는지 확인. 판별 실패 시 true(보수적으로 저장 위치 존중).
+Future<bool> _isOnAnyDisplay(Offset pos, double scale) async {
+  try {
+    final displays = await screenRetriever.getAllDisplays();
+    if (displays.isEmpty) return true;
+    final w = _sizeForScale(scale).width;
+    for (final d in displays) {
+      final dPos = d.visiblePosition ?? Offset.zero;
+      final dSize = d.visibleSize ?? d.size;
+      final overlapX = (pos.dx + w).clamp(dPos.dx, dPos.dx + dSize.width) -
+          pos.dx.clamp(dPos.dx, dPos.dx + dSize.width);
+      final topInside = pos.dy >= dPos.dy - 10 &&
+          pos.dy + 40 <= dPos.dy + dSize.height;
+      if (overlapX >= 60 && topInside) return true;
+    }
+    return false;
+  } catch (_) {
+    return true;
   }
 }
 
@@ -224,11 +254,16 @@ class _OverlayBodyState extends State<_OverlayBody>
   }
 
   // push 사이(48ms)를 보간해 숫자가 부드럽게 흐르도록.
+  //
+  // 33ms(≈30fps) 보간 — 이 위젯은 별도 Flutter 엔진(두 번째 ViewController)이라
+  // 60fps 지속 렌더는 일부 GPU/드라이버에서 누적 부하로 TDR(드라이버 타임아웃 리셋)
+  // → 위젯/프로세스 크래시를 유발할 수 있다. 30fps 로도 숫자 흐름은 충분히 매끄럽고
+  // GPU 부담은 절반으로 준다.
   void _syncDisplayTimer() {
     final shouldRun = _timerRunning || _swRunning;
     if (shouldRun) {
       _displayLastTick = DateTime.now();
-      _displayTimer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
+      _displayTimer ??= Timer.periodic(const Duration(milliseconds: 33), (_) {
         if (!mounted) return;
         final now = DateTime.now();
         final elapsed = now.difference(_displayLastTick!).inMilliseconds;

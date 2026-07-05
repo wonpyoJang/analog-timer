@@ -608,6 +608,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get planSave;
+
+  /// No description provided for @telemetryConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help improve Analog Timer'**
+  String get telemetryConsentTitle;
+
+  /// No description provided for @telemetryConsentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If the app closes unexpectedly, anonymous diagnostics (device environment and error logs) are sent to the developer to help find the cause. No personal information or timer content is included. You can turn this off anytime in settings.'**
+  String get telemetryConsentBody;
+
+  /// No description provided for @telemetryAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get telemetryAllow;
+
+  /// No description provided for @telemetryDeny.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t send'**
+  String get telemetryDeny;
+
+  /// No description provided for @telemetryReportSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Send diagnostics'**
+  String get telemetryReportSetting;
 }
 
 class _AppLocalizationsDelegate

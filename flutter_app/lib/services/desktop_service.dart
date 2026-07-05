@@ -1,13 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
+import 'platform_info.dart';
 
-/// Windows/macOS/Linux 데스크톱 여부. 모바일에선 false.
-/// (이 앱은 web 타겟을 빌드하지 않으므로 dart:io 사용이 안전하다.)
-bool get isDesktop =>
-    Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+// isDesktop/isWindows 등 웹 안전 플랫폼 판별은 platform_info.dart 로 옮겼다.
+// 기존에 desktop_service.dart 에서 isDesktop 을 가져다 쓰던 파일들이 그대로
+// 동작하도록 re-export 한다.
+export 'platform_info.dart';
 
 /// 데스크톱 창(window_manager) + 시스템 트레이(tray_manager) 통합 서비스.
 ///
@@ -54,7 +54,7 @@ class DesktopService with WindowListener, TrayListener {
     // teardown 레이스(크래시·좀비) 없이 한 번에 닫힌다. preventClose 미사용.
     trayManager.addListener(this);
     await trayManager.setIcon(
-      Platform.isWindows
+      isWindows
           ? 'assets/icons/app_icon.ico'
           : 'assets/icons/app_icon.png',
     );

@@ -269,4 +269,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSave => 'Save';
+
+  @override
+  String get telemetryConsentTitle => 'Help improve Analog Timer';
+
+  @override
+  String get telemetryConsentBody =>
+      'If the app closes unexpectedly, anonymous diagnostics (device environment and error logs) are sent to the developer to help find the cause. No personal information or timer content is included. You can turn this off anytime in settings.';
+
+  @override
+  String get telemetryAllow => 'Allow';
+
+  @override
+  String get telemetryDeny => 'Don\'t send';
+
+  @override
+  String get telemetryReportSetting => 'Send diagnostics';
 }

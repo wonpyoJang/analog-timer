@@ -74,6 +74,8 @@ class StopwatchBloc extends Bloc<StopwatchEvent, StopwatchState> {
       final now = DateTime.now();
       final elapsed = now.difference(_lastTick!).inMilliseconds;
       _lastTick = now;
+      // 시계 역행(수동 변경/NTP/DST) 시 음수 elapsed 방어.
+      if (elapsed <= 0) return;
       add(StopwatchTick(elapsed));
     });
   }

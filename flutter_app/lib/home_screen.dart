@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,7 +26,12 @@ import 'services/native_widget_service.dart';
 import 'services/desktop_service.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
+import 'services/telemetry_service.dart';
+import 'widgets/telemetry_consent.dart';
+import 'widgets/sync_connect_page.dart';
+import 'services/sync_service.dart';
 import 'services/daily_record_service.dart';
+import 'services/platform_info.dart';
 import 'features/timer/models/segment.dart';
 import 'widgets/date_nav.dart';
 import 'widgets/day_log_view.dart';
@@ -80,10 +84,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     LiveActivityService.init();
     _prevTimer = context.read<TimerBloc>().state;
     _startTimer();
-    if (Platform.isAndroid) {
+    if (isAndroid) {
       _listenOverlayCommands();
       _restoreState();
-    } else if (Platform.isIOS) {
+    } else if (isIOS) {
       _loadIosWidgetPref();
     } else if (isDesktop) {
       _initDesktop();
@@ -91,7 +95,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
     // 30초마다 자동 저장 — 앱 강제 종료 직전 저장 실패를 보완
     _persistTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) _saveState();
+      if (mounted) {
+        _saveState();
+        _saveTelemetrySnapshot();
+      }
     });
     BatteryService.instance.start(); // async — 내부에서 prefs 로드 후 모니터 시작
   }
@@ -182,10 +189,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       // 데스크톱: 위젯(오버레이 서브윈도우)이 켜져 있던 상태면 시작 시 복원.
+      // '의도 상태(_desktopOverlayOn)'를 먼저 켠다 — TDR 재시작 직후처럼 서브엔진
+      // 생성이 일시 실패해도, 48ms update 루프의 재생성 경로가 이어서 살려낸다.
+      // (show 가 던지면 의도 상태가 꺼진 채 남아 위젯이 영영 안 돌아오던 버그 수정)
       if (isDesktop) {
         if (overlayOn) {
-          await DesktopOverlayService.instance.show(_overlayStateMap());
           if (mounted) setState(() => _desktopOverlayOn = true);
+          try {
+            await DesktopOverlayService.instance.show(_overlayStateMap());
+          } catch (_) {}
         }
         return;
       }
@@ -340,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         setState(() => _now = now);
       }
       // 상태 변화 즉시 동기화
-      if (_overlayOn && Platform.isAndroid) {
+      if (_overlayOn && isAndroid) {
         final ts = context.read<TimerBloc>().state;
         final sw = context.read<StopwatchBloc>().state;
         if (ts.currentSeg != _lastOverlaySeg ||
@@ -378,11 +390,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       _inBackground = false;
       if (_clockTimer == null) _startTimer();
-      if (_overlayOn && Platform.isAndroid) _restoreOverlayIfDead();
+      if (_overlayOn && isAndroid) _restoreOverlayIfDead();
       // STT-08: 권한 요청 화면에서 돌아왔을 때 권한이 허용됐으면 자동 시작
       // _toggleOverlay() 직접 호출 금지 — 거부 시 _pendingOverlayEnable=true 재설정 후
       // requestPermission() 재호출 → paused/resumed 무한 루프 발생
-      if (_pendingOverlayEnable && Platform.isAndroid) {
+      if (_pendingOverlayEnable && isAndroid) {
         _pendingOverlayEnable = false;
         unawaited(_startOverlayIfPermitted());
       }
@@ -411,7 +423,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // 인-포어그라운드 OOM kill 감지 — 포커스 전환 없이 서비스가 죽는 경우를
   // resumed 이벤트가 잡지 못하므로 10초 주기로 직접 확인
   void _syncHealthTimer() {
-    if (_overlayOn && Platform.isAndroid) {
+    if (_overlayOn && isAndroid) {
       _overlayHealthTimer ??= Timer.periodic(
         const Duration(seconds: 10),
         (_) => _restoreOverlayIfDead(),
@@ -446,6 +458,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (mounted) _updateTray();
     });
     _updateTray();
+    // 첫 실행 1회 진단 동의 + 초기 상태 스냅샷(크래시 맥락용).
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      _saveTelemetrySnapshot();
+      if (TelemetryService.instance.supported &&
+          (await TelemetryService.instance.consent()) == null &&
+          mounted) {
+        await showTelemetryConsent(context);
+      }
+    });
+  }
+
+  /// 크래시 리포트에 함께 올릴 마지막 상태(위젯 on/off, 타이머 상태) 저장.
+  void _saveTelemetrySnapshot() {
+    if (!TelemetryService.instance.supported) return;
+    TelemetryService.instance.saveLastState({
+      'overlayOn': _desktopOverlayOn,
+      'timerStatus': context.read<TimerBloc>().state.status.name,
+    });
   }
 
   /// 플로팅 오버레이 위젯(항상 위) 토글.
@@ -453,10 +484,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (_desktopOverlayOn) {
       await DesktopOverlayService.instance.hide();
       setState(() => _desktopOverlayOn = false);
+      unawaited(TelemetryService.instance.logEvent('overlay_off'));
     } else {
       await DesktopOverlayService.instance.show(_overlayStateMap());
       setState(() => _desktopOverlayOn = true);
+      unawaited(TelemetryService.instance.logEvent('overlay_on'));
     }
+    _saveTelemetrySnapshot();
   }
 
   /// 오버레이 서브윈도우 버튼에서 올라온 액션을 메인 타이머/스톱워치에 반영.
@@ -594,7 +628,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _syncLiveActivity() {
-    if (!Platform.isIOS || !_overlayOn) return;
+    if (!isIOS || !_overlayOn) return;
     final timerState = context.read<TimerBloc>().state;
     final swState = context.read<StopwatchBloc>().state;
     final timerActive =
@@ -645,7 +679,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _syncNativeWidget() {
-    if (!Platform.isAndroid) return;
+    if (!isAndroid) return;
     final timerState = context.read<TimerBloc>().state;
     final swState = context.read<StopwatchBloc>().state;
     final timerActive =
@@ -669,7 +703,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _syncOverlay() {
-    if (!_overlayOn || !Platform.isAndroid) return;
+    if (!_overlayOn || !isAndroid) return;
     final timerState = context.read<TimerBloc>().state;
     final swState = context.read<StopwatchBloc>().state;
     final timerActive =
@@ -721,7 +755,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleOverlay() async {
-    if (Platform.isIOS) {
+    if (isIOS) {
       if (_overlayOn) {
         await PipService.stop();
         await LiveActivityService.end();
@@ -735,7 +769,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       }
       return;
     }
-    if (!Platform.isAndroid) return;
+    if (!isAndroid) return;
     if (!await OverlayService.isPermissionGranted) {
       _pendingOverlayEnable = true;
       await OverlayService.requestPermission();
@@ -839,7 +873,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   ),
                                 ),
                               ),
-                              if (Platform.isAndroid || Platform.isIOS) ...[
+                              if (isAndroid || isIOS) ...[
                                 const SizedBox(width: 10),
                                 GestureDetector(
                                   onTap: _toggleOverlay,
@@ -901,6 +935,51 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                         fontSize: 11,
                                         letterSpacing: 0.6,
                                       ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (TelemetryService.instance.supported) ...[
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () => showTelemetrySettings(context),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(7),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      border:
+                                          Border.all(color: AppColors.border),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.bug_report_outlined,
+                                      size: 16,
+                                      color: AppColors.muted,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (SyncService.instance.supported) ...[
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const SyncConnectPage(),
+                                    ),
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(7),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      border:
+                                          Border.all(color: AppColors.border),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.devices,
+                                      size: 16,
+                                      color: AppColors.muted,
                                     ),
                                   ),
                                 ),
