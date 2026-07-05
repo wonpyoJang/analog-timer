@@ -124,6 +124,11 @@ class FeedbackService {
     if (n.endsWith('.mov')) return 'video/quicktime';
     if (n.endsWith('.webm')) return 'video/webm';
     if (n.endsWith('.mkv')) return 'video/x-matroska';
+    if (n.endsWith('.m4a')) return 'audio/mp4';
+    if (n.endsWith('.aac')) return 'audio/aac';
+    if (n.endsWith('.mp3')) return 'audio/mpeg';
+    if (n.endsWith('.wav')) return 'audio/wav';
+    if (n.endsWith('.ogg')) return 'audio/ogg';
     return null;
   }
 

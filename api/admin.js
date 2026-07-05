@@ -107,6 +107,8 @@ function renderFb(items){
         att+='<a href="'+esc(a.url)+'" target="_blank"><img src="'+esc(a.url)+'" style="max-height:120px;max-width:180px;border-radius:6px;border:1px solid var(--border);margin:6px 6px 0 0"></a>';
       else if((a.contentType||'').startsWith('video/'))
         att+='<video src="'+esc(a.url)+'" controls style="max-height:160px;max-width:260px;border-radius:6px;border:1px solid var(--border);margin:6px 6px 0 0"></video>';
+      else if((a.contentType||'').startsWith('audio/'))
+        att+='<div style="margin:6px 0"><span style="color:var(--muted);font-size:11px">🎤 '+esc(a.name||'voice')+'</span><br><audio src="'+esc(a.url)+'" controls style="height:32px;max-width:320px"></audio></div>';
       else
         att+='<div><a href="'+esc(a.url)+'" target="_blank" style="color:#52b0e0">'+esc(a.name||a.url)+'</a></div>';
     });

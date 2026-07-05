@@ -44,6 +44,7 @@ dependencies:
   qr_flutter: ^4.1.0 # 기기 동기화 — 페어링 QR 생성(순수 Dart, 전 플랫폼)
   battery_plus: ^6.0.3
   image_picker: ^1.1.2 # 피드백 첨부 — 사진/동영상 선택(모바일+데스크톱)
+  record: ^7.1.1 # 피드백 음성 녹음 (Windows MF / mobile)
 
   # 데스크톱(Windows/macOS/Linux) 전용 — 모바일에선 호출하지 않음
   window_manager: ^0.4.3

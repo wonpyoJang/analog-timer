@@ -10,6 +10,8 @@ const MAX_FILE = 200 * 1024 * 1024;
 const ALLOWED_TYPES = [
   'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic',
   'video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska',
+  // 음성 피드백 (녹음 m4a/aac 또는 첨부 오디오 파일)
+  'audio/mp4', 'audio/aac', 'audio/mpeg', 'audio/wav', 'audio/webm', 'audio/ogg',
 ];
 
 export default async function handler(req, res) {

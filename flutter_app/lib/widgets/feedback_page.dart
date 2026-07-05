@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:record/record.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/feedback_service.dart';
@@ -15,9 +17,15 @@ class FeedbackPage extends StatefulWidget {
 class _Attachment {
   final File file;
   final String name;
-  final bool isVideo;
+  final String kind; // image | video | audio
   double progress = 0; // 업로드 진행률(전송 시)
-  _Attachment(this.file, this.isVideo) : name = file.uri.pathSegments.last;
+  _Attachment(this.file, this.kind) : name = file.uri.pathSegments.last;
+
+  IconData get icon => switch (kind) {
+        'video' => Icons.videocam,
+        'audio' => Icons.mic,
+        _ => Icons.image,
+      };
 }
 
 class _FeedbackPageState extends State<FeedbackPage> {
@@ -28,8 +36,16 @@ class _FeedbackPageState extends State<FeedbackPage> {
   bool _sending = false;
   String? _error;
 
+  // ── 음성 녹음 상태 ──────────────────────────────────────────
+  final AudioRecorder _recorder = AudioRecorder();
+  bool _recording = false;
+  Duration _recElapsed = Duration.zero;
+  Timer? _recTimer;
+
   @override
   void dispose() {
+    _recTimer?.cancel();
+    _recorder.dispose();
     _msgCtrl.dispose();
     _contactCtrl.dispose();
     super.dispose();
@@ -42,14 +58,63 @@ class _FeedbackPageState extends State<FeedbackPage> {
           ? await picker.pickVideo(source: ImageSource.gallery)
           : await picker.pickImage(source: ImageSource.gallery);
       if (x == null) return;
-      setState(() => _files.add(_Attachment(File(x.path), video)));
+      setState(() => _files.add(_Attachment(File(x.path), video ? 'video' : 'image')));
     } catch (_) {
       // 데스크톱 등에서 picker 미지원 시 무시
     }
   }
 
+  /// 음성 녹음 토글 — 시작하면 m4a(AAC) 로 임시파일에 녹음, 종료 시 첨부 목록에 추가.
+  Future<void> _toggleRecord() async {
+    final l = AppLocalizations.of(context);
+    if (_recording) {
+      _recTimer?.cancel();
+      final path = await _recorder.stop();
+      if (!mounted) return;
+      setState(() {
+        _recording = false;
+        if (path != null) _files.add(_Attachment(File(path), 'audio'));
+      });
+      return;
+    }
+    try {
+      if (!await _recorder.hasPermission()) {
+        if (!mounted) return;
+        setState(() => _error = l.feedbackMicDenied);
+        return;
+      }
+      final path =
+          '${Directory.systemTemp.path}${Platform.pathSeparator}fb_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      await _recorder.start(
+        const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 96000),
+        path: path,
+      );
+      if (!mounted) return;
+      setState(() {
+        _recording = true;
+        _recElapsed = Duration.zero;
+        _error = null;
+      });
+      _recTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) {
+          setState(() => _recElapsed += const Duration(seconds: 1));
+        }
+      });
+    } catch (_) {
+      if (mounted) setState(() => _error = l.feedbackMicDenied);
+    }
+  }
+
+  String get _recLabel {
+    final m = _recElapsed.inMinutes.toString().padLeft(2, '0');
+    final s = (_recElapsed.inSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
   Future<void> _send() async {
     final l = AppLocalizations.of(context);
+    // 녹음 중 전송 → 녹음을 마무리해 첨부에 포함
+    if (_recording) await _toggleRecord();
     if (_msgCtrl.text.trim().isEmpty) {
       setState(() => _error = l.feedbackMessageRequired);
       return;
@@ -138,12 +203,42 @@ class _FeedbackPageState extends State<FeedbackPage> {
           ),
           const SizedBox(height: 16),
           // 첨부 버튼
-          Row(children: [
+          Wrap(spacing: 10, runSpacing: 8, children: [
             _attachBtn(Icons.photo_outlined, l.feedbackAttachPhoto,
                 () => _pick(false)),
-            const SizedBox(width: 10),
             _attachBtn(Icons.videocam_outlined, l.feedbackAttachVideo,
                 () => _pick(true)),
+            // 음성 녹음 — 녹음 중엔 빨간 점 + 경과시간 + 탭하여 종료
+            GestureDetector(
+              onTap: _sending ? null : _toggleRecord,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                decoration: BoxDecoration(
+                  color: _recording
+                      ? AppColors.danger.withAlpha(0x22)
+                      : AppColors.surface,
+                  border: Border.all(
+                      color: _recording ? AppColors.danger : AppColors.border),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(_recording ? Icons.stop_circle_outlined : Icons.mic_none,
+                      size: 16,
+                      color: _recording ? AppColors.danger : AppColors.muted),
+                  const SizedBox(width: 6),
+                  Text(
+                    _recording
+                        ? '${l.feedbackRecording} $_recLabel'
+                        : l.feedbackRecordVoice,
+                    style: TextStyle(
+                        color:
+                            _recording ? AppColors.danger : AppColors.muted,
+                        fontSize: 12),
+                  ),
+                ]),
+              ),
+            ),
           ]),
           const SizedBox(height: 10),
           // 첨부 목록
@@ -157,8 +252,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(children: [
-                Icon(a.value.isVideo ? Icons.videocam : Icons.image,
-                    size: 16, color: AppColors.muted),
+                Icon(a.value.icon, size: 16, color: AppColors.muted),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
