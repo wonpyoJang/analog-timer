@@ -42,6 +42,7 @@ dependencies:
   live_activities: ^2.4.9
   shared_preferences: ^2.3.0
   qr_flutter: ^4.1.0 # 기기 동기화 — 페어링 QR 생성(순수 Dart, 전 플랫폼)
+  mobile_scanner: ^6.0.3 # 기기 동기화 — QR 스캔(모바일 전용, 데스크톱 사용 안 함)
   battery_plus: ^6.0.3
   image_picker: ^1.1.2 # 피드백 첨부 — 사진/동영상 선택(모바일+데스크톱)
 

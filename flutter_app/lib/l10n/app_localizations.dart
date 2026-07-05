@@ -638,6 +638,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send diagnostics'**
   String get telemetryReportSetting;
+
+  /// No description provided for @feedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send feedback'**
+  String get feedbackTitle;
+
+  /// No description provided for @feedbackEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Send feedback to the developer'**
+  String get feedbackEntry;
+
+  /// No description provided for @feedbackEntryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Report a bug or request a feature (photos/videos welcome)'**
+  String get feedbackEntryDesc;
+
+  /// No description provided for @feedbackCategoryBug.
+  ///
+  /// In en, this message translates to:
+  /// **'Bug'**
+  String get feedbackCategoryBug;
+
+  /// No description provided for @feedbackCategoryFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature request'**
+  String get feedbackCategoryFeature;
+
+  /// No description provided for @feedbackCategoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get feedbackCategoryOther;
+
+  /// No description provided for @feedbackMessageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the bug or the feature you\'d like…'**
+  String get feedbackMessageHint;
+
+  /// No description provided for @feedbackContactHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact (optional — email etc. for follow-up)'**
+  String get feedbackContactHint;
+
+  /// No description provided for @feedbackAttachPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach photo'**
+  String get feedbackAttachPhoto;
+
+  /// No description provided for @feedbackAttachVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach video'**
+  String get feedbackAttachVideo;
+
+  /// No description provided for @feedbackSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get feedbackSend;
+
+  /// No description provided for @feedbackSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks! Your feedback has been sent.'**
+  String get feedbackSent;
+
+  /// No description provided for @feedbackFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send — check your network and try again'**
+  String get feedbackFailed;
+
+  /// No description provided for @feedbackMessageRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please write a message first'**
+  String get feedbackMessageRequired;
+
+  /// No description provided for @syncPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device pairing'**
+  String get syncPageTitle;
+
+  /// No description provided for @syncConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Connected'**
+  String get syncConnected;
+
+  /// No description provided for @syncRoomLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Room: {id}'**
+  String syncRoomLabel(String id);
+
+  /// No description provided for @syncRoomDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer, presets, and settings are shared across every device in this room.'**
+  String get syncRoomDesc;
+
+  /// No description provided for @syncAddDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another device'**
+  String get syncAddDevice;
+
+  /// No description provided for @syncInviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite from this device'**
+  String get syncInviteTitle;
+
+  /// No description provided for @syncInviteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the QR or enter the 6-digit code on the other device.'**
+  String get syncInviteDesc;
+
+  /// No description provided for @syncCreateCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate invite code'**
+  String get syncCreateCode;
+
+  /// No description provided for @syncJoinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with a code'**
+  String get syncJoinTitle;
+
+  /// No description provided for @syncJoinDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code shown on the other device.'**
+  String get syncJoinDesc;
+
+  /// No description provided for @syncJoinBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get syncJoinBtn;
+
+  /// No description provided for @syncDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get syncDisconnect;
+
+  /// No description provided for @syncExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan or enter within 5 minutes'**
+  String get syncExpiry;
+
+  /// No description provided for @syncErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get a code — check your network'**
+  String get syncErrorNetwork;
+
+  /// No description provided for @syncErrorCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong or expired code'**
+  String get syncErrorCode;
+
+  /// No description provided for @syncErrorCodeLen.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code'**
+  String get syncErrorCodeLen;
+
+  /// No description provided for @syncScanQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR'**
+  String get syncScanQr;
+
+  /// No description provided for @syncScanCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get syncScanCancel;
 }
 
 class _AppLocalizationsDelegate

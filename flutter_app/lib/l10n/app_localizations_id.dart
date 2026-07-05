@@ -286,4 +286,109 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get telemetryReportSetting => 'Send diagnostics';
+
+  @override
+  String get feedbackTitle => 'Send feedback';
+
+  @override
+  String get feedbackEntry => 'Send feedback to the developer';
+
+  @override
+  String get feedbackEntryDesc =>
+      'Report a bug or request a feature (photos/videos welcome)';
+
+  @override
+  String get feedbackCategoryBug => 'Bug';
+
+  @override
+  String get feedbackCategoryFeature => 'Feature request';
+
+  @override
+  String get feedbackCategoryOther => 'Other';
+
+  @override
+  String get feedbackMessageHint =>
+      'Describe the bug or the feature you\'d like…';
+
+  @override
+  String get feedbackContactHint =>
+      'Contact (optional — email etc. for follow-up)';
+
+  @override
+  String get feedbackAttachPhoto => 'Attach photo';
+
+  @override
+  String get feedbackAttachVideo => 'Attach video';
+
+  @override
+  String get feedbackSend => 'Send';
+
+  @override
+  String get feedbackSent => 'Thanks! Your feedback has been sent.';
+
+  @override
+  String get feedbackFailed =>
+      'Failed to send — check your network and try again';
+
+  @override
+  String get feedbackMessageRequired => 'Please write a message first';
+
+  @override
+  String get syncPageTitle => 'Device pairing';
+
+  @override
+  String get syncConnected => '✓ Connected';
+
+  @override
+  String syncRoomLabel(String id) {
+    return 'Room: $id';
+  }
+
+  @override
+  String get syncRoomDesc =>
+      'Timer, presets, and settings are shared across every device in this room.';
+
+  @override
+  String get syncAddDevice => 'Add another device';
+
+  @override
+  String get syncInviteTitle => 'Invite from this device';
+
+  @override
+  String get syncInviteDesc =>
+      'Scan the QR or enter the 6-digit code on the other device.';
+
+  @override
+  String get syncCreateCode => 'Generate invite code';
+
+  @override
+  String get syncJoinTitle => 'Join with a code';
+
+  @override
+  String get syncJoinDesc =>
+      'Enter the 6-digit code shown on the other device.';
+
+  @override
+  String get syncJoinBtn => 'Connect';
+
+  @override
+  String get syncDisconnect => 'Disconnect';
+
+  @override
+  String get syncExpiry => 'Scan or enter within 5 minutes';
+
+  @override
+  String get syncErrorNetwork => 'Couldn\'t get a code — check your network';
+
+  @override
+  String get syncErrorCode => 'Wrong or expired code';
+
+  @override
+  String get syncErrorCodeLen => 'Enter the 6-digit code';
+
+  @override
+  String get syncScanQr => 'Scan QR';
+
+  @override
+  String get syncScanCancel => 'Cancel';
 }

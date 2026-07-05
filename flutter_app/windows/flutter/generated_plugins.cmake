@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   battery_plus
   desktop_multi_window
+  file_selector_windows
   local_notifier
   permission_handler_windows
   screen_retriever_windows

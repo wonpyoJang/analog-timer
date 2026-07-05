@@ -99,5 +99,27 @@
   "feedbackSend": "보내기",
   "feedbackSent": "감사합니다! 피드백이 전송되었습니다.",
   "feedbackFailed": "전송 실패 — 네트워크 확인 후 다시 시도해주세요",
-  "feedbackMessageRequired": "내용을 먼저 적어주세요"
+  "feedbackMessageRequired": "내용을 먼저 적어주세요",
+
+  "syncPageTitle": "기기 연결",
+  "syncConnected": "✓ 연결됨",
+  "syncRoomLabel": "방 코드: {id}",
+  "@syncRoomLabel": {
+    "placeholders": { "id": { "type": "String" } }
+  },
+  "syncRoomDesc": "이 방의 모든 기기끼리 타이머·프리셋·설정이 동기화됩니다.",
+  "syncAddDevice": "다른 기기 더 추가",
+  "syncInviteTitle": "이 기기로 초대",
+  "syncInviteDesc": "다른 기기에서 QR을 스캔하거나 6자리 코드를 입력하면 연결됩니다.",
+  "syncCreateCode": "초대 코드 만들기",
+  "syncJoinTitle": "코드로 연결",
+  "syncJoinDesc": "다른 기기에 표시된 6자리 코드를 입력하세요.",
+  "syncJoinBtn": "연결",
+  "syncDisconnect": "연결 해제",
+  "syncExpiry": "5분 안에 다른 기기에서 스캔하거나 입력하세요",
+  "syncErrorNetwork": "코드 발급 실패 — 네트워크를 확인하세요",
+  "syncErrorCode": "코드가 틀리거나 만료되었습니다",
+  "syncErrorCodeLen": "6자리 코드를 입력하세요",
+  "syncScanQr": "QR 스캔",
+  "syncScanCancel": "취소"
 }
