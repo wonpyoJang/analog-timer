@@ -26,6 +26,11 @@ class TimerState extends Equatable {
   final int loopCount;
   final List<TimerLogEntry> log;
 
+  /// 지금까지 추가된 로그 엔트리의 **누적 개수** — 단조 증가.
+  /// log 는 300개 캡으로 잘리므로 length 는 신규 엔트리 감지에 못 쓴다
+  /// (캡 도달 후 length 가 고정되어 length 기반 diff/동등성이 전부 깨짐).
+  final int logSeq;
+
   const TimerState({
     required this.status,
     required this.segments,
@@ -34,6 +39,7 @@ class TimerState extends Equatable {
     required this.loop,
     required this.loopCount,
     required this.log,
+    this.logSeq = 0,
   });
 
   factory TimerState.initial() => TimerState(
@@ -44,6 +50,7 @@ class TimerState extends Equatable {
     loop: false,
     loopCount: 0,
     log: const [],
+    logSeq: 0,
   );
 
   Segment? get currentSegment =>
@@ -75,6 +82,7 @@ class TimerState extends Equatable {
     bool? loop,
     int? loopCount,
     List<TimerLogEntry>? log,
+    int? logSeq,
   }) => TimerState(
     status: status ?? this.status,
     segments: segments ?? this.segments,
@@ -83,6 +91,7 @@ class TimerState extends Equatable {
     loop: loop ?? this.loop,
     loopCount: loopCount ?? this.loopCount,
     log: log ?? this.log,
+    logSeq: logSeq ?? this.logSeq,
   );
 
   @override
@@ -93,6 +102,6 @@ class TimerState extends Equatable {
     segRemainMs,
     loop,
     loopCount,
-    log.length,
+    logSeq, // log.length 는 캡 이후 고정되므로 동등성 판별에 부적합
   ];
 }

@@ -173,6 +173,11 @@
   "feedbackFailed": "Failed to send — check your network and try again",
   "feedbackMessageRequired": "Please write a message first",
   "feedbackIncludeLogs": "Include diagnostic logs (device info & recent actions — no personal data)",
+  "reviewPromptTitle": "Enjoying Analog Timer?",
+  "reviewPromptBody": "You just finished a session — nice work! 🎉\nIf you have a moment, tell the developer what you like or what could be better. It really helps.",
+  "reviewPromptAccept": "Share thoughts",
+  "reviewPromptLater": "Later",
+  "reviewPromptNever": "Don't ask again",
 
   "syncPageTitle": "Device pairing",
   "syncConnected": "✓ Connected",

@@ -44,6 +44,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
             segName: state.segments[0].name,
           ),
         ],
+        logSeq: state.logSeq + 1,
       );
     }
     emit(next.copyWith(status: TimerStatus.running));
@@ -66,6 +67,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
             AppColors.muted.toARGB32(),
           ),
         ],
+        logSeq: state.logSeq + 1,
       ),
     );
     unawaited(TelemetryService.instance.logEvent('timer_pause'));
@@ -87,6 +89,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
             AppColors.muted.toARGB32(),
           ),
         ],
+        logSeq: state.logSeq + 1,
       ),
     );
     unawaited(TelemetryService.instance.logEvent('timer_reset'));
@@ -125,6 +128,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
                 segName: '${state.loopCount + 1}',
               ),
             ],
+            logSeq: state.logSeq + 2,
           ),
         );
         if (state.status != TimerStatus.running) _startTicker();
@@ -142,6 +146,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
                 AppColors.accent.toARGB32(),
               ),
             ],
+            logSeq: state.logSeq + 2,
           ),
         );
       }
@@ -161,6 +166,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
               segName: state.segments[nextSeg].name,
             ),
           ],
+          logSeq: state.logSeq + 2,
         ),
       );
       if (!wasRunning) _startTicker();
@@ -218,6 +224,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
             status: TimerStatus.done,
             segRemainMs: 0,
             log: _capLog(log),
+            // 캡 전 길이 차이 = 이번에 추가된 엔트리 수 (단조 증가 유지)
+            logSeq: state.logSeq + (log.length - state.log.length),
           ));
           return;
         }
@@ -237,6 +245,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       segRemainMs: remain,
       loopCount: loopCount,
       log: _capLog(log),
+      logSeq: state.logSeq + (log.length - state.log.length),
     ));
   }
 
@@ -299,6 +308,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         loop: state.loop,
         loopCount: 0,
         log: state.log,
+        logSeq: state.logSeq,
       ),
     );
   }

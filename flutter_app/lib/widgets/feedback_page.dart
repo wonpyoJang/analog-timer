@@ -7,10 +7,13 @@ import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/feedback_service.dart';
 import '../services/telemetry_service.dart';
+import '../services/review_prompt_service.dart';
 
 /// 제작자에게 버그/기능요청 보내기 — 사진·동영상 첨부 지원.
 class FeedbackPage extends StatefulWidget {
-  const FeedbackPage({super.key});
+  /// 초기 선택 카테고리 — 후기 유도 진입은 'other', 기본은 'bug'.
+  final String initialCategory;
+  const FeedbackPage({super.key, this.initialCategory = 'bug'});
   @override
   State<FeedbackPage> createState() => _FeedbackPageState();
 }
@@ -30,7 +33,7 @@ class _Attachment {
 }
 
 class _FeedbackPageState extends State<FeedbackPage> {
-  String _category = 'bug';
+  late String _category = widget.initialCategory;
   final _msgCtrl = TextEditingController();
   final _contactCtrl = TextEditingController();
   final List<_Attachment> _files = [];
@@ -159,6 +162,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
     );
     if (!mounted) return;
     if (ok) {
+      // 피드백을 보낸 사용자에게는 후기 유도 다이얼로그를 더 띄우지 않는다.
+      unawaited(ReviewPromptService.instance.markDone());
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l.feedbackSent)));
       Navigator.pop(context);

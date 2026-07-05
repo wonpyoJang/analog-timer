@@ -25,10 +25,13 @@ import 'services/battery_service.dart';
 import 'services/persistence_service.dart';
 import 'services/native_widget_service.dart';
 import 'services/desktop_service.dart';
+import 'package:window_manager/window_manager.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
 import 'services/telemetry_service.dart';
 import 'widgets/telemetry_consent.dart';
+import 'widgets/review_prompt.dart';
+import 'services/review_prompt_service.dart';
 import 'widgets/sync_connect_page.dart';
 import 'services/sync_service.dart';
 import 'services/daily_record_service.dart';
@@ -53,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Timer? _overlayHealthTimer;
   DateTime _now = DateTime.now();
   late DateTime _viewDate;
-  int _lastTimerLogCount = 0;
+  int _lastTimerLogSeq = 0; // 처리 완료한 누적 로그 시퀀스(캡 무관 단조 증가)
   bool _overlayOn = false;
   bool _overlayShowInFlight = false; // concurrent show() race guard
   bool _pendingOverlayEnable = false; // permission 요청 후 복귀 시 자동 시작 플래그
@@ -94,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _viewDate = DateTime(now.year, now.month, now.day);
     WidgetsBinding.instance.addObserver(this);
     LiveActivityService.init();
+    ReviewPromptService.instance.recordSessionStart(); // 후기 유도 — 세션 카운트
     _prevTimer = context.read<TimerBloc>().state;
     _startTimer();
     if (isAndroid) {
@@ -807,14 +811,35 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _onLogUpdate(BuildContext ctx, TimerState cur) {
-    if (cur.log.length < _lastTimerLogCount) {
-      // 로그가 초기화됨 (restore / replace)
-      _lastTimerLogCount = 0;
-      return;
+    // logSeq(누적 추가 수) 기반 diff — log.length 는 300개 캡 도달 후 고정되어
+    // 신규 엔트리 감지에 쓸 수 없다(캡 이후 일일기록 저장이 영구 정지하던 버그).
+    final delta = cur.logSeq - _lastTimerLogSeq;
+    _lastTimerLogSeq = cur.logSeq;
+    if (delta <= 0) return;
+    // 새 엔트리는 항상 꼬리에 붙고 캡은 머리에서 잘리므로 tail delta 개가 신규.
+    final take = delta.clamp(0, cur.log.length);
+    final newEntries = cur.log.sublist(cur.log.length - take);
+    // 성공 경험 직후 — 단 "정지된" 성공(allDone)만. loop 는 다음 사이클이 이미
+    // 진행 중이라 모달로 작업을 방해하게 되고, 절전 복귀 catch-up 시 존재하지
+    // 않았던 '성공 순간'에 발사되는 문제도 있어 트리거에서 제외한다.
+    if (newEntries.any((e) => e.type == TimerLogType.allDone)) {
+      // 완료 플래시/알림과 겹치지 않게 잠시 뒤에.
+      Future.delayed(const Duration(milliseconds: 1800), () async {
+        // 백그라운드/최소화 상태 노출 방지 — 안 보이는 다이얼로그가 노출
+        // 카운트와 쿨다운만 소모하는 것을 막는다.
+        if (!mounted || _inBackground) return;
+        if (isDesktop) {
+          try {
+            if (await windowManager.isMinimized() ||
+                !await windowManager.isVisible()) {
+              return;
+            }
+          } catch (_) {}
+        }
+        if (!mounted) return;
+        maybeShowReviewPrompt(context);
+      });
     }
-    if (cur.log.length <= _lastTimerLogCount) return;
-    final newEntries = cur.log.skip(_lastTimerLogCount).toList();
-    _lastTimerLogCount = cur.log.length;
     final today = DateTime.now();
     for (final e in newEntries) {
       DailyRecordService.appendLogEntry(today, {
@@ -1300,7 +1325,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     // 타이머 로그 자동 저장 — 새 항목이 추가될 때마다 당일 기록으로 보존
     final withAutoLog = BlocListener<TimerBloc, TimerState>(
-      listenWhen: (p, c) => c.log.length != p.log.length,
+      listenWhen: (p, c) => c.logSeq != p.logSeq,
       listener: _onLogUpdate,
       child: scaffold,
     );

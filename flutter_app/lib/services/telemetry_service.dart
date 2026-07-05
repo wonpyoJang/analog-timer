@@ -54,6 +54,10 @@ class TelemetryService {
   String? _deviceId;
   Map<String, dynamic> _env = {};
 
+  /// 직전 세션이 비정상 종료였는지 — init() 에서 판정된다.
+  /// 사용후기 유도 등 "나쁜 경험 직후엔 하지 말아야 할 것"의 가드로 쓴다.
+  bool lastSessionCrashed = false;
+
   bool get supported =>
       !kIsWeb && (Platform.isWindows || Platform.isMacOS);
 
@@ -102,6 +106,7 @@ class TelemetryService {
       if (await _crumbFile.exists()) await _crumbFile.delete();
     } catch (_) {}
 
+    lastSessionCrashed = !cleanLast && !firstRun;
     if (!cleanLast && !firstRun) {
       final lastStateRaw = p.getString(_kLastState);
       final crash = <String, dynamic>{
