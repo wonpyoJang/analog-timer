@@ -1,6 +1,7 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
+#include <tlhelp32.h>
 #include <d3d11.h>
 
 #include "flutter_window.h"
@@ -112,6 +113,18 @@ DWORD WINAPI TdrWatchdog(LPVOID param) {
 
 }  // namespace
 
+// clean-exit 마커 기록 — 정상 종료 경로들(메시지 루프 종료 / TDR 자가재시작 /
+// 시스템 종료 WM_ENDSESSION)이 공용으로 사용. win32_window.cpp 에서 extern 참조.
+void WriteCleanExitMarker() {
+  wchar_t clean[MAX_PATH];
+  MarkerPath(clean, L"analog_timer_clean.flag");
+  if (clean[0] != L'\0') {
+    HANDLE h = ::CreateFileW(clean, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+                             FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (h != INVALID_HANDLE_VALUE) ::CloseHandle(h);
+  }
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
   // Attach to console when present (e.g., 'flutter run') or create a
@@ -131,7 +144,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   ::CreateMutexW(nullptr, FALSE, L"Local\\AnalogTimer_SingleInstance_Mutex");
   if (::GetLastError() == ERROR_ALREADY_EXISTS) {
     HWND existing = nullptr;
-    for (int i = 0; i < 20; ++i) {
+    // 콜드 스타트(AV 스캔/저사양)에서 첫 창 표시가 2초를 넘겨 이중 인스턴스로
+    // 폴스루하던 문제 — 창이 안 보여도 우리 exe 프로세스가 더 있으면 15초까지
+    // 대기를 연장한다(진짜 좀비면 프로세스가 있어도 끝내 창이 안 떠 폴스루 유지).
+    for (int i = 0; i < 150; ++i) {
       HWND w = ::FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"Analog Timer");
       if (w == nullptr) {
         w = ::FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"analog_timer");
@@ -139,6 +155,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
       if (w != nullptr && ::IsWindowVisible(w)) {
         existing = w;
         break;
+      }
+      if (i >= 19) {
+        // 2초 경과 후엔 다른 인스턴스 프로세스 생존 여부로 계속 기다릴지 판단.
+        bool other_alive = false;
+        HANDLE snap = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if (snap != INVALID_HANDLE_VALUE) {
+          PROCESSENTRY32W pe{};
+          pe.dwSize = sizeof(pe);
+          DWORD self = ::GetCurrentProcessId();
+          if (::Process32FirstW(snap, &pe)) {
+            do {
+              if (pe.th32ProcessID != self &&
+                  ::_wcsicmp(pe.szExeFile, L"analog_timer.exe") == 0) {
+                other_alive = true;
+                break;
+              }
+            } while (::Process32NextW(snap, &pe));
+          }
+          ::CloseHandle(snap);
+        }
+        if (!other_alive) break; // 좀비도 없음 — 즉시 정상 실행 폴스루
       }
       ::Sleep(100);
     }

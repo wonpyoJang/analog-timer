@@ -179,6 +179,21 @@ Win32Window::MessageHandler(HWND hwnd,
                             WPARAM const wparam,
                             LPARAM const lparam) noexcept {
   switch (message) {
+    // 시스템 종료/재부팅/로그오프 — 메시지 루프가 정상 종료 경로(PostQuitMessage)
+    // 를 타지 못하고 OS 가 프로세스를 끝내므로, 이 순간 clean 마커를 남기지 않으면
+    // 다음 실행이 매번 '네이티브 크래시'로 오탐한다(PC를 끄는 모든 사용자에게 발생).
+    case WM_QUERYENDSESSION: {
+      extern void WriteCleanExitMarker();
+      WriteCleanExitMarker();
+      return TRUE; // 종료 허용
+    }
+    case WM_ENDSESSION: {
+      if (wparam) {
+        extern void WriteCleanExitMarker();
+        WriteCleanExitMarker();
+      }
+      return 0;
+    }
     case WM_DESTROY:
       window_handle_ = nullptr;
       Destroy();

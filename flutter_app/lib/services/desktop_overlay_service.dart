@@ -23,6 +23,7 @@ class DesktopOverlayService {
   bool get isShown => _overlay != null;
 
   bool _shouldShow = false; // 사용자가 위젯을 켜둔 상태인지
+  bool _creating = false; // create 인플라이트 가드 — heartbeat 와의 동시 생성 차단
   DateTime? _lastCreate;
   int _updateFails = 0;
 
@@ -69,17 +70,35 @@ class DesktopOverlayService {
   }
 
   Future<void> _create(Map<String, dynamic> state) async {
-    final args = <String, dynamic>{
-      ...state,
-      'role': 'overlay',
-      'mainWindowId': selfWindowId,
-    };
-    _overlay = await WindowController.create(
-      WindowConfiguration(arguments: jsonEncode(args), hiddenAtLaunch: true),
-    );
-    _lastCreate = DateTime.now();
-    _updateFails = 0;
-    // 서브윈도우가 자체적으로 window_manager 로 frameless/always-on-top 구성 후 show().
+    // create 는 수백 ms~수 초(TDR 직후) 걸릴 수 있고, 그 동안 ~1초 heartbeat 가
+    // _overlay==null 을 보고 두 번째 생성에 진입하면 update 를 못 받는
+    // always-on-top 유령 창이 남는다 — 인플라이트 가드로 차단.
+    if (_creating) return;
+    _creating = true;
+    try {
+      final args = <String, dynamic>{
+        ...state,
+        'role': 'overlay',
+        'mainWindowId': selfWindowId,
+      };
+      final controller = await WindowController.create(
+        WindowConfiguration(arguments: jsonEncode(args), hiddenAtLaunch: true),
+      );
+      _overlay = controller;
+      _lastCreate = DateTime.now();
+      _updateFails = 0;
+      // 생성 중 사용자가 위젯을 껐다면(hide 는 인플라이트 create 를 취소하지
+      // 못한다) — 서브윈도우는 기동 시 무조건 스스로 show() 하므로 '꺼진 상태의
+      // 유령 위젯'이 뜬다. 완료 시점에 의도를 재확인해 즉시 숨긴다.
+      if (!_shouldShow) {
+        try {
+          await controller.hide();
+        } catch (_) {}
+      }
+      // 서브윈도우가 자체적으로 window_manager 로 frameless/always-on-top 구성 후 show().
+    } finally {
+      _creating = false;
+    }
   }
 
   Future<void> hide() async {
@@ -98,8 +117,8 @@ class DesktopOverlayService {
     final ov = _overlay;
     if (ov == null) {
       // 위젯이 켜져 있어야 하는데 컨트롤러가 없음(TDR 직후 생성 실패 등) —
-      // 아래 백오프 규칙 안에서 재생성을 재시도한다.
-      if (_shouldShow) await _recreateWithBackoff(state);
+      // 아래 백오프 규칙 안에서 재생성을 재시도한다. 생성 진행 중이면 대기.
+      if (_shouldShow && !_creating) await _recreateWithBackoff(state);
       return;
     }
     try {
@@ -129,6 +148,7 @@ class DesktopOverlayService {
   /// DestroyWindow→WM_DESTROY→OnDestroy 소멸 경로를 타므로 해결되지 않는다.
   /// 정상 작동에선 위젯이 죽지 않아 재생성이 0회 → 누수 노출 없음(검증됨).
   Future<void> _recreateWithBackoff(Map<String, dynamic> state) async {
+    if (_creating) return; // 생성 인플라이트 중 중복 진입 금지
     final now = DateTime.now();
 
     // 48ms update 루프에서 불리므로 시도 간 최소 2초 간격 유지.
@@ -167,7 +187,15 @@ class DesktopOverlayService {
       breadcrumbsOverride: crumbs,
     ));
 
+    // IPC 만 일시 실패한 '살아있는 창'일 수도 있다 — 그대로 버리면 update 를
+    // 영영 못 받는 always-on-top 유령이 된다. 베스트에포트로 숨기고 교체한다.
+    final old = _overlay;
     _overlay = null;
+    if (old != null) {
+      try {
+        await old.hide();
+      } catch (_) {}
+    }
     try {
       await _create(state);
     } catch (_) {}

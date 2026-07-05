@@ -162,12 +162,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (!significant) return;
 
     // 방금 원격에서 적용한 상태 그대로라면 에코 — push 하지 않는다.
+    // one-shot: 에코를 한 번 걸러내면 소거한다. 유지하면 사용자가 '원격과 같은
+    // 상태'로 되돌아오는 정당한 로컬 변경(예: pause 후 다시 resume)까지 영원히
+    // 억제되어 기기 간 desync 가 생긴다.
     final sig = _lastRemoteTimerSig;
     if (sig != null &&
         sig.status == s.status &&
         sig.currentSeg == s.currentSeg &&
         sig.loop == s.loop &&
         _segmentsEqual(sig.segments, s.segments)) {
+      _lastRemoteTimerSig = null;
       return;
     }
     _pushTimer(s);
@@ -374,7 +378,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         final angle = (swData['startAngleRadians'] as num?)?.toDouble();
 
         if (wasRunning && savedAtMs != null) {
-          final elapsed = (now - savedAtMs).clamp(0, 86400000);
+          // 스톱워치는 '실제 경과' 측정 도구 — 24h 클램프는 장기 측정(수 일)을
+          // 조용히 갉아먹는다. 시계 오류 방어 목적의 상한만 30일로 유지.
+          final elapsed = (now - savedAtMs).clamp(0, 30 * 86400000);
           elapsedMs += elapsed;
         }
 
@@ -460,7 +466,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final timerState = context.read<TimerBloc>().state;
     final swState = context.read<StopwatchBloc>().state;
 
-    await PersistenceService.saveOverlayOn(_overlayOn);
+    await PersistenceService.saveOverlayOn(
+        isDesktop ? _desktopOverlayOn : _overlayOn);
     await PersistenceService.saveTimerState(
       segments: timerState.segments.map((s) => s.toJson()).toList(),
       currentSeg: timerState.currentSeg,
@@ -704,6 +711,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       setState(() => _desktopOverlayOn = true);
       unawaited(TelemetryService.instance.logEvent('overlay_on'));
     }
+    // 즉시 영속화 — TDR 자가재시작/재실행 후 위젯 복원의 근거.
+    // (_saveState 는 모바일 플래그(_overlayOn)를 쓰므로 여기서 따로 저장)
+    unawaited(PersistenceService.saveOverlayOn(_desktopOverlayOn));
     _saveTelemetrySnapshot();
     unawaited(pushCurrentSettings());
   }

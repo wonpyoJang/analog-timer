@@ -184,9 +184,22 @@ class TelemetryService {
   }
 
   /// Dart 레벨 에러(FlutterError / PlatformDispatcher) 리포트.
+  /// 지속성 빌드 에러는 매 프레임 발화하므로 스로틀(30초)+동일 메시지 dedup —
+  /// 무제한 전송 시 HttpClient 소켓이 초당 수십 개씩 누적된다.
+  DateTime? _lastDartReport;
+  String? _lastDartMessage;
   Future<void> reportDartError(Object error, StackTrace? stack,
       {Map<String, dynamic>? lastState}) async {
     if (!supported) return;
+    final now = DateTime.now();
+    final msg = error.toString();
+    if (_lastDartReport != null &&
+        now.difference(_lastDartReport!) < const Duration(seconds: 30) &&
+        msg == _lastDartMessage) {
+      return;
+    }
+    _lastDartReport = now;
+    _lastDartMessage = msg;
     await _send({
       'type': 'crash',
       'crashKind': 'dart',

@@ -27,6 +27,9 @@ Future<void> main(List<String> args) async {
     await windowManager.ensureInitialized();
     final overlayArgs = await _overlayArgsIfSubWindow();
     if (overlayArgs != null) {
+      // 서브엔진(위젯)의 Dart 에러도 텔레메트리에 잡히도록 핸들러 설치 —
+      // 미설치 시 위젯 쪽 에러가 전량 미탐되어 '위젯이 검게 죽는' 원인을 놓친다.
+      _installErrorHandlers();
       await runDesktopOverlay(overlayArgs);
       return;
     }

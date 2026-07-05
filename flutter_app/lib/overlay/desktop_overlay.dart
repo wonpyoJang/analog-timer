@@ -4,8 +4,8 @@ import 'dart:math';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
+import 'dart:io';
 import 'package:screen_retriever/screen_retriever.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 import 'overlay_clock_painter.dart';
 import '../widgets/date_label.dart';
@@ -14,6 +14,37 @@ import '../widgets/text_outline.dart';
 const _kOverlayPosX = 'overlay_pos_x';
 const _kOverlayPosY = 'overlay_pos_y';
 const _kOverlayScale = 'overlay_scale';
+
+/// 위치/스케일 전용 파일 스토어 — 서브엔진이 SharedPreferences 를 쓰면 자기
+/// 스냅샷 캐시로 파일 전체를 재작성해 메인 엔진이 저장한 타이머 상태/설정을
+/// 롤백시킨다(breadcrumb/review 가 겪은 것과 동일한 race). 서브엔진의 prefs
+/// 접근을 아예 없애기 위해 전용 JSON 파일을 쓴다.
+File _overlayPrefsFile() {
+  final appdata = Platform.environment['APPDATA'];
+  final base = (Platform.isWindows && appdata != null)
+      ? '$appdata\\dev.analogtimer\\analog_timer'
+      : Directory.systemTemp.path;
+  return File('$base${Platform.pathSeparator}analog_timer_overlay.json');
+}
+
+Future<Map<String, dynamic>> _loadOverlayPrefs() async {
+  try {
+    final f = _overlayPrefsFile();
+    if (await f.exists()) {
+      return (jsonDecode(await f.readAsString()) as Map).cast<String, dynamic>();
+    }
+  } catch (_) {}
+  return {};
+}
+
+Future<void> _saveOverlayPrefs(Map<String, dynamic> updates) async {
+  try {
+    final f = _overlayPrefsFile();
+    final m = await _loadOverlayPrefs()..addAll(updates);
+    await f.parent.create(recursive: true);
+    await f.writeAsString(jsonEncode(m));
+  } catch (_) {}
+}
 const _overlayBase = Size(220, 270); // scale=1 기준(디자인) 크기
 const _scaleMin = 0.7;
 const _scaleMax = 1.8;
@@ -25,9 +56,10 @@ Size _sizeForScale(double s) => Size(_overlayBase.width * s, _overlayBase.height
 /// 서브윈도우에선 window_manager 의 getPosition / onWindowMoved 가 동작하지 않으므로,
 /// 위치는 Dart 에서 직접 추적(드래그 시 setPosition)하고 prefs 에 저장한다.
 Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
-  final prefs = await SharedPreferences.getInstance();
-  final scale = (prefs.getDouble(_kOverlayScale) ?? 1.0).clamp(_scaleMin, _scaleMax);
-  final initialPos = await _resolveInitialPosition(prefs, scale);
+  final ovPrefs = await _loadOverlayPrefs();
+  final scale = ((ovPrefs[_kOverlayScale] as num?)?.toDouble() ?? 1.0)
+      .clamp(_scaleMin, _scaleMax);
+  final initialPos = await _resolveInitialPosition(ovPrefs, scale);
   // 배경을 불투명 다크로 — 투명 레이어드 윈도우는 일부(구형/Intel) GPU 에서
   // 합성에 실패해 '회색 빈 화면'으로 뜨는 사례가 있어, 투명 의존을 제거한다.
   final opts = WindowOptions(
@@ -70,11 +102,11 @@ Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
 /// 위젯을 두고 모니터를 분리하면 위젯이 화면 밖에 떠서 '사라진 것처럼' 보이는
 /// 문제 방지(멀티모니터 사용자의 고전적 함정).
 Future<Offset> _resolveInitialPosition(
-  SharedPreferences prefs,
+  Map<String, dynamic> ovPrefs,
   double scale,
 ) async {
-  final x = prefs.getDouble(_kOverlayPosX);
-  final y = prefs.getDouble(_kOverlayPosY);
+  final x = (ovPrefs[_kOverlayPosX] as num?)?.toDouble();
+  final y = (ovPrefs[_kOverlayPosY] as num?)?.toDouble();
   if (x != null && y != null) {
     final saved = Offset(x, y);
     if (await _isOnAnyDisplay(saved, scale)) return saved;
@@ -329,8 +361,7 @@ class _OverlayBodyState extends State<_OverlayBody>
       );
       final scale =
           (width / _overlayBase.width).clamp(_scaleMin, _scaleMax).toDouble();
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble(_kOverlayScale, scale);
+      await _saveOverlayPrefs({_kOverlayScale: scale});
     } catch (_) {}
     _resizing = false;
   }
@@ -359,9 +390,10 @@ class _OverlayBodyState extends State<_OverlayBody>
     try {
       final cursor = await screenRetriever.getCursorScreenPoint();
       _winPos = cursor - grab;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble(_kOverlayPosX, _winPos.dx);
-      await prefs.setDouble(_kOverlayPosY, _winPos.dy);
+      await _saveOverlayPrefs({
+        _kOverlayPosX: _winPos.dx,
+        _kOverlayPosY: _winPos.dy,
+      });
     } catch (_) {}
     _dragging = false;
   }

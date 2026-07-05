@@ -111,6 +111,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     ];
 
     final nextSeg = state.currentSeg + 1;
+    // emit 은 state 를 동기 갱신하므로 '시작 전 실행 여부'는 여기서 캡처해야 한다.
+    final wasRunningBeforeNext = state.status == TimerStatus.running;
     if (nextSeg >= state.segments.length) {
       if (state.loop) {
         emit(
@@ -131,7 +133,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
             logSeq: state.logSeq + 2,
           ),
         );
-        if (state.status != TimerStatus.running) _startTicker();
+        // 일시정지 상태에서 loop-wrap Next → 티커 재기동 필요.
+        if (!wasRunningBeforeNext) _startTicker();
       } else {
         _stopTicker();
         emit(
@@ -151,7 +154,6 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         );
       }
     } else {
-      final wasRunning = state.status == TimerStatus.running;
       emit(
         state.copyWith(
           currentSeg: nextSeg,
@@ -169,7 +171,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
           logSeq: state.logSeq + 2,
         ),
       );
-      if (!wasRunning) _startTicker();
+      if (!wasRunningBeforeNext) _startTicker();
     }
     unawaited(TelemetryService.instance.logEvent('timer_skip'));
   }
@@ -274,7 +276,20 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   void _onSegmentRemoved(TimerSegmentRemoved event, Emitter<TimerState> emit) {
     if (state.segments.length <= 1) return;
     final segs = List<Segment>.from(state.segments)..removeAt(event.index);
-    emit(state.copyWith(segments: segs));
+    // 진행 인덱스 보정 — 앞 세그먼트가 빠지면 한 칸 당기고, 진행 중이던
+    // 세그먼트 자체가 삭제되면 같은 자리(다음 세그먼트)를 처음부터 시작한다.
+    int cur = state.currentSeg;
+    int remain = state.segRemainMs;
+    if (event.index < cur) {
+      cur -= 1;
+    } else if (event.index == cur &&
+        state.status != TimerStatus.idle &&
+        state.status != TimerStatus.done) {
+      cur = cur.clamp(0, segs.length - 1);
+      remain = segs[cur].duration.inMilliseconds;
+    }
+    cur = cur.clamp(0, segs.length - 1);
+    emit(state.copyWith(segments: segs, currentSeg: cur, segRemainMs: remain));
   }
 
   void _onSegmentUpdated(TimerSegmentUpdated event, Emitter<TimerState> emit) {
