@@ -26,10 +26,20 @@ class SyncService {
   bool get connected => _roomId != null;
   String? get roomId => _roomId;
 
+  /// pull 로 프리셋/hidden defaults 가 반영된 뒤 tick. PresetBar/ManagePage 가
+  /// 이 notifier 를 listen 해서 화면을 다시 로드한다.
+  final presetRefreshSignal = ValueNotifier<int>(0);
+
   /// pull 로 받은 데이터를 앱에 반영하는 콜백.
   void Function(Map<String, dynamic> data)? onTimer;
   void Function(List<dynamic> data)? onPresets;
   void Function(Map<String, dynamic> data)? onSettings;
+
+  /// 페어링 성립 직후 호출 — 초대한 기기가 현재 상태(타이머/프리셋/설정)를
+  /// push 해서 나중에 합류한 기기가 pull 즉시 받아갈 수 있게 한다.
+  /// 이게 없으면 room 이 빈 채로 시작해 "페어링했는데 아무것도 안 넘어오는"
+  /// 상태가 된다.
+  Future<void> Function()? onPushSnapshot;
 
   Future<void> init() async {
     if (!supported) return;
@@ -54,6 +64,8 @@ class SyncService {
     final room = res?['roomId'] as String?;
     if (code == null || room == null) return null;
     await _setRoom(room);
+    // 초대자가 스냅샷을 심어둬야 합류 기기의 첫 pull 에 데이터가 있다.
+    await onPushSnapshot?.call();
     return (code: code, roomId: room);
   }
 
@@ -92,7 +104,8 @@ class SyncService {
   // ── push ──────────────────────────────────────────────────────
   Future<void> pushTimer(Map<String, dynamic> data) => _push('timer', data);
   Future<void> pushPresets(List<dynamic> data) => _push('presets', data);
-  Future<void> pushSettings(Map<String, dynamic> data) => _push('settings', data);
+  Future<void> pushSettings(Map<String, dynamic> data) =>
+      _push('settings', data);
 
   Future<void> _push(String kind, dynamic data) async {
     if (!connected || !supported) return;
@@ -113,12 +126,32 @@ class SyncService {
     if (!connected || !supported) return;
     final res = await _get('$_base/sync?roomId=$_roomId');
     if (res == null) return;
-    _applyKind('timer', res['timer'],
-        (d) => onTimer?.call(d as Map<String, dynamic>));
-    _applyKind('presets', res['presets'],
-        (d) => onPresets?.call(d as List<dynamic>));
-    _applyKind('settings', res['settings'],
-        (d) => onSettings?.call(d as Map<String, dynamic>));
+    // 서버 시계 기준 "push 후 경과시간"을 timer 데이터에 주입 — entry.ts(push
+    // 시점)와 now(pull 시점) 둘 다 서버가 찍으므로 기기 벽시계 스큐와 무관.
+    final serverNow = (res['now'] as num?)?.toInt();
+    final timerEntry = res['timer'];
+    if (serverNow != null && timerEntry is Map) {
+      final ts = (timerEntry['ts'] as num?)?.toInt();
+      final data = timerEntry['data'];
+      if (ts != null && data is Map) {
+        data['_elapsedMs'] = (serverNow - ts).clamp(0, 86400000);
+      }
+    }
+    _applyKind(
+      'timer',
+      res['timer'],
+      (d) => onTimer?.call(d as Map<String, dynamic>),
+    );
+    _applyKind(
+      'presets',
+      res['presets'],
+      (d) => onPresets?.call(d as List<dynamic>),
+    );
+    _applyKind(
+      'settings',
+      res['settings'],
+      (d) => onSettings?.call(d as Map<String, dynamic>),
+    );
   }
 
   void _applyKind(String kind, dynamic entry, void Function(dynamic) apply) {
@@ -136,7 +169,9 @@ class SyncService {
 
   // ── http ──────────────────────────────────────────────────────
   Future<Map<String, dynamic>?> _post(
-      String url, Map<String, dynamic> body) async {
+    String url,
+    Map<String, dynamic> body,
+  ) async {
     HttpClient? c;
     try {
       c = HttpClient()..connectionTimeout = const Duration(seconds: 8);
@@ -179,6 +214,8 @@ class SyncService {
   String _genId() {
     final r = Random.secure();
     return List.generate(
-        12, (_) => r.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+      12,
+      (_) => r.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
   }
 }

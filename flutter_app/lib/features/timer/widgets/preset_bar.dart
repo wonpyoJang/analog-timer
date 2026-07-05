@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/persistence_service.dart';
+import '../../../services/sync_service.dart';
 import '../../../theme/app_theme.dart';
 import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
@@ -26,6 +29,18 @@ class _PresetBarState extends State<PresetBar> {
   void initState() {
     super.initState();
     _load();
+    // pull 로 원격 프리셋/hidden defaults 가 반영되면 tick → 화면 재로드.
+    SyncService.instance.presetRefreshSignal.addListener(_onSyncRefresh);
+  }
+
+  @override
+  void dispose() {
+    SyncService.instance.presetRefreshSignal.removeListener(_onSyncRefresh);
+    super.dispose();
+  }
+
+  void _onSyncRefresh() {
+    if (mounted) _load();
   }
 
   Future<void> _load() async {
@@ -35,9 +50,9 @@ class _PresetBarState extends State<PresetBar> {
     final list = raw == null
         ? <Preset>[]
         : raw
-            .map(Preset.fromJson)
-            .where((p) => !Preset.builtinEnNames.contains(p.name))
-            .toList();
+              .map(Preset.fromJson)
+              .where((p) => !Preset.builtinEnNames.contains(p.name))
+              .toList();
     final hidden = (await PersistenceService.loadHiddenDefaults()).toSet();
     if (!mounted) return;
     setState(() {
@@ -47,9 +62,12 @@ class _PresetBarState extends State<PresetBar> {
     });
   }
 
-  Future<void> _persist() => PersistenceService.savePresets(
-    _userPresets.map((p) => p.toJson()).toList(),
-  );
+  Future<void> _persist() async {
+    final json = _userPresets.map((p) => p.toJson()).toList();
+    await PersistenceService.savePresets(json);
+    // 로컬 저장 성공 후 원격에도 전파 — 실패는 무시(다음 사용자 편집에서 재시도).
+    unawaited(SyncService.instance.pushPresets(json));
+  }
 
   void _apply(Preset p) {
     final l = AppLocalizations.of(context);
@@ -80,9 +98,7 @@ class _PresetBarState extends State<PresetBar> {
     final state = context.read<TimerBloc>().state;
     final messenger = ScaffoldMessenger.of(context);
     if (state.segments.isEmpty) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.noSegmentsToSave)),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l.noSegmentsToSave)));
       return;
     }
     final name = await _promptName();
@@ -232,12 +248,18 @@ class _PresetChip extends StatelessWidget {
                     Container(
                       width: 9,
                       height: 9,
-                      decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: dot,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                     const SizedBox(width: 7),
                     Text(
                       preset.name,
-                      style: const TextStyle(color: AppColors.text, fontSize: 12),
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -286,11 +308,18 @@ class _SaveChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.bookmark_add_outlined, size: 14, color: AppColors.timerOrange),
+              const Icon(
+                Icons.bookmark_add_outlined,
+                size: 14,
+                color: AppColors.timerOrange,
+              ),
               const SizedBox(width: 5),
               Text(
                 l.savePresetChip,
-                style: const TextStyle(color: AppColors.timerOrange, fontSize: 12),
+                style: const TextStyle(
+                  color: AppColors.timerOrange,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),

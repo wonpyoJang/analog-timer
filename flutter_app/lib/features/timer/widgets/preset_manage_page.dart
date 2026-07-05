@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/persistence_service.dart';
+import '../../../services/sync_service.dart';
 import '../../../theme/app_theme.dart';
 import '../models/preset.dart';
 import 'preset_edit_page.dart';
@@ -22,6 +25,17 @@ class _PresetManagePageState extends State<PresetManagePage> {
   void initState() {
     super.initState();
     _load();
+    SyncService.instance.presetRefreshSignal.addListener(_onSyncRefresh);
+  }
+
+  @override
+  void dispose() {
+    SyncService.instance.presetRefreshSignal.removeListener(_onSyncRefresh);
+    super.dispose();
+  }
+
+  void _onSyncRefresh() {
+    if (mounted) _load();
   }
 
   Future<void> _load() async {
@@ -30,9 +44,9 @@ class _PresetManagePageState extends State<PresetManagePage> {
     final list = raw == null
         ? <Preset>[]
         : raw
-            .map(Preset.fromJson)
-            .where((p) => !Preset.builtinEnNames.contains(p.name))
-            .toList();
+              .map(Preset.fromJson)
+              .where((p) => !Preset.builtinEnNames.contains(p.name))
+              .toList();
     final hidden = (await PersistenceService.loadHiddenDefaults()).toSet();
     if (!mounted) return;
     setState(() {
@@ -50,12 +64,23 @@ class _PresetManagePageState extends State<PresetManagePage> {
         _hidden = {..._hidden, key};
       }
     });
-    await PersistenceService.saveHiddenDefaults(_hidden.toList());
+    final hiddenList = _hidden.toList();
+    await PersistenceService.saveHiddenDefaults(hiddenList);
+    // hidden_defaults 는 settings 카테고리로 동기화.
+    unawaited(
+      SyncService.instance.pushSettings({
+        'locale': await PersistenceService.loadLocale(),
+        'overlay_on': await PersistenceService.loadOverlayOn(),
+        'hidden_defaults': hiddenList,
+      }),
+    );
   }
 
-  Future<void> _persist() => PersistenceService.savePresets(
-    _userPresets.map((p) => p.toJson()).toList(),
-  );
+  Future<void> _persist() async {
+    final json = _userPresets.map((p) => p.toJson()).toList();
+    await PersistenceService.savePresets(json);
+    unawaited(SyncService.instance.pushPresets(json));
+  }
 
   Future<void> _new() async {
     final created = await Navigator.push<Preset>(
@@ -70,7 +95,9 @@ class _PresetManagePageState extends State<PresetManagePage> {
   Future<void> _edit(int i) async {
     final edited = await Navigator.push<Preset>(
       context,
-      MaterialPageRoute(builder: (_) => PresetEditPage(initial: _userPresets[i])),
+      MaterialPageRoute(
+        builder: (_) => PresetEditPage(initial: _userPresets[i]),
+      ),
     );
     if (edited == null) return;
     final n = [..._userPresets];
@@ -100,11 +127,17 @@ class _PresetManagePageState extends State<PresetManagePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l.cancel, style: const TextStyle(color: AppColors.muted)),
+            child: Text(
+              l.cancel,
+              style: const TextStyle(color: AppColors.muted),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l.delete, style: const TextStyle(color: AppColors.danger)),
+            child: Text(
+              l.delete,
+              style: const TextStyle(color: AppColors.danger),
+            ),
           ),
         ],
       ),
@@ -134,7 +167,10 @@ class _PresetManagePageState extends State<PresetManagePage> {
             icon: const Icon(Icons.add, size: 18, color: AppColors.timerOrange),
             label: Text(
               l.newPreset,
-              style: const TextStyle(color: AppColors.timerOrange, fontSize: 14),
+              style: const TextStyle(
+                color: AppColors.timerOrange,
+                fontSize: 14,
+              ),
             ),
           ),
           const SizedBox(width: 6),
@@ -207,7 +243,10 @@ class _PresetCard extends StatelessWidget {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: s.color,
+                    shape: BoxShape.circle,
+                  ),
                 ),
             ],
           ),
@@ -222,12 +261,19 @@ class _PresetCard extends StatelessWidget {
                       child: Text(
                         preset.name,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: AppColors.text, fontSize: 14),
+                        style: const TextStyle(
+                          color: AppColors.text,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                     if (preset.loop) ...[
                       const SizedBox(width: 8),
-                      const Icon(Icons.repeat, size: 13, color: AppColors.timerOrange),
+                      const Icon(
+                        Icons.repeat,
+                        size: 13,
+                        color: AppColors.timerOrange,
+                      ),
                     ],
                   ],
                 ),
@@ -251,9 +297,17 @@ class _PresetCard extends StatelessWidget {
               onTap: onToggleHidden!,
             ),
           ] else ...[
-            _IconBtn(icon: Icons.edit_outlined, color: AppColors.text, onTap: onEdit!),
+            _IconBtn(
+              icon: Icons.edit_outlined,
+              color: AppColors.text,
+              onTap: onEdit!,
+            ),
             const SizedBox(width: 4),
-            _IconBtn(icon: Icons.delete_outline, color: AppColors.danger, onTap: onDelete!),
+            _IconBtn(
+              icon: Icons.delete_outline,
+              color: AppColors.danger,
+              onTap: onDelete!,
+            ),
           ],
         ],
       ),
@@ -267,7 +321,11 @@ class _IconBtn extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
-  const _IconBtn({required this.icon, required this.color, required this.onTap});
+  const _IconBtn({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
