@@ -1,5 +1,4 @@
 import { Redis } from '@upstash/redis';
-import { generateClientTokenFromReadWriteToken } from '@vercel/blob/client';
 
 const redis = Redis.fromEnv();
 
@@ -37,6 +36,15 @@ export default async function handler(req, res) {
     const pathname = `feedback/${Date.now().toString(36)}-${Math.random()
       .toString(36)
       .slice(2, 8)}-${safe}`;
+    // dynamic import — 모듈 로드 실패가 함수 전체를 죽이지 않게 + 실제 에러 노출
+    let generateClientTokenFromReadWriteToken;
+    try {
+      ({ generateClientTokenFromReadWriteToken } = await import(
+        '@vercel/blob/client'
+      ));
+    } catch (e) {
+      return res.status(500).json({ error: `blob module: ${e.message}` });
+    }
     const clientToken = await generateClientTokenFromReadWriteToken({
       token: process.env.BLOB_READ_WRITE_TOKEN,
       pathname,
