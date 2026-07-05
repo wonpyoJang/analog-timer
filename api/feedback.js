@@ -99,6 +99,38 @@ export default async function handler(req, res) {
     const limit = Math.min(parseInt(req.query.limit ?? '100', 10) || 100, MAX);
     const raw = await redis.lrange(KEY, 0, limit - 1);
     const items = raw.map((r) => (typeof r === 'string' ? JSON.parse(r) : r));
+    // 첨부는 private blob — 어드민 열람용 15분짜리 presigned GET URL 로 치환
+    try {
+      const hasBlobAtt = items.some((it) =>
+        (it.attachments ?? []).some((a) => a.url?.includes('.blob.vercel-storage.com'))
+      );
+      if (hasBlobAtt) {
+        const { issueSignedToken, presignUrl } = await import('@vercel/blob');
+        const expires = Date.now() + 15 * 60 * 1000;
+        // 와일드카드 read 토큰 1개로 전체 첨부 서명(요청당 1회 발급)
+        const signed = await issueSignedToken({
+          operations: ['get'],
+          validUntil: expires,
+        });
+        for (const it of items) {
+          for (const a of it.attachments ?? []) {
+            if (!a.url?.includes('.blob.vercel-storage.com')) continue;
+            try {
+              const pathname = decodeURIComponent(
+                new URL(a.url).pathname.replace(/^\//, '')
+              );
+              const { presignedUrl } = await presignUrl(signed, {
+                operation: 'get',
+                pathname,
+                access: 'private',
+                validUntil: expires,
+              });
+              a.url = presignedUrl;
+            } catch (_) {} // 개별 실패는 원본 URL 유지
+          }
+        }
+      }
+    } catch (_) {} // presign 불가 시 원본 그대로 반환
     return res.status(200).json({ count: items.length, items });
   }
   if (req.method === 'DELETE') {
