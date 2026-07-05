@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -6,6 +5,8 @@ import 'l10n/app_localizations.dart';
 import 'services/battery_service.dart';
 import 'theme/app_theme.dart';
 import 'widgets/language_picker.dart';
+import 'widgets/feedback_page.dart';
+import 'services/platform_info.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -79,8 +80,22 @@ class SettingsScreen extends StatelessWidget {
 
           const _Divider(),
 
+          // ── 제작자에게 피드백 (버그/기능요청, 사진·동영상 첨부) ──────
+          _SettingsTile(
+            icon: Icons.send_outlined,
+            iconColor: AppColors.timerOrange,
+            title: l.feedbackEntry,
+            subtitle: l.feedbackEntryDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FeedbackPage()),
+            ),
+          ),
+
+          const _Divider(),
+
           // ── 배터리 모니터링 (모바일 전용) ─────────────────────
-          if (Platform.isAndroid || Platform.isIOS) ...[
+          if (isAndroid || isIOS) ...[
             ValueListenableBuilder<bool>(
               valueListenable: BatteryService.instance.monitoringEnabled,
               builder: (ctx, enabled, _) => _SettingsTile(

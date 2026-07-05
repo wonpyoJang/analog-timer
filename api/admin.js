@@ -45,6 +45,8 @@ export default function handler(req, res) {
 <div class="wrap">
   <div class="agg" id="agg"></div>
   <div id="list"><div class="empty">불러오는 중…</div></div>
+  <h2 style="font-size:14px;color:var(--accent);margin:26px 0 10px">💬 사용자 피드백</h2>
+  <div id="fblist"><div class="empty">불러오는 중…</div></div>
 </div>
 <script>
 const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -88,6 +90,32 @@ async function clearAll(){
   const t=document.getElementById('tok').value.trim();
   try{ const r=await fetch('/api/telemetry?token='+encodeURIComponent(t),{method:'DELETE'}); if(r.status===401){alert('인증 실패 — ADMIN_TOKEN 확인');return;} load(); }catch(e){ alert('실패: '+e.message); }
 }
+function fbBadge(c){
+  if(c==='bug') return '<span class="badge crash">버그</span>';
+  if(c==='feature') return '<span class="badge env">기능 요청</span>';
+  return '<span class="badge">기타</span>';
+}
+function renderFb(items){
+  const el=document.getElementById('fblist');
+  if(!items.length){ el.innerHTML='<div class="empty">피드백 없음</div>'; return; }
+  el.innerHTML=items.map(function(f){
+    const meta=[['버전',f.appVersion||'-'],['플랫폼',f.platform||'-'],['연락처',f.contact||'-'],['device',(f.deviceId||'').slice(0,12)]]
+      .map(([k,v])=>'<span><span class="k">'+k+':</span> <span class="v">'+esc(v)+'</span></span>').join('');
+    let att='';
+    (f.attachments||[]).forEach(function(a){
+      if((a.contentType||'').startsWith('image/'))
+        att+='<a href="'+esc(a.url)+'" target="_blank"><img src="'+esc(a.url)+'" style="max-height:120px;max-width:180px;border-radius:6px;border:1px solid var(--border);margin:6px 6px 0 0"></a>';
+      else if((a.contentType||'').startsWith('video/'))
+        att+='<video src="'+esc(a.url)+'" controls style="max-height:160px;max-width:260px;border-radius:6px;border:1px solid var(--border);margin:6px 6px 0 0"></video>';
+      else
+        att+='<div><a href="'+esc(a.url)+'" target="_blank" style="color:#52b0e0">'+esc(a.name||a.url)+'</a></div>';
+    });
+    return '<div class="card"><div class="row1">'+fbBadge(f.category)+'<span class="muted">'+fmt(f.receivedAt)+'</span></div>'
+      +'<pre style="max-height:none">'+esc(f.message)+'</pre>'
+      +(att?'<div>'+att+'</div>':'')
+      +'<div class="meta">'+meta+'</div></div>';
+  }).join('');
+}
 async function load(){
   const t=document.getElementById('tok').value.trim();
   try{
@@ -96,6 +124,11 @@ async function load(){
     const j=await res.json();
     render(j.reports||[]);
   }catch(e){ document.getElementById('list').innerHTML='<div class="empty">오류: '+esc(e.message)+'</div>'; }
+  try{
+    const fr=await fetch('/api/feedback?token='+encodeURIComponent(t)+'&limit=100');
+    if(fr.status===200){ const fj=await fr.json(); renderFb(fj.items||[]); }
+    else document.getElementById('fblist').innerHTML='<div class="empty">피드백 로드 실패 ('+fr.status+')</div>';
+  }catch(e){ document.getElementById('fblist').innerHTML='<div class="empty">오류: '+esc(e.message)+'</div>'; }
 }
 load();
 </script>

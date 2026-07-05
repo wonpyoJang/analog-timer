@@ -85,5 +85,19 @@
   "telemetryConsentBody": "앱이 예기치 않게 종료되면, 원인 파악을 위해 익명 진단 정보(기기 환경·오류 로그)를 개발자에게 보냅니다. 개인정보나 타이머 내용은 포함되지 않습니다. 설정에서 언제든 끌 수 있습니다.",
   "telemetryAllow": "허용",
   "telemetryDeny": "보내지 않음",
-  "telemetryReportSetting": "진단 데이터 전송"
+  "telemetryReportSetting": "진단 데이터 전송",
+  "feedbackTitle": "피드백 보내기",
+  "feedbackEntry": "제작자에게 피드백 보내기",
+  "feedbackEntryDesc": "버그 신고·기능 요청 (사진/동영상 첨부 가능)",
+  "feedbackCategoryBug": "버그",
+  "feedbackCategoryFeature": "기능 요청",
+  "feedbackCategoryOther": "기타",
+  "feedbackMessageHint": "버그 상황이나 원하는 기능을 적어주세요…",
+  "feedbackContactHint": "연락처 (선택 — 답변 받을 이메일 등)",
+  "feedbackAttachPhoto": "사진 첨부",
+  "feedbackAttachVideo": "동영상 첨부",
+  "feedbackSend": "보내기",
+  "feedbackSent": "감사합니다! 피드백이 전송되었습니다.",
+  "feedbackFailed": "전송 실패 — 네트워크 확인 후 다시 시도해주세요",
+  "feedbackMessageRequired": "내용을 먼저 적어주세요"
 }

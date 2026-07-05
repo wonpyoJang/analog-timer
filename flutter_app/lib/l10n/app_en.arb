@@ -154,5 +154,19 @@
   "telemetryConsentBody": "If the app closes unexpectedly, anonymous diagnostics (device environment and error logs) are sent to the developer to help find the cause. No personal information or timer content is included. You can turn this off anytime in settings.",
   "telemetryAllow": "Allow",
   "telemetryDeny": "Don't send",
-  "telemetryReportSetting": "Send diagnostics"
+  "telemetryReportSetting": "Send diagnostics",
+  "feedbackTitle": "Send feedback",
+  "feedbackEntry": "Send feedback to the developer",
+  "feedbackEntryDesc": "Report a bug or request a feature (photos/videos welcome)",
+  "feedbackCategoryBug": "Bug",
+  "feedbackCategoryFeature": "Feature request",
+  "feedbackCategoryOther": "Other",
+  "feedbackMessageHint": "Describe the bug or the feature you'd like…",
+  "feedbackContactHint": "Contact (optional — email etc. for follow-up)",
+  "feedbackAttachPhoto": "Attach photo",
+  "feedbackAttachVideo": "Attach video",
+  "feedbackSend": "Send",
+  "feedbackSent": "Thanks! Your feedback has been sent.",
+  "feedbackFailed": "Failed to send — check your network and try again",
+  "feedbackMessageRequired": "Please write a message first"
 }
