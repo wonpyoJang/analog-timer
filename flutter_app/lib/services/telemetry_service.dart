@@ -16,7 +16,7 @@ class TelemetryService {
 
   static const String _endpoint =
       'https://analog-timer-kappa.vercel.app/api/telemetry';
-  static const String _appVersion = '0.3.0+4';
+  static const String _appVersion = '0.3.1+5';
 
   static const String _kConsent = 'telemetry_consent'; // bool? (null=미정)
   static const String _kDeviceId = 'telemetry_device_id';
