@@ -45,7 +45,11 @@ public abstract class WindowSetup {
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
         }
         if (name.equalsIgnoreCase("flagNotTouchModal") || name.equalsIgnoreCase("focusPointer")) {
-            flag = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
+            // FLAG_NOT_TOUCH_MODAL alone lets the overlay steal IME focus from background apps
+            // (e.g. KakaoTalk keyboard stops working). Adding FLAG_NOT_FOCUSABLE prevents
+            // keyboard/IME focus capture while still allowing touch/drag on the overlay.
+            flag = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                    | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         }
     }
 
@@ -58,7 +62,8 @@ public abstract class WindowSetup {
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
         }
         if (name.equalsIgnoreCase("flagNotTouchModal") || name.equalsIgnoreCase("focusPointer")) {
-            flag = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
+            flag = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                    | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         }
     }
 

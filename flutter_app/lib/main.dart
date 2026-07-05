@@ -9,7 +9,7 @@ import 'services/persistence_service.dart';
 import 'theme/app_theme.dart';
 import 'features/timer/bloc/timer_bloc.dart';
 import 'features/stopwatch/bloc/stopwatch_bloc.dart';
-import 'home_screen.dart';
+import 'splash_screen.dart';
 import 'overlay/overlay_widget.dart';
 import 'overlay/desktop_overlay.dart';
 import 'services/desktop_service.dart';
@@ -20,10 +20,8 @@ import 'services/sync_service.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  // 로케일별 날짜·요일 포맷용 심볼 초기화(메인/오버레이 진입점 모두 커버).
   await initializeDateFormatting();
 
-  // 데스크톱: 이 엔진이 오버레이 서브윈도우로 띄워졌는지 판별.
   if (isDesktop) {
     await windowManager.ensureInitialized();
     final overlayArgs = await _overlayArgsIfSubWindow();
@@ -33,8 +31,6 @@ Future<void> main(List<String> args) async {
     }
   }
 
-  // 메인 윈도우: 창 크기 고정 + 트레이 + 알림 + 오버레이 제어 초기화.
-  // 모바일에선 아래 호출들이 모두 즉시 no-op 으로 빠진다.
   await DesktopService.bootstrapWindow();
   await DesktopNotificationService.init();
   await DesktopService.instance.init();
@@ -73,16 +69,53 @@ Future<Map<String, dynamic>?> _overlayArgsIfSubWindow() async {
 
 // 오버레이 isolate 진입점 — flutter_overlay_window가 별도로 호출
 @pragma('vm:entry-point')
-void overlayMain() {
-  runApp(
-    const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: TimerOverlayWidget(),
-    ),
-  );
+void overlayMain() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting();
+  final tag = await PersistenceService.loadLocale();
+  final locale = tag != null ? parseLocaleTag(tag) : null;
+  runApp(OverlayApp(initialLocale: locale));
 }
 
-/// 'en' / 'ko' / 'zh_Hant' 같은 태그를 Locale 로 파싱.
+/// 오버레이 전용 앱 — shareData로 locale을 동적 변경 가능
+class OverlayApp extends StatefulWidget {
+  final Locale? initialLocale;
+  const OverlayApp({this.initialLocale});
+
+  static OverlayAppState? _instance;
+  static void updateLocale(Locale? locale) => _instance?._apply(locale);
+
+  @override
+  State<OverlayApp> createState() => OverlayAppState();
+}
+
+class OverlayAppState extends State<OverlayApp> {
+  Locale? _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _locale = widget.initialLocale;
+    OverlayApp._instance = this;
+  }
+
+  void _apply(Locale? locale) {
+    if (mounted) setState(() => _locale = locale);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: _locale,
+      home: const TimerOverlayWidget(),
+    );
+  }
+}
+
+/// 'en' / 'ko' / 'zh_Hant' 같은 태그를 Locale로 파싱.
 Locale parseLocaleTag(String tag) {
   final parts = tag.split(RegExp('[_-]'));
   if (parts.length >= 2) {
@@ -94,7 +127,7 @@ Locale parseLocaleTag(String tag) {
 class AnalogTimerApp extends StatefulWidget {
   const AnalogTimerApp({super.key});
 
-  /// 자식 위젯에서 언어를 바꿀 때 호출(null=시스템 기본값).
+  /// 자식 위젯에서 언어를 바꿀 때 호출 (null = 시스템 기본값).
   static void setLocale(BuildContext context, Locale? locale) {
     context.findAncestorStateOfType<_AnalogTimerAppState>()?._apply(locale);
   }
@@ -119,7 +152,6 @@ class _AnalogTimerAppState extends State<AnalogTimerApp> {
 
   void _apply(Locale? locale) {
     setState(() => _locale = locale);
-    // scriptCode 가 있으면 'zh_Hant' 형태로 저장.
     final tag = locale == null
         ? null
         : (locale.scriptCode != null
@@ -142,7 +174,7 @@ class _AnalogTimerAppState extends State<AnalogTimerApp> {
         locale: _locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const HomeScreen(),
+        home: const SplashScreen(),
       ),
     );
   }

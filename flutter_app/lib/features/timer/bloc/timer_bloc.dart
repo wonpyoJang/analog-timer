@@ -22,6 +22,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     on<TimerSegmentUpdated>(_onSegmentUpdated);
     on<TimerSegmentReordered>(_onSegmentReordered);
     on<TimerSegmentsAppended>(_onSegmentsAppended);
+    on<TimerSegmentsReplaced>(_onSegmentsReplaced);
     on<TimerRestore>(_onRestore);
   }
 
@@ -280,6 +281,26 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     if (event.segments.isEmpty) return;
     // 현재 진행/표시 상태는 그대로 두고 목록 끝에만 덧붙인다.
     emit(state.copyWith(segments: [...state.segments, ...event.segments]));
+  }
+
+  void _onSegmentsReplaced(
+    TimerSegmentsReplaced event,
+    Emitter<TimerState> emit,
+  ) {
+    if (event.segments.isEmpty) return;
+    _ticker?.cancel();
+    _ticker = null;
+    emit(
+      TimerState(
+        status: TimerStatus.idle,
+        segments: event.segments,
+        currentSeg: 0,
+        segRemainMs: 0,
+        loop: state.loop,
+        loopCount: 0,
+        log: state.log,
+      ),
+    );
   }
 
   void _onSegmentReordered(
