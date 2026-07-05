@@ -29,28 +29,32 @@ export default async function handler(req, res) {
     return res.status(200).json(out);
   }
 
-  // ── push — kind 별 last-write-wins(ts 비교) ──────────────────────
+  // ── push — 도착순 last-write-wins, ts 는 **서버가** 찍는다 ─────────
+  // 클라이언트 시계는 신뢰하지 않는다: 시계가 미래로 틀어진 기기가 클라 ts 로
+  // LWW 를 잠가버리면 다른 모든 기기의 push 가 조용히 무시되는 최악의 장애가
+  // 된다. 서버 시각 + 모노토닉 가드(동시 도착 시 +1)로 항상 전진만 한다.
   if (req.method === 'POST') {
     const body = req.body ?? {};
     if (JSON.stringify(body).length > MAX_BODY) {
       return res.status(413).json({ error: 'payload too large' });
     }
-    const { deviceId, kind, data, ts } = body;
+    const { deviceId, kind, data } = body;
     if (!KINDS.includes(kind)) {
       return res.status(400).json({ error: 'invalid kind' });
     }
-    if (!deviceId || typeof ts !== 'number') {
-      return res.status(400).json({ error: 'deviceId and numeric ts required' });
+    if (!deviceId) {
+      return res.status(400).json({ error: 'deviceId required' });
     }
 
     const key = `sync:${roomId}:${kind}`;
     const cur = await redis.get(key);
-    // 이미 더 최신(또는 동일) 스냅샷이 있으면 덮어쓰지 않는다.
+    let ts = Date.now();
     if (cur && typeof cur.ts === 'number' && cur.ts >= ts) {
-      return res.status(200).json({ ok: true, skipped: true, currentTs: cur.ts });
+      ts = cur.ts + 1; // 같은 ms 내 연속 push 도 항상 전진
     }
     await redis.set(key, { data, ts, deviceId }, { ex: TTL });
-    return res.status(200).json({ ok: true });
+    // 클라는 반환된 ts 를 저장해 자기 push 를 pull 에서 재적용하지 않는다.
+    return res.status(200).json({ ok: true, ts });
   }
 
   return res.status(405).json({ error: 'method not allowed' });

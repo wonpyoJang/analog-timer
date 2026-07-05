@@ -96,14 +96,16 @@ class SyncService {
 
   Future<void> _push(String kind, dynamic data) async {
     if (!connected || !supported) return;
-    final ts = DateTime.now().millisecondsSinceEpoch;
-    _lastTs[kind] = ts; // 자기 push 는 pull 시 재적용하지 않도록 선기록
-    await _post('$_base/sync?roomId=$_roomId', {
+    // ts 는 서버가 찍는다(클라 시계 불신 — 시계 틀어진 기기가 LWW 를 잠그는
+    // 장애 방지). 반환된 서버 ts 를 기록해 pull 에서 자기 push 를 재적용하지
+    // 않는다(자기 echo 는 deviceId 필터가 이중 방어).
+    final res = await _post('$_base/sync?roomId=$_roomId', {
       'deviceId': _deviceId,
       'kind': kind,
       'data': data,
-      'ts': ts,
     });
+    final ts = (res?['ts'] as num?)?.toInt();
+    if (ts != null && ts > (_lastTs[kind] ?? 0)) _lastTs[kind] = ts;
   }
 
   // ── pull ──────────────────────────────────────────────────────
@@ -124,8 +126,11 @@ class SyncService {
     final ts = (entry['ts'] as num?)?.toInt();
     final data = entry['data'];
     if (ts == null || data == null) return;
-    if (ts <= (_lastTs[kind] ?? 0)) return; // 이미 본 것(또는 자기 것)
+    if (ts <= (_lastTs[kind] ?? 0)) return; // 이미 본 것
     _lastTs[kind] = ts;
+    // 자기 기기가 올린 스냅샷은 재적용하지 않는다(echo 방지). push 응답 유실
+    // 등으로 _lastTs 를 못 받았어도 이 필터가 잡는다.
+    if (entry['deviceId'] == _deviceId) return;
     apply(data);
   }
 
