@@ -284,4 +284,102 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get telemetryReportSetting => '진단 데이터 전송';
+
+  @override
+  String get feedbackTitle => '피드백 보내기';
+
+  @override
+  String get feedbackEntry => '제작자에게 피드백 보내기';
+
+  @override
+  String get feedbackEntryDesc => '버그 신고·기능 요청 (사진/동영상 첨부 가능)';
+
+  @override
+  String get feedbackCategoryBug => '버그';
+
+  @override
+  String get feedbackCategoryFeature => '기능 요청';
+
+  @override
+  String get feedbackCategoryOther => '기타';
+
+  @override
+  String get feedbackMessageHint => '버그 상황이나 원하는 기능을 적어주세요…';
+
+  @override
+  String get feedbackContactHint => '연락처 (선택 — 답변 받을 이메일 등)';
+
+  @override
+  String get feedbackAttachPhoto => '사진 첨부';
+
+  @override
+  String get feedbackAttachVideo => '동영상 첨부';
+
+  @override
+  String get feedbackSend => '보내기';
+
+  @override
+  String get feedbackSent => '감사합니다! 피드백이 전송되었습니다.';
+
+  @override
+  String get feedbackFailed => '전송 실패 — 네트워크 확인 후 다시 시도해주세요';
+
+  @override
+  String get feedbackMessageRequired => '내용을 먼저 적어주세요';
+
+  @override
+  String get syncPageTitle => '기기 연결';
+
+  @override
+  String get syncConnected => '✓ 연결됨';
+
+  @override
+  String syncRoomLabel(String id) {
+    return '방 코드: $id';
+  }
+
+  @override
+  String get syncRoomDesc => '이 방의 모든 기기끼리 타이머·프리셋·설정이 동기화됩니다.';
+
+  @override
+  String get syncAddDevice => '다른 기기 더 추가';
+
+  @override
+  String get syncInviteTitle => '이 기기로 초대';
+
+  @override
+  String get syncInviteDesc => '다른 기기에서 QR을 스캔하거나 6자리 코드를 입력하면 연결됩니다.';
+
+  @override
+  String get syncCreateCode => '초대 코드 만들기';
+
+  @override
+  String get syncJoinTitle => '코드로 연결';
+
+  @override
+  String get syncJoinDesc => '다른 기기에 표시된 6자리 코드를 입력하세요.';
+
+  @override
+  String get syncJoinBtn => '연결';
+
+  @override
+  String get syncDisconnect => '연결 해제';
+
+  @override
+  String get syncExpiry => '5분 안에 다른 기기에서 스캔하거나 입력하세요';
+
+  @override
+  String get syncErrorNetwork => '코드 발급 실패 — 네트워크를 확인하세요';
+
+  @override
+  String get syncErrorCode => '코드가 틀리거나 만료되었습니다';
+
+  @override
+  String get syncErrorCodeLen => '6자리 코드를 입력하세요';
+
+  @override
+  String get syncScanQr => 'QR 스캔';
+
+  @override
+  String get syncScanCancel => '취소';
 }

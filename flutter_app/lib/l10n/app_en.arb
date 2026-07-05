@@ -171,5 +171,27 @@
   "feedbackSend": "Send",
   "feedbackSent": "Thanks! Your feedback has been sent.",
   "feedbackFailed": "Failed to send — check your network and try again",
-  "feedbackMessageRequired": "Please write a message first"
+  "feedbackMessageRequired": "Please write a message first",
+
+  "syncPageTitle": "Device pairing",
+  "syncConnected": "✓ Connected",
+  "syncRoomLabel": "Room: {id}",
+  "@syncRoomLabel": {
+    "placeholders": { "id": { "type": "String" } }
+  },
+  "syncRoomDesc": "Timer, presets, and settings are shared across every device in this room.",
+  "syncAddDevice": "Add another device",
+  "syncInviteTitle": "Invite from this device",
+  "syncInviteDesc": "Scan the QR or enter the 6-digit code on the other device.",
+  "syncCreateCode": "Generate invite code",
+  "syncJoinTitle": "Join with a code",
+  "syncJoinDesc": "Enter the 6-digit code shown on the other device.",
+  "syncJoinBtn": "Connect",
+  "syncDisconnect": "Disconnect",
+  "syncExpiry": "Scan or enter within 5 minutes",
+  "syncErrorNetwork": "Couldn't get a code — check your network",
+  "syncErrorCode": "Wrong or expired code",
+  "syncErrorCodeLen": "Enter the 6-digit code",
+  "syncScanQr": "Scan QR",
+  "syncScanCancel": "Cancel"
 }

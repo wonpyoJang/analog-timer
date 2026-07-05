@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,9 +34,11 @@ import 'services/sync_service.dart';
 import 'services/daily_record_service.dart';
 import 'services/platform_info.dart';
 import 'features/timer/models/segment.dart';
+import 'features/timer/models/preset.dart';
 import 'widgets/date_nav.dart';
 import 'widgets/day_log_view.dart';
 import 'widgets/day_plan_view.dart';
+import 'main.dart' show AnalogTimerApp, parseLocaleTag;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -65,6 +68,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Timer? _trayTimer;
   TimerState? _prevTimer;
   bool _desktopOverlayOn = false;
+
+  // 기기 동기화 — TimerBloc 변경 감시 및 pull 콜백 재적용 가드
+  StreamSubscription<TimerState>? _syncTimerSub;
+  TimerState? _prevSyncTimer;
+  // 마지막으로 원격에서 적용한 타이머 시그니처 — Bloc 방출 타이밍과 무관하게
+  // 에코 push 를 막는다(불리언 플래그는 방출 레이스에 뚫림).
+  ({TimerStatus status, int currentSeg, bool loop, List<Segment> segments})?
+  _lastRemoteTimerSig;
+  bool _applyingRemoteSettings = false;
 
   DateTime get _today => DateTime(_now.year, _now.month, _now.day);
 
@@ -101,6 +113,199 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       }
     });
     BatteryService.instance.start(); // async — 내부에서 prefs 로드 후 모니터 시작
+    _initSync();
+  }
+
+  /// 기기 동기화 콜백 등록 + TimerBloc 변경 감시. init 은 이미 main() 에서 완료.
+  void _initSync() {
+    if (!SyncService.instance.supported) return;
+    SyncService.instance.onTimer = _applyRemoteTimer;
+    SyncService.instance.onPresets = _applyRemotePresets;
+    SyncService.instance.onSettings = _applyRemoteSettings;
+    SyncService.instance.onPushSnapshot = _pushFullSnapshot;
+    _prevSyncTimer = context.read<TimerBloc>().state;
+    _syncTimerSub = context.read<TimerBloc>().stream.listen(_onTimerChanged);
+  }
+
+  /// 페어링 성립 시 현재 타이머/프리셋/설정 전체를 push — 합류한 기기의 첫
+  /// pull 에 데이터가 존재하도록 room 을 채운다.
+  Future<void> _pushFullSnapshot() async {
+    if (!SyncService.instance.connected) return;
+    _pushTimer(context.read<TimerBloc>().state);
+    final raw = await PersistenceService.loadPresets();
+    if (raw != null) {
+      final userPresets = raw
+          .where((m) => !Preset.builtinEnNames.contains(m['name']))
+          .toList();
+      unawaited(SyncService.instance.pushPresets(userPresets));
+    }
+    await pushCurrentSettings();
+  }
+
+  /// 매 tick(segRemainMs) 은 push 하지 않고, 사용자 의도가 반영된 변경만 push.
+  /// 서버 트래픽·배터리 최적화와 다른 기기에서 tick echo 로 흔들리는 것 방지.
+  void _onTimerChanged(TimerState s) {
+    final prev = _prevSyncTimer;
+    _prevSyncTimer = s;
+    if (!SyncService.instance.connected) return;
+
+    final significant =
+        prev == null ||
+        prev.status != s.status ||
+        prev.currentSeg != s.currentSeg ||
+        prev.loop != s.loop ||
+        !_segmentsEqual(prev.segments, s.segments);
+    if (!significant) return;
+
+    // 방금 원격에서 적용한 상태 그대로라면 에코 — push 하지 않는다.
+    final sig = _lastRemoteTimerSig;
+    if (sig != null &&
+        sig.status == s.status &&
+        sig.currentSeg == s.currentSeg &&
+        sig.loop == s.loop &&
+        _segmentsEqual(sig.segments, s.segments)) {
+      return;
+    }
+    _pushTimer(s);
+  }
+
+  void _pushTimer(TimerState s) {
+    unawaited(
+      SyncService.instance.pushTimer({
+        'segments': s.segments.map((seg) => seg.toJson()).toList(),
+        'currentSeg': s.currentSeg,
+        'segRemainMs': s.segRemainMs,
+        'status': s.status.name,
+        'loop': s.loop,
+        // 구버전 서버(now 미반환) 폴백용 — 신버전은 서버 시계(_elapsedMs) 사용.
+        'savedAtMs': DateTime.now().millisecondsSinceEpoch,
+      }),
+    );
+  }
+
+  bool _segmentsEqual(List<Segment> a, List<Segment> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].name != b[i].name ||
+          a[i].minutes != b[i].minutes ||
+          a[i].color != b[i].color)
+        return false;
+    }
+    return true;
+  }
+
+  /// 다른 기기에서 온 타이머 스냅샷 반영 — savedAtMs 경과 보정 후 TimerRestore dispatch.
+  void _applyRemoteTimer(Map<String, dynamic> data) {
+    if (!mounted) return;
+    try {
+      final segs = (data['segments'] as List)
+          .map((e) => Segment.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      var status = TimerStatus.values.firstWhere(
+        (e) => e.name == (data['status'] as String? ?? 'idle'),
+        orElse: () => TimerStatus.idle,
+      );
+      var currentSeg = (data['currentSeg'] as num?)?.toInt() ?? 0;
+      var segRemainMs = (data['segRemainMs'] as num?)?.toInt() ?? 0;
+      final loop = data['loop'] as bool? ?? false;
+      // 경과 보정: 서버 시계 기준(_elapsedMs, push ts→pull now 모두 서버가
+      // 찍음) 우선 — 기기 벽시계 스큐 무관. 구버전 서버는 savedAtMs 폴백.
+      final elapsedMs = (data['_elapsedMs'] as num?)?.toInt();
+      final savedAtMs = (data['savedAtMs'] as num?)?.toInt();
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      // 원격 기기가 running 상태로 남겨두고 시간이 흘렀다면 그만큼 세그먼트 진행.
+      if (status == TimerStatus.running && segs.isNotEmpty) {
+        final elapsed =
+            elapsedMs ??
+            (savedAtMs != null ? (now - savedAtMs).clamp(0, 86400000) : 0);
+        if (elapsed > 0) {
+          (currentSeg, segRemainMs, status) = _advanceTimer(
+            segs,
+            currentSeg,
+            segRemainMs,
+            elapsed,
+            loop,
+          );
+        }
+      }
+
+      // 적용 직전 시그니처 기록 — _onTimerChanged 가 이 상태의 에코를 걸러냄.
+      _lastRemoteTimerSig = (
+        status: status,
+        currentSeg: currentSeg,
+        loop: loop,
+        segments: segs,
+      );
+      context.read<TimerBloc>().add(
+        TimerRestore(
+          segments: segs,
+          currentSeg: currentSeg,
+          segRemainMs: segRemainMs,
+          status: status,
+          loop: loop,
+        ),
+      );
+    } catch (e) {
+      // 스키마 불일치 등으로 못 읽은 스냅샷 — 무시하되 개발 중엔 드러낸다.
+      // SyncService 가 ts 를 이미 소비해 같은 항목은 재시도되지 않는다.
+      if (kDebugMode) debugPrint('[sync] remote timer apply failed: $e');
+    }
+  }
+
+  Future<void> _applyRemotePresets(List<dynamic> data) async {
+    try {
+      final list = data
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+      await PersistenceService.savePresets(list);
+      // PresetBar/PresetManagePage 가 즉시 재로드하도록 신호.
+      SyncService.instance.presetRefreshSignal.value++;
+    } catch (_) {}
+  }
+
+  Future<void> _applyRemoteSettings(Map<String, dynamic> data) async {
+    if (!mounted) return;
+    _applyingRemoteSettings = true;
+    try {
+      final locale = data['locale'];
+      if (data.containsKey('locale') && (locale is String || locale == null)) {
+        // 원격 pull 은 재-push 하지 않는 별도 진입점 사용.
+        AnalogTimerApp.setRemoteLocale(
+          context,
+          locale == null ? null : parseLocaleTag(locale as String),
+        );
+      }
+      final overlayOn = data['overlay_on'];
+      if (overlayOn is bool) {
+        await PersistenceService.saveOverlayOn(overlayOn);
+        // 실제 오버레이 켜고/끄기까지 원격 명령으로 조작하면 사용자가 놀라므로
+        // 저장만 하고 화면 상태는 다음 앱 실행 시 반영. (일관성 vs 놀람 최소화)
+      }
+      final hidden = data['hidden_defaults'];
+      if (hidden is List) {
+        await PersistenceService.saveHiddenDefaults(hidden.cast<String>());
+        SyncService.instance.presetRefreshSignal.value++;
+      }
+    } finally {
+      _applyingRemoteSettings = false;
+    }
+  }
+
+  /// 현재 설정(locale/overlay_on/hidden_defaults) 스냅샷을 원격에 push.
+  Future<void> pushCurrentSettings() async {
+    if (_applyingRemoteSettings) return;
+    if (!SyncService.instance.connected) return;
+    final locale = await PersistenceService.loadLocale();
+    final hidden = await PersistenceService.loadHiddenDefaults();
+    unawaited(
+      SyncService.instance.pushSettings({
+        'locale': locale,
+        'overlay_on': _overlayOn || _desktopOverlayOn,
+        'hidden_defaults': hidden,
+      }),
+    );
   }
 
   Future<void> _loadIosWidgetPref() async {
@@ -441,6 +646,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _persistTimer?.cancel();
     _overlayHealthTimer?.cancel();
     _trayTimer?.cancel();
+    _syncTimerSub?.cancel();
+    SyncService.instance.onTimer = null;
+    SyncService.instance.onPresets = null;
+    SyncService.instance.onSettings = null;
+    SyncService.instance.onPushSnapshot = null;
     BatteryService.instance.stop();
     super.dispose();
   }
@@ -491,6 +701,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       unawaited(TelemetryService.instance.logEvent('overlay_on'));
     }
     _saveTelemetrySnapshot();
+    unawaited(pushCurrentSettings());
   }
 
   /// 오버레이 서브윈도우 버튼에서 올라온 액션을 메인 타이머/스톱워치에 반영.
@@ -792,6 +1003,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       // 즉시 상태 전송 — 첫 heartbeat(~1s) 전까지 기본값 노출 방지
       _syncOverlay();
     }
+    unawaited(pushCurrentSettings());
   }
 
   @override
@@ -947,8 +1159,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     padding: const EdgeInsets.all(7),
                                     decoration: BoxDecoration(
                                       color: AppColors.surface,
-                                      border:
-                                          Border.all(color: AppColors.border),
+                                      border: Border.all(
+                                        color: AppColors.border,
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Icon(
@@ -972,8 +1185,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     padding: const EdgeInsets.all(7),
                                     decoration: BoxDecoration(
                                       color: AppColors.surface,
-                                      border:
-                                          Border.all(color: AppColors.border),
+                                      border: Border.all(
+                                        color: AppColors.border,
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Icon(

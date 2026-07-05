@@ -26,6 +26,9 @@ export default async function handler(req, res) {
     for (const kind of KINDS) {
       out[kind] = await redis.get(`sync:${roomId}:${kind}`);
     }
+    // now: 클라가 "push 후 경과시간"을 서버 시계만으로 계산하는 기준 —
+    // 기기 벽시계 스큐가 러닝 타이머 보정에 섞이는 것을 차단.
+    out.now = Date.now();
     return res.status(200).json(out);
   }
 

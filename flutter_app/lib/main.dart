@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
@@ -132,12 +133,20 @@ class AnalogTimerApp extends StatefulWidget {
     context.findAncestorStateOfType<_AnalogTimerAppState>()?._apply(locale);
   }
 
+  /// 원격 pull 로 받은 locale 반영 — 저장까지만, 다시 push 하지 않는다.
+  static void setRemoteLocale(BuildContext context, Locale? locale) {
+    context.findAncestorStateOfType<_AnalogTimerAppState>()?.applyRemoteLocale(
+      locale,
+    );
+  }
+
   @override
   State<AnalogTimerApp> createState() => _AnalogTimerAppState();
 }
 
 class _AnalogTimerAppState extends State<AnalogTimerApp> {
   Locale? _locale;
+  bool _applyingRemoteLocale = false;
 
   @override
   void initState() {
@@ -150,7 +159,7 @@ class _AnalogTimerAppState extends State<AnalogTimerApp> {
     if (tag != null && mounted) setState(() => _locale = parseLocaleTag(tag));
   }
 
-  void _apply(Locale? locale) {
+  void _apply(Locale? locale, {bool remote = false}) {
     setState(() => _locale = locale);
     final tag = locale == null
         ? null
@@ -158,6 +167,29 @@ class _AnalogTimerAppState extends State<AnalogTimerApp> {
               ? '${locale.languageCode}_${locale.scriptCode}'
               : locale.languageCode);
     PersistenceService.saveLocale(tag);
+    // 원격 적용이면 다시 push 하지 않는다(에코 방지).
+    if (remote || _applyingRemoteLocale) return;
+    _pushSettings(tag);
+  }
+
+  Future<void> _pushSettings(String? localeTag) async {
+    if (!SyncService.instance.connected) return;
+    final overlayOn = await PersistenceService.loadOverlayOn();
+    final hidden = await PersistenceService.loadHiddenDefaults();
+    unawaited(
+      SyncService.instance.pushSettings({
+        'locale': localeTag,
+        'overlay_on': overlayOn,
+        'hidden_defaults': hidden,
+      }),
+    );
+  }
+
+  /// HomeScreen 의 onSettings 콜백에서 원격 locale 을 반영할 때 사용.
+  void applyRemoteLocale(Locale? locale) {
+    _applyingRemoteLocale = true;
+    _apply(locale, remote: true);
+    _applyingRemoteLocale = false;
   }
 
   @override
