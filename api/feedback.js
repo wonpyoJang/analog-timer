@@ -18,6 +18,14 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Token');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // ── [임시 진단] Blob 관련 env 변수 "이름"만 노출(값 제외) — 원인 확인 후 제거 ──
+  if (req.method === 'GET' && req.query.diag === 'env') {
+    const names = Object.keys(process.env).filter(
+      (k) => /BLOB|TOKEN/i.test(k)
+    );
+    return res.status(200).json({ blobEnvNames: names });
+  }
+
   // ── 첨부 업로드 토큰 발급 — 앱이 Blob 스토리지에 직접 PUT(서버 4.5MB 제한 우회) ──
   if (req.method === 'POST' && req.body?.action === 'upload-token') {
     const { filename, contentType, size } = req.body;
