@@ -32,6 +32,7 @@ class DesktopOverlayService {
   DateTime? _recreateWindowStart;
   int _recreateCount = 0;
   DateTime? _backoffUntil;
+  DateTime? _lastRecreateAttempt;
 
   /// 메인 윈도우에서 1회 호출 — 오버레이가 보내는 'action' 수신 핸들러 등록.
   Future<void> init() async {
@@ -51,6 +52,7 @@ class DesktopOverlayService {
   }
 
   /// 오버레이 표시 — 없으면 생성, 있으면 다시 보이기.
+  /// 생성 실패(TDR 직후 등)해도 던지지 않는다 — update 루프가 재시도한다.
   Future<void> show(Map<String, dynamic> initialState) async {
     if (!isDesktop) return;
     _shouldShow = true;
@@ -61,7 +63,9 @@ class DesktopOverlayService {
       await update(initialState);
       return;
     }
-    await _create(initialState);
+    try {
+      await _create(initialState);
+    } catch (_) {}
   }
 
   Future<void> _create(Map<String, dynamic> state) async {
@@ -92,7 +96,12 @@ class DesktopOverlayService {
   /// 상태에서 연속 실패가 누적되면 오버레이를 자동 재생성해 '사라짐'을 복구한다.
   Future<void> update(Map<String, dynamic> state) async {
     final ov = _overlay;
-    if (ov == null) return;
+    if (ov == null) {
+      // 위젯이 켜져 있어야 하는데 컨트롤러가 없음(TDR 직후 생성 실패 등) —
+      // 아래 백오프 규칙 안에서 재생성을 재시도한다.
+      if (_shouldShow) await _recreateWithBackoff(state);
+      return;
+    }
     try {
       await ov.invokeMethod('update', jsonEncode(state));
       _updateFails = 0;
@@ -107,47 +116,60 @@ class DesktopOverlayService {
       // 연속 3회(≈150ms) 실패 시에만 재생성 — 일시적 오류로 인한 오작동 방지.
       if (++_updateFails < 3) return;
 
-      // NOTE: 위젯이 죽은 뒤 재생성을 "반복"하면 핸들이 누수된다(~3/cycle). 근본
-      // 원인은 desktop_multi_window 가 아니라, 서브윈도우가 닫힐 때 Flutter 의
-      // FlutterViewController(엔진)가 소멸하며 핸들을 완전히 회수하지 못하는 Flutter
-      // Windows 엔진 레벨 이슈다. 라이브러리에 window_close 를 추가해도 결국 같은
-      // DestroyWindow→WM_DESTROY→OnDestroy 소멸 경로를 타므로 해결되지 않는다.
-      // 정상 작동에선 위젯이 죽지 않아 재생성이 0회 → 누수 노출 없음(검증됨).
-      final now = DateTime.now();
-
-      // 백오프 중이면 재생성 보류 — 폭주로 인한 핸들 누적 차단.
-      if (_backoffUntil != null && now.isBefore(_backoffUntil!)) return;
-
-      // 30초 윈도우 내 재생성 횟수 집계. 임계(5회) 초과 시 60초 백오프.
-      if (_recreateWindowStart == null ||
-          now.difference(_recreateWindowStart!) > const Duration(seconds: 30)) {
-        _recreateWindowStart = now;
-        _recreateCount = 0;
-      }
-      if (++_recreateCount > 5) {
-        _backoffUntil = now.add(const Duration(seconds: 60));
-        _recreateCount = 0;
-        return;
-      }
-
-      // 위젯이 혼자 사라짐 — 앱 프로세스는 생존하므로 네이티브 크래시 마커로는
-      // 안 잡힌다. 이 순간 직접 텔레메트리 전송(그 시점 GPU TDR/이벤트로그 포함)해
-      // '위젯 단독 사라짐'을 어드민에서 볼 수 있게 한다.
-      // 위젯 재생성 직전에 breadcrumb 를 읽어둔다(재생성 중엔 파일 접근이 깨짐).
-      final crumbs = await TelemetryService.instance.snapshotCrumbs();
-      unawaited(TelemetryService.instance.reportWidgetGone(
-        lastState: {
-          'overlayOn': true,
-          'event': 'auto_recreate',
-          'recreateCount': _recreateCount,
-        },
-        breadcrumbsOverride: crumbs,
-      ));
-
-      _overlay = null;
-      try {
-        await _create(state);
-      } catch (_) {}
+      await _recreateWithBackoff(state);
     }
+  }
+
+  /// 위젯 재생성(백오프 포함) — update 실패 누적 시와 '컨트롤러 부재' 시 공용.
+  ///
+  /// NOTE: 위젯이 죽은 뒤 재생성을 "반복"하면 핸들이 누수된다(~3/cycle). 근본
+  /// 원인은 desktop_multi_window 가 아니라, 서브윈도우가 닫힐 때 Flutter 의
+  /// FlutterViewController(엔진)가 소멸하며 핸들을 완전히 회수하지 못하는 Flutter
+  /// Windows 엔진 레벨 이슈다. 라이브러리에 window_close 를 추가해도 결국 같은
+  /// DestroyWindow→WM_DESTROY→OnDestroy 소멸 경로를 타므로 해결되지 않는다.
+  /// 정상 작동에선 위젯이 죽지 않아 재생성이 0회 → 누수 노출 없음(검증됨).
+  Future<void> _recreateWithBackoff(Map<String, dynamic> state) async {
+    final now = DateTime.now();
+
+    // 48ms update 루프에서 불리므로 시도 간 최소 2초 간격 유지.
+    if (_lastRecreateAttempt != null &&
+        now.difference(_lastRecreateAttempt!) < const Duration(seconds: 2)) {
+      return;
+    }
+    _lastRecreateAttempt = now;
+
+    // 백오프 중이면 재생성 보류 — 폭주로 인한 핸들 누적 차단.
+    if (_backoffUntil != null && now.isBefore(_backoffUntil!)) return;
+
+    // 30초 윈도우 내 재생성 횟수 집계. 임계(5회) 초과 시 60초 백오프.
+    if (_recreateWindowStart == null ||
+        now.difference(_recreateWindowStart!) > const Duration(seconds: 30)) {
+      _recreateWindowStart = now;
+      _recreateCount = 0;
+    }
+    if (++_recreateCount > 5) {
+      _backoffUntil = now.add(const Duration(seconds: 60));
+      _recreateCount = 0;
+      return;
+    }
+
+    // 위젯이 혼자 사라짐 — 앱 프로세스는 생존하므로 네이티브 크래시 마커로는
+    // 안 잡힌다. 이 순간 직접 텔레메트리 전송(그 시점 GPU TDR/이벤트로그 포함)해
+    // '위젯 단독 사라짐'을 어드민에서 볼 수 있게 한다.
+    // 위젯 재생성 직전에 breadcrumb 를 읽어둔다(재생성 중엔 파일 접근이 깨짐).
+    final crumbs = await TelemetryService.instance.snapshotCrumbs();
+    unawaited(TelemetryService.instance.reportWidgetGone(
+      lastState: {
+        'overlayOn': true,
+        'event': 'auto_recreate',
+        'recreateCount': _recreateCount,
+      },
+      breadcrumbsOverride: crumbs,
+    ));
+
+    _overlay = null;
+    try {
+      await _create(state);
+    } catch (_) {}
   }
 }

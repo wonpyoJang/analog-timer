@@ -154,10 +154,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       // 데스크톱: 위젯(오버레이 서브윈도우)이 켜져 있던 상태면 시작 시 복원.
+      // '의도 상태(_desktopOverlayOn)'를 먼저 켠다 — TDR 재시작 직후처럼 서브엔진
+      // 생성이 일시 실패해도, 48ms update 루프의 재생성 경로가 이어서 살려낸다.
+      // (show 가 던지면 의도 상태가 꺼진 채 남아 위젯이 영영 안 돌아오던 버그 수정)
       if (isDesktop) {
         if (overlayOn) {
-          await DesktopOverlayService.instance.show(_overlayStateMap());
           if (mounted) setState(() => _desktopOverlayOn = true);
+          try {
+            await DesktopOverlayService.instance.show(_overlayStateMap());
+          } catch (_) {}
         }
         return;
       }

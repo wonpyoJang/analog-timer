@@ -34,6 +34,8 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 # dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
+# TDR(GPU 드라이버 리셋) 워치독 — main.cpp 가 D3D11 디바이스 상태를 폴링
+target_link_libraries(${BINARY_NAME} PRIVATE "d3d11.lib")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.

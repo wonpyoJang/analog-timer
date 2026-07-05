@@ -115,6 +115,33 @@ class TelemetryService {
       await p.setString(_kPending, jsonEncode(crash));
       if (_enabled) await _flushPending();
     }
+
+    // TDR 자가 재시작 감지 — 네이티브 워치독이 GPU 드라이버 리셋을 감지해 앱을
+    // 재시작했으면 마커가 남아있다. 마커 파일은 네이티브의 재시작 폭주 방지에
+    // 쓰이므로 삭제하지 않고, mtime 기준으로 이미 리포트한 것만 건너뛴다.
+    await _reportTdrRestartIfAny(p);
+  }
+
+  Future<void> _reportTdrRestartIfAny(SharedPreferences p) async {
+    if (!Platform.isWindows) return;
+    try {
+      final flag = File(
+          '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_tdr.flag');
+      if (!await flag.exists()) return;
+      final mtime = (await flag.lastModified()).millisecondsSinceEpoch;
+      const kReported = 'telemetry_tdr_reported_ms';
+      if (mtime <= (p.getInt(kReported) ?? 0)) return; // 이미 리포트함
+      await p.setInt(kReported, mtime);
+      final crash = <String, dynamic>{
+        'type': 'crash',
+        'crashKind': 'tdr_restart',
+        'message':
+            'GPU TDR(드라이버 리셋) 감지 → 워치독이 앱 자가 재시작 (렌더 서피스 사망 복구)',
+        'lastState': {'tdrFlagMtime': mtime},
+      };
+      await p.setString(_kPending, jsonEncode(crash));
+      if (_enabled) await _flushPending();
+    } catch (_) {}
   }
 
   /// 정상 종료 — 마커 생성(네이티브 main.cpp 가 주 경로, 이건 보조 안전망).
