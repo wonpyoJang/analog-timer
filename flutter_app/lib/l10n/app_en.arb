@@ -172,6 +172,7 @@
   "feedbackSent": "Thanks! Your feedback has been sent.",
   "feedbackFailed": "Failed to send — check your network and try again",
   "feedbackMessageRequired": "Please write a message first",
+  "feedbackIncludeLogs": "Include diagnostic logs (device info & recent actions — no personal data)",
 
   "syncPageTitle": "Device pairing",
   "syncConnected": "✓ Connected",

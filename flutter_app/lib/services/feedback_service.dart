@@ -79,11 +79,13 @@ class FeedbackService {
   }
 
   /// 피드백 제출. [attachments] 는 uploadAttachment 반환값 목록.
+  /// [diagnostics] 는 TelemetryService.diagnosticsSnapshot() 결과(선택).
   Future<bool> submit({
     required String category, // bug | feature | other
     required String message,
     String? contact,
     List<Map<String, dynamic>> attachments = const [],
+    Map<String, dynamic>? diagnostics,
   }) async {
     if (!supported) return false;
     final p = await SharedPreferences.getInstance();
@@ -94,6 +96,8 @@ class FeedbackService {
       'message': message,
       if (contact != null && contact.trim().isNotEmpty) 'contact': contact.trim(),
       'attachments': attachments,
+      if (diagnostics != null && diagnostics.isNotEmpty)
+        'diagnostics': diagnostics,
       'appVersion': '0.4.0+6',
       'platform': defaultTargetPlatform.name,
     });

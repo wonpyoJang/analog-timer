@@ -6,6 +6,7 @@ import 'package:record/record.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/feedback_service.dart';
+import '../services/telemetry_service.dart';
 
 /// 제작자에게 버그/기능요청 보내기 — 사진·동영상 첨부 지원.
 class FeedbackPage extends StatefulWidget {
@@ -34,6 +35,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
   final _contactCtrl = TextEditingController();
   final List<_Attachment> _files = [];
   bool _sending = false;
+  bool _includeLogs = true; // 진단 로그 동봉 (기본 ON, 사용자가 끌 수 있음)
   String? _error;
 
   // ── 음성 녹음 상태 ──────────────────────────────────────────
@@ -144,12 +146,16 @@ class _FeedbackPageState extends State<FeedbackPage> {
       uploaded.add(r);
     }
 
-    // 2) 제출
+    // 2) 제출 (선택 시 진단 스냅샷 동봉 — 환경/최근 행동/이벤트로그)
+    final diag = _includeLogs
+        ? await TelemetryService.instance.diagnosticsSnapshot()
+        : null;
     final ok = await FeedbackService.instance.submit(
       category: _category,
       message: _msgCtrl.text.trim(),
       contact: _contactCtrl.text,
       attachments: uploaded,
+      diagnostics: diag,
     );
     if (!mounted) return;
     if (ok) {
@@ -284,6 +290,33 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   ),
               ]),
             ),
+          // 진단 로그 동봉 체크박스 (기기 환경·최근 행동 흐름 — 개인정보 미포함)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: GestureDetector(
+              onTap: _sending
+                  ? null
+                  : () => setState(() => _includeLogs = !_includeLogs),
+              child: Row(children: [
+                Icon(
+                  _includeLogs
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  size: 18,
+                  color:
+                      _includeLogs ? AppColors.timerOrange : AppColors.muted,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l.feedbackIncludeLogs,
+                    style:
+                        const TextStyle(color: AppColors.muted, fontSize: 12),
+                  ),
+                ),
+              ]),
+            ),
+          ),
           if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 6, bottom: 6),

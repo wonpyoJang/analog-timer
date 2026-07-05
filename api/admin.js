@@ -112,9 +112,22 @@ function renderFb(items){
       else
         att+='<div><a href="'+esc(a.url)+'" target="_blank" style="color:#52b0e0">'+esc(a.name||a.url)+'</a></div>';
     });
+    let diag='';
+    if(f.diagnostics){
+      const crumbs=(f.diagnostics.breadcrumbs||[]).map(function(c){
+        const t=new Date(c.t).toLocaleTimeString('ko-KR');
+        return t+'  '+c.e+(c.d?' '+JSON.stringify(c.d):'');
+      }).join('\n');
+      diag='<details style="margin-top:6px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">🔍 진단 로그 (환경·직전 행동)</summary>'
+        +(crumbs?'<div class="muted" style="font-size:11px;margin-top:6px">직전 행동</div><pre>'+esc(crumbs)+'</pre>':'')
+        +'<pre>'+esc(JSON.stringify({env:f.diagnostics.env,lastState:f.diagnostics.lastState},null,1))+'</pre>'
+        +(f.diagnostics.eventLog?'<div class="muted" style="font-size:11px;margin-top:6px">Windows 이벤트로그</div><pre>'+esc(typeof f.diagnostics.eventLog==='string'?f.diagnostics.eventLog:JSON.stringify(f.diagnostics.eventLog,null,1))+'</pre>':'')
+        +'</details>';
+    }
     return '<div class="card"><div class="row1">'+fbBadge(f.category)+'<span class="muted">'+fmt(f.receivedAt)+'</span></div>'
       +'<pre style="max-height:none">'+esc(f.message)+'</pre>'
       +(att?'<div>'+att+'</div>':'')
+      +diag
       +'<div class="meta">'+meta+'</div></div>';
   }).join('');
 }

@@ -222,6 +222,26 @@ class TelemetryService {
   /// 위젯 재생성 직전에 호출측이 breadcrumb 를 읽어두기 위한 public 접근자.
   Future<List<Map<String, dynamic>>> snapshotCrumbs() => _readCrumbs();
 
+  /// 피드백에 동봉할 진단 스냅샷 — 기기 환경 + 최근 행동 흐름 + 마지막 상태 +
+  /// Windows 이벤트로그. 개인정보·타이머 내용은 포함하지 않는다(텔레메트리와 동일 범위).
+  Future<Map<String, dynamic>> diagnosticsSnapshot() async {
+    if (!supported) return {};
+    try {
+      if (_env.isEmpty) await _collectEnv();
+      final p = await SharedPreferences.getInstance();
+      final lastRaw = p.getString(_kLastState);
+      return {
+        'env': _env,
+        'breadcrumbs': await _readCrumbs(),
+        'lastState': lastRaw != null ? jsonDecode(lastRaw) : null,
+        'eventLog': await _collectEventLog(),
+        'appVersion': _appVersion,
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+
   Future<void> _flushPending() async {
     if (!_enabled || !supported) return;
     final p = await SharedPreferences.getInstance();

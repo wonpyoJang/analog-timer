@@ -87,6 +87,13 @@ export default async function handler(req, res) {
             contentType: String(a.contentType ?? '').slice(0, 60),
           }))
         : [],
+      // 진단 스냅샷(선택) — env/breadcrumbs/lastState/eventLog. 32KB 캡.
+      diagnostics: (() => {
+        if (!b.diagnostics || typeof b.diagnostics !== 'object') return null;
+        const s = JSON.stringify(b.diagnostics);
+        if (s.length <= 32768) return b.diagnostics;
+        return { truncated: true, raw: s.slice(0, 32768) };
+      })(),
     };
     await redis.lpush(KEY, JSON.stringify(item));
     await redis.ltrim(KEY, 0, MAX - 1);

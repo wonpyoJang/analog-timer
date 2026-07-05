@@ -103,6 +103,7 @@
   "feedbackSent": "감사합니다! 피드백이 전송되었습니다.",
   "feedbackFailed": "전송 실패 — 네트워크 확인 후 다시 시도해주세요",
   "feedbackMessageRequired": "내용을 먼저 적어주세요",
+  "feedbackIncludeLogs": "진단 로그 함께 보내기 (기기 환경·최근 사용 흐름 — 개인정보 미포함)",
 
   "syncPageTitle": "기기 연결",
   "syncConnected": "✓ 연결됨",
