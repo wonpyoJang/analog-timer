@@ -28,24 +28,22 @@ class FeedbackService {
     final contentType = _guessType(name);
     if (contentType == null) return null;
 
-    // 1) 업로드 토큰 발급
+    // 1) presigned 업로드 URL 발급 (서버가 OIDC 로 서명 — 클라이언트 인증 불필요)
     final tok = await _postJson('$_base/feedback', {
       'action': 'upload-token',
       'filename': name,
       'contentType': contentType,
       'size': size,
     });
-    final clientToken = tok?['clientToken'] as String?;
     final uploadUrl = tok?['uploadUrl'] as String?;
-    if (clientToken == null || uploadUrl == null) return null;
+    final pathname = tok?['pathname'] as String?;
+    if (uploadUrl == null) return null;
 
     // 2) Blob 에 직접 스트리밍 PUT (파일을 통째로 메모리에 올리지 않음)
     HttpClient? c;
     try {
       c = HttpClient()..connectionTimeout = const Duration(seconds: 20);
       final req = await c.putUrl(Uri.parse(uploadUrl));
-      req.headers.set('authorization', 'Bearer $clientToken');
-      req.headers.set('x-content-type', contentType);
       req.headers.contentType = ContentType.parse(contentType);
       req.contentLength = size;
       var sent = 0;
@@ -59,8 +57,13 @@ class FeedbackService {
       final res = await req.close().timeout(const Duration(minutes: 30));
       final body = await utf8.decoder.bind(res).join();
       if (res.statusCode != 200) return null;
-      final j = jsonDecode(body) as Map<String, dynamic>;
-      final url = (j['url'] ?? j['downloadUrl']) as String?;
+      // 응답 JSON 의 url 우선, 없으면 presigned URL 에서 공개 URL 유도
+      String? url;
+      try {
+        final j = jsonDecode(body) as Map<String, dynamic>;
+        url = (j['url'] ?? j['downloadUrl']) as String?;
+      } catch (_) {}
+      url ??= _publicUrlFrom(uploadUrl, pathname);
       if (url == null) return null;
       return {
         'url': url,
@@ -95,6 +98,19 @@ class FeedbackService {
       'platform': defaultTargetPlatform.name,
     });
     return res?['ok'] == true;
+  }
+
+  /// presigned URL(호스트에 스토어 ID 포함)에서 업로드 완료 후의 공개 URL 을 유도.
+  String? _publicUrlFrom(String uploadUrl, String? pathname) {
+    if (pathname == null) return null;
+    try {
+      final host = Uri.parse(uploadUrl).host; // <storeid>.blob.vercel-storage.com 형태
+      final storeId = host.split('.').first;
+      if (storeId.isEmpty) return null;
+      return 'https://$storeId.public.blob.vercel-storage.com/$pathname';
+    } catch (_) {
+      return null;
+    }
   }
 
   String? _guessType(String name) {

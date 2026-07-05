@@ -18,18 +18,12 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Token');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ── [임시 진단] Blob 관련 env 변수 "이름"만 노출(값 제외) — 원인 확인 후 제거 ──
-  if (req.method === 'GET' && req.query.diag === 'env') {
-    const names = Object.keys(process.env).filter(
-      (k) => /BLOB|TOKEN/i.test(k)
-    );
-    return res.status(200).json({ blobEnvNames: names });
-  }
-
-  // ── 첨부 업로드 토큰 발급 — 앱이 Blob 스토리지에 직접 PUT(서버 4.5MB 제한 우회) ──
+  // ── 첨부 업로드 presigned URL 발급 — 앱이 Blob 에 직접 PUT(서버 4.5MB 제한 우회).
+  // 신형 Blob 스토어(OIDC): BLOB_STORE_ID + VERCEL_OIDC_TOKEN 기반.
+  // issueSignedToken → presignUrl → 클라이언트는 인증 헤더 없이 순수 HTTP PUT.
   if (req.method === 'POST' && req.body?.action === 'upload-token') {
     const { filename, contentType, size } = req.body;
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    if (!process.env.BLOB_STORE_ID && !process.env.BLOB_READ_WRITE_TOKEN) {
       return res.status(503).json({ error: 'blob storage not configured' });
     }
     if (!ALLOWED_TYPES.includes(contentType)) {
@@ -44,28 +38,27 @@ export default async function handler(req, res) {
     const pathname = `feedback/${Date.now().toString(36)}-${Math.random()
       .toString(36)
       .slice(2, 8)}-${safe}`;
-    // dynamic import — 모듈 로드 실패가 함수 전체를 죽이지 않게 + 실제 에러 노출
-    let generateClientTokenFromReadWriteToken;
     try {
-      ({ generateClientTokenFromReadWriteToken } = await import(
-        '@vercel/blob/client'
-      ));
+      // dynamic import — 모듈 로드 실패가 함수 전체를 죽이지 않게
+      const { issueSignedToken, presignUrl } = await import('@vercel/blob');
+      const expires = Date.now() + 10 * 60 * 1000; // 10분
+      const signed = await issueSignedToken({
+        pathname,
+        operations: ['put'],
+        validUntil: expires,
+      });
+      const { presignedUrl } = await presignUrl(signed, {
+        operation: 'put',
+        pathname,
+        access: 'public',
+        allowedContentTypes: [contentType],
+        maximumSizeInBytes: MAX_FILE,
+        validUntil: expires,
+      });
+      return res.status(200).json({ uploadUrl: presignedUrl, pathname });
     } catch (e) {
-      return res.status(500).json({ error: `blob module: ${e.message}` });
+      return res.status(500).json({ error: `presign failed: ${e.message}` });
     }
-    const clientToken = await generateClientTokenFromReadWriteToken({
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      pathname,
-      allowedContentTypes: [contentType],
-      maximumSizeInBytes: MAX_FILE,
-      validUntil: Date.now() + 10 * 60 * 1000, // 10분
-      addRandomSuffix: false,
-    });
-    return res.status(200).json({
-      clientToken,
-      pathname,
-      uploadUrl: `https://blob.vercel-storage.com/${pathname}`,
-    });
   }
 
   // ── 피드백 접수 ─────────────────────────────────────────────
