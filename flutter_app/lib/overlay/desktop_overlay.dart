@@ -14,6 +14,7 @@ import '../widgets/text_outline.dart';
 const _kOverlayPosX = 'overlay_pos_x';
 const _kOverlayPosY = 'overlay_pos_y';
 const _kOverlayScale = 'overlay_scale';
+const _kOverlayOpacity = 'overlay_opacity';
 
 /// 위치/스케일 전용 파일 스토어 — 서브엔진이 SharedPreferences 를 쓰면 자기
 /// 스냅샷 캐시로 파일 전체를 재작성해 메인 엔진이 저장한 타이머 상태/설정을
@@ -215,11 +216,39 @@ class _OverlayBodyState extends State<_OverlayBody>
   DateTime? _displayLastTick;
   late final AnimationController _blinkCtrl;
 
+  // 창 투명도 — 사이클 버튼(100→85→70→50→30%)으로 조절, 전용 파일에 저장.
+  // 호버 중에는 일시적으로 불투명하게 해 조작성을 보장한다.
+  static const _opacitySteps = [1.0, 0.85, 0.7, 0.5, 0.3];
+  double _opacity = 1.0;
+  bool _hoverOpaque = false;
+
+  void _applyWindowOpacity() {
+    unawaited(() async {
+      try {
+        await windowManager.setOpacity(_hoverOpaque ? 1.0 : _opacity);
+      } catch (_) {} // 일부 환경(레이어드 미지원)에선 무시 — 불투명 유지
+    }());
+  }
+
+  Future<void> _cycleOpacity() async {
+    final i = _opacitySteps.indexWhere((v) => (v - _opacity).abs() < 0.01);
+    setState(() => _opacity = _opacitySteps[(i + 1) % _opacitySteps.length]);
+    _applyWindowOpacity();
+    await _saveOverlayPrefs({_kOverlayOpacity: _opacity});
+  }
+
   @override
   void initState() {
     super.initState();
     _winPos = widget.initialPos;
     _applyState(widget.initial);
+    // 저장된 투명도 적용
+    unawaited(_loadOverlayPrefs().then((m) {
+      final v = ((m[_kOverlayOpacity] as num?)?.toDouble() ?? 1.0);
+      if (!mounted) return;
+      setState(() => _opacity = v.clamp(0.3, 1.0));
+      _applyWindowOpacity();
+    }));
     _clockTimer = Timer.periodic(
       const Duration(milliseconds: 250),
       (_) {
@@ -411,9 +440,18 @@ class _OverlayBodyState extends State<_OverlayBody>
   Widget build(BuildContext context) {
     // 내용은 고정 디자인 크기(_overlayBase)로 그리고, FittedBox 로 실제 창 크기에
     // 균일 스케일 → 크기 조절 시 시계·글자·버튼이 한꺼번에 비율대로 커지고 작아짐.
-    return Material(
-      color: const Color(0xFF0E0E0F),
-      child: Stack(
+    return MouseRegion(
+      onEnter: (_) {
+        _hoverOpaque = true;
+        _applyWindowOpacity();
+      },
+      onExit: (_) {
+        _hoverOpaque = false;
+        _applyWindowOpacity();
+      },
+      child: Material(
+        color: const Color(0xFF0E0E0F),
+        child: Stack(
         children: [
           Positioned.fill(
             child: FittedBox(
@@ -442,6 +480,7 @@ class _OverlayBodyState extends State<_OverlayBody>
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -606,6 +645,7 @@ class _OverlayBodyState extends State<_OverlayBody>
         if (_swActive || _swElapsedMs > 0)
           btn(_swRunning ? Icons.stop : Icons.play_arrow, swColor,
               () => _sendAction('sw_toggle')),
+        btn(Icons.opacity, Colors.white54, _cycleOpacity),
         btn(Icons.close, Colors.white54, () => _sendAction('overlay_hide')),
       ],
     );
