@@ -65,13 +65,21 @@ Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
 }
 
 /// 저장된 위치가 있으면 그것을, 없으면 기본 작업영역 우상단을 반환.
+///
+/// 저장 위치는 **현재 연결된 모니터 위에 있는지 검증**한다 — 외부 모니터에
+/// 위젯을 두고 모니터를 분리하면 위젯이 화면 밖에 떠서 '사라진 것처럼' 보이는
+/// 문제 방지(멀티모니터 사용자의 고전적 함정).
 Future<Offset> _resolveInitialPosition(
   SharedPreferences prefs,
   double scale,
 ) async {
   final x = prefs.getDouble(_kOverlayPosX);
   final y = prefs.getDouble(_kOverlayPosY);
-  if (x != null && y != null) return Offset(x, y);
+  if (x != null && y != null) {
+    final saved = Offset(x, y);
+    if (await _isOnAnyDisplay(saved, scale)) return saved;
+    // 화면 밖 → 기본 위치로 폴백(아래로 진행)
+  }
   try {
     final display = await screenRetriever.getPrimaryDisplay();
     final size = display.visibleSize ?? display.size;
@@ -82,6 +90,28 @@ Future<Offset> _resolveInitialPosition(
     );
   } catch (_) {
     return const Offset(60, 60);
+  }
+}
+
+/// 위젯 사각형이 현재 연결된 모니터 중 하나와 의미있게(드래그 가능한 상단부
+/// 40px 이상) 겹치는지 확인. 판별 실패 시 true(보수적으로 저장 위치 존중).
+Future<bool> _isOnAnyDisplay(Offset pos, double scale) async {
+  try {
+    final displays = await screenRetriever.getAllDisplays();
+    if (displays.isEmpty) return true;
+    final w = _sizeForScale(scale).width;
+    for (final d in displays) {
+      final dPos = d.visiblePosition ?? Offset.zero;
+      final dSize = d.visibleSize ?? d.size;
+      final overlapX = (pos.dx + w).clamp(dPos.dx, dPos.dx + dSize.width) -
+          pos.dx.clamp(dPos.dx, dPos.dx + dSize.width);
+      final topInside = pos.dy >= dPos.dy - 10 &&
+          pos.dy + 40 <= dPos.dy + dSize.height;
+      if (overlapX >= 60 && topInside) return true;
+    }
+    return false;
+  } catch (_) {
+    return true;
   }
 }
 
