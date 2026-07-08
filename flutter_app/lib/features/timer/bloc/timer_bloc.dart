@@ -49,8 +49,11 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     }
     emit(next.copyWith(status: TimerStatus.running));
     _startTicker();
-    unawaited(TelemetryService.instance
-        .logEvent('timer_start', {'seg': state.currentSegment?.name}));
+    unawaited(
+      TelemetryService.instance.logEvent('timer_start', {
+        'seg': state.currentSegment?.name,
+      }),
+    );
   }
 
   void _onPause(TimerPause event, Emitter<TimerState> emit) {
@@ -189,8 +192,11 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     // 여러 세그먼트를 한 번에 관통할 수 있으므로, 복원 경로(_advanceTimer)와
     // 동일하게 초과분을 이월하며 따라잡는다(이전엔 한 세그먼트만 소비하고
     // 나머지를 버려 절전 후 타이머가 실제보다 덜 진행되는 버그).
-    unawaited(TelemetryService.instance
-        .logEvent('segment_done', {'seg': state.currentSegment?.name}));
+    unawaited(
+      TelemetryService.instance.logEvent('segment_done', {
+        'seg': state.currentSegment?.name,
+      }),
+    );
     final log = [
       ...state.log,
       TimerLogEntry(
@@ -209,46 +215,71 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         if (state.loop) {
           seg = 0;
           loopCount++;
-          log.add(TimerLogEntry(
-            DateTime.now(),
-            TimerLogType.loop,
-            AppColors.accent.toARGB32(),
-            segName: '$loopCount',
-          ));
+          log.add(
+            TimerLogEntry(
+              DateTime.now(),
+              TimerLogType.loop,
+              AppColors.accent.toARGB32(),
+              segName: '$loopCount',
+            ),
+          );
         } else {
           _stopTicker();
-          log.add(TimerLogEntry(
-            DateTime.now(),
-            TimerLogType.allDone,
-            AppColors.accent.toARGB32(),
-          ));
-          emit(state.copyWith(
-            status: TimerStatus.done,
-            segRemainMs: 0,
-            log: _capLog(log),
-            // 캡 전 길이 차이 = 이번에 추가된 엔트리 수 (단조 증가 유지)
-            logSeq: state.logSeq + (log.length - state.log.length),
-          ));
+          log.add(
+            TimerLogEntry(
+              DateTime.now(),
+              TimerLogType.allDone,
+              AppColors.accent.toARGB32(),
+            ),
+          );
+          emit(
+            state.copyWith(
+              status: TimerStatus.done,
+              segRemainMs: 0,
+              log: _capLog(log),
+              // 캡 전 길이 차이 = 이번에 추가된 엔트리 수 (단조 증가 유지)
+              logSeq: state.logSeq + (log.length - state.log.length),
+            ),
+          );
           return;
         }
       }
       final segMs = state.segments[seg].duration.inMilliseconds;
+      // 0ms 세그먼트 + loop ON 이면 이 루프가 영원히 못 빠져나가 메인 isolate
+      // 가 프리즈된다(ANR). 복원 경로(_advanceTimer)와 동일하게 즉시 완료 처리.
+      if (segMs <= 0) {
+        _stopTicker();
+        emit(
+          state.copyWith(
+            currentSeg: seg,
+            status: TimerStatus.done,
+            segRemainMs: 0,
+            log: _capLog(log),
+            logSeq: state.logSeq + (log.length - state.log.length),
+          ),
+        );
+        return;
+      }
       remain += segMs;
-      log.add(TimerLogEntry(
-        DateTime.now(),
-        remain <= 0 ? TimerLogType.done : TimerLogType.start,
-        state.segments[seg].color.toARGB32(),
-        segName: state.segments[seg].name,
-      ));
+      log.add(
+        TimerLogEntry(
+          DateTime.now(),
+          remain <= 0 ? TimerLogType.done : TimerLogType.start,
+          state.segments[seg].color.toARGB32(),
+          segName: state.segments[seg].name,
+        ),
+      );
     }
 
-    emit(state.copyWith(
-      currentSeg: seg,
-      segRemainMs: remain,
-      loopCount: loopCount,
-      log: _capLog(log),
-      logSeq: state.logSeq + (log.length - state.log.length),
-    ));
+    emit(
+      state.copyWith(
+        currentSeg: seg,
+        segRemainMs: remain,
+        loopCount: loopCount,
+        log: _capLog(log),
+        logSeq: state.logSeq + (log.length - state.log.length),
+      ),
+    );
   }
 
   /// 로그 무한 축적 방지 — loop 타이머를 밤새 돌려도 최근 300개만 유지.
@@ -275,6 +306,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
 
   void _onSegmentRemoved(TimerSegmentRemoved event, Emitter<TimerState> emit) {
     if (state.segments.length <= 1) return;
+    // 리빌드 직전 UI 가 들고 있던 stale index 방어 — 범위 밖이면 무시.
+    if (event.index < 0 || event.index >= state.segments.length) return;
     final segs = List<Segment>.from(state.segments)..removeAt(event.index);
     // 진행 인덱스 보정 — 앞 세그먼트가 빠지면 한 칸 당기고, 진행 중이던
     // 세그먼트 자체가 삭제되면 같은 자리(다음 세그먼트)를 처음부터 시작한다.
@@ -285,8 +318,28 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     } else if (event.index == cur &&
         state.status != TimerStatus.idle &&
         state.status != TimerStatus.done) {
-      cur = cur.clamp(0, segs.length - 1);
-      remain = segs[cur].duration.inMilliseconds;
+      if (cur >= segs.length) {
+        // 진행 중이던 '마지막' 세그먼트 삭제 — 다음 세그먼트가 없다.
+        // 앞으로 되감으면 이미 완료한 세그먼트가 재실행되고 done 로그/알림이
+        // 중복되므로, loop 면 랩(처음부터), 아니면 완료 처리한다.
+        if (state.loop) {
+          cur = 0;
+          remain = segs[0].duration.inMilliseconds;
+        } else {
+          _stopTicker();
+          emit(
+            state.copyWith(
+              segments: segs,
+              currentSeg: segs.length - 1,
+              segRemainMs: 0,
+              status: TimerStatus.done,
+            ),
+          );
+          return;
+        }
+      } else {
+        remain = segs[cur].duration.inMilliseconds;
+      }
     }
     cur = cur.clamp(0, segs.length - 1);
     emit(state.copyWith(segments: segs, currentSeg: cur, segRemainMs: remain));
@@ -364,7 +417,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         segRemainMs: event.segRemainMs,
         status: event.status,
         loop: event.loop,
-        log: const [],
+        log: event.preserveLog ? state.log : const [],
       ),
     );
     if (event.status == TimerStatus.running) _startTicker();
