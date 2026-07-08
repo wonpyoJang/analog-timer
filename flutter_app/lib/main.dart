@@ -55,7 +55,9 @@ void _installErrorHandlers() {
   };
   WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
     TelemetryService.instance.reportDartError(error, stack);
-    return true;
+    // 텔레메트리 미지원 플랫폼(모바일)에서 true 를 반환하면 uncaught 비동기
+    // 에러가 콘솔/logcat 출력조차 없이 소멸한다 — 수집 안 되면 기본 처리로.
+    return TelemetryService.instance.supported;
   };
 }
 
