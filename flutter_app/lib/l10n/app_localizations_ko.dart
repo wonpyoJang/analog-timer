@@ -316,6 +316,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get feedbackAttachVideo => '동영상 첨부';
 
   @override
+  String get feedbackRecordVoice => '음성 녹음';
+
+  @override
+  String get feedbackRecording => '녹음 중… 탭하여 종료';
+
+  @override
+  String get feedbackMicDenied => '마이크를 사용할 수 없습니다 — 시스템 설정에서 권한을 확인해주세요';
+
+  @override
   String get feedbackSend => '보내기';
 
   @override

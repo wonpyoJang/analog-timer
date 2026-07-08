@@ -320,6 +320,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get feedbackAttachVideo => 'Attach video';
 
   @override
+  String get feedbackRecordVoice => 'Record voice';
+
+  @override
+  String get feedbackRecording => 'Recording… tap to stop';
+
+  @override
+  String get feedbackMicDenied =>
+      'Microphone unavailable — check permission in system settings';
+
+  @override
   String get feedbackSend => 'Send';
 
   @override

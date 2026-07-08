@@ -699,6 +699,24 @@ abstract class AppLocalizations {
   /// **'Attach video'**
   String get feedbackAttachVideo;
 
+  /// No description provided for @feedbackRecordVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Record voice'**
+  String get feedbackRecordVoice;
+
+  /// No description provided for @feedbackRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording… tap to stop'**
+  String get feedbackRecording;
+
+  /// No description provided for @feedbackMicDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone unavailable — check permission in system settings'**
+  String get feedbackMicDenied;
+
   /// No description provided for @feedbackSend.
   ///
   /// In en, this message translates to:
