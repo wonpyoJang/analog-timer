@@ -88,13 +88,25 @@ class TimerRestore extends TimerEvent {
   final int segRemainMs;
   final TimerStatus status;
   final bool loop;
+
+  /// true 면 세션 로그를 비우지 않는다 — sync 원격 적용처럼 세션이 계속되는
+  /// 경로용. 앱 시작 복원(기본 false)은 새 세션이므로 로그를 비운다.
+  final bool preserveLog;
   const TimerRestore({
     required this.segments,
     required this.currentSeg,
     required this.segRemainMs,
     required this.status,
     required this.loop,
+    this.preserveLog = false,
   });
   @override
-  List<Object?> get props => [segments, currentSeg, segRemainMs, status, loop];
+  List<Object?> get props => [
+    segments,
+    currentSeg,
+    segRemainMs,
+    status,
+    loop,
+    preserveLog,
+  ];
 }
