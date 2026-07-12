@@ -178,6 +178,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
 
   void _onTick(TimerTick event, Emitter<TimerState> emit) {
     if (state.status != TimerStatus.running) return;
+    // 시계 역행 방어(심층) — 티커가 거르지만 bloc 단독으로도 음수 tick 에
+    // 시간이 거꾸로 가면 안 된다.
+    if (event.elapsedMs <= 0) return;
     int remain = state.segRemainMs - event.elapsedMs;
 
     if (remain > 0) {
