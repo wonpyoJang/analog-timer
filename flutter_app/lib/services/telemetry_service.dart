@@ -17,7 +17,7 @@ class TelemetryService {
 
   static const String _endpoint =
       'https://analog-timer-kappa.vercel.app/api/telemetry';
-  static const String _appVersion = '0.4.1+7';
+  static const String _appVersion = '0.4.2+8';
 
   static const String _kConsent = 'telemetry_consent'; // bool? (null=미정)
   static const String _kDeviceId = 'telemetry_device_id';
@@ -68,6 +68,10 @@ class TelemetryService {
   int _lastFrameMs = 0;
   Timer? _heartbeatTimer;
 
+  /// 마지막으로 렌더 프레임이 그려진 시각(ms). 0 이면 아직 첫 프레임 전.
+  /// 멈춤(freeze) 워치독이 이 값의 나이로 "렌더가 죽었는지"를 판정한다.
+  int get lastFrameMs => _lastFrameMs;
+
   Future<Map<String, dynamic>?> _readHeartbeat() async {
     try {
       if (await _heartbeatFile.exists()) {
@@ -99,7 +103,9 @@ class TelemetryService {
 
     unawaited(beat());
     _heartbeatTimer?.cancel();
-    _heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (_) => beat());
+    // 10초 주기 — 네이티브 워치독의 Dart 프리즈 감지(60초 정체 판정)가 충분히
+    // 빠르게 반응하도록. 쓰기 부하는 수십 바이트 파일 하나라 무시 가능.
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) => beat());
   }
 
   /// 워치독 tdr 마커 진단 — 이번 크래시가 "워치독이 아는 TDR" 맥락이었는지 판별.

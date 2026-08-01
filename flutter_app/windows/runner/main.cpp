@@ -64,10 +64,88 @@ bool MainWindowAlive() {
   return false;
 }
 
+// Dart heartbeat 파일(%APPDATA%\dev.analogtimer\analog_timer\
+// analog_timer_heartbeat.json)의 마지막 수정 이후 경과(초). 실패 시 -1.
+// Dart 쪽이 10초 주기로 갱신하므로, 한참 정체 = Dart 이벤트 루프 프리즈.
+int HeartbeatAgeSeconds() {
+  wchar_t path[MAX_PATH];
+  DWORD n = ::GetEnvironmentVariableW(L"APPDATA", path, MAX_PATH);
+  if (n == 0 || n >= MAX_PATH - 60) return -1;
+  ::lstrcatW(path, L"\\dev.analogtimer\\analog_timer\\analog_timer_heartbeat.json");
+  WIN32_FILE_ATTRIBUTE_DATA fad;
+  if (!::GetFileAttributesExW(path, GetFileExInfoStandard, &fad)) return -1;
+  FILETIME now_ft;
+  ::GetSystemTimeAsFileTime(&now_ft);
+  ULARGE_INTEGER now_u{now_ft.dwLowDateTime, now_ft.dwHighDateTime};
+  ULARGE_INTEGER mod_u{fad.ftLastWriteTime.dwLowDateTime,
+                       fad.ftLastWriteTime.dwHighDateTime};
+  if (mod_u.QuadPart > now_u.QuadPart) return 0;
+  return static_cast<int>((now_u.QuadPart - mod_u.QuadPart) / 10000000ULL);
+}
+
+// 멈춤 고지 팝업 — powershell WScript Popup(20초 자동 타임아웃, system-modal).
+// 렌더가 죽어도 OS 가 그리므로 항상 보인다. 한글 메시지는 소스 인코딩 이슈를
+// 피하려고 UTF-16LE base64(-EncodedCommand)로 임베드했다.
+// 반환: 1=확인, 2=취소, 그 외(-1 등)=타임아웃/실패.
+int ShowFreezeCountdownPopup() {
+  // "타이머가 응답하지 않습니다. 확인을 누르거나 20초가 지나면 자동으로 다시
+  //  시작합니다. (기록과 경과 시간은 유지됩니다)" / 제목 "Analog Timer - 멈춤 감지"
+  static const wchar_t kCmd[] =
+      L"powershell -NoProfile -WindowStyle Hidden -EncodedCommand "
+      L"ZQB4AGkAdAAgACgATgBlAHcALQBPAGIAagBlAGMAdAAgAC0AQwBvAG0ATwBiAGoAZQBjAHQA"
+      L"IABXAFMAYwByAGkAcAB0AC4AUwBoAGUAbABsACkALgBQAG8AcAB1AHAAKAAnAMDQdMc4ugCs"
+      L"IABRx/WyWNXAySAASsW1wsiy5LIuACAAVdZ4x0THIAAEsnS5cKyYsCAAMgAwAAjNAKwgAMDJ"
+      L"mLB0uiAAkMfZszzHXLggAOSy3MIgANzCkcdp1ciy5LIuACAAKAAwrl24/KwgAL2s/KwgANzC"
+      L"BKxAxyAAIMfAySm0yLLksikAJwAsACAAMgAwACwAIAAnAEEAbgBhAGwAbwBnACAAVABpAG0A"
+      L"ZQByACAALQAgAEi6pM0gABCswMknACwAIAA0ADAAOQA3ACkA";
+  wchar_t cmd[1024];
+  ::lstrcpyW(cmd, kCmd);
+  STARTUPINFOW si{};
+  si.cb = sizeof(si);
+  PROCESS_INFORMATION pi{};
+  if (!::CreateProcessW(nullptr, cmd, nullptr, nullptr, FALSE,
+                        CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
+    return -1;
+  }
+  DWORD code = static_cast<DWORD>(-1);
+  if (::WaitForSingleObject(pi.hProcess, 35000) == WAIT_OBJECT_0) {
+    ::GetExitCodeProcess(pi.hProcess, &code);
+  } else {
+    ::TerminateProcess(pi.hProcess, 0);
+  }
+  ::CloseHandle(pi.hProcess);
+  ::CloseHandle(pi.hThread);
+  return static_cast<int>(code);
+}
+
+// clean 마커 기록 후 자기 자신을 지연 재기동하고 즉시 종료.
+// (TDR 자가재시작과 동일 패턴 — teardown 을 건너뛰어 레이스 없이 끝낸다)
+void RelaunchSelfAndDie() {
+  wchar_t exe[MAX_PATH];
+  if (::GetModuleFileNameW(nullptr, exe, MAX_PATH) == 0) return;
+  wchar_t cmd[MAX_PATH + 64];
+  ::wsprintfW(cmd, L"cmd /c ping -n 4 127.0.0.1 >nul & start \"\" \"%s\"", exe);
+  STARTUPINFOW si{};
+  si.cb = sizeof(si);
+  PROCESS_INFORMATION pi{};
+  if (::CreateProcessW(nullptr, cmd, nullptr, nullptr, FALSE,
+                       CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
+    ::CloseHandle(pi.hProcess);
+    ::CloseHandle(pi.hThread);
+    WriteCleanExitMarker();  // 파일 상단 전역 선언 사용 (익명 NS 내 extern 금지)
+    ::TerminateProcess(::GetCurrentProcess(), 0);
+  }
+}
+
 DWORD WINAPI TdrWatchdog(LPVOID param) {
   HWND main_hwnd = static_cast<HWND>(param);
   ID3D11Device* device = nullptr;
   int tick = 0;
+  // 진단 스위치: TDR 자가재시작 비활성(janitor 는 유지). 강제 TDR 실험에서
+  // "엔진이 스스로 device-lost 를 복구하는지"를 워치독 개입 없이 관찰할 때 쓴다.
+  //   set ANALOG_TIMER_NO_TDR_RESTART=1
+  const bool no_tdr_restart =
+      ::GetEnvironmentVariableW(L"ANALOG_TIMER_NO_TDR_RESTART", nullptr, 0) > 0;
   for (;;) {
     ::Sleep(1000);
     // ── 고아 위젯 좀비 janitor ──
@@ -80,7 +158,45 @@ DWORD WINAPI TdrWatchdog(LPVOID param) {
       WriteCleanExitMarker();
       ::TerminateProcess(::GetCurrentProcess(), 0);
     }
-    if (++tick % 5 != 0) continue;  // D3D 디바이스 체크는 기존대로 5초 주기
+    if (++tick % 5 != 0) continue;  // 무거운 체크(D3D/heartbeat)는 5초 주기
+
+    // ── Dart 프리즈 감지 (heartbeat 정체) ──
+    // Dart 가 10초 주기로 갱신하는 heartbeat 파일이 60초+ 정체 = Dart 이벤트
+    // 루프가 얼어붙음(렌더만이 아니라 통째로). 팝업(20초 카운트다운) 고지 후
+    // 자동 재시작한다 — 타이머는 savedAtMs 벽시계 보정으로 이어진다.
+    //
+    // 절전/최대절전 복귀 오탐 방어: 잠들어 있던 동안엔 tick 루프도 멈추므로
+    // GetTickCount64 간격이 크게 점프한다. 점프 감지 후 90초는 판정 유예
+    // (Dart 가 깨어나 heartbeat 를 다시 쓸 시간).
+    {
+      static ULONGLONG last_check_ms = ::GetTickCount64();
+      static ULONGLONG grace_until_ms = 0;
+      static ULONGLONG snooze_until_ms = 0;
+      // 이 세션에서 heartbeat 가 fresh 한 것을 본 적 있어야만 정체를 신뢰한다.
+      // 파일이 아예 없거나 영구적으로 못 쓰는 환경(권한 등)에서 "정체" 오판
+      // → 무한 재시작 루프가 되는 것을 차단.
+      static bool seen_fresh = false;
+      ULONGLONG now_ms = ::GetTickCount64();
+      if (now_ms - last_check_ms > 30000) {  // 5초 주기가 30초+ 점프 = 절전 복귀
+        grace_until_ms = now_ms + 90000;
+      }
+      last_check_ms = now_ms;
+      if (now_ms >= grace_until_ms && now_ms >= snooze_until_ms) {
+        int age = HeartbeatAgeSeconds();
+        if (age >= 0 && age < 30) seen_fresh = true;
+        if (seen_fresh && age >= 60) {
+          int r = ShowFreezeCountdownPopup();
+          if (r == 2) {
+            snooze_until_ms = now_ms + 10 * 60 * 1000;  // 취소 → 10분 보류
+          } else {
+            RelaunchSelfAndDie();  // 확인/타임아웃 → 재시작 (미반환)
+            snooze_until_ms = now_ms + 60 * 1000;  // 재기동 실패 시 1분 후 재시도
+          }
+        }
+      }
+    }
+
+    if (no_tdr_restart) continue;   // 진단 모드: TDR 감지·자가재시작 생략
     if (device == nullptr) {
       HRESULT hr = ::D3D11CreateDevice(
           nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0,

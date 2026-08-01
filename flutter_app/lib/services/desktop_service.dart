@@ -49,6 +49,64 @@ class DesktopService with WindowListener, TrayListener {
     });
   }
 
+  /// 프레임 정체 워치독 — "렌더 콜백이 멈춘" 유형의 freeze 감지.
+  ///
+  /// 역할 분담(강제 TDR 실험으로 확인): TDR 순백 화면에서는 프레임 콜백이
+  /// 계속 돌기 때문에 이 감지로는 안 잡힌다 — 그 유형은 네이티브 워치독
+  /// (D3D device-removed 폴링)이 담당. 여기는 raster/콜백 자체가 멎는 유형과,
+  /// Dart 는 살아있는데 프레임 스케줄이 죽은 잔여 케이스를 잡는다.
+  Timer? _freezeWatchdog;
+  int _staleCount = 0;
+  int _lastFreezeCheckMs = 0;
+  int _freezeSnoozeUntilMs = 0;
+
+  void _startFreezeWatchdog() {
+    _freezeWatchdog?.cancel();
+    _freezeWatchdog = Timer.periodic(const Duration(seconds: 5), (_) async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // 절전 복귀 방어: 5초 주기가 15초+ 점프했으면 판정 리셋 후 한 텀 유예.
+      final jumped =
+          _lastFreezeCheckMs != 0 && now - _lastFreezeCheckMs > 15000;
+      _lastFreezeCheckMs = now;
+      if (jumped) {
+        _staleCount = 0;
+        return;
+      }
+      if (now < _freezeSnoozeUntilMs || _restarting || _quitting) return;
+      final frameMs = TelemetryService.instance.lastFrameMs;
+      if (frameMs == 0) return; // 첫 프레임 전
+      // 최소화/숨김(트레이) 상태에선 프레임이 안 그려지는 게 정상.
+      try {
+        if (await windowManager.isMinimized() ||
+            !await windowManager.isVisible()) {
+          _staleCount = 0;
+          return;
+        }
+      } catch (_) {
+        return;
+      }
+      if (now - frameMs > 15000) {
+        // 연속 3회(15초 창 3번) 확인 후에만 발동 — 일시 부하 오탐 방지.
+        if (++_staleCount < 3) return;
+        _staleCount = 0;
+        unawaited(TelemetryService.instance.logEvent('freeze_detected', {
+          'kind': 'frame_stall',
+          'frameAgeSec': ((now - frameMs) / 1000).round(),
+        }));
+        await restart(
+          reason: 'auto_frame_stall',
+          confirmTimeoutSeconds: 20,
+          proceedOnTimeout: true,
+        );
+        // restart 가 거절로 돌아왔으면 10분 보류(팝업 스팸 방지).
+        _freezeSnoozeUntilMs =
+            DateTime.now().millisecondsSinceEpoch + 10 * 60 * 1000;
+      } else {
+        _staleCount = 0;
+      }
+    });
+  }
+
   /// runApp 이후(또는 직전) 호출 — 트레이 아이콘/메뉴 + 리스너 등록.
   Future<void> init() async {
     if (!isDesktop) return;
@@ -64,6 +122,7 @@ class DesktopService with WindowListener, TrayListener {
     await trayManager.setToolTip('Analog Timer');
     await _rebuildMenu('대기 중');
     _trayReady = true;
+    _startFreezeWatchdog();
   }
 
   Future<void> _rebuildMenu(String status) async {
@@ -169,15 +228,25 @@ class DesktopService with WindowListener, TrayListener {
 
   /// [confirm] 이면 네이티브 확인창으로 동의를 받은 뒤에만 진행한다.
   /// [reason] 은 텔레메트리 breadcrumb 에 남는 트리거 구분값.
-  Future<void> restart({bool confirm = true, String reason = 'manual'}) async {
+  /// [confirmTimeoutSeconds] > 0 이면 카운트다운 확인창 — [proceedOnTimeout] 이
+  /// true 일 때 무응답(타임아웃)을 "진행"으로 취급한다(자동 트리거용: 자리를
+  /// 비웠거나 입력이 죽은 상황에서도 복구가 굴러가야 하므로).
+  Future<void> restart({
+    bool confirm = true,
+    String reason = 'manual',
+    int confirmTimeoutSeconds = 0,
+    bool proceedOnTimeout = false,
+  }) async {
     if (!isDesktop || _quitting || _restarting) return;
     _restarting = true;
     if (confirm) {
       final ok = await nativeConfirm(
         title: restartTitle,
         message: restartMessage,
+        timeoutSeconds: confirmTimeoutSeconds,
       );
-      if (ok != true) {
+      final proceed = ok == true || (ok == null && proceedOnTimeout);
+      if (!proceed) {
         unawaited(TelemetryService.instance
             .logEvent('restart_declined', {'reason': reason}));
         _restarting = false;
