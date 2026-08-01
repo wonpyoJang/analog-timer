@@ -17,7 +17,7 @@ class TelemetryService {
 
   static const String _endpoint =
       'https://analog-timer-kappa.vercel.app/api/telemetry';
-  static const String _appVersion = '0.4.0+6';
+  static const String _appVersion = '0.4.1+7';
 
   static const String _kConsent = 'telemetry_consent'; // bool? (null=미정)
   static const String _kDeviceId = 'telemetry_device_id';
@@ -88,6 +88,8 @@ class TelemetryService {
     } catch (_) {}
     Future<void> beat() async {
       try {
+        // 부모 디렉토리 보장 — 첫 실행/재설치 직후엔 아직 없을 수 있다.
+        await _heartbeatFile.parent.create(recursive: true);
         await _heartbeatFile.writeAsString(jsonEncode({
           't': DateTime.now().millisecondsSinceEpoch,
           'frame': _lastFrameMs == 0 ? null : _lastFrameMs,
@@ -201,15 +203,23 @@ class TelemetryService {
         },
       };
       await p.setString(_kPending, jsonEncode(crash));
-      if (_enabled) await _flushPending();
     }
 
-    // TDR 자가 재시작 감지 — 네이티브 워치독이 GPU 드라이버 리셋을 감지해 앱을
-    // 재시작했으면 마커가 남아있다. 마커 파일은 네이티브의 재시작 폭주 방지에
-    // 쓰이므로 삭제하지 않고, mtime 기준으로 이미 리포트한 것만 건너뛴다.
-    await _reportTdrRestartIfAny(p);
-
+    // heartbeat 는 크래시 전송보다 먼저 시작 — _flushPending 의 이벤트로그 수집
+    // (PowerShell, 수 초~수십 초)이 첫 heartbeat 를 지연시키면 그 사이 크래시 시
+    // freeze 시점 데이터가 통째로 빈다.
     _startHeartbeat();
+
+    // 전송 체인은 백그라운드로 — 이벤트로그 수집(PowerShell)이 앱 시작(runApp)을
+    // 막지 않게. 순서는 보존(크래시 flush → TDR 리포트, _kPending 경합 방지)하고,
+    // 실패해도 pending 은 prefs 에 남아 다음 기회에 재전송된다.
+    unawaited(() async {
+      if (lastSessionCrashed && _enabled) await _flushPending();
+      // TDR 자가 재시작 감지 — 네이티브 워치독이 GPU 드라이버 리셋을 감지해 앱을
+      // 재시작했으면 마커가 남아있다. 마커 파일은 네이티브의 재시작 폭주 방지에
+      // 쓰이므로 삭제하지 않고, mtime 기준으로 이미 리포트한 것만 건너뛴다.
+      await _reportTdrRestartIfAny(p);
+    }());
   }
 
   Future<void> _reportTdrRestartIfAny(SharedPreferences p) async {

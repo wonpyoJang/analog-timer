@@ -68,8 +68,10 @@ DWORD WINAPI TdrWatchdog(LPVOID param) {
     wchar_t flag[MAX_PATH];
     MarkerPath(flag, L"analog_timer_tdr.flag");
     if (flag[0] != L'\0') {
-      // 3분 이내 재감지 = 드라이버 반복 리셋 중 → 재시작 폭주 방지, 감시만 계속.
-      if (TdrFlagFresh(flag, 180)) continue;
+      // 60초 이내 재감지 = 드라이버 반복 리셋 중 → 재시작 폭주 방지, 감시만 계속.
+      // (원래 180초 — 반복 TDR 시 사용자가 최대 3분간 멈춘 시계를 보다 강제종료하는
+      //  패턴이 텔레메트리로 확인돼 60초로 단축. 폭주 상한은 분당 1회 재시작.)
+      if (TdrFlagFresh(flag, 60)) continue;
       HANDLE h = ::CreateFileW(flag, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
                                FILE_ATTRIBUTE_NORMAL, nullptr);
       if (h != INVALID_HANDLE_VALUE) ::CloseHandle(h);
