@@ -117,7 +117,7 @@ function renderFb(items){
       const crumbs=(f.diagnostics.breadcrumbs||[]).map(function(c){
         const t=new Date(c.t).toLocaleTimeString('ko-KR');
         return t+'  '+c.e+(c.d?' '+JSON.stringify(c.d):'');
-      }).join('\n');
+      }).join('\\n');
       diag='<details style="margin-top:6px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">🔍 진단 로그 (환경·직전 행동)</summary>'
         +(crumbs?'<div class="muted" style="font-size:11px;margin-top:6px">직전 행동</div><pre>'+esc(crumbs)+'</pre>':'')
         +'<pre>'+esc(JSON.stringify({env:f.diagnostics.env,lastState:f.diagnostics.lastState},null,1))+'</pre>'
