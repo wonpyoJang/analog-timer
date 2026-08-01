@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
+import 'native_confirm.dart';
 import 'platform_info.dart';
 import 'telemetry_service.dart';
 
@@ -157,11 +158,34 @@ class DesktopService with WindowListener, TrayListener {
   /// 타이머/스톱워치는 savedAtMs 벽시계 보정으로 이어지므로 기록·경과시간이
   /// 보존된다. 메인 창 렌더가 얼어도(TDR 좀비) 트레이 메뉴는 OS가 그리므로
   /// 트레이 경로는 Dart 가 살아 있는 한 동작한다.
+  /// 재시작 확인 문구 — 무엇이 보존되고 무엇이 일어나는지 명시(고지 후 동의).
+  static const String restartTitle = 'Analog Timer — 다시 시작';
+  static const String restartMessage = '화면 멈춤을 해소하기 위해 앱을 다시 시작합니다.\n\n'
+      '· 타이머 기록과 경과 시간은 그대로 유지됩니다\n'
+      '· 앱이 잠시 닫힌 뒤 약 5초 후 자동으로 다시 열립니다\n\n'
+      '계속할까요?';
+
   bool _restarting = false;
-  Future<void> restart() async {
+
+  /// [confirm] 이면 네이티브 확인창으로 동의를 받은 뒤에만 진행한다.
+  /// [reason] 은 텔레메트리 breadcrumb 에 남는 트리거 구분값.
+  Future<void> restart({bool confirm = true, String reason = 'manual'}) async {
     if (!isDesktop || _quitting || _restarting) return;
     _restarting = true;
-    unawaited(TelemetryService.instance.logEvent('manual_restart'));
+    if (confirm) {
+      final ok = await nativeConfirm(
+        title: restartTitle,
+        message: restartMessage,
+      );
+      if (ok != true) {
+        unawaited(TelemetryService.instance
+            .logEvent('restart_declined', {'reason': reason}));
+        _restarting = false;
+        return;
+      }
+    }
+    unawaited(
+        TelemetryService.instance.logEvent('manual_restart', {'reason': reason}));
     // 상태 저장(타이머 연속성) — 실패해도 30초 주기 저장분으로 이어진다.
     final cb = onQuit;
     if (cb != null) {

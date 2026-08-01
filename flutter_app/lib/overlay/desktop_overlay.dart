@@ -9,6 +9,7 @@ import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 import 'overlay_clock_painter.dart';
 import '../services/desktop_service.dart';
+import '../services/native_confirm.dart';
 import '../services/telemetry_service.dart';
 import '../widgets/date_label.dart';
 import '../widgets/text_outline.dart';
@@ -537,7 +538,23 @@ class _OverlayBodyState extends State<_OverlayBody>
   /// 앱 재시작 — 메인 엔진을 거치지 않는 직접 경로(메인이 얼어 있어도 동작).
   /// 종료는 스크립트(taskkill)에 위임한다 — 서브엔진에서 exit() 를 부르면
   /// 엔진 teardown 레이스로 0xC0000005 가 날 수 있다.
+  ///
+  /// 확인창은 네이티브(system-modal) — 이 경로가 쓰이는 상황은 대개 메인 렌더가
+  /// 죽어 있을 때라 Flutter 다이얼로그로는 고지가 보이지 않는다.
+  /// (메인이 얼어 있으면 상태 저장 요청도 닿지 않지만, 타이머는 30초 주기 저장 +
+  ///  savedAtMs 벽시계 보정으로 이어지므로 손실은 사실상 없다.)
+  bool _restarting = false;
   Future<void> _restartApp() async {
+    if (_restarting) return;
+    _restarting = true;
+    final ok = await nativeConfirm(
+      title: DesktopService.restartTitle,
+      message: DesktopService.restartMessage,
+    );
+    if (ok != true) {
+      _restarting = false;
+      return;
+    }
     await TelemetryService.instance.markCleanExit();
     await DesktopService.scheduleRelaunch(killSelf: true);
   }
