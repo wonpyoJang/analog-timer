@@ -139,6 +139,29 @@ class DesktopOverlayService {
     }
   }
 
+  /// 수동 재생성 — "멈춤 해소" 버튼용. 사용자가 명시적으로 요청한 것이므로
+  /// 자동 재생성용 백오프·시도 간격을 리셋하고 죽은(또는 언) 창을 즉시 교체한다.
+  Future<void> recreate(Map<String, dynamic> state) async {
+    if (!isDesktop) return;
+    _shouldShow = true;
+    _backoffUntil = null;
+    _recreateWindowStart = null;
+    _recreateCount = 0;
+    _lastRecreateAttempt = null;
+    _updateFails = 0;
+    unawaited(TelemetryService.instance.logEvent('widget_manual_recreate'));
+    final old = _overlay;
+    _overlay = null;
+    if (old != null) {
+      try {
+        await old.hide();
+      } catch (_) {}
+    }
+    try {
+      await _create(state);
+    } catch (_) {}
+  }
+
   /// 위젯 재생성(백오프 포함) — update 실패 누적 시와 '컨트롤러 부재' 시 공용.
   ///
   /// NOTE: 위젯이 죽은 뒤 재생성을 "반복"하면 핸들이 누수된다(~3/cycle). 근본

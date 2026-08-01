@@ -1185,6 +1185,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     ),
                                   ),
                                 ),
+                                // 위젯 재생성 — 위젯이 얼거나 사라졌을 때 수동 복구.
+                                if (_desktopOverlayOn) ...[
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () => DesktopOverlayService.instance
+                                        .recreate(_overlayStateMap()),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(7),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        border: Border.all(
+                                          color: AppColors.border,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.refresh,
+                                        size: 16,
+                                        color: AppColors.muted,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
                               if (TelemetryService.instance.supported) ...[
                                 const SizedBox(width: 8),
