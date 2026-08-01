@@ -115,16 +115,11 @@ class DesktopService with WindowListener, TrayListener {
     } catch (_) {}
   }
 
-  /// 트레이 "다시 시작(화면 멈춤 해소)" — 3초 뒤 자기 자신을 재기동하는 프로세스를
-  /// 예약해 두고 정상 종료 경로(quit)를 탄다. 타이머/스톱워치는 savedAtMs 벽시계
-  /// 보정으로 이어지므로 기록·경과시간이 보존된다.
-  ///
-  /// 메인 창 렌더가 얼어도(TDR 좀비) 트레이 메뉴는 OS가 그리므로 이 경로는
-  /// Dart 가 살아 있는 한 동작한다. 단일 인스턴스 mutex 는 종료와 함께 해제되어
-  /// 지연 기동이 필요하다 — main.cpp TDR 자가재실행과 동일 패턴.
-  Future<void> restart() async {
-    if (!isDesktop || _quitting) return;
-    unawaited(TelemetryService.instance.logEvent('manual_restart'));
+  /// 3초 뒤 자기 자신을 재기동하는 프로세스 예약 — 메인/오버레이 엔진 공용.
+  /// 단일 인스턴스 mutex 는 종료와 함께 해제되므로 지연 기동이 필요하다
+  /// (main.cpp TDR 자가재실행과 동일 패턴). 성공 여부를 반환한다.
+  static Future<bool> scheduleRelaunch() async {
+    if (!isDesktop) return false;
     try {
       await Process.start(
         'powershell',
@@ -138,9 +133,21 @@ class DesktopService with WindowListener, TrayListener {
         ],
         mode: ProcessStartMode.detached,
       );
+      return true;
     } catch (_) {
-      return; // 재기동 예약 실패 시 종료하지 않는다 — "앱만 죽는" 사고 방지.
+      return false;
     }
+  }
+
+  /// "다시 시작(화면 멈춤 해소)" — 재기동 예약 후 정상 종료 경로(quit)를 탄다.
+  /// 타이머/스톱워치는 savedAtMs 벽시계 보정으로 이어지므로 기록·경과시간이
+  /// 보존된다. 메인 창 렌더가 얼어도(TDR 좀비) 트레이 메뉴는 OS가 그리므로
+  /// 트레이 경로는 Dart 가 살아 있는 한 동작한다.
+  Future<void> restart() async {
+    if (!isDesktop || _quitting) return;
+    unawaited(TelemetryService.instance.logEvent('manual_restart'));
+    // 재기동 예약 실패 시 종료하지 않는다 — "앱만 죽는" 사고 방지.
+    if (!await scheduleRelaunch()) return;
     await quit();
   }
 

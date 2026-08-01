@@ -8,6 +8,8 @@ import 'dart:io';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 import 'overlay_clock_painter.dart';
+import '../services/desktop_service.dart';
+import '../services/telemetry_service.dart';
 import '../widgets/date_label.dart';
 import '../widgets/text_outline.dart';
 
@@ -463,6 +465,29 @@ class _OverlayBodyState extends State<_OverlayBody>
               ),
             ),
           ),
+          // 좌상단 앱 재시작 — "시계 멈춤" 탈출구. 위젯은 별도 엔진이라 메인 창
+          // 렌더가 얼어도 이 버튼은 살아 있을 수 있다. 메인을 거치지 않고 이
+          // 엔진에서 직접 재기동을 예약하고 프로세스를 끝낸다(exit). 타이머는
+          // 30초 주기 저장 + savedAtMs 벽시계 보정으로 이어지므로 손실 없음.
+          Positioned(
+            left: 0,
+            top: 0,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _restartApp,
+              child: const MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.restart_alt,
+                    size: 13,
+                    color: Color(0xAAF0C040), // accent — 복구 액션임을 드러낸다
+                  ),
+                ),
+              ),
+            ),
+          ),
           // 좌하단 투명도 토글 — 타이머 조작이 아닌 '창 크롬' 컨트롤이므로
           // 컨트롤 행이 아니라 리사이즈 그립과 동급의 작은 코너 아이콘으로 둔다.
           Positioned(
@@ -507,6 +532,13 @@ class _OverlayBodyState extends State<_OverlayBody>
         ),
       ),
     );
+  }
+
+  /// 앱 재시작 — 메인 엔진을 거치지 않는 직접 경로(메인이 얼어 있어도 동작).
+  /// clean 마커를 남겨 크래시 오탐을 막고, 재기동 예약 성공 시에만 종료한다.
+  Future<void> _restartApp() async {
+    await TelemetryService.instance.markCleanExit();
+    if (await DesktopService.scheduleRelaunch()) exit(0);
   }
 
   Widget _buildContent() {

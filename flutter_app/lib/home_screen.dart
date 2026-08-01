@@ -1208,6 +1208,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     ),
                                   ),
                                 ],
+                                // 앱 재시작 — "시계 멈춤" 탈출구. 타이머는
+                                // savedAtMs 벽시계 보정으로 이어져 손실 없음.
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () =>
+                                      DesktopService.instance.restart(),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(7),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      border: Border.all(
+                                        color: AppColors.border,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.restart_alt,
+                                      size: 16,
+                                      color: AppColors.accent,
+                                    ),
+                                  ),
+                                ),
                               ],
                               if (TelemetryService.instance.supported) ...[
                                 const SizedBox(width: 8),

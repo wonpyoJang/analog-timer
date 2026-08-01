@@ -7,6 +7,9 @@
 #include "flutter_window.h"
 #include "utils.h"
 
+// 파일 하단 정의 — TdrWatchdog(익명 네임스페이스)에서도 사용하는 전역 함수.
+void WriteCleanExitMarker();
+
 namespace {
 
 // ── GPU TDR(드라이버 타임아웃 리셋) 워치독 ─────────────────────────────
@@ -48,8 +51,20 @@ bool TdrFlagFresh(const wchar_t* path, int seconds) {
 DWORD WINAPI TdrWatchdog(LPVOID param) {
   HWND main_hwnd = static_cast<HWND>(param);
   ID3D11Device* device = nullptr;
+  int tick = 0;
   for (;;) {
-    ::Sleep(5000);
+    ::Sleep(1000);
+    // ── 고아 위젯 좀비 janitor ──
+    // 메인 창이 파괴됐는데 메시지 루프가 안 끝나는 사례(위젯 서브윈도우가 루프를
+    // 붙잡음 — WM_DESTROY 가 플러그인 체인에 삼켜져 PostQuitMessage 미도달)에서
+    // '창 없는 프로세스 + 남은 위젯'이 생긴다. 어느 경로로 죽었든 메인 창이
+    // 사라졌으면 1초 내에 확실히 종료한다. 정상 X 닫기는 사용자의 의도적 종료
+    // 이므로 clean 마커를 남긴다(루프 정상 종료 경로와 동일 의미).
+    if (!::IsWindow(main_hwnd)) {
+      WriteCleanExitMarker();
+      ::TerminateProcess(::GetCurrentProcess(), 0);
+    }
+    if (++tick % 5 != 0) continue;  // D3D 디바이스 체크는 기존대로 5초 주기
     if (device == nullptr) {
       HRESULT hr = ::D3D11CreateDevice(
           nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0,
