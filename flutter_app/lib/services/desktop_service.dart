@@ -116,24 +116,30 @@ class DesktopService with WindowListener, TrayListener {
   }
 
   /// 3초 뒤 자기 자신을 재기동하는 프로세스 예약 — 메인/오버레이 엔진 공용.
-  /// 단일 인스턴스 mutex 는 종료와 함께 해제되므로 지연 기동이 필요하다
-  /// (main.cpp TDR 자가재실행과 동일 패턴). 성공 여부를 반환한다.
+  /// 단일 인스턴스 mutex 는 종료와 함께 해제되므로 지연 기동이 필요하다.
+  /// 성공 여부를 반환한다.
+  ///
+  /// bat 파일 + cmd 방식인 이유: detached powershell 에 -Command 인자를 넘기는
+  /// 방식은 실환경에서 인자가 통째로 유실돼(빈 powershell 만 상주) 재기동이
+  /// 조용히 실패하는 것이 확인됐다. 인자 인용 문제가 없는 스크립트 파일 실행으로
+  /// 교체 — 네이티브 TDR 자가재실행(main.cpp, cmd+ping 지연)과 동일 계열 패턴.
   static Future<bool> scheduleRelaunch() async {
     if (!isDesktop) return false;
     try {
-      await Process.start(
-        'powershell',
-        [
-          '-NoProfile',
-          '-WindowStyle',
-          'Hidden',
-          '-Command',
-          "Start-Sleep -Seconds 3; "
-              "Start-Process -FilePath '${Platform.resolvedExecutable}'",
-        ],
+      final exe = Platform.resolvedExecutable;
+      final bat = File(
+          '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_relaunch.bat');
+      await bat.writeAsString('@echo off\r\n'
+          'ping -n 4 127.0.0.1 >nul\r\n'
+          'start "" "$exe"\r\n'
+          'del "%~f0"\r\n');
+      final p = await Process.start(
+        'cmd',
+        ['/c', bat.path],
         mode: ProcessStartMode.detached,
       );
-      return true;
+      // detached 라도 spawn 자체가 실패하면 여기서 throw — pid 확인으로 방어.
+      return p.pid > 0;
     } catch (_) {
       return false;
     }

@@ -48,6 +48,22 @@ bool TdrFlagFresh(const wchar_t* path, int seconds) {
          static_cast<ULONGLONG>(seconds) * 10000000ULL;
 }
 
+// 우리 프로세스 소유의 러너 메인 창이 존재하는지 — janitor 판정용.
+// 저장해둔 HWND 로 IsWindow 를 확인하는 방식은 창 파괴 후 다른 창이 같은 핸들
+// 값을 재사용하면 영원히 TRUE 라 janitor 가 눈멀게 된다(실환경에서 확인됨).
+// 클래스명으로 재탐색하고 소유 프로세스를 대조해 핸들 재사용에 면역으로 만든다.
+bool MainWindowAlive() {
+  DWORD self = ::GetCurrentProcessId();
+  HWND w = nullptr;
+  while ((w = ::FindWindowExW(nullptr, w, L"FLUTTER_RUNNER_WIN32_WINDOW",
+                              nullptr)) != nullptr) {
+    DWORD pid = 0;
+    ::GetWindowThreadProcessId(w, &pid);
+    if (pid == self) return true;
+  }
+  return false;
+}
+
 DWORD WINAPI TdrWatchdog(LPVOID param) {
   HWND main_hwnd = static_cast<HWND>(param);
   ID3D11Device* device = nullptr;
@@ -60,7 +76,7 @@ DWORD WINAPI TdrWatchdog(LPVOID param) {
     // '창 없는 프로세스 + 남은 위젯'이 생긴다. 어느 경로로 죽었든 메인 창이
     // 사라졌으면 1초 내에 확실히 종료한다. 정상 X 닫기는 사용자의 의도적 종료
     // 이므로 clean 마커를 남긴다(루프 정상 종료 경로와 동일 의미).
-    if (!::IsWindow(main_hwnd)) {
+    if (!MainWindowAlive()) {
       WriteCleanExitMarker();
       ::TerminateProcess(::GetCurrentProcess(), 0);
     }
