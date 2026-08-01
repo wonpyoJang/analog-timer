@@ -81,6 +81,7 @@ function render(reports){
     if(r.lastState) det+='<details><summary>마지막 상태</summary><pre>'+esc(JSON.stringify(r.lastState,null,2))+'</pre></details>';
     if(r.breadcrumbs&&r.breadcrumbs.length) det+='<details open><summary>직전 행동 '+r.breadcrumbs.length+'개 (크래시 전 사용 흐름)</summary><pre>'+esc(r.breadcrumbs.map(function(b){return new Date(b.t).toLocaleTimeString("ko-KR")+"  "+b.e+(b.d?" "+JSON.stringify(b.d):"");}).join("\\n"))+'</pre></details>';
     if(r.eventLog) det+='<details><summary>Windows 이벤트로그</summary><pre>'+esc(r.eventLog)+'</pre></details>';
+    if(r.extra) det+='<details open><summary>진단 (tdr 마커·heartbeat)</summary><pre>'+esc(JSON.stringify(r.extra,null,2))+'</pre></details>';
     if(r.stack) det+='<details><summary>스택</summary><pre>'+esc(r.stack)+'</pre></details>';
     return '<div class="card"><div class="row1">'+badge(r)+'<span class="muted">'+fmt(r.receivedAt)+'</span></div><div class="meta">'+meta+'</div>'+det+'</div>';
   }).join('');
