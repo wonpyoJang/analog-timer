@@ -1190,7 +1190,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   const SizedBox(width: 8),
                                   GestureDetector(
                                     onTap: () => DesktopOverlayService.instance
-                                        .recreate(_overlayStateMap()),
+                                        .refresh(_overlayStateMap()),
                                     child: Container(
                                       padding: const EdgeInsets.all(7),
                                       decoration: BoxDecoration(

@@ -535,10 +535,11 @@ class _OverlayBodyState extends State<_OverlayBody>
   }
 
   /// 앱 재시작 — 메인 엔진을 거치지 않는 직접 경로(메인이 얼어 있어도 동작).
-  /// clean 마커를 남겨 크래시 오탐을 막고, 재기동 예약 성공 시에만 종료한다.
+  /// 종료는 스크립트(taskkill)에 위임한다 — 서브엔진에서 exit() 를 부르면
+  /// 엔진 teardown 레이스로 0xC0000005 가 날 수 있다.
   Future<void> _restartApp() async {
     await TelemetryService.instance.markCleanExit();
-    if (await DesktopService.scheduleRelaunch()) exit(0);
+    await DesktopService.scheduleRelaunch(killSelf: true);
   }
 
   Widget _buildContent() {

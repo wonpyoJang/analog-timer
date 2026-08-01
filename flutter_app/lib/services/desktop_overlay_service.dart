@@ -139,27 +139,46 @@ class DesktopOverlayService {
     }
   }
 
-  /// 수동 재생성 — "멈춤 해소" 버튼용. 사용자가 명시적으로 요청한 것이므로
-  /// 자동 재생성용 백오프·시도 간격을 리셋하고 죽은(또는 언) 창을 즉시 교체한다.
-  Future<void> recreate(Map<String, dynamic> state) async {
-    if (!isDesktop) return;
+  /// 수동 새로고침 — "위젯이 이상할 때" 버튼용.
+  ///
+  /// **살아있는 위젯을 절대 재생성하지 않는다.** desktop_multi_window 0.3.0 에는
+  /// close() 가 없어 기존 서브윈도우를 파괴할 수 없다. 살아있는 창을 두고 두 번째
+  /// 엔진을 만들면 두 라이브 엔진이 always-on-top/window_manager 상태를 두고
+  /// 경합해 0xC0000005(액세스 위반)로 프로세스가 죽는다 — 실제로 재현됨.
+  ///
+  /// 그래서 IPC 로 생사를 먼저 판정한다:
+  ///  - 응답함(살아있음) → 새 엔진 없이 hide/show 로 창만 다시 띄워 렌더 재개 유도
+  ///  - 무응답/부재(죽음) → 그때만 재생성(자동 경로와 동일, 백오프는 리셋)
+  Future<void> refresh(Map<String, dynamic> state) async {
+    if (!isDesktop || _creating) return;
     _shouldShow = true;
+    unawaited(TelemetryService.instance.logEvent('widget_manual_refresh'));
+
+    final ov = _overlay;
+    if (ov != null) {
+      try {
+        await ov
+            .invokeMethod('update', jsonEncode(state))
+            .timeout(const Duration(seconds: 2));
+        // 살아있음 — 창만 다시 띄운다(새 엔진 생성 없음 = 안전).
+        _updateFails = 0;
+        try {
+          await ov.hide();
+          await ov.show();
+        } catch (_) {}
+        return;
+      } catch (_) {
+        // 무응답 — 진짜 죽은 위젯. 아래 재생성 경로로 내려간다.
+      }
+    }
+
+    // 죽었거나 없음 → 재생성. 사용자의 명시적 요청이므로 백오프를 리셋한다.
     _backoffUntil = null;
     _recreateWindowStart = null;
     _recreateCount = 0;
     _lastRecreateAttempt = null;
     _updateFails = 0;
-    unawaited(TelemetryService.instance.logEvent('widget_manual_recreate'));
-    final old = _overlay;
-    _overlay = null;
-    if (old != null) {
-      try {
-        await old.hide();
-      } catch (_) {}
-    }
-    try {
-      await _create(state);
-    } catch (_) {}
+    await _recreateWithBackoff(state);
   }
 
   /// 위젯 재생성(백오프 포함) — update 실패 누적 시와 '컨트롤러 부재' 시 공용.

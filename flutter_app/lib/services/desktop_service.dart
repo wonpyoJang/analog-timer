@@ -123,14 +123,22 @@ class DesktopService with WindowListener, TrayListener {
   /// 방식은 실환경에서 인자가 통째로 유실돼(빈 powershell 만 상주) 재기동이
   /// 조용히 실패하는 것이 확인됐다. 인자 인용 문제가 없는 스크립트 파일 실행으로
   /// 교체 — 네이티브 TDR 자가재실행(main.cpp, cmd+ping 지연)과 동일 계열 패턴.
-  static Future<bool> scheduleRelaunch() async {
+  ///
+  /// [killSelf] 면 스크립트가 이 프로세스를 taskkill 로 끝낸 뒤 재기동한다.
+  /// Dart 의 exit()/WM_CLOSE teardown 은 엔진·서브엔진 소멸 레이스로
+  /// 0xC0000005 를 내는 경로라(main.cpp 가 TerminateProcess 를 쓰는 이유)
+  /// 종료 자체를 프로세스 밖으로 빼는 편이 안전하고, **앱이 완전히 얼어도
+  /// 동작한다** — "멈춤 해소" 버튼의 목적에 정확히 부합.
+  /// 호출 전에 clean 마커를 남길 것(크래시 오탐 방지).
+  static Future<bool> scheduleRelaunch({bool killSelf = false}) async {
     if (!isDesktop) return false;
     try {
       final exe = Platform.resolvedExecutable;
       final bat = File(
           '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_relaunch.bat');
       await bat.writeAsString('@echo off\r\n'
-          'ping -n 4 127.0.0.1 >nul\r\n'
+          'ping -n 3 127.0.0.1 >nul\r\n'
+          '${killSelf ? 'taskkill /F /PID $pid >nul 2>&1\r\nping -n 3 127.0.0.1 >nul\r\n' : ''}'
           'start "" "$exe"\r\n'
           'del "%~f0"\r\n');
       final p = await Process.start(
@@ -149,12 +157,23 @@ class DesktopService with WindowListener, TrayListener {
   /// 타이머/스톱워치는 savedAtMs 벽시계 보정으로 이어지므로 기록·경과시간이
   /// 보존된다. 메인 창 렌더가 얼어도(TDR 좀비) 트레이 메뉴는 OS가 그리므로
   /// 트레이 경로는 Dart 가 살아 있는 한 동작한다.
+  bool _restarting = false;
   Future<void> restart() async {
-    if (!isDesktop || _quitting) return;
+    if (!isDesktop || _quitting || _restarting) return;
+    _restarting = true;
     unawaited(TelemetryService.instance.logEvent('manual_restart'));
-    // 재기동 예약 실패 시 종료하지 않는다 — "앱만 죽는" 사고 방지.
-    if (!await scheduleRelaunch()) return;
-    await quit();
+    // 상태 저장(타이머 연속성) — 실패해도 30초 주기 저장분으로 이어진다.
+    final cb = onQuit;
+    if (cb != null) {
+      try {
+        await cb().timeout(const Duration(milliseconds: 500));
+      } catch (_) {}
+    }
+    // 종료를 스크립트에 위임하므로, 크래시 오탐 방지 마커를 먼저 남긴다.
+    await TelemetryService.instance.markCleanExit();
+    if (!await scheduleRelaunch(killSelf: true)) {
+      _restarting = false; // 예약 실패 — 앱을 그대로 둔다("앱만 죽는" 사고 방지)
+    }
   }
 
   Future<void> _showWindow() async {
