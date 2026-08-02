@@ -87,6 +87,8 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   // 편집 모드 — 길게 누르면 크기·위치 버튼 표시, 5초 무조작 시 자동 숨김
   bool _editMode = false;
   Timer? _editModeTimer;
+  // 엣지 D-pad 도킹 방향 — ⇄로 전환 (왼손잡이 대응)
+  bool _dpadOnLeft = false;
 
   // 길게 누르기 온보딩 힌트 — show 커맨드의 hintLongPress로 활성화
   bool _showHint = false;
@@ -708,8 +710,6 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
 
   Widget _buildEditCanvas() {
     final w = _effectiveExpandedW.toDouble();
-    final a = _gridAnchors();
-    const accent = Color(0xFFE07A52);
     return Stack(
       children: [
         // 스크림 — 빈 곳 탭 = 편집 완료
@@ -719,41 +719,8 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
             child: Container(color: Colors.black.withValues(alpha: 0.45)),
           ),
         ),
-        // 9앵커 점 — 탭 한 번으로 해당 위치로 이동
-        for (var row = 0; row < 3; row++)
-          for (var col = 0; col < 3; col++)
-            Positioned(
-              left: _editCenterOff + a.xs[col] + w / 2 - 22,
-              top: a.ys[row] + w / 2 - 22,
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _editPos = Offset(_editCenterOff + a.xs[col], a.ys[row]);
-                    _gridIdx = row * 3 + col;
-                  });
-                  _restartEditModeTimer();
-                },
-                behavior: HitTestBehavior.opaque,
-                child: SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Center(
-                    child: Container(
-                      width: _gridIdx == row * 3 + col ? 18 : 12,
-                      height: _gridIdx == row * 3 + col ? 18 : 12,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _gridIdx == row * 3 + col
-                            ? accent
-                            : Colors.white70,
-                        border: Border.all(color: Colors.black45, width: 1),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        // 시계 미리보기 — 창이 고정이라 직접 드래그도 좌표 피드백 없이 부드러움
+        // 시계 미리보기 + 그 위 3×3 그리드 — 창이 고정이라 직접 드래그도
+        // 좌표 피드백 없이 부드러움. 셀 탭 = 해당 앵커로 이동
         Positioned(
           left: _editPos.dx,
           top: _editPos.dy,
@@ -762,55 +729,148 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
           child: GestureDetector(
             onPanUpdate: (d) => _nudgeBy(d.delta.dx, d.delta.dy),
             behavior: HitTestBehavior.opaque,
-            child: CustomPaint(
-              painter: _OverlayClockPainter(
-                timerActive: _timerActive,
-                segRemainMs: _segRemainMs,
-                segColor: _effectiveTimerColor,
-                swActive: _swActive,
-                swElapsedMs: _swElapsedMs,
-                swStartAngleRad: _swStartAngleRad,
-              ),
-              child: const SizedBox.expand(),
+            child: Stack(
+              children: [
+                Opacity(
+                  opacity: 0.4,
+                  child: CustomPaint(
+                    painter: _OverlayClockPainter(
+                      timerActive: _timerActive,
+                      segRemainMs: _segRemainMs,
+                      segColor: _effectiveTimerColor,
+                      swActive: _swActive,
+                      swElapsedMs: _swElapsedMs,
+                      swStartAngleRad: _swStartAngleRad,
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: _buildPositionGrid(),
+                ),
+              ],
             ),
           ),
         ),
-        // 하단 고정 컨트롤 — D-pad(미세 이동) + 크기 + 완료
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 48,
-          child: Center(child: _buildEditBar()),
+        // 엣지 도킹 D-pad — 한손 엄지 존, ⇄로 좌/우 전환
+        Positioned.fill(
+          child: Align(
+            alignment: Alignment(_dpadOnLeft ? -0.97 : 0.97, 0.2),
+            child: _buildEdgePad(),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildEditBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xE61A1A1C),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFF3A3A3E), width: 1),
+  Widget _buildPositionGrid() {
+    return Column(
+      children: [
+        for (var row = 0; row < 3; row++)
+          Expanded(
+            child: Row(
+              children: [
+                for (var col = 0; col < 3; col++)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(3),
+                      child: _gridCell(col, row),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _gridCell(int col, int row) {
+    final selected = _gridIdx == row * 3 + col;
+    const accent = Color(0xFFE07A52);
+    final a = _gridAnchors();
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _editPos = Offset(_editCenterOff + a.xs[col], a.ys[row]);
+          _gridIdx = row * 3 + col;
+        });
+        _restartEditModeTimer();
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? accent : Colors.white38,
+            width: selected ? 2 : 1,
+          ),
+          color: selected
+              ? accent.withValues(alpha: 0.15)
+              : Colors.black.withValues(alpha: 0.25),
+        ),
+        child: Center(
+          child: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: selected ? accent : Colors.white70,
+            ),
+          ),
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 미세 조정 D-pad — 앵커 사이 위치가 필요할 때
-          _dpadChip(Icons.keyboard_arrow_left, -1, 0),
-          _dpadChip(Icons.keyboard_arrow_up, 0, -1),
-          _dpadChip(Icons.keyboard_arrow_down, 0, 1),
-          _dpadChip(Icons.keyboard_arrow_right, 1, 0),
-          const SizedBox(width: 6),
-          _cornerChipButton(Icons.open_in_full, () {
-            _cycleOverlaySize();
-            _restartEditModeTimer();
-          }),
-          const SizedBox(width: 6),
-          _cornerChipButton(Icons.check, _finishEdit),
-        ],
-      ),
+    );
+  }
+
+  /// 엣지 도킹 세로 D-pad — ⇄(도킹 전환) / ▲ / ◀▶ / ▼ / 크기 / 완료
+  Widget _buildEdgePad() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: _dpadOnLeft
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.end,
+      children: [
+        _cornerChipButton(Icons.swap_horiz, () {
+          setState(() => _dpadOnLeft = !_dpadOnLeft);
+          _restartEditModeTimer();
+        }),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xE61A1A1C),
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: const Color(0xFF3A3A3E), width: 1),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _dpadChip(Icons.keyboard_arrow_up, 0, -1),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _dpadChip(Icons.keyboard_arrow_left, -1, 0),
+                  _dpadChip(Icons.keyboard_arrow_right, 1, 0),
+                ],
+              ),
+              _dpadChip(Icons.keyboard_arrow_down, 0, 1),
+              Container(
+                width: 26,
+                height: 1,
+                margin: const EdgeInsets.symmetric(vertical: 5),
+                color: const Color(0xFF3A3A3E),
+              ),
+              _cornerChipButton(Icons.open_in_full, () {
+                _cycleOverlaySize();
+                _restartEditModeTimer();
+              }),
+              const SizedBox(height: 4),
+              _cornerChipButton(Icons.check, _finishEdit),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
