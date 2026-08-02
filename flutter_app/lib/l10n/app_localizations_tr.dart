@@ -657,4 +657,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsHapticsDesc =>
       'Başlatma, duraklatma ve tamamlamada titret';
+
+  @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
 }

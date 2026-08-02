@@ -654,6 +654,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => '开始、暂停和完成时振动';
+
+  @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).

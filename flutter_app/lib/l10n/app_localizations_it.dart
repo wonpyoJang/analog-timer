@@ -659,4 +659,11 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settingsHapticsDesc =>
       'Vibra all\'avvio, in pausa e al completamento';
+
+  @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
 }
