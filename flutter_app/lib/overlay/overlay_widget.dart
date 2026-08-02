@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import '../l10n/app_localizations.dart';
 import '../main.dart' show parseLocaleTag, OverlayApp;
+import '../services/persistence_service.dart';
 
 class TimerOverlayWidget extends StatefulWidget {
   const TimerOverlayWidget({super.key});
@@ -153,6 +154,25 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   void initState() {
     super.initState();
     _updateClock();
+    // ⇄ 도킹 방향 복원 — 왼손 사용자가 매번 다시 전환하지 않도록
+    PersistenceService.loadDpadOnLeft().then((v) {
+      if (mounted && v) setState(() => _dpadOnLeft = v);
+    });
+    // 사용자 지정 크기 복원 — 앱 재시작 후에도 유지
+    PersistenceService.loadOverlayCustomW().then((w) {
+      if (mounted && w != null) setState(() => _customExpandedW = w);
+    });
+    // 네이티브 드래그 종료 통지 — 드래그로 옮긴 위치도 저장
+    _overlayCh.setMethodCallHandler((call) async {
+      if (call.method == 'onDragEnd') {
+        final args = call.arguments as Map?;
+        final x = (args?['x'] as num?)?.toDouble();
+        final y = (args?['y'] as num?)?.toDouble();
+        if (x != null && y != null) {
+          await PersistenceService.saveOverlayPos(x, y);
+        }
+      }
+    });
     _clockTimer = Timer.periodic(
       const Duration(seconds: 1),
       (_) => _updateClock(),
@@ -226,7 +246,14 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
             _effectiveExpandedH,
             true,
           );
-          await _moveOverlay(0, 53);
+          // 마지막 사용자 지정 위치 복원 — 화면 크기 변동 대비 클램프
+          final saved = await PersistenceService.loadOverlayPos();
+          final maxX = (_screenWidthDp - _effectiveExpandedW) / 2;
+          final maxY = (_screenHeightDp - _effectiveExpandedH - 24).toDouble();
+          await _moveOverlay(
+            (saved?.x ?? 0).clamp(-maxX, maxX),
+            (saved?.y ?? _topY).clamp(0.0, maxY),
+          );
           return;
         }
 
@@ -453,14 +480,22 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     _dpadRepeat = null;
   }
 
+  /// 임시 리셋 — 접기 등 표시 정리용. 저장된 사용자 위치는 건드리지 않는다
   Future<void> _resetPosition() {
     _gridIdx = 1; // 상단 중앙 앵커
     return _moveOverlay(0, _topY);
   }
 
+  /// 명시적 리셋(더블탭) — 저장 위치도 상단 중앙으로 갱신
+  Future<void> _resetPositionAndSave() {
+    PersistenceService.saveOverlayPos(0, _topY);
+    return _resetPosition();
+  }
+
   Future<void> _setOverlaySize(int w, int h) async {
     if (_resizeInFlight) return;
     setState(() => _customExpandedW = w);
+    PersistenceService.saveOverlayCustomW(w);
     // 편집 캔버스는 풀스크린 유지 — 실제 창 크기는 _finishEdit에서 반영
     if (_editMode) return;
     _resizeInFlight = true;
@@ -559,6 +594,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
       true,
     );
     await _moveOverlay(p.dx, p.dy);
+    await PersistenceService.saveOverlayPos(p.dx, p.dy);
   }
 
   void _restartEditModeTimer() {
@@ -625,7 +661,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
             onTap: () {
               if (!_wasDragging) _toggleExpanded(context);
             },
-            onDoubleTap: _resetPosition,
+            onDoubleTap: _resetPositionAndSave,
             onLongPress: _enterEditMode,
             onScaleStart: _onScaleStart,
             onScaleUpdate: _onScaleUpdate,
@@ -833,6 +869,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
       children: [
         _cornerChipButton(Icons.swap_horiz, () {
           setState(() => _dpadOnLeft = !_dpadOnLeft);
+          PersistenceService.saveDpadOnLeft(_dpadOnLeft);
           _restartEditModeTimer();
         }),
         const SizedBox(height: 4),

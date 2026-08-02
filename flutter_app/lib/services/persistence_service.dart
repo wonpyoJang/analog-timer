@@ -9,6 +9,47 @@ class PersistenceService {
   static const _kLocale = 'locale';
   static const _kHiddenDefaults = 'hidden_default_presets';
   static const _kOverlayHintCount = 'overlay_hint_count';
+  static const _kDpadOnLeft = 'dpad_on_left';
+  static const _kOverlayPosX = 'overlay_pos_x';
+  static const _kOverlayPosY = 'overlay_pos_y';
+  static const _kOverlayCustomW = 'overlay_custom_w';
+
+  /// 오버레이 사용자 지정 너비(dp) — null이면 기본 42% 공식. 오버레이 isolate 전용
+  static Future<void> saveOverlayCustomW(int w) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kOverlayCustomW, w);
+  }
+
+  static Future<int?> loadOverlayCustomW() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kOverlayCustomW);
+  }
+
+  /// 오버레이 창 마지막 위치(dp, topCenter gravity 기준) — 오버레이 isolate 전용
+  static Future<void> saveOverlayPos(double x, double y) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_kOverlayPosX, x);
+    await prefs.setDouble(_kOverlayPosY, y);
+  }
+
+  static Future<({double x, double y})?> loadOverlayPos() async {
+    final prefs = await SharedPreferences.getInstance();
+    final x = prefs.getDouble(_kOverlayPosX);
+    final y = prefs.getDouble(_kOverlayPosY);
+    if (x == null || y == null) return null;
+    return (x: x, y: y);
+  }
+
+  /// 편집 D-pad 도킹 방향 — 오버레이 isolate에서 읽고 쓴다 (⇄ 전환 기억)
+  static Future<bool> loadDpadOnLeft() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kDpadOnLeft) ?? false;
+  }
+
+  static Future<void> saveDpadOnLeft(bool onLeft) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kDpadOnLeft, onLeft);
+  }
 
   /// 오버레이 길게 누르기 힌트 노출 횟수 — 편집 모드 사용 확인 시 999로 영구 종료
   static Future<int> loadOverlayHintCount() async {
