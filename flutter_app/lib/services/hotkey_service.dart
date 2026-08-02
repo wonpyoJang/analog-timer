@@ -122,6 +122,43 @@ class HotkeyService {
     }
   }
 
+  /// 녹화 중 전역 핫키 일시 해제 — **필수**.
+  ///
+  /// system scope 핫키는 OS 가 키를 가로채(RegisterHotKey) 포커스 앱으로
+  /// 전달하지 않는다. 등록된 상태로 녹화하면 사용자가 그 조합(특히 현재
+  /// 조합)을 눌러도 마지막 키가 Flutter 에 도달하지 않아 "수식키 3개 이상은
+  /// 녹화가 안 된다"처럼 보인다(실사용 지적). 녹화 창을 열 때 해제하고
+  /// 닫을 때 되돌린다.
+  /// 녹화 중 표식 — 인앱 단축키 핸들러(home_screen)도 이 동안 물러난다.
+  /// (안 그러면 Space 를 녹화하려는 순간 타이머가 토글된다)
+  bool recording = false;
+
+  Future<void> suspendForRecording() async {
+    recording = true;
+    await _unregister();
+  }
+
+  Future<void> resumeAfterRecording() async {
+    recording = false;
+    if (enabled) await _register();
+  }
+
+  /// 다른 액션이 이미 쓰는 조합인지 — 중복 등록은 둘 중 하나가 조용히 실패한다.
+  String? conflictingAction(String action, HotKey hk) {
+    for (final e in _bindings.entries) {
+      if (e.key == action) continue;
+      final o = e.value;
+      if (o.key == hk.key &&
+          _modSet(o.modifiers) == _modSet(hk.modifiers)) {
+        return e.key;
+      }
+    }
+    return null;
+  }
+
+  String _modSet(List<HotKeyModifier>? m) =>
+      ((m ?? <HotKeyModifier>[]).map((e) => e.name).toList()..sort()).join(',');
+
   /// 액션 조합 변경 — 녹화 UI 에서 호출. scope 는 항상 system 으로 강제.
   Future<void> setBinding(String action, HotKey recorded) async {
     final hk = HotKey(

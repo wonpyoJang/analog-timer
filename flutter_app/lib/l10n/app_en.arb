@@ -237,6 +237,8 @@
   "settingsHotkeysDesc": "Work from any app. Tap an item below to change its keys. In-app: Space, N, S, L, W",
   "hotkeyReset": "Restore defaults",
   "hotkeyRecordPrompt": "Press the new key combination",
+  "hotkeyNeedModifier": "Include at least one modifier (Ctrl, Shift, Alt)",
+  "hotkeyDuplicate": "Already used by another action",
   "settingsTtsVoice": "Voice style",
   "settingsTtsVoiceDefault": "System default",
   "settingsTtsVoicePreview": "This is how announcements will sound",

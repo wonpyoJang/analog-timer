@@ -168,6 +168,8 @@
   "settingsHotkeysDesc": "다른 앱을 쓰는 중에도 동작해요. 아래 항목을 눌러 키를 바꿀 수 있어요. 창 안에선 Space·N·S·L·W",
   "hotkeyReset": "기본값 복원",
   "hotkeyRecordPrompt": "새 키 조합을 눌러주세요",
+  "hotkeyNeedModifier": "Ctrl·Shift·Alt 중 하나 이상을 포함해야 해요",
+  "hotkeyDuplicate": "다른 동작이 이미 쓰는 조합이에요",
   "settingsTtsVoice": "음성 스타일",
   "settingsTtsVoiceDefault": "시스템 기본",
   "settingsTtsVoicePreview": "안내 음성은 이렇게 들려요",

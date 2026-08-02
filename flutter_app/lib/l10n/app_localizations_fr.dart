@@ -535,6 +535,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get hotkeyRecordPrompt => 'Press the new key combination';
 
   @override
+  String get hotkeyNeedModifier =>
+      'Include at least one modifier (Ctrl, Shift, Alt)';
+
+  @override
+  String get hotkeyDuplicate => 'Already used by another action';
+
+  @override
   String get settingsTtsVoice => 'Voice style';
 
   @override

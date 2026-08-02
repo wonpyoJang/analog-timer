@@ -1428,6 +1428,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   ///  Space 타이머 토글 · N 다음 · S 스톱워치 · L 랩 · W 위젯 · ? 치트시트
   bool _onKeyEvent(KeyEvent event) {
     if (event is! KeyDownEvent) return false;
+    // 핫키 녹화 중엔 물러난다 — 녹화하려는 키가 액션으로 소비되면 안 된다.
+    if (HotkeyService.instance.recording) return false;
     // 텍스트 입력 중(세그먼트 이름·분 편집)엔 양보.
     final ctx = FocusManager.instance.primaryFocus?.context;
     if (ctx != null &&

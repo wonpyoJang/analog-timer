@@ -266,59 +266,87 @@ Widget _hotkeyRow(BuildContext context, String label, String action) {
 }
 
 /// 조합 녹화 다이얼로그 — 원하는 키를 누르면 미리보기, 저장으로 확정.
+///
+/// 여는 동안 전역 핫키를 해제한다(등록된 조합은 OS 가 가로채 녹화가 안 됨).
 Future<void> _recordHotkey(
     BuildContext context, String label, String action) async {
   final l = AppLocalizations.of(context);
   HotKey? recorded;
-  await showDialog<void>(
-    context: context,
-    builder: (ctx) => StatefulBuilder(
-      builder: (ctx2, setState) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(label,
-            style: const TextStyle(fontSize: 15, color: AppColors.text)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l.hotkeyRecordPrompt,
-                style:
-                    const TextStyle(fontSize: 12.5, color: AppColors.muted)),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.bg,
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: HotKeyRecorder(
-                initalHotKey: HotkeyService.instance.binding(action),
-                onHotKeyRecorded: (hk) => setState(() => recorded = hk),
-              ),
+  await HotkeyService.instance.suspendForRecording();
+  try {
+    if (!context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx2, setState) {
+          // 검증: 수식키 없는 단일 키를 전역 등록하면 그 키가 시스템 전체에서
+          // 삼켜진다. 중복 조합은 둘 중 하나가 조용히 등록 실패한다.
+          final mods = recorded?.modifiers ?? const <HotKeyModifier>[];
+          final noMod = recorded != null && mods.isEmpty;
+          final dup = recorded == null
+              ? null
+              : HotkeyService.instance.conflictingAction(action, recorded!);
+          final invalid = recorded == null || noMod || dup != null;
+          return AlertDialog(
+            backgroundColor: AppColors.surface,
+            title: Text(label,
+                style: const TextStyle(fontSize: 15, color: AppColors.text)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l.hotkeyRecordPrompt,
+                    style: const TextStyle(
+                        fontSize: 12.5, color: AppColors.muted)),
+                const SizedBox(height: 14),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.bg,
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: HotKeyRecorder(
+                    initalHotKey: HotkeyService.instance.binding(action),
+                    onHotKeyRecorded: (hk) => setState(() => recorded = hk),
+                  ),
+                ),
+                if (noMod || dup != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    noMod ? l.hotkeyNeedModifier : l.hotkeyDuplicate,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 11.5, color: AppColors.danger),
+                  ),
+                ],
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx2),
-            child: Text(l.cancel,
-                style: const TextStyle(color: AppColors.muted)),
-          ),
-          TextButton(
-            onPressed: recorded == null
-                ? null
-                : () {
-                    HotkeyService.instance.setBinding(action, recorded!);
-                    Navigator.pop(ctx2);
-                  },
-            child: Text(l.save,
-                style: const TextStyle(color: AppColors.accent)),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx2),
+                child: Text(l.cancel,
+                    style: const TextStyle(color: AppColors.muted)),
+              ),
+              TextButton(
+                onPressed: invalid
+                    ? null
+                    : () {
+                        HotkeyService.instance.setBinding(action, recorded!);
+                        Navigator.pop(ctx2);
+                      },
+                child: Text(l.save,
+                    style: TextStyle(
+                        color: invalid ? AppColors.muted : AppColors.accent)),
+              ),
+            ],
+          );
+        },
       ),
-    ),
-  );
+    );
+  } finally {
+    await HotkeyService.instance.resumeAfterRecording();
+  }
 }
 
 /// Windows 음성 이름 정리 — "Microsoft Zira - English (US)" → "Zira - English (US)".

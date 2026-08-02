@@ -1089,6 +1089,18 @@ abstract class AppLocalizations {
   /// **'Press the new key combination'**
   String get hotkeyRecordPrompt;
 
+  /// No description provided for @hotkeyNeedModifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Include at least one modifier (Ctrl, Shift, Alt)'**
+  String get hotkeyNeedModifier;
+
+  /// No description provided for @hotkeyDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Already used by another action'**
+  String get hotkeyDuplicate;
+
   /// No description provided for @settingsTtsVoice.
   ///
   /// In en, this message translates to:
