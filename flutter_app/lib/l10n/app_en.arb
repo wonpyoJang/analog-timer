@@ -308,5 +308,7 @@
   "a11yEditSegment": "Edit segment",
   "a11yDismissBanner": "Dismiss",
   "settingsHaptics": "Haptic feedback",
-  "settingsHapticsDesc": "Vibrate on start, pause and completion"
+  "settingsHapticsDesc": "Vibrate on start, pause and completion",
+  "settingsNotifications": "Notifications",
+  "settingsNotificationsDesc": "Toast when a segment changes or the timer completes"
 }

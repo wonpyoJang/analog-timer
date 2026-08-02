@@ -204,5 +204,7 @@
   "a11yEditSegment": "구간 편집",
   "a11yDismissBanner": "알림 닫기",
   "settingsHaptics": "진동 피드백",
-  "settingsHapticsDesc": "시작·일시정지·완료 시 진동"
+  "settingsHapticsDesc": "시작·일시정지·완료 시 진동",
+  "settingsNotifications": "알림",
+  "settingsNotificationsDesc": "구간이 바뀌거나 타이머가 끝나면 알림으로 표시"
 }

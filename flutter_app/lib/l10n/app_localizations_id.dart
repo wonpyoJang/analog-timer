@@ -658,4 +658,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => 'Getar saat mulai, jeda, dan selesai';
+
+  @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
 }

@@ -658,4 +658,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => 'Вибрация при старте, паузе и завершении';
+
+  @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
 }

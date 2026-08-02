@@ -657,4 +657,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => 'Vibrar al iniciar, pausar y completar';
+
+  @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
 }
