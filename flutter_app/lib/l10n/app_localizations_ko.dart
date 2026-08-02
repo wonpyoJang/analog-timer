@@ -452,5 +452,26 @@ class AppLocalizationsKo extends AppLocalizations {
       'Windows 설정 > 시간 및 언어 > 음성에서 한국어 음성을 추가하면 더 자연스러워요';
 
   @override
+  String get menuMore => '더보기';
+
+  @override
+  String get menuSettingsHint => '언어 · 알림 · 배터리';
+
+  @override
+  String get menuTroubleshoot => '문제 해결';
+
+  @override
+  String get menuAutoRecoveryNote => '멈춤 자동 감지·복구 켜짐 — 보통 직접 누를 일이 없습니다.';
+
+  @override
+  String get menuRefreshWidget => '위젯 새로고침';
+
+  @override
+  String get menuRestartApp => '앱 재시작';
+
+  @override
+  String get menuErrorReports => '오류 리포트';
+
+  @override
   String get overlayLongPressHint => '시계를 길게 누르면 크기·위치를 조절할 수 있어요';
 }

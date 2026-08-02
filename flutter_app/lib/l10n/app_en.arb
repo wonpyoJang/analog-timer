@@ -216,5 +216,12 @@
   "ttsOnboardBody": "Segment changes like this can also be announced by voice",
   "ttsOnboardEnable": "Try it",
   "ttsVoiceMissingHint": "For natural announcements, add your language's voice in Windows Settings > Time & Language > Speech",
+  "menuMore": "More",
+  "menuSettingsHint": "Language · notifications · battery",
+  "menuTroubleshoot": "TROUBLESHOOT",
+  "menuAutoRecoveryNote": "Auto detection and recovery is on — you rarely need these.",
+  "menuRefreshWidget": "Refresh widget",
+  "menuRestartApp": "Restart app",
+  "menuErrorReports": "Error reports",
   "overlayLongPressHint": "Long-press the clock to adjust its size and position"
 }

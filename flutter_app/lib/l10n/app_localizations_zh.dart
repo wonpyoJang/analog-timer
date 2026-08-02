@@ -465,6 +465,28 @@ class AppLocalizationsZh extends AppLocalizations {
       'For natural announcements, add your language\'s voice in Windows Settings > Time & Language > Speech';
 
   @override
+  String get menuMore => 'More';
+
+  @override
+  String get menuSettingsHint => 'Language · notifications · battery';
+
+  @override
+  String get menuTroubleshoot => 'TROUBLESHOOT';
+
+  @override
+  String get menuAutoRecoveryNote =>
+      'Auto detection and recovery is on — you rarely need these.';
+
+  @override
+  String get menuRefreshWidget => 'Refresh widget';
+
+  @override
+  String get menuRestartApp => 'Restart app';
+
+  @override
+  String get menuErrorReports => 'Error reports';
+
+  @override
   String get overlayLongPressHint => '长按时钟可调整大小和位置';
 }
 

@@ -41,7 +41,9 @@ class DesktopService with WindowListener, TrayListener {
       center: true,
       title: 'Analog Timer',
       backgroundColor: Colors.transparent,
-      titleBarStyle: TitleBarStyle.normal,
+      // 커스텀 타이틀바(DesktopTitleBar)를 직접 그리므로 OS 캡션은 숨긴다.
+      // hidden 은 리사이즈 테두리를 유지하므로 창 크기 조절은 그대로 동작.
+      titleBarStyle: TitleBarStyle.hidden,
     );
     await windowManager.waitUntilReadyToShow(options, () async {
       await windowManager.show();
