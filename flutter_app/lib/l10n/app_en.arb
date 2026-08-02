@@ -220,6 +220,8 @@
   "menuSettingsHint": "Language · notifications · battery",
   "menuTroubleshoot": "TROUBLESHOOT",
   "menuAutoRecoveryNote": "Auto detection and recovery is on — you rarely need these.",
+  "settingsHotkeys": "Global shortcuts",
+  "settingsHotkeysDesc": "Work in any app: Ctrl+Alt+Space start/pause · Ctrl+Alt+N next · Ctrl+Alt+L lap. In-app: Space, N, S, L, W",
   "settingsTtsVoice": "Voice style",
   "settingsTtsVoiceDefault": "System default",
   "settingsTtsVoicePreview": "This is how announcements will sound",

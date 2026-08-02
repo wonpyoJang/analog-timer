@@ -987,6 +987,18 @@ abstract class AppLocalizations {
   /// **'Auto detection and recovery is on — you rarely need these.'**
   String get menuAutoRecoveryNote;
 
+  /// No description provided for @settingsHotkeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Global shortcuts'**
+  String get settingsHotkeys;
+
+  /// No description provided for @settingsHotkeysDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Work in any app: Ctrl+Alt+Space start/pause · Ctrl+Alt+N next · Ctrl+Alt+L lap. In-app: Space, N, S, L, W'**
+  String get settingsHotkeysDesc;
+
   /// No description provided for @settingsTtsVoice.
   ///
   /// In en, this message translates to:

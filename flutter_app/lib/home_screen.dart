@@ -29,6 +29,7 @@ import 'package:window_manager/window_manager.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
 import 'services/telemetry_service.dart';
+import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
 import 'widgets/overflow_menu.dart';
 import 'widgets/telemetry_consent.dart';
@@ -684,6 +685,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _initDesktop() async {
     // 오버레이(서브윈도우) 버튼 → 메인으로 전달되는 액션 처리
     DesktopOverlayService.instance.onAction = _handleOverlayAction;
+    // 글로벌 핫키(Ctrl+Alt+Space/N/L) — 같은 액션 핸들러로 배선.
+    HotkeyService.instance.onAction = _handleOverlayAction;
     // 종료 직전 상태 저장만 — 실제 종료(exit)와 오버레이 정리는
     // DesktopService.quit() 및 프로세스 종료가 담당한다.
     DesktopService.instance.onQuit = () async {
@@ -749,6 +752,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         context.read<TimerBloc>().add(const TimerNext());
       case 'sw_toggle':
         context.read<StopwatchBloc>().add(const StopwatchToggle());
+      case 'sw_lap':
+        context.read<StopwatchBloc>().add(const StopwatchLap());
+      case 'widget_toggle':
+        if (isDesktop) _toggleDesktopOverlay();
       case 'overlay_hide':
         DesktopOverlayService.instance.hide();
         setState(() => _desktopOverlayOn = false);
@@ -1366,7 +1373,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       child: scaffold,
     );
 
-    if (!isDesktop) return withAutoLog;
+    // 인앱 단축키 — Space(타이머)/N(다음)/S(스톱워치)/L(랩)/W(위젯).
+    // 글로벌 핫키(Ctrl+Alt+…)와 달리 창이 포커스일 때만. 텍스트 입력 중엔
+    // _shortcut 가드가 무시한다(세그먼트 분·이름 편집 보호).
+    final withShortcuts = CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.space): () =>
+            _shortcut('timer_toggle'),
+        const SingleActivator(LogicalKeyboardKey.keyN): () =>
+            _shortcut('timer_next'),
+        const SingleActivator(LogicalKeyboardKey.keyS): () =>
+            _shortcut('sw_toggle'),
+        const SingleActivator(LogicalKeyboardKey.keyL): () =>
+            _shortcut('sw_lap'),
+        const SingleActivator(LogicalKeyboardKey.keyW): () =>
+            _shortcut('widget_toggle'),
+      },
+      child: Focus(autofocus: true, child: withAutoLog),
+    );
+
+    if (!isDesktop) return withShortcuts;
     // 데스크톱: 타이머 상태 전이를 감지해 알림/동기화 발신. segRemainMs 만
     // 바뀌는 매 프레임은 무시하고 status/세그먼트/loop 변화에만 반응한다.
     return BlocListener<TimerBloc, TimerState>(
@@ -1376,8 +1402,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           p.loop != c.loop ||
           !identical(p.segments, c.segments),
       listener: (_, state) => _onTimerTransition(state),
-      child: withAutoLog,
+      child: withShortcuts,
     );
+  }
+
+  /// 인앱 단축키 공용 진입 — 텍스트 필드 편집 중이면 무시.
+  void _shortcut(String action) {
+    final ctx = FocusManager.instance.primaryFocus?.context;
+    if (ctx != null &&
+        ctx.findAncestorStateOfType<EditableTextState>() != null) {
+      return;
+    }
+    _handleOverlayAction(action);
   }
 }
 

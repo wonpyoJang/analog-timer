@@ -464,6 +464,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get menuAutoRecoveryNote => '멈춤 자동 감지·복구 켜짐 — 보통 직접 누를 일이 없습니다.';
 
   @override
+  String get settingsHotkeys => '전역 단축키';
+
+  @override
+  String get settingsHotkeysDesc =>
+      '다른 앱에서도: Ctrl+Alt+Space 시작/정지 · Ctrl+Alt+N 다음 · Ctrl+Alt+L 랩. 창 안에선 Space·N·S·L·W';
+
+  @override
   String get settingsTtsVoice => '음성 스타일';
 
   @override

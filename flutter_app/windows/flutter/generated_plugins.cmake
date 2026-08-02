@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_multi_window
   file_selector_windows
   flutter_tts
+  hotkey_manager_windows
   local_notifier
   permission_handler_windows
   record_windows

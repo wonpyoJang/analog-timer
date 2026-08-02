@@ -7,6 +7,7 @@ import 'theme/app_theme.dart';
 import 'widgets/language_picker.dart';
 import 'widgets/feedback_page.dart';
 import 'services/platform_info.dart';
+import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -94,6 +95,31 @@ class SettingsScreen extends StatelessWidget {
           ),
 
           const _Divider(),
+
+          // ── 전역 단축키 (데스크톱) — 다른 앱에서도 타이머 조작 ─────
+          if (isDesktop) ...[
+            ValueListenableBuilder<bool>(
+              valueListenable: HotkeyService.instance.enabledListenable,
+              builder: (ctx, hkOn, _) => _SettingsTile(
+                icon: Icons.keyboard_outlined,
+                iconColor: AppColors.accent,
+                title: l.settingsHotkeys,
+                subtitle: l.settingsHotkeysDesc,
+                trailing: Switch(
+                  value: hkOn,
+                  onChanged: HotkeyService.instance.setEnabled,
+                  activeThumbColor: AppColors.accent,
+                  trackColor: WidgetStateProperty.resolveWith(
+                    (states) => states.contains(WidgetState.selected)
+                        ? AppColors.accent.withAlpha(0x55)
+                        : AppColors.surface,
+                  ),
+                ),
+                onTap: () => HotkeyService.instance.setEnabled(!hkOn),
+              ),
+            ),
+            const _Divider(),
+          ],
 
           // ── 음성 안내 (TTS) — 세그먼트 전환/완료를 소리로 ────────
           ValueListenableBuilder<bool>(

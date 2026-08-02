@@ -480,6 +480,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Auto detection and recovery is on — you rarely need these.';
 
   @override
+  String get settingsHotkeys => 'Global shortcuts';
+
+  @override
+  String get settingsHotkeysDesc =>
+      'Work in any app: Ctrl+Alt+Space start/pause · Ctrl+Alt+N next · Ctrl+Alt+L lap. In-app: Space, N, S, L, W';
+
+  @override
   String get settingsTtsVoice => 'Voice style';
 
   @override

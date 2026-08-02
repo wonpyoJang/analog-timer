@@ -151,6 +151,8 @@
   "menuSettingsHint": "언어 · 알림 · 배터리",
   "menuTroubleshoot": "문제 해결",
   "menuAutoRecoveryNote": "멈춤 자동 감지·복구 켜짐 — 보통 직접 누를 일이 없습니다.",
+  "settingsHotkeys": "전역 단축키",
+  "settingsHotkeysDesc": "다른 앱에서도: Ctrl+Alt+Space 시작/정지 · Ctrl+Alt+N 다음 · Ctrl+Alt+L 랩. 창 안에선 Space·N·S·L·W",
   "settingsTtsVoice": "음성 스타일",
   "settingsTtsVoiceDefault": "시스템 기본",
   "settingsTtsVoicePreview": "안내 음성은 이렇게 들려요",
