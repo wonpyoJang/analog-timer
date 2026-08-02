@@ -33,13 +33,12 @@ class DesktopTitleBar extends StatelessWidget {
           padding: const EdgeInsets.only(left: 10),
           child: Row(
             children: [
-              Container(
+              // 앱 로고 — 어두운 바에서도 보이는 링 렌디션(작업표시줄과 동일).
+              Image.asset(
+                'assets/icons/app_icon_small.png',
                 width: 14,
                 height: 14,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2A2A2E),
-                  borderRadius: BorderRadius.circular(3),
-                ),
+                filterQuality: FilterQuality.medium,
               ),
               const SizedBox(width: 9),
               const Expanded(

@@ -96,6 +96,7 @@ flutter:
 
   assets:
     - assets/icons/app_icon.ico
+    - assets/icons/app_icon_small.png # 커스텀 타이틀바 로고(링 렌디션)
 
   fonts:
     - family: Pretendard
