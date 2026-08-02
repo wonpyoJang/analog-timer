@@ -96,5 +96,7 @@
   "a11yEditSegment": "Editar segmento",
   "a11yDismissBanner": "Dispensar",
   "settingsHaptics": "Resposta tátil",
-  "settingsHapticsDesc": "Vibrar ao iniciar, pausar e concluir"
+  "settingsHapticsDesc": "Vibrar ao iniciar, pausar e concluir",
+  "settingsColorblind": "Modo daltônico",
+  "settingsColorblindDesc": "Distinguir o cronômetro por traço, não só por cor"
 }

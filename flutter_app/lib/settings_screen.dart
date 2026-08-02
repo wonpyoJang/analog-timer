@@ -14,6 +14,7 @@ import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
 import 'services/text_scale_service.dart';
 import 'services/haptic_service.dart';
+import 'services/colorblind_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -280,6 +281,30 @@ class SettingsScreen extends StatelessWidget {
             ),
             const _Divider(),
           ],
+
+          // ── 색맹 모드 (접근성) ────────────────────────────────
+          ValueListenableBuilder<bool>(
+            valueListenable: ColorblindService.instance.enabledListenable,
+            builder: (ctx, cbOn, _) => _SettingsTile(
+              icon: Icons.palette_outlined,
+              iconColor: AppColors.accent,
+              title: l.settingsColorblind,
+              subtitle: l.settingsColorblindDesc,
+              trailing: Switch(
+                value: cbOn,
+                onChanged: ColorblindService.instance.setEnabled,
+                activeThumbColor: AppColors.accent,
+                trackColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.selected)
+                      ? AppColors.accent.withAlpha(0x55)
+                      : AppColors.surface,
+                ),
+              ),
+              onTap: () => ColorblindService.instance.setEnabled(!cbOn),
+            ),
+          ),
+
+          const _Divider(),
 
           // ── 배터리 모니터링 (모바일 전용) ─────────────────────
           if (isAndroid || isIOS) ...[

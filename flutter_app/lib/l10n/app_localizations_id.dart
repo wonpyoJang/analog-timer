@@ -665,4 +665,11 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsNotificationsDesc =>
       'Toast when a segment changes or the timer completes';
+
+  @override
+  String get settingsColorblind => 'Mode buta warna';
+
+  @override
+  String get settingsColorblindDesc =>
+      'Bedakan stopwatch dengan pola putus-putus, bukan hanya warna';
 }

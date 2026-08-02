@@ -663,4 +663,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsNotificationsDesc =>
       'Toast when a segment changes or the timer completes';
+
+  @override
+  String get settingsColorblind => 'وضع عمى الألوان';
+
+  @override
+  String get settingsColorblindDesc =>
+      'تمييز ساعة الإيقاف بنمط متقطع وليس باللون فقط';
 }

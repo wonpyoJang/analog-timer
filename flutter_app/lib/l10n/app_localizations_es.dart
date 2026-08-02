@@ -664,4 +664,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settingsNotificationsDesc =>
       'Toast when a segment changes or the timer completes';
+
+  @override
+  String get settingsColorblind => 'Modo daltónico';
+
+  @override
+  String get settingsColorblindDesc =>
+      'Distinguir el cronómetro por patrón discontinuo, no solo por color';
 }

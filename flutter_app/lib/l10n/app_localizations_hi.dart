@@ -664,4 +664,11 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get settingsNotificationsDesc =>
       'Toast when a segment changes or the timer completes';
+
+  @override
+  String get settingsColorblind => 'वर्णांध मोड';
+
+  @override
+  String get settingsColorblindDesc =>
+      'स्टॉपवॉच को केवल रंग नहीं, धराशायी पैटर्न से पहचानें';
 }

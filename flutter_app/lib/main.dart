@@ -22,6 +22,7 @@ import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
 import 'services/text_scale_service.dart';
 import 'services/haptic_service.dart';
+import 'services/colorblind_service.dart';
 import 'widgets/desktop_title_bar.dart';
 
 Future<void> main(List<String> args) async {
@@ -49,6 +50,7 @@ Future<void> main(List<String> args) async {
   await TtsService.instance.init();
   await TextScaleService.instance.init();
   await HapticService.instance.init();
+  await ColorblindService.instance.init();
   await HotkeyService.instance.init();
   _installErrorHandlers();
   runApp(const AnalogTimerApp());
@@ -88,6 +90,7 @@ void overlayMain() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting();
   await TextScaleService.instance.init();
+  await ColorblindService.instance.init();
   final tag = await PersistenceService.loadLocale();
   final locale = tag != null ? parseLocaleTag(tag) : null;
   runApp(OverlayApp(initialLocale: locale));

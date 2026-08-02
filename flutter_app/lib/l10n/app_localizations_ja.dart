@@ -661,4 +661,10 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get settingsNotificationsDesc =>
       'Toast when a segment changes or the timer completes';
+
+  @override
+  String get settingsColorblind => '色覚モード';
+
+  @override
+  String get settingsColorblindDesc => 'ストップウォッチを色でなく点線で区別';
 }

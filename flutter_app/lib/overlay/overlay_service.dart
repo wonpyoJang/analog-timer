@@ -3,6 +3,7 @@ import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import '../services/persistence_service.dart';
 import '../services/platform_info.dart';
 import '../services/text_scale_service.dart';
+import '../services/colorblind_service.dart';
 
 class OverlayService {
   static Future<bool> get isPermissionGranted async {
@@ -108,6 +109,8 @@ class OverlayService {
         'batteryLevel': batteryLevel,
         // 인앱 글씨 배율 라이브 전파 — 오버레이 isolate가 반영
         'textScale': TextScaleService.instance.scale,
+        // 색맹 모드 라이브 전파
+        'colorblind': ColorblindService.instance.enabled,
       }),
     );
   }

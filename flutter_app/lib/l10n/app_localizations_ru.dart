@@ -665,4 +665,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsNotificationsDesc =>
       'Toast when a segment changes or the timer completes';
+
+  @override
+  String get settingsColorblind => 'Режим для дальтоников';
+
+  @override
+  String get settingsColorblindDesc =>
+      'Отличать секундомер пунктиром, а не только цветом';
 }

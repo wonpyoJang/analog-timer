@@ -665,4 +665,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsNotificationsDesc =>
       'Toast when a segment changes or the timer completes';
+
+  @override
+  String get settingsColorblind => 'Farbenblind-Modus';
+
+  @override
+  String get settingsColorblindDesc =>
+      'Stoppuhr per gestricheltem Muster unterscheiden, nicht nur per Farbe';
 }

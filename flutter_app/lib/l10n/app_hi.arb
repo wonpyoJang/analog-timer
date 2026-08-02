@@ -96,5 +96,7 @@
   "a11yEditSegment": "खंड संपादित करें",
   "a11yDismissBanner": "खारिज करें",
   "settingsHaptics": "हैप्टिक फ़ीडबैक",
-  "settingsHapticsDesc": "आरंभ, विराम और पूर्णता पर कंपन"
+  "settingsHapticsDesc": "आरंभ, विराम और पूर्णता पर कंपन",
+  "settingsColorblind": "वर्णांध मोड",
+  "settingsColorblindDesc": "स्टॉपवॉच को केवल रंग नहीं, धराशायी पैटर्न से पहचानें"
 }

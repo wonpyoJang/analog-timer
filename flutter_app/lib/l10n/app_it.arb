@@ -96,5 +96,7 @@
   "a11yEditSegment": "Modifica segmento",
   "a11yDismissBanner": "Ignora",
   "settingsHaptics": "Feedback aptico",
-  "settingsHapticsDesc": "Vibra all'avvio, in pausa e al completamento"
+  "settingsHapticsDesc": "Vibra all'avvio, in pausa e al completamento",
+  "settingsColorblind": "Modalità daltonici",
+  "settingsColorblindDesc": "Distingui il cronometro con tratteggio, non solo col colore"
 }

@@ -661,6 +661,12 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settingsNotificationsDesc =>
       'Toast when a segment changes or the timer completes';
+
+  @override
+  String get settingsColorblind => '色盲模式';
+
+  @override
+  String get settingsColorblindDesc => '用虚线而非仅颜色区分秒表';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -975,4 +981,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsHapticsDesc => '開始、暫停和完成時震動';
+
+  @override
+  String get settingsColorblind => '色盲模式';
+
+  @override
+  String get settingsColorblindDesc => '用虛線而非僅顏色區分碼錶';
 }

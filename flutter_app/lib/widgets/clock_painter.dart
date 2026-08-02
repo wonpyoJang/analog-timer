@@ -8,10 +8,14 @@ class ClockPainter extends CustomPainter {
   final StopwatchState swState;
   final DateTime now;
 
+  /// 색맹 모드 — 켜지면 스톱워치 호를 점선으로(색 외 형태 구분).
+  final bool colorblind;
+
   ClockPainter({
     required this.timerState,
     required this.swState,
     required this.now,
+    this.colorblind = false,
   });
 
   @override
@@ -136,39 +140,43 @@ class ClockPainter extends CustomPainter {
     final startAngle = swState.startAngleRadians ?? _minuteHandAngle();
     const swColor = Color(0xFF2EA84A);
 
-    // 완성 바퀴 (바깥 → 안) — 색맹 대응: 점선(dashed)으로 그려 타이머(채운
-    // 쐐기, solid)와 색 없이도 구분된다.
+    // 완성 바퀴 (바깥 → 안). 색맹 모드에서만 점선(색 외 형태 구분), 기본은 실선.
     for (int ring = 0; ring < min(fullLaps, maxRings); ring++) {
       final r = outermost - ring * step - ringW / 2;
-      _drawDashedArc(
-        canvas,
-        Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        -pi / 2,
-        2 * pi,
-        Paint()
-          ..color = swColor.withAlpha(0x77)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = ringW
-          ..strokeCap = StrokeCap.butt,
-      );
+      final paint = Paint()
+        ..color = swColor.withAlpha(0x77)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = ringW
+        ..strokeCap = StrokeCap.butt;
+      if (colorblind) {
+        _drawDashedArc(
+          canvas,
+          Rect.fromCircle(center: Offset(cx, cy), radius: r),
+          -pi / 2,
+          2 * pi,
+          paint,
+        );
+      } else {
+        canvas.drawCircle(Offset(cx, cy), r, paint);
+      }
     }
 
-    // 현재 진행 링 — 점선
+    // 현재 진행 링
     final curRing = min(fullLaps, maxRings - 1);
     if (curRing >= 0 && partialMin > 0) {
       final r = outermost - curRing * step - ringW / 2;
       final sweep = (partialMin / 60) * 2 * pi;
-      _drawDashedArc(
-        canvas,
-        Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        startAngle,
-        sweep,
-        Paint()
-          ..color = swColor.withAlpha(0xCC)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = ringW
-          ..strokeCap = StrokeCap.butt,
-      );
+      final rect = Rect.fromCircle(center: Offset(cx, cy), radius: r);
+      final paint = Paint()
+        ..color = swColor.withAlpha(0xCC)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = ringW
+        ..strokeCap = colorblind ? StrokeCap.butt : StrokeCap.round;
+      if (colorblind) {
+        _drawDashedArc(canvas, rect, startAngle, sweep, paint);
+      } else {
+        canvas.drawArc(rect, startAngle, sweep, false, paint);
+      }
     }
   }
 
@@ -295,6 +303,7 @@ class ClockPainter extends CustomPainter {
   bool shouldRepaint(ClockPainter old) =>
       old.timerState != timerState ||
       old.swState != swState ||
+      old.colorblind != colorblind ||
       old.now.second != now.second ||
       old.now.millisecond != now.millisecond;
 }

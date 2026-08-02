@@ -33,6 +33,7 @@ import 'services/hotkey_service.dart';
 import 'services/shortcut_hint_service.dart';
 import 'services/tts_service.dart';
 import 'services/haptic_service.dart';
+import 'services/colorblind_service.dart';
 import 'widgets/overflow_menu.dart';
 import 'widgets/shortcut_sheet.dart';
 import 'widgets/telemetry_consent.dart';
@@ -1572,11 +1573,16 @@ class _ClockWidget extends StatelessWidget {
                 children: [
                   AspectRatio(
                     aspectRatio: 1,
-                    child: CustomPaint(
-                      painter: ClockPainter(
-                        timerState: timerState,
-                        swState: swState,
-                        now: now,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable:
+                          ColorblindService.instance.enabledListenable,
+                      builder: (context, colorblind, _) => CustomPaint(
+                        painter: ClockPainter(
+                          timerState: timerState,
+                          swState: swState,
+                          now: now,
+                          colorblind: colorblind,
+                        ),
                       ),
                     ),
                   ),
