@@ -651,4 +651,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => 'खारिज करें';
+
+  @override
+  String get settingsHaptics => 'हैप्टिक फ़ीडबैक';
+
+  @override
+  String get settingsHapticsDesc => 'आरंभ, विराम और पूर्णता पर कंपन';
 }

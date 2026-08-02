@@ -32,6 +32,7 @@ import 'services/telemetry_service.dart';
 import 'services/hotkey_service.dart';
 import 'services/shortcut_hint_service.dart';
 import 'services/tts_service.dart';
+import 'services/haptic_service.dart';
 import 'widgets/overflow_menu.dart';
 import 'widgets/shortcut_sheet.dart';
 import 'widgets/telemetry_consent.dart';
@@ -883,6 +884,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final ttsLocale = Localizations.localeOf(context).toLanguageTag();
 
     if (cur.status == TimerStatus.done && prev.status != TimerStatus.done) {
+      HapticService.instance.impact(); // 완료 — 강한 촉각 알림
       DesktopNotificationService.notify(
         l.notifyTimerDoneTitle,
         l.notifyTimerDoneBody,
@@ -894,6 +896,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } else if (cur.currentSeg != prev.currentSeg &&
         cur.status == TimerStatus.running &&
         prev.status == TimerStatus.running) {
+      HapticService.instance.selection(); // 세그먼트 전환
       final prevName = prev.currentSeg < prev.segments.length
           ? prev.segments[prev.currentSeg].name
           : '';
@@ -908,6 +911,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
       // TTS 온보딩(1회) — 사용자가 전환을 3번째 경험한 직후에만 제안.
       unawaited(_maybeShowTtsOnboarding());
+    } else if (cur.status != prev.status) {
+      // 시작/일시정지/재개 등 상태 전환 — 가벼운 촉각 확인
+      HapticService.instance.selection();
     }
   }
 

@@ -94,5 +94,7 @@
   "textSizePreview": "Предпросмотр 25:00",
   "a11yClose": "Закрыть",
   "a11yEditSegment": "Изменить сегмент",
-  "a11yDismissBanner": "Скрыть"
+  "a11yDismissBanner": "Скрыть",
+  "settingsHaptics": "Тактильная отдача",
+  "settingsHapticsDesc": "Вибрация при старте, паузе и завершении"
 }

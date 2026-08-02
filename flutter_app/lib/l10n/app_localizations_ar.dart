@@ -650,4 +650,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => 'تجاهل';
+
+  @override
+  String get settingsHaptics => 'ردود فعل لمسية';
+
+  @override
+  String get settingsHapticsDesc => 'اهتزاز عند البدء والإيقاف المؤقت والإكمال';
 }

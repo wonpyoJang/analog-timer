@@ -306,5 +306,7 @@
   "textSizePreview": "Timer 25:00 preview",
   "a11yClose": "Close",
   "a11yEditSegment": "Edit segment",
-  "a11yDismissBanner": "Dismiss"
+  "a11yDismissBanner": "Dismiss",
+  "settingsHaptics": "Haptic feedback",
+  "settingsHapticsDesc": "Vibrate on start, pause and completion"
 }

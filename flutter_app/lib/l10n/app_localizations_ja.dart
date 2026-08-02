@@ -648,4 +648,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => '通知を閉じる';
+
+  @override
+  String get settingsHaptics => '触覚フィードバック';
+
+  @override
+  String get settingsHapticsDesc => '開始・一時停止・完了時に振動';
 }

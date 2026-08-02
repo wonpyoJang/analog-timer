@@ -94,5 +94,7 @@
   "textSizePreview": "पूर्वावलोकन 25:00",
   "a11yClose": "बंद करें",
   "a11yEditSegment": "खंड संपादित करें",
-  "a11yDismissBanner": "खारिज करें"
+  "a11yDismissBanner": "खारिज करें",
+  "settingsHaptics": "हैप्टिक फ़ीडबैक",
+  "settingsHapticsDesc": "आरंभ, विराम और पूर्णता पर कंपन"
 }

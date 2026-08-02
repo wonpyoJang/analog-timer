@@ -154,6 +154,26 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   late AnimationController _blinkCtrl;
   late AnimationController _batteryBlinkCtrl;
 
+  // 시스템 "동작 줄이기" — 깜빡임/체이스를 정적으로 렌더(광과민 대응).
+  // chase 컨트롤러 자체는 오버레이 프레임 드라이버라 멈추지 않고 값만 정적 사용.
+  bool _reduceMotion = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduce = MediaQuery.of(context).disableAnimations;
+    if (reduce != _reduceMotion) {
+      _reduceMotion = reduce;
+      if (reduce) {
+        _blinkCtrl.stop();
+        _batteryBlinkCtrl.stop();
+      } else {
+        if (_ending) _blinkCtrl.repeat(reverse: true);
+        if (_batteryLow) _batteryBlinkCtrl.repeat(reverse: true);
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -304,14 +324,14 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
           _cancelNextCountdown();
         }
         if (_ending && !wasEnding) {
-          _blinkCtrl.repeat(reverse: true);
+          if (!_reduceMotion) _blinkCtrl.repeat(reverse: true);
         } else if (!_ending && wasEnding) {
           _blinkCtrl
             ..stop()
             ..value = 1.0;
         }
         if (_batteryLow && !wasBatteryLow) {
-          _batteryBlinkCtrl.repeat(reverse: true);
+          if (!_reduceMotion) _batteryBlinkCtrl.repeat(reverse: true);
         } else if (!_batteryLow && wasBatteryLow) {
           _batteryBlinkCtrl
             ..stop()
@@ -1182,23 +1202,28 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     return AnimatedBuilder(
       animation: Listenable.merge([_blinkCtrl, _batteryBlinkCtrl]),
       builder: (context, _) {
-        final opacity = _ending ? _blinkCtrl.value : 1.0;
+        final opacity = (_ending && !_reduceMotion) ? _blinkCtrl.value : 1.0;
         return Opacity(
           opacity: opacity.clamp(0.3, 1.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (_batteryLow)
-                FadeTransition(
-                  opacity: Tween<double>(
-                    begin: 0.25,
-                    end: 1.0,
-                  ).animate(_batteryBlinkCtrl),
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: _BatteryBadge(level: _batteryLevel),
-                  ),
-                ),
+                _reduceMotion
+                    ? Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: _BatteryBadge(level: _batteryLevel),
+                      )
+                    : FadeTransition(
+                        opacity: Tween<double>(
+                          begin: 0.25,
+                          end: 1.0,
+                        ).animate(_batteryBlinkCtrl),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: _BatteryBadge(level: _batteryLevel),
+                        ),
+                      ),
               if (_timerActive) ...[
                 if (_timerLabel.isNotEmpty)
                   Text(
@@ -1304,7 +1329,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
               mode: borderMode,
               frac: _timerFrac,
               timerColor: _effectiveTimerColor,
-              chasePhase: _chaseCtrl.value,
+              chasePhase: _reduceMotion ? 0.0 : _chaseCtrl.value,
             ),
             child: child,
           );
@@ -1395,7 +1420,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         ],
       );
 
-      if (_ending) {
+      if (_ending && !_reduceMotion) {
         content = FadeTransition(
           opacity: Tween<double>(begin: 0.15, end: 1.0).animate(_blinkCtrl),
           child: content,

@@ -5,6 +5,7 @@ import '../../../theme/app_theme.dart';
 import '../bloc/stopwatch_bloc.dart';
 import '../bloc/stopwatch_event.dart';
 import '../../../services/hotkey_service.dart';
+import '../../../services/haptic_service.dart';
 import '../../../services/shortcut_hint_service.dart';
 import '../bloc/stopwatch_state.dart';
 
@@ -27,6 +28,7 @@ class StopwatchControls extends StatelessWidget {
     final lapMs = state.elapsedMs - state.lapStartMs;
     final lapNum = state.laps.length + 1;
     context.read<StopwatchBloc>().add(const StopwatchLap());
+    HapticService.instance.selection();
     // 기록이 하단 패널에만 들어가 잘 안 보이므로, 눌렸음을 즉시 알리는 스낵바.
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
@@ -77,6 +79,7 @@ class StopwatchControls extends StatelessWidget {
                       context.read<StopwatchBloc>().add(
                         const StopwatchToggle(),
                       );
+                      HapticService.instance.selection();
                       ShortcutHintService.instance.buttonPressed('sw_toggle');
                     },
                   ),
@@ -91,8 +94,9 @@ class StopwatchControls extends StatelessWidget {
                     onTap: active
                         ? () {
                             _lap(context, state);
-                            ShortcutHintService.instance
-                                .buttonPressed('sw_lap');
+                            ShortcutHintService.instance.buttonPressed(
+                              'sw_lap',
+                            );
                           }
                         : null,
                   ),

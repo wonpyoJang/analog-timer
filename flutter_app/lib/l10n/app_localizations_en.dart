@@ -650,4 +650,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => 'Dismiss';
+
+  @override
+  String get settingsHaptics => 'Haptic feedback';
+
+  @override
+  String get settingsHapticsDesc => 'Vibrate on start, pause and completion';
 }

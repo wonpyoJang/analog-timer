@@ -94,5 +94,7 @@
   "textSizePreview": "Önizleme 25:00",
   "a11yClose": "Kapat",
   "a11yEditSegment": "Bölümü düzenle",
-  "a11yDismissBanner": "Kapat"
+  "a11yDismissBanner": "Kapat",
+  "settingsHaptics": "Dokunsal geri bildirim",
+  "settingsHapticsDesc": "Başlatma, duraklatma ve tamamlamada titret"
 }

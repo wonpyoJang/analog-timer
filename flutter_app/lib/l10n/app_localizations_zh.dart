@@ -648,6 +648,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => '关闭提示';
+
+  @override
+  String get settingsHaptics => '触感反馈';
+
+  @override
+  String get settingsHapticsDesc => '开始、暂停和完成时振动';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -956,4 +962,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get a11yDismissBanner => '關閉提示';
+
+  @override
+  String get settingsHaptics => '觸覺回饋';
+
+  @override
+  String get settingsHapticsDesc => '開始、暫停和完成時震動';
 }

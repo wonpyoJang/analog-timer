@@ -652,4 +652,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => 'Schließen';
+
+  @override
+  String get settingsHaptics => 'Haptisches Feedback';
+
+  @override
+  String get settingsHapticsDesc => 'Vibrieren bei Start, Pause und Abschluss';
 }

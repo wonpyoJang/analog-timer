@@ -202,5 +202,7 @@
   "textSizePreview": "타이머 25:00 미리보기",
   "a11yClose": "닫기",
   "a11yEditSegment": "구간 편집",
-  "a11yDismissBanner": "알림 닫기"
+  "a11yDismissBanner": "알림 닫기",
+  "settingsHaptics": "진동 피드백",
+  "settingsHapticsDesc": "시작·일시정지·완료 시 진동"
 }

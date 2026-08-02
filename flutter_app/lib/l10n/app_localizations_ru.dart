@@ -652,4 +652,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => 'Скрыть';
+
+  @override
+  String get settingsHaptics => 'Тактильная отдача';
+
+  @override
+  String get settingsHapticsDesc => 'Вибрация при старте, паузе и завершении';
 }

@@ -652,4 +652,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => 'Ignorer';
+
+  @override
+  String get settingsHaptics => 'Retour haptique';
+
+  @override
+  String get settingsHapticsDesc => 'Vibrer au démarrage, en pause et à la fin';
 }

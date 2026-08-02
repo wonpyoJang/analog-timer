@@ -21,6 +21,7 @@ import 'services/sync_service.dart';
 import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
 import 'services/text_scale_service.dart';
+import 'services/haptic_service.dart';
 import 'widgets/desktop_title_bar.dart';
 
 Future<void> main(List<String> args) async {
@@ -47,6 +48,7 @@ Future<void> main(List<String> args) async {
   await SyncService.instance.init();
   await TtsService.instance.init();
   await TextScaleService.instance.init();
+  await HapticService.instance.init();
   await HotkeyService.instance.init();
   _installErrorHandlers();
   runApp(const AnalogTimerApp());
