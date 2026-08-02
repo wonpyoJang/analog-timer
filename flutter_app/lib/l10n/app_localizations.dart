@@ -1101,6 +1101,18 @@ abstract class AppLocalizations {
   /// **'Already used by another action'**
   String get hotkeyDuplicate;
 
+  /// No description provided for @hotkeyTakenWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Taken by another app — tap to change'**
+  String get hotkeyTakenWarning;
+
+  /// No description provided for @hotkeyRecordCaution.
+  ///
+  /// In en, this message translates to:
+  /// **'This combo will stop working in other apps that use it'**
+  String get hotkeyRecordCaution;
+
   /// No description provided for @settingsTtsVoice.
   ///
   /// In en, this message translates to:

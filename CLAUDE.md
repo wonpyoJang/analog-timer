@@ -31,9 +31,10 @@
 - configure 실패 후엔 반드시 `flutter clean` (CMAKE_INSTALL_PREFIX 오염)
 - **빌드 전 앱 종료**: `taskkill //F //IM analog_timer.exe` — 안 하면 LNK1104.
   강제 종료 전 `%TEMP%\analog_timer_clean.flag` 생성(크래시 오탐 방지)
-- pub cache 로컬 패치 2건 — `pub upgrade` 시 소실 주의, 원본/재적용은 `patches/`:
+- pub cache 로컬 패치 3건 — `pub upgrade` 시 소실 주의, 원본/재적용은 `patches/`:
   - desktop_multi_window: WM_FONTCHANGE null 가드
   - flutter_tts: CMakeLists C++17+/await (VS2019 16.5 C++20 코루틴 미지원)
+  - hotkey_manager_windows: RegisterHotKey 실패를 Error 로 전파(선점 감지)
 - 아이콘 재생성: `python tool/make_icons.py` (크기별 렌디션)
 
 ## 테스트/검증 관례

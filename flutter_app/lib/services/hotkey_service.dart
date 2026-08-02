@@ -32,6 +32,12 @@ class HotkeyService {
   /// 바인딩 변경 알림(설정 UI 갱신용) — 값은 의미 없는 리비전 카운터.
   final ValueNotifier<int> bindingsRev = ValueNotifier<int>(0);
 
+  /// 등록에 실패한 액션들 — 다른 앱이 선점한 조합. Windows 는 원래 이 실패를
+  /// 조용히 삼키므로(hotkey_manager_windows 로컬 패치로 전파) 설정에 ⚠ 로
+  /// 노출해 "저장했는데 안 눌림"의 원인을 사용자가 알 수 있게 한다.
+  final ValueNotifier<Set<String>> failedActions =
+      ValueNotifier<Set<String>>(const {});
+
   /// 액션 콜백 — home_screen 의 액션 핸들러('timer_toggle' 등)로 연결된다.
   void Function(String action)? onAction;
 
@@ -276,6 +282,7 @@ class HotkeyService {
   Future<void> _register() async {
     if (_registered || !isDesktop) return;
     _registered = true;
+    final failed = <String>{};
     for (final action in actions) {
       final hk = _bindings[action];
       if (hk == null) continue;
@@ -289,13 +296,16 @@ class HotkeyService {
           },
         );
       } catch (_) {
-        // 다른 앱이 선점한 조합 — 해당 키만 조용히 포기(나머지는 동작).
+        // 다른 앱이 선점한 조합 — 해당 키만 포기하고 ⚠ 로 노출.
+        failed.add(action);
       }
     }
+    failedActions.value = failed;
   }
 
   Future<void> _unregister() async {
     _registered = false;
+    failedActions.value = const {};
     try {
       await hotKeyManager.unregisterAll();
     } catch (_) {}

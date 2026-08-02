@@ -542,6 +542,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get hotkeyDuplicate => 'Already used by another action';
 
   @override
+  String get hotkeyTakenWarning => 'Taken by another app — tap to change';
+
+  @override
+  String get hotkeyRecordCaution =>
+      'This combo will stop working in other apps that use it';
+
+  @override
   String get settingsTtsVoice => 'Voice style';
 
   @override
