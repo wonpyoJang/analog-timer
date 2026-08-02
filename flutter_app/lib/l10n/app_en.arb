@@ -239,6 +239,8 @@
   "hotkeyRecordPrompt": "Press the new key combination",
   "hotkeyNeedModifier": "Include Ctrl, Alt or Win (Shift alone would hijack normal typing)",
   "hotkeyDuplicate": "Already used by another action",
+  "hotkeyTakenWarning": "Taken by another app — tap to change",
+  "hotkeyRecordCaution": "This combo will stop working in other apps that use it",
   "settingsTtsVoice": "Voice style",
   "settingsTtsVoiceDefault": "System default",
   "settingsTtsVoicePreview": "This is how announcements will sound",

@@ -524,6 +524,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get hotkeyDuplicate => '다른 동작이 이미 쓰는 조합이에요';
 
   @override
+  String get hotkeyTakenWarning => '다른 앱이 사용 중인 조합이에요 — 눌러서 바꿔주세요';
+
+  @override
+  String get hotkeyRecordCaution => '이 조합을 쓰는 다른 앱에서는 해당 키가 동작하지 않게 돼요';
+
+  @override
   String get settingsTtsVoice => '음성 스타일';
 
   @override

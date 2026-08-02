@@ -235,34 +235,65 @@ class SettingsScreen extends StatelessWidget {
 }
 
 /// 핫키 액션 한 줄 — 라벨 + 현재 조합 뱃지. 탭하면 녹화 다이얼로그.
+/// 등록 실패(다른 앱 선점) 시 ⚠ + 경고문 — "저장했는데 안 눌림" 원인 노출.
 Widget _hotkeyRow(BuildContext context, String label, String action) {
   final combo = HotkeyService.instance.describe(action);
-  return InkWell(
-    onTap: () => _recordHotkey(context, label, action),
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(56, 6, 20, 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(label,
-                style:
-                    const TextStyle(fontSize: 13, color: AppColors.text)),
+  final l = AppLocalizations.of(context);
+  return ValueListenableBuilder<Set<String>>(
+    valueListenable: HotkeyService.instance.failedActions,
+    builder: (ctx, failed, _) {
+      final taken = failed.contains(action);
+      return InkWell(
+        onTap: () => _recordHotkey(context, label, action),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(56, 6, 20, 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(label,
+                        style: const TextStyle(
+                            fontSize: 13, color: AppColors.text)),
+                  ),
+                  if (taken) ...[
+                    const Icon(Icons.warning_amber_rounded,
+                        size: 14, color: AppColors.danger),
+                    const SizedBox(width: 6),
+                  ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.bg,
+                      border: Border.all(
+                          color:
+                              taken ? AppColors.danger : AppColors.border),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(combo,
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: taken
+                                ? AppColors.danger
+                                : AppColors.text)),
+                  ),
+                ],
+              ),
+              if (taken)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(l.hotkeyTakenWarning,
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                          fontSize: 11, color: AppColors.danger)),
+                ),
+            ],
           ),
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: AppColors.bg,
-              border: Border.all(color: AppColors.border),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(combo,
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.text)),
-          ),
-        ],
-      ),
-    ),
+        ),
+      );
+    },
   );
 }
 
@@ -321,6 +352,14 @@ Future<void> _recordHotkey(
                         fontSize: 11.5, color: AppColors.danger),
                   ),
                 ],
+                // 사전 주의 한 줄 — 전역 핫키는 다른 앱의 같은 조합을 이긴다.
+                const SizedBox(height: 12),
+                Text(
+                  l.hotkeyRecordCaution,
+                  textAlign: TextAlign.center,
+                  style:
+                      const TextStyle(fontSize: 11, color: AppColors.faint),
+                ),
               ],
             ),
             actions: [
