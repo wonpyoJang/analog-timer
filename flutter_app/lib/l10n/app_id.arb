@@ -94,5 +94,7 @@
   "textSizePreview": "Pratinjau 25:00",
   "a11yClose": "Tutup",
   "a11yEditSegment": "Edit segmen",
-  "a11yDismissBanner": "Tutup"
+  "a11yDismissBanner": "Tutup",
+  "settingsHaptics": "Umpan balik haptik",
+  "settingsHapticsDesc": "Getar saat mulai, jeda, dan selesai"
 }

@@ -630,4 +630,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => '알림 닫기';
+
+  @override
+  String get settingsHaptics => '진동 피드백';
+
+  @override
+  String get settingsHapticsDesc => '시작·일시정지·완료 시 진동';
 }

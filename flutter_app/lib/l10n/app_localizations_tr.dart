@@ -650,4 +650,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => 'Kapat';
+
+  @override
+  String get settingsHaptics => 'Dokunsal geri bildirim';
+
+  @override
+  String get settingsHapticsDesc =>
+      'Başlatma, duraklatma ve tamamlamada titret';
 }

@@ -94,5 +94,7 @@
   "textSizePreview": "計時器 25:00 預覽",
   "a11yClose": "關閉",
   "a11yEditSegment": "編輯區間",
-  "a11yDismissBanner": "關閉提示"
+  "a11yDismissBanner": "關閉提示",
+  "settingsHaptics": "觸覺回饋",
+  "settingsHapticsDesc": "開始、暫停和完成時震動"
 }

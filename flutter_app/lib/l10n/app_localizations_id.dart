@@ -652,4 +652,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => 'Tutup';
+
+  @override
+  String get settingsHaptics => 'Umpan balik haptik';
+
+  @override
+  String get settingsHapticsDesc => 'Getar saat mulai, jeda, dan selesai';
 }
