@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'l10n/app_localizations.dart';
 import 'theme/app_theme.dart';
 import 'features/timer/bloc/timer_bloc.dart';
@@ -612,6 +613,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         _syncOverlay();
         _syncLiveActivity();
         _syncDesktopOverlay();
+        _maybeChimeHour(now); // 정각 시보 — 1초 주기면 0분을 놓치지 않는다
       }
       _nativeTick = (_nativeTick + 1) % 62; // ~1초마다
       if (_nativeTick == 0) _syncNativeWidget();
@@ -1460,6 +1462,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       listener: (_, state) => _onTimerTransition(state),
       child: withShortcuts,
     );
+  }
+
+  /// 정각 시보 — 발화 문구를 로케일에 맞게 만들어 TtsService 에 위임.
+  /// (판정·야간 무음·중복 가드는 서비스 쪽. 여기선 문구만 만든다)
+  void _maybeChimeHour(DateTime now) {
+    if (!TtsService.instance.enabled || !TtsService.instance.hourlyChime) {
+      return;
+    }
+    if (now.minute != 0) return; // 문구 생성 비용 절약용 선체크
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
+    // "오후 3시" / "3 PM" — 분 없는 시각 표기가 TTS 낭독에 자연스럽다.
+    // 그 외 언어는 지역 관례 표기(jm)로 폴백(분 포함 "3:00 PM" 낭독).
+    final String time;
+    if (localeTag.startsWith('ko')) {
+      time = DateFormat('a h시', 'ko').format(now);
+    } else if (localeTag.startsWith('en')) {
+      time = DateFormat('h a').format(now);
+    } else {
+      time = DateFormat.jm(localeTag).format(now);
+    }
+    unawaited(TtsService.instance.maybeChimeHour(
+      now,
+      AppLocalizations.of(context).hourlyChimeSpoken(time),
+      localeTag: localeTag,
+    ));
   }
 
   /// 단축키 맥락 힌트 스낵바 — 방금 누른 버튼의 단축키를 1회 알려준다.

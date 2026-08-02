@@ -667,6 +667,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsColorblindDesc => '用虚线而非仅颜色区分秒表';
+
+  @override
+  String get settingsHourlyChime => 'Hourly time announcement';
+
+  @override
+  String get settingsHourlyChimeDesc =>
+      'Speaks the time on the hour · quiet 10 PM–8 AM';
+
+  @override
+  String hourlyChimeSpoken(String time) {
+    return 'It\'s $time';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).

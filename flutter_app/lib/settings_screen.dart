@@ -229,6 +229,43 @@ class SettingsScreen extends StatelessWidget {
                   ),
           ),
 
+          // ── 정각 시보 (TTS 켜졌을 때만) — 매시 정각에 시간 낭독 ───
+          ValueListenableBuilder<bool>(
+            valueListenable: TtsService.instance.enabledListenable,
+            builder: (ctx, ttsOn, _) => !ttsOn
+                ? const SizedBox.shrink()
+                : ValueListenableBuilder<bool>(
+                    valueListenable: TtsService.instance.hourlyChimeListenable,
+                    builder: (ctx2, chimeOn, _) => _SettingsTile(
+                      icon: Icons.schedule,
+                      iconColor: AppColors.accent,
+                      title: l.settingsHourlyChime,
+                      subtitle: l.settingsHourlyChimeDesc,
+                      trailing: Switch(
+                        value: chimeOn,
+                        onChanged: (v) => TtsService.instance.setHourlyChime(
+                          v,
+                          sample: l.settingsTtsSample,
+                          localeTag:
+                              Localizations.localeOf(context).toLanguageTag(),
+                        ),
+                        activeThumbColor: AppColors.accent,
+                        trackColor: WidgetStateProperty.resolveWith(
+                          (states) => states.contains(WidgetState.selected)
+                              ? AppColors.accent.withAlpha(0x55)
+                              : AppColors.surface,
+                        ),
+                      ),
+                      onTap: () => TtsService.instance.setHourlyChime(
+                        !chimeOn,
+                        sample: l.settingsTtsSample,
+                        localeTag:
+                            Localizations.localeOf(context).toLanguageTag(),
+                      ),
+                    ),
+                  ),
+          ),
+
           const _Divider(),
 
           // ── 진동 피드백 (접근성, 모바일 전용 — 데스크톱엔 진동 모터가

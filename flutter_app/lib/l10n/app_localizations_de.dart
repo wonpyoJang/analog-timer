@@ -672,4 +672,16 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsColorblindDesc =>
       'Stoppuhr per gestricheltem Muster unterscheiden, nicht nur per Farbe';
+
+  @override
+  String get settingsHourlyChime => 'Hourly time announcement';
+
+  @override
+  String get settingsHourlyChimeDesc =>
+      'Speaks the time on the hour · quiet 10 PM–8 AM';
+
+  @override
+  String hourlyChimeSpoken(String time) {
+    return 'It\'s $time';
+  }
 }

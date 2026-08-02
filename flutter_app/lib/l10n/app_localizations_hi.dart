@@ -671,4 +671,16 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get settingsColorblindDesc =>
       'स्टॉपवॉच को केवल रंग नहीं, धराशायी पैटर्न से पहचानें';
+
+  @override
+  String get settingsHourlyChime => 'Hourly time announcement';
+
+  @override
+  String get settingsHourlyChimeDesc =>
+      'Speaks the time on the hour · quiet 10 PM–8 AM';
+
+  @override
+  String hourlyChimeSpoken(String time) {
+    return 'It\'s $time';
+  }
 }

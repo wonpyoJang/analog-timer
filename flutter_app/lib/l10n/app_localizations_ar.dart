@@ -670,4 +670,16 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsColorblindDesc =>
       'تمييز ساعة الإيقاف بنمط متقطع وليس باللون فقط';
+
+  @override
+  String get settingsHourlyChime => 'Hourly time announcement';
+
+  @override
+  String get settingsHourlyChimeDesc =>
+      'Speaks the time on the hour · quiet 10 PM–8 AM';
+
+  @override
+  String hourlyChimeSpoken(String time) {
+    return 'It\'s $time';
+  }
 }
