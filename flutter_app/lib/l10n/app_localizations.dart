@@ -1092,7 +1092,7 @@ abstract class AppLocalizations {
   /// No description provided for @hotkeyNeedModifier.
   ///
   /// In en, this message translates to:
-  /// **'Include at least one modifier (Ctrl, Shift, Alt)'**
+  /// **'Include Ctrl, Alt or Win (Shift alone would hijack normal typing)'**
   String get hotkeyNeedModifier;
 
   /// No description provided for @hotkeyDuplicate.

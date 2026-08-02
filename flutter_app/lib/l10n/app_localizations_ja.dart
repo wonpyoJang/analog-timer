@@ -534,7 +534,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get hotkeyNeedModifier =>
-      'Include at least one modifier (Ctrl, Shift, Alt)';
+      'Include Ctrl, Alt or Win (Shift alone would hijack normal typing)';
 
   @override
   String get hotkeyDuplicate => 'Already used by another action';

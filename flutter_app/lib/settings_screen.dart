@@ -5,6 +5,7 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 import 'l10n/app_localizations.dart';
 import 'services/battery_service.dart';
 import 'theme/app_theme.dart';
+import 'widgets/hotkey_record_field.dart';
 import 'widgets/language_picker.dart';
 import 'widgets/feedback_page.dart';
 import 'services/platform_info.dart';
@@ -279,10 +280,10 @@ Future<void> _recordHotkey(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx2, setState) {
-          // 검증: 수식키 없는 단일 키를 전역 등록하면 그 키가 시스템 전체에서
-          // 삼켜진다. 중복 조합은 둘 중 하나가 조용히 등록 실패한다.
-          final mods = recorded?.modifiers ?? const <HotKeyModifier>[];
-          final noMod = recorded != null && mods.isEmpty;
+          // 검증: Ctrl/Alt/Win 없는 조합(Shift 단독 포함)은 일반 타이핑을
+          // 시스템 전역에서 강탈한다. 중복 조합은 조용히 등록 실패한다.
+          final noMod =
+              recorded != null && !HotkeyService.isSaneBinding(recorded!);
           final dup = recorded == null
               ? null
               : HotkeyService.instance.conflictingAction(action, recorded!);
@@ -306,9 +307,9 @@ Future<void> _recordHotkey(
                     border: Border.all(color: AppColors.border),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: HotKeyRecorder(
-                    initalHotKey: HotkeyService.instance.binding(action),
-                    onHotKeyRecorded: (hk) => setState(() => recorded = hk),
+                  child: HotkeyRecordField(
+                    initial: HotkeyService.instance.binding(action),
+                    onRecorded: (hk) => setState(() => recorded = hk),
                   ),
                 ),
                 if (noMod || dup != null) ...[
