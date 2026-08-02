@@ -525,7 +525,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsHotkeysDesc =>
-      'Work in any app: Ctrl+Alt+Space start/pause · Ctrl+Alt+N next · Ctrl+Alt+L lap. In-app: Space, N, S, L, W';
+      'Work from any app. Tap an item below to change its keys. In-app: Space, N, S, L, W';
+
+  @override
+  String get hotkeyReset => 'Restore defaults';
+
+  @override
+  String get hotkeyRecordPrompt => 'Press the new key combination';
 
   @override
   String get settingsTtsVoice => 'Voice style';

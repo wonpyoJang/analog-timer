@@ -4,6 +4,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
+import '../../../services/hotkey_service.dart';
 import '../../../services/shortcut_hint_service.dart';
 import '../bloc/timer_state.dart';
 
@@ -44,7 +45,7 @@ class TimerControls extends StatelessWidget {
                     enabled: !isRunning,
                     primary: true,
                     color: AppColors.timerOrange,
-                    tooltip: 'Space · Ctrl+Alt+Space',
+                    tooltip: 'Space · ${HotkeyService.instance.describe('timer_toggle')}',
                     onTap: isRunning
                         ? null
                         : () {
@@ -59,7 +60,7 @@ class TimerControls extends StatelessWidget {
                   child: _Btn(
                     label: l.btnPause,
                     enabled: isRunning,
-                    tooltip: 'Space · Ctrl+Alt+Space',
+                    tooltip: 'Space · ${HotkeyService.instance.describe('timer_toggle')}',
                     onTap: isRunning
                         ? () {
                             context.read<TimerBloc>().add(const TimerPause());
@@ -81,7 +82,7 @@ class TimerControls extends StatelessWidget {
                     enabled: !isIdle,
                     color: AppColors.accent,
                     accentOutline: true,
-                    tooltip: 'N · Ctrl+Alt+N',
+                    tooltip: 'N · ${HotkeyService.instance.describe('timer_next')}',
                     onTap: !isIdle
                         ? () {
                             context.read<TimerBloc>().add(const TimerNext());

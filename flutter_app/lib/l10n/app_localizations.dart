@@ -1074,8 +1074,20 @@ abstract class AppLocalizations {
   /// No description provided for @settingsHotkeysDesc.
   ///
   /// In en, this message translates to:
-  /// **'Work in any app: Ctrl+Alt+Space start/pause · Ctrl+Alt+N next · Ctrl+Alt+L lap. In-app: Space, N, S, L, W'**
+  /// **'Work from any app. Tap an item below to change its keys. In-app: Space, N, S, L, W'**
   String get settingsHotkeysDesc;
+
+  /// No description provided for @hotkeyReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore defaults'**
+  String get hotkeyReset;
+
+  /// No description provided for @hotkeyRecordPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Press the new key combination'**
+  String get hotkeyRecordPrompt;
 
   /// No description provided for @settingsTtsVoice.
   ///
