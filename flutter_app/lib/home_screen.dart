@@ -1530,27 +1530,59 @@ class _ClockWidget extends StatelessWidget {
   final DateTime now;
   const _ClockWidget({required this.now});
 
+  /// 색-단독으로 표현되던 시계 진행 상황을 스크린리더용 한 문장으로.
+  /// 시계 face(CustomPaint)는 시맨틱이 없어 이 라벨이 유일한 접근 수단이 된다.
+  static String _semanticsLabel(
+    AppLocalizations l,
+    TimerState ts,
+    StopwatchState sw,
+  ) {
+    String fmt(int ms) {
+      final total = ms ~/ 1000;
+      final m = total ~/ 60;
+      final s = total % 60;
+      return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
+
+    final parts = <String>[];
+    if (ts.status == TimerStatus.done) {
+      parts.add('${l.legendTimer}: ${l.statusDone}');
+    } else if (ts.status != TimerStatus.idle) {
+      parts.add('${l.legendTimer}: ${fmt(ts.segRemainMs)}');
+    }
+    if (sw.running || sw.elapsedMs > 0) {
+      parts.add('${l.legendStopwatch}: ${fmt(sw.elapsedMs)}');
+    }
+    return parts.isEmpty ? l.statusWaiting : parts.join(', ');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return BlocBuilder<TimerBloc, TimerState>(
       builder: (context, timerState) {
         return BlocBuilder<StopwatchBloc, StopwatchState>(
           builder: (context, swState) {
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                AspectRatio(
-                  aspectRatio: 1,
-                  child: CustomPaint(
-                    painter: ClockPainter(
-                      timerState: timerState,
-                      swState: swState,
-                      now: now,
+            return Semantics(
+              container: true,
+              label: _semanticsLabel(l, timerState, swState),
+              excludeSemantics: true,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: CustomPaint(
+                      painter: ClockPainter(
+                        timerState: timerState,
+                        swState: swState,
+                        now: now,
+                      ),
                     ),
                   ),
-                ),
-                _CenterInfo(timerState: timerState, swState: swState),
-              ],
+                  _CenterInfo(timerState: timerState, swState: swState),
+                ],
+              ),
             );
           },
         );

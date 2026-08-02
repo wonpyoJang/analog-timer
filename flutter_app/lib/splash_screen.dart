@@ -37,14 +37,24 @@ class _SplashScreenState extends State<SplashScreen>
     Future.delayed(const Duration(milliseconds: 2200), _navigateHome);
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 시스템 "동작 줄이기" — 페이드 인을 건너뛰고 즉시 표시(광과민/멀미 대응).
+    if (MediaQuery.of(context).disableAnimations && _fade.value < 1.0) {
+      _fade.value = 1.0;
+    }
+  }
+
   void _navigateHome() {
     if (!mounted) return;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: Duration(milliseconds: reduceMotion ? 0 : 500),
         pageBuilder: (_, _, _) => const HomeScreen(),
         transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
+            reduceMotion ? child : FadeTransition(opacity: anim, child: child),
       ),
     );
   }
