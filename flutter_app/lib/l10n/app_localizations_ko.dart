@@ -497,6 +497,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shortcutWidgetMirror => '위젯 반대편으로 대칭 이동';
 
   @override
+  String get shortcutWidgetFocus => '위젯 포커스 (키보드 배치 시작)';
+
+  @override
+  String get shortcutWidgetBlur => '하던 앱으로 돌아가기';
+
+  @override
   String get keysHintTimerToggle =>
       '💡 Space 또는 Ctrl+Alt+Space로도 시작/일시정지할 수 있어요';
 

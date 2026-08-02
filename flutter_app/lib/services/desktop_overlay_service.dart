@@ -101,6 +101,17 @@ class DesktopOverlayService {
     }
   }
 
+  /// 위젯 창에 키보드 포커스 — 전역 핫키(widget_focus)용.
+  /// 핫키 이벤트를 받은 프로세스는 포그라운드 활성화 권한을 얻으므로
+  /// 같은 프로세스의 서브윈도우 focus 가 OS 포커스 잠금에 막히지 않는다.
+  Future<void> focusOverlay() async {
+    final ov = _overlay;
+    if (ov == null || !_shouldShow) return;
+    try {
+      await ov.invokeMethod('focus');
+    } catch (_) {}
+  }
+
   Future<void> hide() async {
     _shouldShow = false;
     if (_overlay == null) return;

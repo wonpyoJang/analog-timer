@@ -132,6 +132,8 @@ class SettingsScreen extends StatelessWidget {
                           _hotkeyRow(
                               context, l.shortcutTimerNext, 'timer_next'),
                           _hotkeyRow(context, l.shortcutSwLap, 'sw_lap'),
+                          _hotkeyRow(context, l.shortcutWidgetFocus,
+                              'widget_focus'),
                           Align(
                             alignment: Alignment.centerRight,
                             child: Padding(

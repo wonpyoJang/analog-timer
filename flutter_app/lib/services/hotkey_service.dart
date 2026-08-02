@@ -24,7 +24,12 @@ class HotkeyService {
   static const String _kBindPrefix = 'hotkey_bind_'; // + action = HotKey json
 
   /// 핫키를 제공하는 액션 목록(표시 순서).
-  static const List<String> actions = ['timer_toggle', 'timer_next', 'sw_lap'];
+  static const List<String> actions = [
+    'timer_toggle',
+    'timer_next',
+    'sw_lap',
+    'widget_focus',
+  ];
 
   final ValueNotifier<bool> enabledListenable = ValueNotifier<bool>(true);
   bool get enabled => enabledListenable.value;
@@ -48,6 +53,10 @@ class HotkeyService {
         'timer_toggle': _key(PhysicalKeyboardKey.space),
         'timer_next': _key(PhysicalKeyboardKey.keyN),
         'sw_lap': _key(PhysicalKeyboardKey.keyL),
+        // 위젯은 skipTaskbar(툴윈도우)라 Alt+Tab 에 안 뜬다(위젯 관례) —
+        // 마우스 없이 포커스하는 유일한 경로가 이 핫키다. 포커스 후
+        // 1~9/화살표/Tab 으로 배치하고 Esc 로 이전 앱에 돌아간다.
+        'widget_focus': _key(PhysicalKeyboardKey.keyW),
       };
 
   HotKey _key(PhysicalKeyboardKey code) => HotKey(

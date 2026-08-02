@@ -281,6 +281,11 @@ class _OverlayBodyState extends State<_OverlayBody>
             final map = jsonDecode(call.arguments as String) as Map<String, dynamic>;
             _applyState(map);
           } catch (_) {}
+        } else if (call.method == 'focus') {
+          // 전역 핫키(widget_focus) → 키보드 배치 시작.
+          try {
+            await windowManager.focus();
+          } catch (_) {}
         }
         return null;
       });
@@ -571,6 +576,16 @@ class _OverlayBodyState extends State<_OverlayBody>
   bool _onMoveKey(KeyEvent e) {
     if (e is! KeyDownEvent && e is! KeyRepeatEvent) return false;
     final k = e.logicalKey;
+
+    // Esc = 포커스 반환 — 키보드 배치를 마치고 하던 앱으로 돌아간다.
+    if (k == LogicalKeyboardKey.escape) {
+      unawaited(() async {
+        try {
+          await windowManager.blur();
+        } catch (_) {}
+      }());
+      return true;
+    }
 
     // Tab = 수평 대칭(좌↔우), Shift+Tab = 수직 대칭(상↔하) —
     // "위젯이 작업 영역을 가린다 → 반대편으로 휙"을 원탭으로.
