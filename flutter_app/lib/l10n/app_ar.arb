@@ -94,5 +94,7 @@
   "textSizePreview": "معاينة 25:00",
   "a11yClose": "إغلاق",
   "a11yEditSegment": "تعديل المقطع",
-  "a11yDismissBanner": "تجاهل"
+  "a11yDismissBanner": "تجاهل",
+  "settingsHaptics": "ردود فعل لمسية",
+  "settingsHapticsDesc": "اهتزاز عند البدء والإيقاف المؤقت والإكمال"
 }

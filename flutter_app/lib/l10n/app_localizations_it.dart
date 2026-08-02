@@ -652,4 +652,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get a11yDismissBanner => 'Ignora';
+
+  @override
+  String get settingsHaptics => 'Feedback aptico';
+
+  @override
+  String get settingsHapticsDesc =>
+      'Vibra all\'avvio, in pausa e al completamento';
 }

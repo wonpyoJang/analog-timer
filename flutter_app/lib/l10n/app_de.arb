@@ -94,5 +94,7 @@
   "textSizePreview": "Timer 25:00 Vorschau",
   "a11yClose": "Schließen",
   "a11yEditSegment": "Abschnitt bearbeiten",
-  "a11yDismissBanner": "Schließen"
+  "a11yDismissBanner": "Schließen",
+  "settingsHaptics": "Haptisches Feedback",
+  "settingsHapticsDesc": "Vibrieren bei Start, Pause und Abschluss"
 }

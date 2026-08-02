@@ -12,6 +12,7 @@ import 'services/platform_info.dart';
 import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
 import 'services/text_scale_service.dart';
+import 'services/haptic_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -224,6 +225,30 @@ class SettingsScreen extends StatelessWidget {
                       onTap: () => _pickTtsVoice(context, l),
                     ),
                   ),
+          ),
+
+          const _Divider(),
+
+          // ── 진동 피드백 (접근성) ──────────────────────────────
+          ValueListenableBuilder<bool>(
+            valueListenable: HapticService.instance.enabledListenable,
+            builder: (ctx, hOn, _) => _SettingsTile(
+              icon: Icons.vibration,
+              iconColor: AppColors.accent,
+              title: l.settingsHaptics,
+              subtitle: l.settingsHapticsDesc,
+              trailing: Switch(
+                value: hOn,
+                onChanged: HapticService.instance.setEnabled,
+                activeThumbColor: AppColors.accent,
+                trackColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.selected)
+                      ? AppColors.accent.withAlpha(0x55)
+                      : AppColors.surface,
+                ),
+              ),
+              onTap: () => HapticService.instance.setEnabled(!hOn),
+            ),
           ),
 
           const _Divider(),

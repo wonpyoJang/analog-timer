@@ -94,5 +94,7 @@
   "textSizePreview": "Aperçu 25:00",
   "a11yClose": "Fermer",
   "a11yEditSegment": "Modifier le segment",
-  "a11yDismissBanner": "Ignorer"
+  "a11yDismissBanner": "Ignorer",
+  "settingsHaptics": "Retour haptique",
+  "settingsHapticsDesc": "Vibrer au démarrage, en pause et à la fin"
 }

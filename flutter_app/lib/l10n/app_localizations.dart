@@ -1298,6 +1298,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dismiss'**
   String get a11yDismissBanner;
+
+  /// No description provided for @settingsHaptics.
+  ///
+  /// In en, this message translates to:
+  /// **'Haptic feedback'**
+  String get settingsHaptics;
+
+  /// No description provided for @settingsHapticsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrate on start, pause and completion'**
+  String get settingsHapticsDesc;
 }
 
 class _AppLocalizationsDelegate
