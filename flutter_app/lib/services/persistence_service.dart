@@ -9,6 +9,18 @@ class PersistenceService {
   static const _kLocale = 'locale';
   static const _kHiddenDefaults = 'hidden_default_presets';
   static const _kOverlayHintCount = 'overlay_hint_count';
+  static const _kDpadOnLeft = 'dpad_on_left';
+
+  /// 편집 D-pad 도킹 방향 — 오버레이 isolate에서 읽고 쓴다 (⇄ 전환 기억)
+  static Future<bool> loadDpadOnLeft() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kDpadOnLeft) ?? false;
+  }
+
+  static Future<void> saveDpadOnLeft(bool onLeft) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kDpadOnLeft, onLeft);
+  }
 
   /// 오버레이 길게 누르기 힌트 노출 횟수 — 편집 모드 사용 확인 시 999로 영구 종료
   static Future<int> loadOverlayHintCount() async {

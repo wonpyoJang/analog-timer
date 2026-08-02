@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import '../l10n/app_localizations.dart';
 import '../main.dart' show parseLocaleTag, OverlayApp;
+import '../services/persistence_service.dart';
 
 class TimerOverlayWidget extends StatefulWidget {
   const TimerOverlayWidget({super.key});
@@ -153,6 +154,10 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   void initState() {
     super.initState();
     _updateClock();
+    // ⇄ 도킹 방향 복원 — 왼손 사용자가 매번 다시 전환하지 않도록
+    PersistenceService.loadDpadOnLeft().then((v) {
+      if (mounted && v) setState(() => _dpadOnLeft = v);
+    });
     _clockTimer = Timer.periodic(
       const Duration(seconds: 1),
       (_) => _updateClock(),
@@ -833,6 +838,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
       children: [
         _cornerChipButton(Icons.swap_horiz, () {
           setState(() => _dpadOnLeft = !_dpadOnLeft);
+          PersistenceService.saveDpadOnLeft(_dpadOnLeft);
           _restartEditModeTimer();
         }),
         const SizedBox(height: 4),
