@@ -555,6 +555,12 @@ class _OverlayBodyState extends State<_OverlayBody>
       _restarting = false;
       return;
     }
+    // 복구 마커 — 메인 엔진이 얼어 있어도 남길 수 있는 파일 경로. 다음 실행이
+    // recovery 리포트로 전송(위젯 버튼 = 메인 freeze 의심 상황이므로 가치 높음).
+    await TelemetryService.instance.writeRecoveryMarker('widget_restart', {
+      'kind': 'widget_restart_button',
+      'atMs': DateTime.now().millisecondsSinceEpoch,
+    });
     await TelemetryService.instance.markCleanExit();
     await DesktopService.scheduleRelaunch(killSelf: true);
   }

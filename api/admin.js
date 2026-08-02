@@ -52,6 +52,7 @@ export default function handler(req, res) {
 const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const fmt=t=>{const d=new Date(t);return d.toLocaleString('ko-KR');};
 function badge(r){
+  if(r.type==='recovery') return '<span class="badge" style="color:#7bd88f;border-color:#365">복구: '+esc(r.crashKind||'?')+'</span>';
   if(r.type==='env') return '<span class="badge env">ENV</span>';
   if(r.crashKind==='native') return '<span class="badge native">NATIVE 크래시</span>';
   if(r.crashKind==='widget') return '<span class="badge native">위젯 단독 사라짐</span>';

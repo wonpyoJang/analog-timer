@@ -118,6 +118,20 @@ int ShowFreezeCountdownPopup() {
   return static_cast<int>(code);
 }
 
+// 복구 마커(JSON) 기록 — 다음 실행의 Dart TelemetryService 가 읽어
+// type:'recovery' 리포트로 전송한다(원인·디버깅 정보 동봉). ASCII 전용.
+void WriteRecoveryMarkerJson(const wchar_t* filename, const char* json) {
+  wchar_t path[MAX_PATH];
+  MarkerPath(path, filename);
+  if (path[0] == L'\0') return;
+  HANDLE h = ::CreateFileW(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+                           FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (h == INVALID_HANDLE_VALUE) return;
+  DWORD written = 0;
+  ::WriteFile(h, json, static_cast<DWORD>(::lstrlenA(json)), &written, nullptr);
+  ::CloseHandle(h);
+}
+
 // clean 마커 기록 후 자기 자신을 지연 재기동하고 즉시 종료.
 // (TDR 자가재시작과 동일 패턴 — teardown 을 건너뛰어 레이스 없이 끝낸다)
 void RelaunchSelfAndDie() {
@@ -155,6 +169,10 @@ DWORD WINAPI TdrWatchdog(LPVOID param) {
     // 사라졌으면 1초 내에 확실히 종료한다. 정상 X 닫기는 사용자의 의도적 종료
     // 이므로 clean 마커를 남긴다(루프 정상 종료 경로와 동일 의미).
     if (!MainWindowAlive()) {
+      // 발동 원인 기록: 프로세스 uptime(초) — 좀비 발생 빈도/시점 추적용.
+      char jbuf[128];
+      ::wsprintfA(jbuf, "{\"kind\":\"janitor_close\",\"uptimeSec\":%d}", tick);
+      WriteRecoveryMarkerJson(L"analog_timer_janitor.json", jbuf);
       WriteCleanExitMarker();
       ::TerminateProcess(::GetCurrentProcess(), 0);
     }
@@ -188,7 +206,20 @@ DWORD WINAPI TdrWatchdog(LPVOID param) {
           int r = ShowFreezeCountdownPopup();
           if (r == 2) {
             snooze_until_ms = now_ms + 10 * 60 * 1000;  // 취소 → 10분 보류
+            char jbuf[160];
+            ::wsprintfA(jbuf,
+                        "{\"kind\":\"freeze_restart_declined\","
+                        "\"hbAgeSec\":%d,\"uptimeSec\":%d}",
+                        age, tick);
+            WriteRecoveryMarkerJson(L"analog_timer_freeze_restart.json", jbuf);
           } else {
+            // 발동 원인 기록: heartbeat 나이·팝업 응답(1=확인/-1=타임아웃)·uptime.
+            char jbuf[160];
+            ::wsprintfA(jbuf,
+                        "{\"kind\":\"freeze_restart\",\"hbAgeSec\":%d,"
+                        "\"popup\":%d,\"uptimeSec\":%d}",
+                        age, r, tick);
+            WriteRecoveryMarkerJson(L"analog_timer_freeze_restart.json", jbuf);
             RelaunchSelfAndDie();  // 확인/타임아웃 → 재시작 (미반환)
             snooze_until_ms = now_ms + 60 * 1000;  // 재기동 실패 시 1분 후 재시도
           }

@@ -239,8 +239,9 @@ class DesktopService with WindowListener, TrayListener {
   }) async {
     if (!isDesktop || _quitting || _restarting) return;
     _restarting = true;
+    bool? ok;
     if (confirm) {
-      final ok = await nativeConfirm(
+      ok = await nativeConfirm(
         title: restartTitle,
         message: restartMessage,
         timeoutSeconds: confirmTimeoutSeconds,
@@ -249,12 +250,25 @@ class DesktopService with WindowListener, TrayListener {
       if (!proceed) {
         unawaited(TelemetryService.instance
             .logEvent('restart_declined', {'reason': reason}));
+        // 복구 거절도 리포트 — "감지는 됐는데 사용자가 막음" 빈도 추적.
+        unawaited(TelemetryService.instance.reportRecovery('restart_declined',
+            extra: {'reason': reason, 'answer': ok == false ? 'cancel' : 'timeout'}));
         _restarting = false;
         return;
       }
     }
     unawaited(
         TelemetryService.instance.logEvent('manual_restart', {'reason': reason}));
+    // 복구 리포트 — 트리거(reason)·확인 방식·당시 상태를 디버깅 가능하게 동봉.
+    // 큐 적재가 먼저라 재시작으로 프로세스가 죽어도 다음 실행이 재전송한다.
+    await TelemetryService.instance.reportRecovery('restart', extra: {
+      'reason': reason,
+      'confirmedBy': !confirm
+          ? 'no_prompt'
+          : ok == true
+              ? 'user_ok'
+              : 'countdown_timeout',
+    });
     // 상태 저장(타이머 연속성) — 실패해도 30초 주기 저장분으로 이어진다.
     final cb = onQuit;
     if (cb != null) {

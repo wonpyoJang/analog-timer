@@ -17,9 +17,10 @@ class TelemetryService {
 
   static const String _endpoint =
       'https://analog-timer-kappa.vercel.app/api/telemetry';
-  static const String _appVersion = '0.4.2+8';
+  static const String _appVersion = '0.4.2+9';
 
   static const String _kConsent = 'telemetry_consent'; // bool? (null=미정)
+  static const String _kPendingEvents = 'telemetry_pending_events'; // 복구 이벤트 큐
   static const String _kDeviceId = 'telemetry_device_id';
   static const String _kLastState = 'telemetry_last_state';
   static const String _kPending = 'telemetry_pending_crash';
@@ -108,6 +109,110 @@ class TelemetryService {
     _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) => beat());
   }
 
+  /// 복구 이벤트 보고 — 자동/수동 복구가 "왜, 어떤 상태에서" 발동했는지 서버에
+  /// 남긴다(type: 'recovery'). 재시작 직전에 불려도 유실되지 않도록 prefs 큐에
+  /// 먼저 적재하고 곧바로 전송을 시도한다 — 실패분은 다음 실행 init 이 재전송.
+  /// 디버깅 컨텍스트(당시 프레임 나이·tdr 마커·타이머 상태·breadcrumbs) 자동 동봉.
+  Future<void> reportRecovery(String kind,
+      {String? message, Map<String, dynamic>? extra}) async {
+    if (!supported) return;
+    try {
+      final p = await SharedPreferences.getInstance();
+      final lastRaw = p.getString(_kLastState);
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      final ev = <String, dynamic>{
+        'type': 'recovery',
+        'crashKind': kind,
+        'message': message ?? '복구 발동 — $kind',
+        'lastState': lastRaw != null ? jsonDecode(lastRaw) : null,
+        'breadcrumbs': await _readCrumbs(),
+        'extra': {
+          ...?extra,
+          'tdrFlag': await _tdrFlagDiag(),
+          if (_lastFrameMs != 0)
+            'frameAgeSec': ((nowMs - _lastFrameMs) / 1000).round(),
+          'atMs': nowMs,
+        },
+      };
+      await _enqueueEvent(p, ev);
+      unawaited(_flushEvents());
+    } catch (_) {}
+  }
+
+  Future<void> _enqueueEvent(
+      SharedPreferences p, Map<String, dynamic> ev) async {
+    final list = (jsonDecode(p.getString(_kPendingEvents) ?? '[]') as List)
+        .toList();
+    list.add(ev);
+    while (list.length > 20) {
+      list.removeAt(0);
+    }
+    await p.setString(_kPendingEvents, jsonEncode(list));
+  }
+
+  Future<void> _flushEvents() async {
+    if (!_enabled || !supported) return;
+    try {
+      final p = await SharedPreferences.getInstance();
+      final raw = p.getString(_kPendingEvents);
+      if (raw == null || raw == '[]') return;
+      final remain = <dynamic>[];
+      for (final ev in (jsonDecode(raw) as List)) {
+        if (!await _send((ev as Map).cast<String, dynamic>())) remain.add(ev);
+      }
+      await p.setString(_kPendingEvents, jsonEncode(remain));
+    } catch (_) {}
+  }
+
+  /// 서브엔진(위젯)/외부에서 복구 마커 기록 — prefs 는 메인/위젯 엔진 간 flush
+  /// 경합이 있어 쓰지 않고(breadcrumb 파일 분리와 같은 이유) systemTemp 파일
+  /// 마커로 남긴다. 다음 실행의 _reportRecoveryMarkersIfAny 가 보고.
+  Future<void> writeRecoveryMarker(
+      String name, Map<String, dynamic> data) async {
+    try {
+      final f = File(
+          '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_$name.json');
+      await f.writeAsString(jsonEncode(data));
+    } catch (_) {}
+  }
+
+  /// 네이티브 워치독/서브엔진이 남긴 복구 마커(json) → recovery 리포트.
+  ///  - freeze_restart: heartbeat 정체 → 팝업 → 자동 재시작 (main.cpp)
+  ///  - janitor: 고아 위젯 좀비 정리 (main.cpp)
+  ///  - widget_restart: 위젯 코너 재시작 버튼 (오버레이 엔진)
+  /// mtime 을 prefs 에 기록해 중복 보고를 막고, 마커 시각 주변(−10분)의
+  /// Windows 이벤트로그를 동봉해 원인 추적이 가능하게 한다.
+  Future<void> _reportRecoveryMarkersIfAny(SharedPreferences p) async {
+    for (final name in ['freeze_restart', 'janitor', 'widget_restart']) {
+      try {
+        final f = File(
+            '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_$name.json');
+        if (!await f.exists()) continue;
+        final mtime = (await f.lastModified()).millisecondsSinceEpoch;
+        final key = 'telemetry_rcv_${name}_ms';
+        if (mtime <= (p.getInt(key) ?? 0)) continue; // 이미 보고함
+        await p.setInt(key, mtime);
+        Map<String, dynamic> content = {};
+        try {
+          content =
+              (jsonDecode(await f.readAsString()) as Map).cast<String, dynamic>();
+        } catch (_) {}
+        await _enqueueEvent(p, <String, dynamic>{
+          'type': 'recovery',
+          'crashKind': content['kind'] ?? name,
+          'message': '복구 마커 감지(직전 세션) — ${content['kind'] ?? name}',
+          'eventLog': await _collectEventLog(sinceMs: mtime - 600000),
+          'extra': {
+            'marker': content,
+            'markerAtMs': mtime,
+            'tdrFlag': await _tdrFlagDiag(),
+          },
+        });
+      } catch (_) {}
+    }
+    unawaited(_flushEvents());
+  }
+
   /// 워치독 tdr 마커 진단 — 이번 크래시가 "워치독이 아는 TDR" 맥락이었는지 판별.
   /// exists+ageMin 이 작으면 TDR 직후(폭주가드 감시 중 사용자 강제종료 등),
   /// exists=false 면 워치독이 전혀 감지 못 한 freeze/크래시.
@@ -148,7 +253,10 @@ class TelemetryService {
     final p = await SharedPreferences.getInstance();
     await p.setBool(_kConsent, v);
     _enabled = v;
-    if (v) await _flushPending();
+    if (v) {
+      await _flushPending();
+      await _flushEvents();
+    }
   }
 
   /// 앱 시작 직후 호출 — 비정상 종료 감지 + 환경 수집.
@@ -225,6 +333,9 @@ class TelemetryService {
       // 재시작했으면 마커가 남아있다. 마커 파일은 네이티브의 재시작 폭주 방지에
       // 쓰이므로 삭제하지 않고, mtime 기준으로 이미 리포트한 것만 건너뛴다.
       await _reportTdrRestartIfAny(p);
+      // 복구 마커(freeze_restart/janitor/widget_restart) + 이전 세션에 못 보낸
+      // recovery 이벤트 큐 재전송.
+      await _reportRecoveryMarkersIfAny(p);
     }());
   }
 
