@@ -320,6 +320,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get feedbackAttachVideo => 'Attach video';
 
   @override
+  String get feedbackRecordVoice => 'Record voice';
+
+  @override
+  String get feedbackRecording => 'Recording… tap to stop';
+
+  @override
+  String get feedbackMicDenied =>
+      'Microphone unavailable — check permission in system settings';
+
+  @override
   String get feedbackSend => 'Send';
 
   @override
@@ -331,6 +341,26 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get feedbackMessageRequired => 'Please write a message first';
+
+  @override
+  String get feedbackIncludeLogs =>
+      'Include diagnostic logs (device info & recent actions — no personal data)';
+
+  @override
+  String get reviewPromptTitle => 'Enjoying Analog Timer?';
+
+  @override
+  String get reviewPromptBody =>
+      'You just finished a session — nice work! 🎉\nIf you have a moment, tell the developer what you like or what could be better. It really helps.';
+
+  @override
+  String get reviewPromptAccept => 'Share thoughts';
+
+  @override
+  String get reviewPromptLater => 'Later';
+
+  @override
+  String get reviewPromptNever => 'Don\'t ask again';
 
   @override
   String get syncPageTitle => 'Device pairing';
@@ -390,4 +420,27 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get syncScanCancel => 'Cancel';
+
+  @override
+  String get tipWidgetToggle => 'Show or hide the floating widget';
+
+  @override
+  String get tipWidgetRefresh =>
+      'Refresh the widget (use if it is frozen or missing)';
+
+  @override
+  String get tipAppRestart =>
+      'Restart the app to fix a frozen screen — records and elapsed time are kept';
+
+  @override
+  String get tipOverlayOpacity => 'Adjust widget transparency';
+
+  @override
+  String get tipOverlayResize => 'Drag to resize the widget';
+
+  @override
+  String get tipOverlayHide => 'Hide the widget';
+
+  @override
+  String get tipStopwatchToggle => 'Start or stop the stopwatch';
 }

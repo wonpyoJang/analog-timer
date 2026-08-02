@@ -699,6 +699,24 @@ abstract class AppLocalizations {
   /// **'Attach video'**
   String get feedbackAttachVideo;
 
+  /// No description provided for @feedbackRecordVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Record voice'**
+  String get feedbackRecordVoice;
+
+  /// No description provided for @feedbackRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording… tap to stop'**
+  String get feedbackRecording;
+
+  /// No description provided for @feedbackMicDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone unavailable — check permission in system settings'**
+  String get feedbackMicDenied;
+
   /// No description provided for @feedbackSend.
   ///
   /// In en, this message translates to:
@@ -722,6 +740,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please write a message first'**
   String get feedbackMessageRequired;
+
+  /// No description provided for @feedbackIncludeLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Include diagnostic logs (device info & recent actions — no personal data)'**
+  String get feedbackIncludeLogs;
+
+  /// No description provided for @reviewPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoying Analog Timer?'**
+  String get reviewPromptTitle;
+
+  /// No description provided for @reviewPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You just finished a session — nice work! 🎉\nIf you have a moment, tell the developer what you like or what could be better. It really helps.'**
+  String get reviewPromptBody;
+
+  /// No description provided for @reviewPromptAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Share thoughts'**
+  String get reviewPromptAccept;
+
+  /// No description provided for @reviewPromptLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get reviewPromptLater;
+
+  /// No description provided for @reviewPromptNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t ask again'**
+  String get reviewPromptNever;
 
   /// No description provided for @syncPageTitle.
   ///
@@ -830,6 +884,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get syncScanCancel;
+
+  /// No description provided for @tipWidgetToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show or hide the floating widget'**
+  String get tipWidgetToggle;
+
+  /// No description provided for @tipWidgetRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh the widget (use if it is frozen or missing)'**
+  String get tipWidgetRefresh;
+
+  /// No description provided for @tipAppRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart the app to fix a frozen screen — records and elapsed time are kept'**
+  String get tipAppRestart;
+
+  /// No description provided for @tipOverlayOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust widget transparency'**
+  String get tipOverlayOpacity;
+
+  /// No description provided for @tipOverlayResize.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to resize the widget'**
+  String get tipOverlayResize;
+
+  /// No description provided for @tipOverlayHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide the widget'**
+  String get tipOverlayHide;
+
+  /// No description provided for @tipStopwatchToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start or stop the stopwatch'**
+  String get tipStopwatchToggle;
 }
 
 class _AppLocalizationsDelegate

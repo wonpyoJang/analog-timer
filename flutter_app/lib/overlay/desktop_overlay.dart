@@ -473,17 +473,20 @@ class _OverlayBodyState extends State<_OverlayBody>
           Positioned(
             left: 0,
             top: 0,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _restartApp,
-              child: const MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Padding(
-                  padding: EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.restart_alt,
-                    size: 13,
-                    color: Color(0xAAF0C040), // accent — 복구 액션임을 드러낸다
+            child: Tooltip(
+              message: AppLocalizations.of(context).tipAppRestart,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _restartApp,
+                child: const MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.restart_alt,
+                      size: 13,
+                      color: Color(0xAAF0C040), // accent — 복구 액션임을 드러낸다
+                    ),
                   ),
                 ),
               ),
@@ -494,20 +497,23 @@ class _OverlayBodyState extends State<_OverlayBody>
           Positioned(
             left: 0,
             bottom: 0,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _cycleOpacity,
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.opacity,
-                    size: 12,
-                    // 투명도를 낮춰둔 상태면 살짝 밝게 — 활성 상태 힌트
-                    color: _opacity < 0.99
-                        ? const Color(0xAAFFFFFF)
-                        : const Color(0x55FFFFFF),
+            child: Tooltip(
+              message: AppLocalizations.of(context).tipOverlayOpacity,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _cycleOpacity,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.opacity,
+                      size: 12,
+                      // 투명도를 낮춰둔 상태면 살짝 밝게 — 활성 상태 힌트
+                      color: _opacity < 0.99
+                          ? const Color(0xAAFFFFFF)
+                          : const Color(0x55FFFFFF),
+                    ),
                   ),
                 ),
               ),
@@ -517,14 +523,17 @@ class _OverlayBodyState extends State<_OverlayBody>
           Positioned(
             right: 0,
             bottom: 0,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onPanStart: _onResizeStart,
-              child: const MouseRegion(
-                cursor: SystemMouseCursors.resizeUpLeftDownRight,
-                child: Padding(
-                  padding: EdgeInsets.all(3),
-                  child: _ResizeGrip(),
+            child: Tooltip(
+              message: AppLocalizations.of(context).tipOverlayResize,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanStart: _onResizeStart,
+                child: const MouseRegion(
+                  cursor: SystemMouseCursors.resizeUpLeftDownRight,
+                  child: Padding(
+                    padding: EdgeInsets.all(3),
+                    child: _ResizeGrip(),
+                  ),
                 ),
               ),
             ),
@@ -691,22 +700,27 @@ class _OverlayBodyState extends State<_OverlayBody>
   Widget _controlBar() {
     const swColor = Color(0xFF2EA84A);
     final timerColor = _effectiveTimerColor;
+    final l = AppLocalizations.of(context);
 
-    Widget btn(IconData icon, Color color, VoidCallback onTap,
+    // 접근성: 아이콘만 있는 버튼이라 호버 툴팁(+스크린리더 시맨틱)으로 용도 고지.
+    Widget btn(IconData icon, Color color, VoidCallback onTap, String tip,
         {double size = 30}) {
-      return GestureDetector(
-        onTap: onTap,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: const Color(0xCC1A1A1C),
-              shape: BoxShape.circle,
-              border: Border.all(color: color.withValues(alpha: 0.4)),
+      return Tooltip(
+        message: tip,
+        child: GestureDetector(
+          onTap: onTap,
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: const Color(0xCC1A1A1C),
+                shape: BoxShape.circle,
+                border: Border.all(color: color.withValues(alpha: 0.4)),
+              ),
+              child: Icon(icon, color: color, size: size * 0.46),
             ),
-            child: Icon(icon, color: color, size: size * 0.46),
           ),
         ),
       );
@@ -717,15 +731,17 @@ class _OverlayBodyState extends State<_OverlayBody>
       children: [
         if (_timerActive) ...[
           btn(_timerRunning ? Icons.pause : Icons.play_arrow, timerColor,
-              () => _sendAction('timer_toggle')),
+              () => _sendAction('timer_toggle'),
+              _timerRunning ? l.btnPause : l.btnStart),
           // ⏭ 즉시 다음(카운트다운 없음)
           btn(Icons.skip_next, timerColor.withValues(alpha: 0.75),
-              () => _sendAction('timer_next')),
+              () => _sendAction('timer_next'), l.btnNext),
         ],
         if (_swActive || _swElapsedMs > 0)
           btn(_swRunning ? Icons.stop : Icons.play_arrow, swColor,
-              () => _sendAction('sw_toggle')),
-        btn(Icons.close, Colors.white54, () => _sendAction('overlay_hide')),
+              () => _sendAction('sw_toggle'), l.tipStopwatchToggle),
+        btn(Icons.close, Colors.white54, () => _sendAction('overlay_hide'),
+            l.tipOverlayHide),
       ],
     );
   }

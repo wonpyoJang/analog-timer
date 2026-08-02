@@ -130,5 +130,12 @@
   "syncErrorCode": "코드가 틀리거나 만료되었습니다",
   "syncErrorCodeLen": "6자리 코드를 입력하세요",
   "syncScanQr": "QR 스캔",
-  "syncScanCancel": "취소"
+  "syncScanCancel": "취소",
+  "tipWidgetToggle": "플로팅 위젯 켜기/끄기",
+  "tipWidgetRefresh": "위젯 새로고침 — 위젯이 멈추거나 사라졌을 때",
+  "tipAppRestart": "앱 다시 시작 (화면 멈춤 해소) — 기록과 경과 시간은 유지됩니다",
+  "tipOverlayOpacity": "위젯 투명도 조절",
+  "tipOverlayResize": "드래그하여 위젯 크기 조절",
+  "tipOverlayHide": "위젯 숨기기",
+  "tipStopwatchToggle": "스톱워치 시작/정지"
 }

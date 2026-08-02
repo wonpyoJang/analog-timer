@@ -1122,7 +1122,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               ),
                               if (isAndroid || isIOS) ...[
                                 const SizedBox(width: 10),
-                                GestureDetector(
+                                Tooltip(
+                                  message: l.tipWidgetToggle,
+                                  child: GestureDetector(
                                   onTap: _toggleOverlay,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
@@ -1151,11 +1153,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       ),
                                     ),
                                   ),
+                                  ),
                                 ),
                               ],
                               if (isDesktop) ...[
                                 const SizedBox(width: 10),
-                                GestureDetector(
+                                Tooltip(
+                                  message: l.tipWidgetToggle,
+                                  child: GestureDetector(
                                   onTap: _toggleDesktopOverlay,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
@@ -1184,11 +1189,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       ),
                                     ),
                                   ),
+                                  ),
                                 ),
                                 // 위젯 재생성 — 위젯이 얼거나 사라졌을 때 수동 복구.
                                 if (_desktopOverlayOn) ...[
                                   const SizedBox(width: 8),
-                                  GestureDetector(
+                                  Tooltip(
+                                    message: l.tipWidgetRefresh,
+                                    child: GestureDetector(
                                     onTap: () => DesktopOverlayService.instance
                                         .refresh(_overlayStateMap()),
                                     child: Container(
@@ -1206,12 +1214,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                         color: AppColors.muted,
                                       ),
                                     ),
+                                    ),
                                   ),
                                 ],
                                 // 앱 재시작 — "시계 멈춤" 탈출구. 타이머는
                                 // savedAtMs 벽시계 보정으로 이어져 손실 없음.
                                 const SizedBox(width: 8),
-                                GestureDetector(
+                                Tooltip(
+                                  message: l.tipAppRestart,
+                                  child: GestureDetector(
                                   onTap: () =>
                                       DesktopService.instance.restart(),
                                   child: Container(
@@ -1229,11 +1240,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       color: AppColors.accent,
                                     ),
                                   ),
+                                  ),
                                 ),
                               ],
                               if (TelemetryService.instance.supported) ...[
                                 const SizedBox(width: 8),
-                                GestureDetector(
+                                Tooltip(
+                                  message: l.telemetryReportSetting,
+                                  child: GestureDetector(
                                   onTap: () => showTelemetrySettings(context),
                                   child: Container(
                                     padding: const EdgeInsets.all(7),
@@ -1250,11 +1264,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       color: AppColors.muted,
                                     ),
                                   ),
+                                  ),
                                 ),
                               ],
                               if (SyncService.instance.supported) ...[
                                 const SizedBox(width: 8),
-                                GestureDetector(
+                                Tooltip(
+                                  message: l.syncPageTitle,
+                                  child: GestureDetector(
                                   onTap: () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -1276,10 +1293,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       color: AppColors.muted,
                                     ),
                                   ),
+                                  ),
                                 ),
                               ],
                               const SizedBox(width: 10),
-                              GestureDetector(
+                              Tooltip(
+                                message: l.settings,
+                                child: GestureDetector(
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -1298,6 +1318,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     size: 16,
                                     color: AppColors.muted,
                                   ),
+                                ),
                                 ),
                               ),
                             ],

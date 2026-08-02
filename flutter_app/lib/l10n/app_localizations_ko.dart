@@ -316,6 +316,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get feedbackAttachVideo => '동영상 첨부';
 
   @override
+  String get feedbackRecordVoice => '음성 녹음';
+
+  @override
+  String get feedbackRecording => '녹음 중… 탭하여 종료';
+
+  @override
+  String get feedbackMicDenied => '마이크를 사용할 수 없습니다 — 시스템 설정에서 권한을 확인해주세요';
+
+  @override
   String get feedbackSend => '보내기';
 
   @override
@@ -326,6 +335,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get feedbackMessageRequired => '내용을 먼저 적어주세요';
+
+  @override
+  String get feedbackIncludeLogs => '진단 로그 함께 보내기 (기기 환경·최근 사용 흐름 — 개인정보 미포함)';
+
+  @override
+  String get reviewPromptTitle => '아날로그 타이머, 잘 쓰고 계신가요?';
+
+  @override
+  String get reviewPromptBody =>
+      '방금 세션을 완주하셨네요, 수고하셨습니다! 🎉\n잠깐 시간이 되시면 좋았던 점이나 아쉬운 점을 들려주세요. 개발에 큰 힘이 됩니다.';
+
+  @override
+  String get reviewPromptAccept => '의견 보내기';
+
+  @override
+  String get reviewPromptLater => '나중에';
+
+  @override
+  String get reviewPromptNever => '다시 묻지 않기';
 
   @override
   String get syncPageTitle => '기기 연결';
@@ -382,4 +410,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get syncScanCancel => '취소';
+
+  @override
+  String get tipWidgetToggle => '플로팅 위젯 켜기/끄기';
+
+  @override
+  String get tipWidgetRefresh => '위젯 새로고침 — 위젯이 멈추거나 사라졌을 때';
+
+  @override
+  String get tipAppRestart => '앱 다시 시작 (화면 멈춤 해소) — 기록과 경과 시간은 유지됩니다';
+
+  @override
+  String get tipOverlayOpacity => '위젯 투명도 조절';
+
+  @override
+  String get tipOverlayResize => '드래그하여 위젯 크기 조절';
+
+  @override
+  String get tipOverlayHide => '위젯 숨기기';
+
+  @override
+  String get tipStopwatchToggle => '스톱워치 시작/정지';
 }

@@ -199,5 +199,12 @@
   "syncErrorCode": "Wrong or expired code",
   "syncErrorCodeLen": "Enter the 6-digit code",
   "syncScanQr": "Scan QR",
-  "syncScanCancel": "Cancel"
+  "syncScanCancel": "Cancel",
+  "tipWidgetToggle": "Show or hide the floating widget",
+  "tipWidgetRefresh": "Refresh the widget (use if it is frozen or missing)",
+  "tipAppRestart": "Restart the app to fix a frozen screen — records and elapsed time are kept",
+  "tipOverlayOpacity": "Adjust widget transparency",
+  "tipOverlayResize": "Drag to resize the widget",
+  "tipOverlayHide": "Hide the widget",
+  "tipStopwatchToggle": "Start or stop the stopwatch"
 }
