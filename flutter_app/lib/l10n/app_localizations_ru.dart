@@ -625,4 +625,31 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get hotkeyRecordGuide2 =>
       'Pick one you don\'t already use elsewhere — adding Shift makes clashes rare.';
+
+  @override
+  String get settingsTextSize => 'Размер текста';
+
+  @override
+  String get textSizeSmall => 'Мелкий';
+
+  @override
+  String get textSizeNormal => 'Обычный';
+
+  @override
+  String get textSizeLarge => 'Крупный';
+
+  @override
+  String get textSizeXLarge => 'Очень крупный';
+
+  @override
+  String get textSizePreview => 'Предпросмотр 25:00';
+
+  @override
+  String get a11yClose => 'Закрыть';
+
+  @override
+  String get a11yEditSegment => 'Изменить сегмент';
+
+  @override
+  String get a11yDismissBanner => 'Скрыть';
 }

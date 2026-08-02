@@ -85,5 +85,14 @@
   "editCoachGrid": "انقر على خلية للانتقال إليها",
   "editCoachDpad": "الأسهم للضبط الدقيق · اضغط مطولًا للتكرار",
   "editCoachControls": "⤢ الحجم · ⇄ تبديل الجانب · ✓ تم",
-  "editCoachDismiss": "انقر في أي مكان للبدء"
+  "editCoachDismiss": "انقر في أي مكان للبدء",
+  "settingsTextSize": "حجم الخط",
+  "textSizeSmall": "صغير",
+  "textSizeNormal": "عادي",
+  "textSizeLarge": "كبير",
+  "textSizeXLarge": "كبير جدًا",
+  "textSizePreview": "معاينة 25:00",
+  "a11yClose": "إغلاق",
+  "a11yEditSegment": "تعديل المقطع",
+  "a11yDismissBanner": "تجاهل"
 }

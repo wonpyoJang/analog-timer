@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../services/persistence_service.dart';
 import '../../../services/sync_service.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/a11y.dart';
 import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
 import '../models/preset.dart';
@@ -268,9 +269,9 @@ class _PresetChip extends StatelessWidget {
           ),
           if (deletable) ...[
             const SizedBox(width: 2),
-            GestureDetector(
+            AccessibleIconButton(
+              label: '${AppLocalizations.of(context).delete}: ${preset.name}',
               onTap: onDelete,
-              behavior: HitTestBehavior.opaque,
               child: const MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: Padding(

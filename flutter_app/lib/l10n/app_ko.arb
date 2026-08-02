@@ -193,5 +193,14 @@
   "overlayKbGuide2": "1–9 구역 이동 · Tab 반전 · Esc 완료",
   "overlayKbHint": "팁: 키보드로도 옮길 수 있어요 — {combo}",
   "hotkeyRecordGuide1": "Ctrl이나 Alt를 먼저 누른 채 글자를 톡 — 예: {example}",
-  "hotkeyRecordGuide2": "평소 안 쓰는 조합으로 고르세요 — Shift를 더하면 겹칠 일이 드물어요"
+  "hotkeyRecordGuide2": "평소 안 쓰는 조합으로 고르세요 — Shift를 더하면 겹칠 일이 드물어요",
+  "settingsTextSize": "글씨 크기",
+  "textSizeSmall": "작게",
+  "textSizeNormal": "보통",
+  "textSizeLarge": "크게",
+  "textSizeXLarge": "아주 크게",
+  "textSizePreview": "타이머 25:00 미리보기",
+  "a11yClose": "닫기",
+  "a11yEditSegment": "구간 편집",
+  "a11yDismissBanner": "알림 닫기"
 }

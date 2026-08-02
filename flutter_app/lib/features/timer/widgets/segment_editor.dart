@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/a11y.dart';
 import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
 import '../bloc/timer_state.dart';
@@ -249,7 +250,8 @@ class _SegmentRowState extends State<_SegmentRow> {
             style: const TextStyle(color: AppColors.muted, fontSize: 12),
           ),
           const SizedBox(width: 4),
-          GestureDetector(
+          AccessibleIconButton(
+            label: l.delete,
             onTap: () => context.read<TimerBloc>().add(
               TimerSegmentRemoved(widget.index),
             ),
