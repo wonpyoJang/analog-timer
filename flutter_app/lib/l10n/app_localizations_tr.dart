@@ -657,4 +657,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsHapticsDesc =>
       'Başlatma, duraklatma ve tamamlamada titret';
+
+  @override
+  String get settingsColorblind => 'Renk körlüğü modu';
+
+  @override
+  String get settingsColorblindDesc =>
+      'Kronometreyi yalnızca renkle değil kesik çizgiyle ayırt et';
 }

@@ -656,4 +656,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => 'Vibrate on start, pause and completion';
+
+  @override
+  String get settingsColorblind => 'Colorblind mode';
+
+  @override
+  String get settingsColorblindDesc =>
+      'Distinguish stopwatch by dashed pattern, not just color';
 }

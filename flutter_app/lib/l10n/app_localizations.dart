@@ -1310,6 +1310,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Vibrate on start, pause and completion'**
   String get settingsHapticsDesc;
+
+  /// No description provided for @settingsColorblind.
+  ///
+  /// In en, this message translates to:
+  /// **'Colorblind mode'**
+  String get settingsColorblind;
+
+  /// No description provided for @settingsColorblindDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Distinguish stopwatch by dashed pattern, not just color'**
+  String get settingsColorblindDesc;
 }
 
 class _AppLocalizationsDelegate

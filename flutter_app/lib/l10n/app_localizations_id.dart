@@ -658,4 +658,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => 'Getar saat mulai, jeda, dan selesai';
+
+  @override
+  String get settingsColorblind => 'Mode buta warna';
+
+  @override
+  String get settingsColorblindDesc =>
+      'Bedakan stopwatch dengan pola putus-putus, bukan hanya warna';
 }

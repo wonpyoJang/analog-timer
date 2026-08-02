@@ -96,5 +96,7 @@
   "a11yEditSegment": "Abschnitt bearbeiten",
   "a11yDismissBanner": "Schließen",
   "settingsHaptics": "Haptisches Feedback",
-  "settingsHapticsDesc": "Vibrieren bei Start, Pause und Abschluss"
+  "settingsHapticsDesc": "Vibrieren bei Start, Pause und Abschluss",
+  "settingsColorblind": "Farbenblind-Modus",
+  "settingsColorblindDesc": "Stoppuhr per gestricheltem Muster unterscheiden, nicht nur per Farbe"
 }

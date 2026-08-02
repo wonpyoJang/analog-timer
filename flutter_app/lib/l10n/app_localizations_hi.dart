@@ -657,4 +657,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => 'आरंभ, विराम और पूर्णता पर कंपन';
+
+  @override
+  String get settingsColorblind => 'वर्णांध मोड';
+
+  @override
+  String get settingsColorblindDesc =>
+      'स्टॉपवॉच को केवल रंग नहीं, धराशायी पैटर्न से पहचानें';
 }

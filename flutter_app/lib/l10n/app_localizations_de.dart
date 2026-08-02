@@ -658,4 +658,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => 'Vibrieren bei Start, Pause und Abschluss';
+
+  @override
+  String get settingsColorblind => 'Farbenblind-Modus';
+
+  @override
+  String get settingsColorblindDesc =>
+      'Stoppuhr per gestricheltem Muster unterscheiden, nicht nur per Farbe';
 }

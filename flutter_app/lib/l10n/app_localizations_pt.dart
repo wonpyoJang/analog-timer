@@ -657,4 +657,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => 'Vibrar ao iniciar, pausar e concluir';
+
+  @override
+  String get settingsColorblind => 'Modo daltônico';
+
+  @override
+  String get settingsColorblindDesc =>
+      'Distinguir o cronômetro por traço, não só por cor';
 }

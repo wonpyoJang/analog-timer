@@ -636,4 +636,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => '시작·일시정지·완료 시 진동';
+
+  @override
+  String get settingsColorblind => '색맹 모드';
+
+  @override
+  String get settingsColorblindDesc => '스톱워치를 색이 아닌 점선 패턴으로 구분';
 }

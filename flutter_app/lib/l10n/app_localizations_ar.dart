@@ -656,4 +656,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => 'اهتزاز عند البدء والإيقاف المؤقت والإكمال';
+
+  @override
+  String get settingsColorblind => 'وضع عمى الألوان';
+
+  @override
+  String get settingsColorblindDesc =>
+      'تمييز ساعة الإيقاف بنمط متقطع وليس باللون فقط';
 }

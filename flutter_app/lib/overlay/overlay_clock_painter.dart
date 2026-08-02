@@ -11,6 +11,7 @@ class OverlayClockPainter extends CustomPainter {
   final bool swActive;
   final int swElapsedMs;
   final double? swStartAngleRad;
+  final bool colorblind;
 
   const OverlayClockPainter({
     required this.now,
@@ -20,6 +21,7 @@ class OverlayClockPainter extends CustomPainter {
     required this.swActive,
     required this.swElapsedMs,
     required this.swStartAngleRad,
+    this.colorblind = false,
   });
 
   double _minuteHandAngle() {
@@ -113,36 +115,41 @@ class OverlayClockPainter extends CustomPainter {
     final partialMin = elapsedMin % 60;
     final startAngle = swStartAngleRad ?? _minuteHandAngle();
     const swColor = Color(0xFF2EA84A);
-    // 색맹 대응: 스톱워치는 점선(dashed)으로 — 타이머(채운 쐐기, solid)와 구분.
+    // 색맹 모드에서만 점선(색 외 형태 구분), 기본은 실선.
     for (int ring = 0; ring < min(fullLaps, maxRings); ring++) {
       final r = outermost - ring * step - ringW / 2;
-      _drawDashedArc(
-        canvas,
-        Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        -pi / 2,
-        2 * pi,
-        Paint()
-          ..color = swColor.withAlpha(0x77)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = ringW
-          ..strokeCap = StrokeCap.butt,
-      );
+      final paint = Paint()
+        ..color = swColor.withAlpha(0x77)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = ringW
+        ..strokeCap = StrokeCap.butt;
+      if (colorblind) {
+        _drawDashedArc(
+          canvas,
+          Rect.fromCircle(center: Offset(cx, cy), radius: r),
+          -pi / 2,
+          2 * pi,
+          paint,
+        );
+      } else {
+        canvas.drawCircle(Offset(cx, cy), r, paint);
+      }
     }
     final curRing = min(fullLaps, maxRings - 1);
     if (curRing >= 0 && partialMin > 0) {
       final r = outermost - curRing * step - ringW / 2;
       final sweep = (partialMin / 60) * 2 * pi;
-      _drawDashedArc(
-        canvas,
-        Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        startAngle,
-        sweep,
-        Paint()
-          ..color = swColor.withAlpha(0xCC)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = ringW
-          ..strokeCap = StrokeCap.butt,
-      );
+      final rect = Rect.fromCircle(center: Offset(cx, cy), radius: r);
+      final paint = Paint()
+        ..color = swColor.withAlpha(0xCC)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = ringW
+        ..strokeCap = colorblind ? StrokeCap.butt : StrokeCap.round;
+      if (colorblind) {
+        _drawDashedArc(canvas, rect, startAngle, sweep, paint);
+      } else {
+        canvas.drawArc(rect, startAngle, sweep, false, paint);
+      }
     }
   }
 

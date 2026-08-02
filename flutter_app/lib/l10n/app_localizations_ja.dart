@@ -654,4 +654,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => '開始・一時停止・完了時に振動';
+
+  @override
+  String get settingsColorblind => '色覚モード';
+
+  @override
+  String get settingsColorblindDesc => 'ストップウォッチを色でなく点線で区別';
 }

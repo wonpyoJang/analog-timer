@@ -658,4 +658,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsHapticsDesc => 'Вибрация при старте, паузе и завершении';
+
+  @override
+  String get settingsColorblind => 'Режим для дальтоников';
+
+  @override
+  String get settingsColorblindDesc =>
+      'Отличать секундомер пунктиром, а не только цветом';
 }

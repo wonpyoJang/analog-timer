@@ -96,5 +96,7 @@
   "a11yEditSegment": "تعديل المقطع",
   "a11yDismissBanner": "تجاهل",
   "settingsHaptics": "ردود فعل لمسية",
-  "settingsHapticsDesc": "اهتزاز عند البدء والإيقاف المؤقت والإكمال"
+  "settingsHapticsDesc": "اهتزاز عند البدء والإيقاف المؤقت والإكمال",
+  "settingsColorblind": "وضع عمى الألوان",
+  "settingsColorblindDesc": "تمييز ساعة الإيقاف بنمط متقطع وليس باللون فقط"
 }

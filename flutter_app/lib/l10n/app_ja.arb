@@ -96,5 +96,7 @@
   "a11yEditSegment": "区間を編集",
   "a11yDismissBanner": "通知を閉じる",
   "settingsHaptics": "触覚フィードバック",
-  "settingsHapticsDesc": "開始・一時停止・完了時に振動"
+  "settingsHapticsDesc": "開始・一時停止・完了時に振動",
+  "settingsColorblind": "色覚モード",
+  "settingsColorblindDesc": "ストップウォッチを色でなく点線で区別"
 }

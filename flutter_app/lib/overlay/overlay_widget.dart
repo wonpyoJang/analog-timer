@@ -8,6 +8,7 @@ import '../l10n/app_localizations.dart';
 import '../main.dart' show parseLocaleTag, OverlayApp;
 import '../services/persistence_service.dart';
 import '../services/text_scale_service.dart';
+import '../services/colorblind_service.dart';
 
 class TimerOverlayWidget extends StatefulWidget {
   const TimerOverlayWidget({super.key});
@@ -158,6 +159,9 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   // chase 컨트롤러 자체는 오버레이 프레임 드라이버라 멈추지 않고 값만 정적 사용.
   bool _reduceMotion = false;
 
+  // 색맹 모드 — 메인 앱에서 shareData로 전파, 스톱워치 호를 점선 렌더.
+  bool _colorblind = ColorblindService.instance.enabled;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -240,6 +244,12 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         final textScale = (map['textScale'] as num?)?.toDouble();
         if (textScale != null && textScale != TextScaleService.instance.scale) {
           TextScaleService.instance.scaleListenable.value = textScale;
+        }
+
+        // 색맹 모드 라이브 동기화
+        final colorblind = map['colorblind'] as bool?;
+        if (colorblind != null && colorblind != _colorblind) {
+          setState(() => _colorblind = colorblind);
         }
 
         // command 처리 — 메인 앱에서 resizeOverlay를 직접 못 하므로 위젯이 대신 실행
@@ -727,6 +737,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                       swActive: _swActive,
                       swElapsedMs: _swElapsedMs,
                       swStartAngleRad: _swStartAngleRad,
+                      colorblind: _colorblind,
                     ),
                     child: const SizedBox.expand(),
                   ),
@@ -824,6 +835,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                       swActive: _swActive,
                       swElapsedMs: _swElapsedMs,
                       swStartAngleRad: _swStartAngleRad,
+                      colorblind: _colorblind,
                     ),
                     child: const SizedBox.expand(),
                   ),
@@ -1622,6 +1634,7 @@ class _OverlayClockPainter extends CustomPainter {
   final bool swActive;
   final int swElapsedMs;
   final double? swStartAngleRad;
+  final bool colorblind;
 
   const _OverlayClockPainter({
     required this.timerActive,
@@ -1630,6 +1643,7 @@ class _OverlayClockPainter extends CustomPainter {
     required this.swActive,
     required this.swElapsedMs,
     required this.swStartAngleRad,
+    this.colorblind = false,
   });
 
   double _minuteHandAngle(DateTime now) {
@@ -1735,36 +1749,41 @@ class _OverlayClockPainter extends CustomPainter {
     final partialMin = elapsedMin % 60;
     final startAngle = swStartAngleRad ?? _minuteHandAngle(now);
     const swColor = Color(0xFF2EA84A);
-    // 색맹 대응: 스톱워치는 점선(dashed) — 타이머(채운 쐐기, solid)와 구분.
+    // 색맹 모드에서만 점선(색 외 형태 구분), 기본은 실선.
     for (int ring = 0; ring < min(fullLaps, maxRings); ring++) {
       final r = outermost - ring * step - ringW / 2;
-      _drawDashedArc(
-        canvas,
-        Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        -pi / 2,
-        2 * pi,
-        Paint()
-          ..color = swColor.withAlpha(0x77)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = ringW
-          ..strokeCap = StrokeCap.butt,
-      );
+      final paint = Paint()
+        ..color = swColor.withAlpha(0x77)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = ringW
+        ..strokeCap = StrokeCap.butt;
+      if (colorblind) {
+        _drawDashedArc(
+          canvas,
+          Rect.fromCircle(center: Offset(cx, cy), radius: r),
+          -pi / 2,
+          2 * pi,
+          paint,
+        );
+      } else {
+        canvas.drawCircle(Offset(cx, cy), r, paint);
+      }
     }
     final curRing = min(fullLaps, maxRings - 1);
     if (curRing >= 0 && partialMin > 0) {
       final r = outermost - curRing * step - ringW / 2;
       final sweep = (partialMin / 60) * 2 * pi;
-      _drawDashedArc(
-        canvas,
-        Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        startAngle,
-        sweep,
-        Paint()
-          ..color = swColor.withAlpha(0xCC)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = ringW
-          ..strokeCap = StrokeCap.butt,
-      );
+      final rect = Rect.fromCircle(center: Offset(cx, cy), radius: r);
+      final paint = Paint()
+        ..color = swColor.withAlpha(0xCC)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = ringW
+        ..strokeCap = colorblind ? StrokeCap.butt : StrokeCap.round;
+      if (colorblind) {
+        _drawDashedArc(canvas, rect, startAngle, sweep, paint);
+      } else {
+        canvas.drawArc(rect, startAngle, sweep, false, paint);
+      }
     }
   }
 

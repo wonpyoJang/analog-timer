@@ -96,5 +96,7 @@
   "a11yEditSegment": "Bölümü düzenle",
   "a11yDismissBanner": "Kapat",
   "settingsHaptics": "Dokunsal geri bildirim",
-  "settingsHapticsDesc": "Başlatma, duraklatma ve tamamlamada titret"
+  "settingsHapticsDesc": "Başlatma, duraklatma ve tamamlamada titret",
+  "settingsColorblind": "Renk körlüğü modu",
+  "settingsColorblindDesc": "Kronometreyi yalnızca renkle değil kesik çizgiyle ayırt et"
 }
