@@ -4,6 +4,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
+import '../../../services/shortcut_hint_service.dart';
 import '../bloc/timer_state.dart';
 
 class TimerControls extends StatelessWidget {
@@ -43,10 +44,14 @@ class TimerControls extends StatelessWidget {
                     enabled: !isRunning,
                     primary: true,
                     color: AppColors.timerOrange,
+                    tooltip: 'Space · Ctrl+Alt+Space',
                     onTap: isRunning
                         ? null
-                        : () =>
-                              context.read<TimerBloc>().add(const TimerStart()),
+                        : () {
+                            context.read<TimerBloc>().add(const TimerStart());
+                            ShortcutHintService.instance
+                                .buttonPressed('timer_toggle');
+                          },
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -54,9 +59,13 @@ class TimerControls extends StatelessWidget {
                   child: _Btn(
                     label: l.btnPause,
                     enabled: isRunning,
+                    tooltip: 'Space · Ctrl+Alt+Space',
                     onTap: isRunning
-                        ? () =>
-                              context.read<TimerBloc>().add(const TimerPause())
+                        ? () {
+                            context.read<TimerBloc>().add(const TimerPause());
+                            ShortcutHintService.instance
+                                .buttonPressed('timer_toggle');
+                          }
                         : null,
                   ),
                 ),
@@ -72,8 +81,13 @@ class TimerControls extends StatelessWidget {
                     enabled: !isIdle,
                     color: AppColors.accent,
                     accentOutline: true,
+                    tooltip: 'N · Ctrl+Alt+N',
                     onTap: !isIdle
-                        ? () => context.read<TimerBloc>().add(const TimerNext())
+                        ? () {
+                            context.read<TimerBloc>().add(const TimerNext());
+                            ShortcutHintService.instance
+                                .buttonPressed('timer_next');
+                          }
                         : null,
                   ),
                 ),
@@ -106,6 +120,9 @@ class _Btn extends StatelessWidget {
   final Color? color;
   final VoidCallback? onTap;
 
+  /// 호버 시 단축키 표기(예: 'Space · Ctrl+Alt+Space') — 학습 장치 1층.
+  final String? tooltip;
+
   const _Btn({
     required this.label,
     this.enabled = true,
@@ -114,6 +131,7 @@ class _Btn extends StatelessWidget {
     this.accentOutline = false,
     this.color,
     this.onTap,
+    this.tooltip,
   });
 
   @override
@@ -138,7 +156,7 @@ class _Btn extends StatelessWidget {
       fg = fg.withAlpha(0x88);
     }
 
-    return GestureDetector(
+    final btn = GestureDetector(
       onTap: enabled ? onTap : null,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
@@ -156,5 +174,7 @@ class _Btn extends StatelessWidget {
         ),
       ),
     );
+    if (tooltip == null) return btn;
+    return Tooltip(message: tooltip!, child: btn);
   }
 }

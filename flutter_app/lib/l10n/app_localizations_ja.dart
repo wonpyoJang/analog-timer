@@ -478,6 +478,48 @@ class AppLocalizationsJa extends AppLocalizations {
       'Auto detection and recovery is on — you rarely need these.';
 
   @override
+  String get shortcutSheetTitle => 'Keyboard shortcuts';
+
+  @override
+  String get shortcutGlobalSection => 'Anywhere (global)';
+
+  @override
+  String get shortcutInAppSection => 'When this window is focused';
+
+  @override
+  String get shortcutTimerToggle => 'Start / pause timer';
+
+  @override
+  String get shortcutTimerNext => 'Next segment';
+
+  @override
+  String get shortcutSwToggle => 'Start / stop stopwatch';
+
+  @override
+  String get shortcutSwLap => 'Lap';
+
+  @override
+  String get shortcutWidgetToggle => 'Toggle widget';
+
+  @override
+  String get keysHintTimerToggle =>
+      'Tip: Space or Ctrl+Alt+Space also starts/pauses the timer';
+
+  @override
+  String get keysHintTimerNext =>
+      'Tip: N or Ctrl+Alt+N also skips to the next segment';
+
+  @override
+  String get keysHintSwToggle =>
+      'Tip: the S key also starts/stops the stopwatch';
+
+  @override
+  String get keysHintSwLap => 'Tip: L or Ctrl+Alt+L also records a lap';
+
+  @override
+  String get menuShortcuts => 'Shortcuts';
+
+  @override
   String get settingsHotkeys => 'Global shortcuts';
 
   @override

@@ -4,6 +4,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../bloc/stopwatch_bloc.dart';
 import '../bloc/stopwatch_event.dart';
+import '../../../services/shortcut_hint_service.dart';
 import '../bloc/stopwatch_state.dart';
 
 String _fmt(int ms) {
@@ -70,9 +71,13 @@ class StopwatchControls extends StatelessWidget {
                     label: state.running ? l.btnPause : l.btnStart,
                     primary: true,
                     color: AppColors.swGreen,
-                    onTap: () => context.read<StopwatchBloc>().add(
-                      const StopwatchToggle(),
-                    ),
+                    tooltip: 'S',
+                    onTap: () {
+                      context.read<StopwatchBloc>().add(
+                        const StopwatchToggle(),
+                      );
+                      ShortcutHintService.instance.buttonPressed('sw_toggle');
+                    },
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -81,7 +86,14 @@ class StopwatchControls extends StatelessWidget {
                     label: l.btnLap,
                     // 스톱워치가 시작되지 않았으면 비활성(회색) — 무반응 혼란 방지.
                     enabled: active,
-                    onTap: active ? () => _lap(context, state) : null,
+                    tooltip: 'L · Ctrl+Alt+L',
+                    onTap: active
+                        ? () {
+                            _lap(context, state);
+                            ShortcutHintService.instance
+                                .buttonPressed('sw_lap');
+                          }
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -111,6 +123,9 @@ class _Btn extends StatelessWidget {
   final Color? color;
   final VoidCallback? onTap;
 
+  /// 호버 시 단축키 표기 — 학습 장치 1층.
+  final String? tooltip;
+
   const _Btn({
     required this.label,
     this.enabled = true,
@@ -118,6 +133,7 @@ class _Btn extends StatelessWidget {
     this.danger = false,
     this.color,
     this.onTap,
+    this.tooltip,
   });
 
   @override
@@ -139,7 +155,7 @@ class _Btn extends StatelessWidget {
       border = border.withAlpha(0x55);
     }
 
-    return Material(
+    final btn = Material(
       color: bg,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
@@ -163,5 +179,7 @@ class _Btn extends StatelessWidget {
         ),
       ),
     );
+    if (tooltip == null) return btn;
+    return Tooltip(message: tooltip!, child: btn);
   }
 }

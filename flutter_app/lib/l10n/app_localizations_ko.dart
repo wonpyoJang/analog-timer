@@ -464,6 +464,46 @@ class AppLocalizationsKo extends AppLocalizations {
   String get menuAutoRecoveryNote => '멈춤 자동 감지·복구 켜짐 — 보통 직접 누를 일이 없습니다.';
 
   @override
+  String get shortcutSheetTitle => '키보드 단축키';
+
+  @override
+  String get shortcutGlobalSection => '어디서든 (전역)';
+
+  @override
+  String get shortcutInAppSection => '이 창이 포커스일 때';
+
+  @override
+  String get shortcutTimerToggle => '타이머 시작/일시정지';
+
+  @override
+  String get shortcutTimerNext => '다음 세그먼트';
+
+  @override
+  String get shortcutSwToggle => '스톱워치 시작/정지';
+
+  @override
+  String get shortcutSwLap => '랩';
+
+  @override
+  String get shortcutWidgetToggle => '위젯 켜기/끄기';
+
+  @override
+  String get keysHintTimerToggle =>
+      '💡 Space 또는 Ctrl+Alt+Space로도 시작/일시정지할 수 있어요';
+
+  @override
+  String get keysHintTimerNext => '💡 N 또는 Ctrl+Alt+N으로도 다음 세그먼트로 넘어갈 수 있어요';
+
+  @override
+  String get keysHintSwToggle => '💡 S 키로도 스톱워치를 시작/정지할 수 있어요';
+
+  @override
+  String get keysHintSwLap => '💡 L 또는 Ctrl+Alt+L로도 랩을 찍을 수 있어요';
+
+  @override
+  String get menuShortcuts => '단축키';
+
+  @override
   String get settingsHotkeys => '전역 단축키';
 
   @override

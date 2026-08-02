@@ -987,6 +987,84 @@ abstract class AppLocalizations {
   /// **'Auto detection and recovery is on — you rarely need these.'**
   String get menuAutoRecoveryNote;
 
+  /// No description provided for @shortcutSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts'**
+  String get shortcutSheetTitle;
+
+  /// No description provided for @shortcutGlobalSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Anywhere (global)'**
+  String get shortcutGlobalSection;
+
+  /// No description provided for @shortcutInAppSection.
+  ///
+  /// In en, this message translates to:
+  /// **'When this window is focused'**
+  String get shortcutInAppSection;
+
+  /// No description provided for @shortcutTimerToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start / pause timer'**
+  String get shortcutTimerToggle;
+
+  /// No description provided for @shortcutTimerNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next segment'**
+  String get shortcutTimerNext;
+
+  /// No description provided for @shortcutSwToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start / stop stopwatch'**
+  String get shortcutSwToggle;
+
+  /// No description provided for @shortcutSwLap.
+  ///
+  /// In en, this message translates to:
+  /// **'Lap'**
+  String get shortcutSwLap;
+
+  /// No description provided for @shortcutWidgetToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle widget'**
+  String get shortcutWidgetToggle;
+
+  /// No description provided for @keysHintTimerToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: Space or Ctrl+Alt+Space also starts/pauses the timer'**
+  String get keysHintTimerToggle;
+
+  /// No description provided for @keysHintTimerNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: N or Ctrl+Alt+N also skips to the next segment'**
+  String get keysHintTimerNext;
+
+  /// No description provided for @keysHintSwToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: the S key also starts/stops the stopwatch'**
+  String get keysHintSwToggle;
+
+  /// No description provided for @keysHintSwLap.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: L or Ctrl+Alt+L also records a lap'**
+  String get keysHintSwLap;
+
+  /// No description provided for @menuShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcuts'**
+  String get menuShortcuts;
+
   /// No description provided for @settingsHotkeys.
   ///
   /// In en, this message translates to:

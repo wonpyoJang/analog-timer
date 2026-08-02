@@ -33,10 +33,11 @@ class OverflowMenuItem {
 
 /// 헤더의 ⋯ 버튼. 탭하면 앵커 아래에 메뉴를 띄운다.
 class OverflowMenuButton extends StatelessWidget {
-  /// 설정 / 기기 동기화 / 오류 리포트 진입 — 화면 전환은 호출측이 처리.
+  /// 설정 / 기기 동기화 / 오류 리포트 / 단축키 — 화면 전환은 호출측이 처리.
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenSync;
   final VoidCallback onOpenTelemetry;
+  final VoidCallback onShowShortcuts;
 
   /// 위젯 새로고침 — 위젯이 켜져 있을 때만 노출된다.
   final bool widgetOn;
@@ -47,6 +48,7 @@ class OverflowMenuButton extends StatelessWidget {
     required this.onOpenSettings,
     required this.onOpenSync,
     required this.onOpenTelemetry,
+    required this.onShowShortcuts,
     required this.widgetOn,
     required this.onRefreshWidget,
   });
@@ -102,6 +104,12 @@ class OverflowMenuButton extends StatelessWidget {
           chevron: true,
           onTap: onOpenSync,
         ),
+      OverflowMenuItem(
+        icon: Icons.keyboard_outlined,
+        label: l.menuShortcuts,
+        hint: '?',
+        onTap: onShowShortcuts,
+      ),
     ];
     final trouble = <OverflowMenuItem>[
       // 레이블은 메뉴 전용 단문(툴팁 문장을 재사용하면 줄이 넘친다).

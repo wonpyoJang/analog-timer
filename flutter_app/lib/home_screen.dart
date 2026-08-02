@@ -30,8 +30,10 @@ import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
 import 'services/telemetry_service.dart';
 import 'services/hotkey_service.dart';
+import 'services/shortcut_hint_service.dart';
 import 'services/tts_service.dart';
 import 'widgets/overflow_menu.dart';
+import 'widgets/shortcut_sheet.dart';
 import 'widgets/telemetry_consent.dart';
 import 'widgets/review_prompt.dart';
 import 'services/review_prompt_service.dart';
@@ -687,6 +689,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     DesktopOverlayService.instance.onAction = _handleOverlayAction;
     // 글로벌 핫키(Ctrl+Alt+Space/N/L) — 같은 액션 핸들러로 배선.
     HotkeyService.instance.onAction = _handleOverlayAction;
+    // 단축키 맥락 힌트 — 버튼 3번째 클릭 시 액션별 1회 스낵바.
+    ShortcutHintService.instance.onHint = _showShortcutHint;
     // 종료 직전 상태 저장만 — 실제 종료(exit)와 오버레이 정리는
     // DesktopService.quit() 및 프로세스 종료가 담당한다.
     DesktopService.instance.onQuit = () async {
@@ -756,6 +760,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         context.read<StopwatchBloc>().add(const StopwatchLap());
       case 'widget_toggle':
         if (isDesktop) _toggleDesktopOverlay();
+      case 'shortcut_sheet':
+        showShortcutSheet(context);
       case 'overlay_hide':
         DesktopOverlayService.instance.hide();
         setState(() => _desktopOverlayOn = false);
@@ -1287,6 +1293,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 ),
                                 onOpenTelemetry: () =>
                                     showTelemetrySettings(context),
+                                onShowShortcuts: () =>
+                                    showShortcutSheet(context),
                               ),
                             ],
                           ),
@@ -1388,6 +1396,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             _shortcut('sw_lap'),
         const SingleActivator(LogicalKeyboardKey.keyW): () =>
             _shortcut('widget_toggle'),
+        // ? — 치트시트 (Shift+/ 및 물음표 전용 키 배열 모두 대응)
+        const SingleActivator(LogicalKeyboardKey.slash, shift: true): () =>
+            _shortcut('shortcut_sheet'),
       },
       child: Focus(autofocus: true, child: withAutoLog),
     );
@@ -1404,6 +1415,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       listener: (_, state) => _onTimerTransition(state),
       child: withShortcuts,
     );
+  }
+
+  /// 단축키 맥락 힌트 스낵바 — 방금 누른 버튼의 단축키를 1회 알려준다.
+  void _showShortcutHint(String action) {
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    final msg = switch (action) {
+      'timer_toggle' => l.keysHintTimerToggle,
+      'timer_next' => l.keysHintTimerNext,
+      'sw_toggle' => l.keysHintSwToggle,
+      'sw_lap' => l.keysHintSwLap,
+      _ => null,
+    };
+    if (msg == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 6),
+    ));
   }
 
   /// 인앱 단축키 공용 진입 — 텍스트 필드 편집 중이면 무시.
