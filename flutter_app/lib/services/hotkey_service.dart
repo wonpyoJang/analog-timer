@@ -4,15 +4,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'keyboard_layout_info.dart';
 import 'platform_info.dart';
 import 'telemetry_service.dart';
 
 /// 글로벌 핫키 — 다른 앱에서 일하는 중에도 타이머를 조작한다.
 ///
-/// 기본 조합은 **Ctrl+Shift+Alt** + Space/N/L. 처음엔 Ctrl+Alt 였으나
-/// IntelliJ(Reformat=Ctrl+Alt+L, Inline=Ctrl+Alt+N) 등 주요 도구를 시스템
-/// 레벨에서 강탈하는 충돌이 확인돼 3-modifier 로 변경 — 기존 앱이 거의 쓰지
-/// 않는 영역이고 유럽 키보드 AltGr(=Ctrl+Alt) 문자 입력과도 안 겹친다.
+/// 기본 조합은 **설치된 자판 레이아웃에 따라** 결정된다(+ Space/N/L/W):
+/// - AltGr 레이아웃 없음(한/미/일 등 확실한 경우만): **Ctrl+Alt** —
+///   3키라 멤브레인 키보드 고스팅(4키 동시 인식 불가)을 피하고 누르기 쉽다.
+///   IntelliJ(Reformat=Ctrl+Alt+L) 등 개발 도구와는 겹치지만, 그 계층은
+///   설정 녹화로 스스로 바꿀 수 있다(일반 유저 우선 트레이드오프).
+/// - AltGr 레이아웃 존재/불확실: **Ctrl+Shift+Alt** — AltGr(=Ctrl+Alt)
+///   문자 입력(€, ę …)을 시스템 전역에서 강탈하지 않는 안전 조합.
+/// 판별은 keyboard_layout_info.dart(자판 레이아웃 기준, UI 로케일 아님).
 ///
 /// 조합은 설정에서 액션별로 직접 녹화해 바꿀 수 있다(prefs 저장).
 /// 기본 ON, 설정 토글로 전체 해제. 콜백은 home_screen 이 배선한다.
@@ -59,11 +64,17 @@ class HotkeyService {
         'widget_focus': _key(PhysicalKeyboardKey.keyW),
       };
 
+  /// 기본 조합의 모디파이어 — 설치된 자판 레이아웃으로 1회 판별.
+  /// AltGr 레이아웃 없음(한/미/일 등)이 확실하면 Ctrl+Alt(3키 — 멤브레인
+  /// 키보드 고스팅 회피), 하나라도 있거나 불확실하면 Ctrl+Shift+Alt 유지
+  /// (AltGr 문자 입력 강탈 방지). 상세는 keyboard_layout_info.dart.
+  static final bool _simpleCombo = computeSimpleComboSafe();
+
   HotKey _key(PhysicalKeyboardKey code) => HotKey(
         key: code,
         modifiers: [
           HotKeyModifier.control,
-          HotKeyModifier.shift,
+          if (!_simpleCombo) HotKeyModifier.shift,
           HotKeyModifier.alt,
         ],
         // inapp 이 아닌 system — 포커스가 다른 앱에 있어도 동작해야 한다.
@@ -233,11 +244,16 @@ class HotkeyService {
     if (enabled) await _register();
   }
 
+  /// 선점 폴백으로 바뀐 액션들 — 사용자 지정이 아니므로 isModified 에서
+  /// 기본값 취급("기본값 복원" 상시 노출 방지, 시안 결정 4).
+  final Set<String> _fallbackActions = {};
+
   /// 기본 조합에서 하나라도 바뀌었는지 — "기본값 복원" 버튼은 이때만 노출
   /// (시안 결정 4: 평소엔 시각 소음 0).
   bool get isModified {
     final d = _defaults();
     for (final a in actions) {
+      if (_fallbackActions.contains(a)) continue;
       final cur = _bindings[a];
       final def = d[a];
       if (cur == null || def == null) continue;
@@ -308,28 +324,60 @@ class HotkeyService {
     if (_registered || !isDesktop) return;
     _registered = true;
     final failed = <String>{};
+    final defaults = _defaults();
     for (final action in actions) {
       final hk = _bindings[action];
       if (hk == null) continue;
-      try {
-        await hotKeyManager.register(
-          hk,
-          keyDownHandler: (_) {
-            unawaited(TelemetryService.instance
-                .logEvent('global_hotkey', {'action': action}));
-            onAction?.call(action);
-          },
+      var ok = await _tryRegister(action, hk);
+      // 단순 기본 조합(Ctrl+Alt)이 다른 앱에 선점된 경우 — 사용자가 직접
+      // 지정한 조합이 아니라면 그 액션만 안전 조합(Ctrl+Shift+Alt)으로
+      // 폴백해 재시도한다. 기본값이 첫 실행부터 ⚠ 로 시작하는 것 방지
+      // (이 PC 에서 Ctrl+Alt+Space 선점으로 실측). prefs 에 저장하지
+      // 않으므로 선점 앱이 사라지면 다음 실행에서 단순 조합으로 복귀.
+      if (!ok && _simpleCombo && _sameCombo(hk, defaults[action])) {
+        final safe = HotKey(
+          key: hk.key,
+          modifiers: [
+            HotKeyModifier.control,
+            HotKeyModifier.shift,
+            HotKeyModifier.alt,
+          ],
+          scope: HotKeyScope.system,
         );
-      } catch (_) {
-        // 다른 앱이 선점한 조합 — 해당 키만 포기하고 ⚠ 로 노출.
-        failed.add(action);
+        if (await _tryRegister(action, safe)) {
+          _bindings[action] = safe;
+          _fallbackActions.add(action);
+          bindingsRev.value++;
+          ok = true;
+        }
       }
+      if (!ok) failed.add(action); // 폴백까지 실패 — ⚠ 로 노출.
     }
     failedActions.value = failed;
   }
 
+  Future<bool> _tryRegister(String action, HotKey hk) async {
+    try {
+      await hotKeyManager.register(
+        hk,
+        keyDownHandler: (_) {
+          unawaited(TelemetryService.instance
+              .logEvent('global_hotkey', {'action': action}));
+          onAction?.call(action);
+        },
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _sameCombo(HotKey a, HotKey? b) =>
+      b != null && a.key == b.key && _modSet(a.modifiers) == _modSet(b.modifiers);
+
   Future<void> _unregister() async {
     _registered = false;
+    _fallbackActions.clear();
     failedActions.value = const {};
     try {
       await hotKeyManager.unregisterAll();
