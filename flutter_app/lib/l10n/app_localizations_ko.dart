@@ -431,4 +431,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tipStopwatchToggle => '스톱워치 시작/정지';
+
+  @override
+  String get settingsTts => '음성 안내';
+
+  @override
+  String get settingsTtsDesc => '세그먼트 전환과 타이머 완료를 소리로 알려줍니다';
+
+  @override
+  String get settingsTtsSample => '음성 안내가 켜졌습니다';
 }

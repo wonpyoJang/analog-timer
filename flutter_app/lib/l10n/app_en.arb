@@ -206,5 +206,8 @@
   "tipOverlayOpacity": "Adjust widget transparency",
   "tipOverlayResize": "Drag to resize the widget",
   "tipOverlayHide": "Hide the widget",
-  "tipStopwatchToggle": "Start or stop the stopwatch"
+  "tipStopwatchToggle": "Start or stop the stopwatch",
+  "settingsTts": "Voice announcements",
+  "settingsTtsDesc": "Speak segment changes and timer completion aloud",
+  "settingsTtsSample": "Voice announcements are on"
 }

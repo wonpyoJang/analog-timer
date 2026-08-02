@@ -29,6 +29,7 @@ import 'package:window_manager/window_manager.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
 import 'services/telemetry_service.dart';
+import 'services/tts_service.dart';
 import 'widgets/telemetry_consent.dart';
 import 'widgets/review_prompt.dart';
 import 'services/review_prompt_service.dart';
@@ -801,10 +802,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     final l = AppLocalizations.of(context);
 
+    // 음성 안내는 알림과 같은 문구를 읽는다(l10n 재사용) — 앱 로케일 음성으로.
+    final ttsLocale = Localizations.localeOf(context).toLanguageTag();
+
     if (cur.status == TimerStatus.done && prev.status != TimerStatus.done) {
       DesktopNotificationService.notify(
         l.notifyTimerDoneTitle,
         l.notifyTimerDoneBody,
+      );
+      TtsService.instance.speak(
+        '${l.notifyTimerDoneTitle}. ${l.notifyTimerDoneBody}',
+        localeTag: ttsLocale,
       );
     } else if (cur.currentSeg != prev.currentSeg &&
         cur.status == TimerStatus.running &&
@@ -816,6 +824,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       DesktopNotificationService.notify(
         l.notifySegmentDoneTitle,
         l.notifySegmentDoneBody(prevName, curName),
+      );
+      TtsService.instance.speak(
+        l.notifySegmentDoneBody(prevName, curName),
+        localeTag: ttsLocale,
       );
     }
   }

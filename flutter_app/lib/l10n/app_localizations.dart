@@ -926,6 +926,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start or stop the stopwatch'**
   String get tipStopwatchToggle;
+
+  /// No description provided for @settingsTts.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice announcements'**
+  String get settingsTts;
+
+  /// No description provided for @settingsTtsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Speak segment changes and timer completion aloud'**
+  String get settingsTtsDesc;
+
+  /// No description provided for @settingsTtsSample.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice announcements are on'**
+  String get settingsTtsSample;
 }
 
 class _AppLocalizationsDelegate

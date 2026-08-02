@@ -442,4 +442,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get tipStopwatchToggle => 'Start or stop the stopwatch';
+
+  @override
+  String get settingsTts => 'Voice announcements';
+
+  @override
+  String get settingsTtsDesc =>
+      'Speak segment changes and timer completion aloud';
+
+  @override
+  String get settingsTtsSample => 'Voice announcements are on';
 }

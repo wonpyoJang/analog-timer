@@ -137,5 +137,8 @@
   "tipOverlayOpacity": "위젯 투명도 조절",
   "tipOverlayResize": "드래그하여 위젯 크기 조절",
   "tipOverlayHide": "위젯 숨기기",
-  "tipStopwatchToggle": "스톱워치 시작/정지"
+  "tipStopwatchToggle": "스톱워치 시작/정지",
+  "settingsTts": "음성 안내",
+  "settingsTtsDesc": "세그먼트 전환과 타이머 완료를 소리로 알려줍니다",
+  "settingsTtsSample": "음성 안내가 켜졌습니다"
 }
