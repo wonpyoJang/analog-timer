@@ -226,5 +226,5 @@
   "menuRefreshWidget": "Refresh widget",
   "menuRestartApp": "Restart app",
   "menuErrorReports": "Error reports",
-  "overlayLongPressHint": "Long-press the clock to adjust its size and position"
+  "overlayLongPressHint": "Long-press the clock, then tap a dot to move it there"
 }

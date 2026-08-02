@@ -81,5 +81,5 @@
   "planSaveAsCurrent": "儲存為計畫",
   "planLoadIntoTimer": "載入計時器",
   "planSave": "儲存",
-  "overlayLongPressHint": "長按時鐘可調整大小和位置"
+  "overlayLongPressHint": "長按時鐘，然後點按想要移動到的位置圓點"
 }

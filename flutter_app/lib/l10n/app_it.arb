@@ -81,5 +81,5 @@
   "planSaveAsCurrent": "Salva come piano",
   "planLoadIntoTimer": "Carica nel timer",
   "planSave": "Salva",
-  "overlayLongPressHint": "Tieni premuto l'orologio per regolarne dimensioni e posizione"
+  "overlayLongPressHint": "Tieni premuto l'orologio, poi tocca un punto per spostarlo lì"
 }

@@ -81,5 +81,5 @@
   "planSaveAsCurrent": "योजना के रूप में सहेजें",
   "planLoadIntoTimer": "टाइमर में लोड करें",
   "planSave": "सहेजें",
-  "overlayLongPressHint": "आकार और स्थिति समायोजित करने के लिए घड़ी को देर तक दबाएँ"
+  "overlayLongPressHint": "घड़ी को देर तक दबाएँ, फिर उसे वहाँ ले जाने के लिए किसी बिंदु पर टैप करें"
 }
