@@ -83,6 +83,10 @@ Future<void> showShortcutSheet(BuildContext context) {
           if (isDesktop) row(l.shortcutWidgetToggle, const ['W']),
           if (isDesktop)
             row(l.shortcutWidgetMove, const ['←↑→↓', 'Shift+←↑→↓']),
+          if (isDesktop)
+            row(l.shortcutWidgetAnchor, const ['1–9']),
+          if (isDesktop)
+            row(l.shortcutWidgetMirror, const ['Tab', 'Shift+Tab']),
           row(l.shortcutSheetTitle, const ['?']),
           const SizedBox(height: 8),
         ],

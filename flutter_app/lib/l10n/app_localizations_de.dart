@@ -507,6 +507,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shortcutWidgetMove => 'Move widget (click the widget first)';
 
   @override
+  String get shortcutWidgetAnchor => 'Snap widget to 3×3 grid';
+
+  @override
+  String get shortcutWidgetMirror => 'Flip widget to opposite side';
+
+  @override
   String get keysHintTimerToggle =>
       'Tip: Space or Ctrl+Alt+Space also starts/pauses the timer';
 

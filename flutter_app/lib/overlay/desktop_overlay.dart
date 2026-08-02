@@ -556,9 +556,39 @@ class _OverlayBodyState extends State<_OverlayBody>
   /// 위젯 창이 키보드 포커스일 때만 이벤트를 받는다 — 전역 핫키 오염 없음.
   /// (모바일의 3×3 그리드 편집과 달리 데스크톱은 정밀 배치가 목적)
   Timer? _posSaveDebounce;
+
+  void _savePosDebounced() {
+    // 홀드 리핏 중 매 이벤트 파일 쓰기 방지 — 이동이 멎으면 저장.
+    _posSaveDebounce?.cancel();
+    _posSaveDebounce = Timer(const Duration(milliseconds: 400), () {
+      _saveOverlayPrefs({
+        _kOverlayPosX: _winPos.dx,
+        _kOverlayPosY: _winPos.dy,
+      });
+    });
+  }
+
   bool _onMoveKey(KeyEvent e) {
     if (e is! KeyDownEvent && e is! KeyRepeatEvent) return false;
     final k = e.logicalKey;
+
+    // Tab = 수평 대칭(좌↔우), Shift+Tab = 수직 대칭(상↔하) —
+    // "위젯이 작업 영역을 가린다 → 반대편으로 휙"을 원탭으로.
+    if (k == LogicalKeyboardKey.tab) {
+      if (e is KeyRepeatEvent) return true; // 미러는 리핏 무의미
+      unawaited(
+          _mirror(horizontal: !HardwareKeyboard.instance.isShiftPressed));
+      return true;
+    }
+
+    // 1~9 = 3×3 앵커 점프 — 숫자패드 배열이 곧 화면 배열
+    // (7·8·9=상단, 4·5·6=중단, 1·2·3=하단). 모바일의 그리드 편집과 동일 개념.
+    final anchor = _digitOf(k);
+    if (anchor != null) {
+      unawaited(_snapToAnchor(anchor));
+      return true;
+    }
+
     double dx = 0, dy = 0;
     if (k == LogicalKeyboardKey.arrowLeft) {
       dx = -1;
@@ -574,15 +604,88 @@ class _OverlayBodyState extends State<_OverlayBody>
     final step = HardwareKeyboard.instance.isShiftPressed ? 60.0 : 10.0;
     _winPos = Offset(_winPos.dx + dx * step, _winPos.dy + dy * step);
     unawaited(windowManager.setPosition(_winPos));
-    // 홀드 리핏 중 매 이벤트 파일 쓰기 방지 — 이동이 멎으면 저장.
-    _posSaveDebounce?.cancel();
-    _posSaveDebounce = Timer(const Duration(milliseconds: 400), () {
-      _saveOverlayPrefs({
-        _kOverlayPosX: _winPos.dx,
-        _kOverlayPosY: _winPos.dy,
-      });
-    });
+    _savePosDebounced();
     return true;
+  }
+
+  static int? _digitOf(LogicalKeyboardKey k) {
+    const rows = [
+      [LogicalKeyboardKey.digit1, LogicalKeyboardKey.numpad1],
+      [LogicalKeyboardKey.digit2, LogicalKeyboardKey.numpad2],
+      [LogicalKeyboardKey.digit3, LogicalKeyboardKey.numpad3],
+      [LogicalKeyboardKey.digit4, LogicalKeyboardKey.numpad4],
+      [LogicalKeyboardKey.digit5, LogicalKeyboardKey.numpad5],
+      [LogicalKeyboardKey.digit6, LogicalKeyboardKey.numpad6],
+      [LogicalKeyboardKey.digit7, LogicalKeyboardKey.numpad7],
+      [LogicalKeyboardKey.digit8, LogicalKeyboardKey.numpad8],
+      [LogicalKeyboardKey.digit9, LogicalKeyboardKey.numpad9],
+    ];
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].contains(k)) return i + 1;
+    }
+    return null;
+  }
+
+  /// 위젯(좌상단 기준)이 현재 놓인 모니터의 작업영역. 못 찾으면 primary.
+  Future<(Offset, Size)> _currentDisplayArea() async {
+    try {
+      final displays = await screenRetriever.getAllDisplays();
+      for (final d in displays) {
+        final o = d.visiblePosition ?? Offset.zero;
+        final s = d.visibleSize ?? d.size;
+        if (_winPos.dx >= o.dx &&
+            _winPos.dx < o.dx + s.width &&
+            _winPos.dy >= o.dy &&
+            _winPos.dy < o.dy + s.height) {
+          return (o, s);
+        }
+      }
+      final p = await screenRetriever.getPrimaryDisplay();
+      return (p.visiblePosition ?? Offset.zero, p.visibleSize ?? p.size);
+    } catch (_) {
+      return (Offset.zero, const Size(1920, 1080));
+    }
+  }
+
+  /// 현재 창 크기 — 리사이즈로 배율이 바뀌었을 수 있어 prefs 에서 읽는다.
+  Future<Size> _currentWinSize() async {
+    final m = await _loadOverlayPrefs();
+    final s = ((m[_kOverlayScale] as num?)?.toDouble() ?? widget.initialScale)
+        .clamp(_scaleMin, _scaleMax);
+    return _sizeForScale(s.toDouble());
+  }
+
+  Future<void> _snapToAnchor(int n) async {
+    const margin = 12.0;
+    final (origin, area) = await _currentDisplayArea();
+    final win = await _currentWinSize();
+    final col = (n - 1) % 3; // 0=좌, 1=중, 2=우
+    final rowFromBottom = (n - 1) ~/ 3; // 0=하단, 1=중단, 2=상단
+    final xs = [
+      origin.dx + margin,
+      origin.dx + (area.width - win.width) / 2,
+      origin.dx + area.width - win.width - margin,
+    ];
+    final ys = [
+      origin.dy + area.height - win.height - margin,
+      origin.dy + (area.height - win.height) / 2,
+      origin.dy + margin,
+    ];
+    _winPos = Offset(xs[col], ys[rowFromBottom]);
+    await windowManager.setPosition(_winPos);
+    _savePosDebounced();
+  }
+
+  Future<void> _mirror({required bool horizontal}) async {
+    final (origin, area) = await _currentDisplayArea();
+    final win = await _currentWinSize();
+    _winPos = horizontal
+        ? Offset(
+            2 * origin.dx + area.width - _winPos.dx - win.width, _winPos.dy)
+        : Offset(
+            _winPos.dx, 2 * origin.dy + area.height - _winPos.dy - win.height);
+    await windowManager.setPosition(_winPos);
+    _savePosDebounced();
   }
 
   /// 앱 재시작 — 메인 엔진을 거치지 않는 직접 경로(메인이 얼어 있어도 동작).

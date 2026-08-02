@@ -1041,6 +1041,18 @@ abstract class AppLocalizations {
   /// **'Move widget (click the widget first)'**
   String get shortcutWidgetMove;
 
+  /// No description provided for @shortcutWidgetAnchor.
+  ///
+  /// In en, this message translates to:
+  /// **'Snap widget to 3×3 grid'**
+  String get shortcutWidgetAnchor;
+
+  /// No description provided for @shortcutWidgetMirror.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip widget to opposite side'**
+  String get shortcutWidgetMirror;
+
   /// No description provided for @keysHintTimerToggle.
   ///
   /// In en, this message translates to:
