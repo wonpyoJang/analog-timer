@@ -30,6 +30,7 @@ import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
 import 'services/telemetry_service.dart';
 import 'services/tts_service.dart';
+import 'widgets/overflow_menu.dart';
 import 'widgets/telemetry_consent.dart';
 import 'widgets/review_prompt.dart';
 import 'services/review_prompt_service.dart';
@@ -1244,135 +1245,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   ),
                                   ),
                                 ),
-                                // 위젯 재생성 — 위젯이 얼거나 사라졌을 때 수동 복구.
-                                if (_desktopOverlayOn) ...[
-                                  const SizedBox(width: 8),
-                                  Tooltip(
-                                    message: l.tipWidgetRefresh,
-                                    child: GestureDetector(
-                                    onTap: () => DesktopOverlayService.instance
-                                        .refresh(_overlayStateMap()),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(7),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surface,
-                                        border: Border.all(
-                                          color: AppColors.border,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.refresh,
-                                        size: 16,
-                                        color: AppColors.muted,
-                                      ),
-                                    ),
-                                    ),
-                                  ),
-                                ],
-                                // 앱 재시작 — "시계 멈춤" 탈출구. 타이머는
-                                // savedAtMs 벽시계 보정으로 이어져 손실 없음.
-                                const SizedBox(width: 8),
-                                Tooltip(
-                                  message: l.tipAppRestart,
-                                  child: GestureDetector(
-                                  onTap: () =>
-                                      DesktopService.instance.restart(),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(7),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surface,
-                                      border: Border.all(
-                                        color: AppColors.border,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.restart_alt,
-                                      size: 16,
-                                      color: AppColors.accent,
-                                    ),
-                                  ),
-                                  ),
-                                ),
                               ],
-                              if (TelemetryService.instance.supported) ...[
-                                const SizedBox(width: 8),
-                                Tooltip(
-                                  message: l.telemetryReportSetting,
-                                  child: GestureDetector(
-                                  onTap: () => showTelemetrySettings(context),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(7),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surface,
-                                      border: Border.all(
-                                        color: AppColors.border,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.bug_report_outlined,
-                                      size: 16,
-                                      color: AppColors.muted,
-                                    ),
-                                  ),
-                                  ),
-                                ),
-                              ],
-                              if (SyncService.instance.supported) ...[
-                                const SizedBox(width: 8),
-                                Tooltip(
-                                  message: l.syncPageTitle,
-                                  child: GestureDetector(
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const SyncConnectPage(),
-                                    ),
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(7),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surface,
-                                      border: Border.all(
-                                        color: AppColors.border,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.devices,
-                                      size: 16,
-                                      color: AppColors.muted,
-                                    ),
-                                  ),
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(width: 10),
-                              Tooltip(
-                                message: l.settings,
-                                child: GestureDetector(
-                                onTap: () => Navigator.push(
+                              // ⋯ 오버플로 — 설정·동기화·복구(문제 해결)를 한
+                              // 뎁스 아래로. 헤더는 [위젯 토글 + ⋯] 2개만 남는다.
+                              const SizedBox(width: 8),
+                              OverflowMenuButton(
+                                widgetOn: _desktopOverlayOn,
+                                onRefreshWidget: () => DesktopOverlayService
+                                    .instance
+                                    .refresh(_overlayStateMap()),
+                                onOpenSettings: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => const SettingsScreen(),
                                   ),
                                 ),
-                                child: Container(
-                                  padding: const EdgeInsets.all(7),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surface,
-                                    border: Border.all(color: AppColors.border),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.settings,
-                                    size: 16,
-                                    color: AppColors.muted,
+                                onOpenSync: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const SyncConnectPage(),
                                   ),
                                 ),
-                                ),
+                                onOpenTelemetry: () =>
+                                    showTelemetrySettings(context),
                               ),
                             ],
                           ),

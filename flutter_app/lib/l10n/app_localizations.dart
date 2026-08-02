@@ -962,6 +962,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'For natural announcements, add your language\'s voice in Windows Settings > Time & Language > Speech'**
   String get ttsVoiceMissingHint;
+
+  /// No description provided for @menuMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get menuMore;
+
+  /// No description provided for @menuSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Language · notifications · battery'**
+  String get menuSettingsHint;
+
+  /// No description provided for @menuTroubleshoot.
+  ///
+  /// In en, this message translates to:
+  /// **'TROUBLESHOOT'**
+  String get menuTroubleshoot;
+
+  /// No description provided for @menuAutoRecoveryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto detection and recovery is on — you rarely need these.'**
+  String get menuAutoRecoveryNote;
+
+  /// No description provided for @menuRefreshWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh widget'**
+  String get menuRefreshWidget;
+
+  /// No description provided for @menuRestartApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart app'**
+  String get menuRestartApp;
+
+  /// No description provided for @menuErrorReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Error reports'**
+  String get menuErrorReports;
 }
 
 class _AppLocalizationsDelegate

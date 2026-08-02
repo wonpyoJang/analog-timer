@@ -143,5 +143,12 @@
   "settingsTtsSample": "음성 안내가 켜졌습니다",
   "ttsOnboardBody": "방금 같은 세그먼트 전환을 소리로도 알려드릴 수 있어요",
   "ttsOnboardEnable": "켜보기",
-  "ttsVoiceMissingHint": "Windows 설정 > 시간 및 언어 > 음성에서 한국어 음성을 추가하면 더 자연스러워요"
+  "ttsVoiceMissingHint": "Windows 설정 > 시간 및 언어 > 음성에서 한국어 음성을 추가하면 더 자연스러워요",
+  "menuMore": "더보기",
+  "menuSettingsHint": "언어 · 알림 · 배터리",
+  "menuTroubleshoot": "문제 해결",
+  "menuAutoRecoveryNote": "멈춤 자동 감지·복구 켜짐 — 보통 직접 누를 일이 없습니다.",
+  "menuRefreshWidget": "위젯 새로고침",
+  "menuRestartApp": "앱 재시작",
+  "menuErrorReports": "오류 리포트"
 }

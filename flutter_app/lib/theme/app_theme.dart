@@ -6,6 +6,8 @@ class AppColors {
   static const border = Color(0xFF2E2E32);
   static const text = Color(0xFFE8E6E0);
   static const muted = Color(0xFF6B6968);
+  /// muted 보다 더 옅은 3차 텍스트 — 메뉴 그룹 헤더·힌트·쉐브론 (시안 토큰).
+  static const faint = Color(0xFF46443F);
   static const accent = Color(0xFFF0C040);
   static const timerOrange = Color(0xFFE07A52);
   static const timerOrangeDark = Color(0xFFC05A28);

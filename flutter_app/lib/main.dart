@@ -19,6 +19,7 @@ import 'services/desktop_overlay_service.dart';
 import 'services/telemetry_service.dart';
 import 'services/sync_service.dart';
 import 'services/tts_service.dart';
+import 'widgets/desktop_title_bar.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -211,6 +212,8 @@ class _AnalogTimerAppState extends State<AnalogTimerApp> {
         locale: _locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        // 커스텀 타이틀바를 모든 라우트 위에 — 설정/동기화 화면도 동일 톤.
+        builder: withDesktopTitleBar,
         home: const SplashScreen(),
       ),
     );
