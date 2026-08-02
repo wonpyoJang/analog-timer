@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:analog_timer/services/platform_info.dart';
 import 'package:analog_timer/widgets/a11y.dart';
 import 'package:analog_timer/services/text_scale_service.dart';
 
 void main() {
   group('AccessibleIconButton', () {
-    testWidgets('스크린리더 라벨 노출 + 48dp 최소 터치 타깃', (tester) async {
+    testWidgets('스크린리더 라벨 노출 + 플랫폼별 최소 터치 타깃', (tester) async {
       var tapped = false;
       await tester.pumpWidget(
         MaterialApp(
@@ -28,10 +29,13 @@ void main() {
       // 라벨이 시맨틱 트리에 존재
       expect(find.bySemanticsLabel('닫기'), findsOneWidget);
 
-      // 최소 48dp 터치 타깃
+      // 최소 터치 타깃 — 터치 48dp(WCAG 2.5.5) / 데스크톱 포인터 32dp
+      // (WCAG 2.5.8 최소 24dp 충족). 테스트는 호스트 플랫폼에서 도니
+      // platform_info 로 기대값을 맞춘다.
+      final minTarget = isDesktop ? 32.0 : 48.0;
       final size = tester.getSize(find.byType(AccessibleIconButton));
-      expect(size.width, greaterThanOrEqualTo(48));
-      expect(size.height, greaterThanOrEqualTo(48));
+      expect(size.width, greaterThanOrEqualTo(minTarget));
+      expect(size.height, greaterThanOrEqualTo(minTarget));
 
       await tester.tap(find.byType(AccessibleIconButton));
       expect(tapped, isTrue);
