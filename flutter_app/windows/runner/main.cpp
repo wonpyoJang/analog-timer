@@ -5,6 +5,7 @@
 #include <d3d11.h>
 
 #include "flutter_window.h"
+#include "resource.h"
 #include "utils.h"
 
 // 파일 하단 정의 — TdrWatchdog(익명 네임스페이스)에서도 사용하는 전역 함수.
@@ -387,6 +388,29 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);
+
+  // 창 아이콘 명시 지정 — 작업표시줄/Alt+Tab 이 기본 문서 아이콘으로 뜨던 문제.
+  // 클래스 hIcon(LoadIcon)은 크기 지정이 안 돼 셸이 원하는 치수를 못 얻는
+  // 경우가 있다. LoadImage 로 SM_CXICON/SM_CXSMICON 에 맞춰 각각 로드해
+  // WM_SETICON 으로 창에 직접 박는다(ICO 에 16~256px 다중 크기 포함 필요).
+  if (HWND hwnd = window.GetHandle()) {
+    HICON icon_big = static_cast<HICON>(::LoadImageW(
+        instance, MAKEINTRESOURCEW(IDI_APP_ICON), IMAGE_ICON,
+        ::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON),
+        LR_DEFAULTCOLOR));
+    HICON icon_small = static_cast<HICON>(::LoadImageW(
+        instance, MAKEINTRESOURCEW(IDI_APP_ICON), IMAGE_ICON,
+        ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON),
+        LR_DEFAULTCOLOR));
+    if (icon_big) {
+      ::SendMessageW(hwnd, WM_SETICON, ICON_BIG,
+                     reinterpret_cast<LPARAM>(icon_big));
+    }
+    if (icon_small) {
+      ::SendMessageW(hwnd, WM_SETICON, ICON_SMALL,
+                     reinterpret_cast<LPARAM>(icon_small));
+    }
+  }
 
   // TDR 워치독 시작 — GPU 드라이버 리셋 감지 시 자가 재시작(위 주석 참조).
   ::CreateThread(nullptr, 0, TdrWatchdog, window.GetHandle(), 0, nullptr);
