@@ -1210,6 +1210,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             color: Colors.white,
                             size: 18,
                           ),
+                          tooltip: l.a11yDismissBanner,
                           onPressed: BatteryService.instance.dismiss,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -1255,34 +1256,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 Tooltip(
                                   message: l.tipWidgetToggle,
                                   child: GestureDetector(
-                                  onTap: _toggleOverlay,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: _overlayOn
-                                          ? AppColors.accent.withAlpha(0x33)
-                                          : AppColors.surface,
-                                      border: Border.all(
-                                        color: _overlayOn
-                                            ? AppColors.accent
-                                            : AppColors.border,
+                                    onTap: _toggleOverlay,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
                                       ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      _overlayOn ? l.widgetOn : l.widget,
-                                      style: TextStyle(
+                                      decoration: BoxDecoration(
                                         color: _overlayOn
-                                            ? AppColors.accent
-                                            : AppColors.muted,
-                                        fontSize: 11,
-                                        letterSpacing: 0.6,
+                                            ? AppColors.accent.withAlpha(0x33)
+                                            : AppColors.surface,
+                                        border: Border.all(
+                                          color: _overlayOn
+                                              ? AppColors.accent
+                                              : AppColors.border,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        _overlayOn ? l.widgetOn : l.widget,
+                                        style: TextStyle(
+                                          color: _overlayOn
+                                              ? AppColors.accent
+                                              : AppColors.muted,
+                                          fontSize: 11,
+                                          letterSpacing: 0.6,
+                                        ),
                                       ),
                                     ),
-                                  ),
                                   ),
                                 ),
                               ],
@@ -1291,34 +1292,36 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 Tooltip(
                                   message: l.tipWidgetToggle,
                                   child: GestureDetector(
-                                  onTap: _toggleDesktopOverlay,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: _desktopOverlayOn
-                                          ? AppColors.accent.withAlpha(0x33)
-                                          : AppColors.surface,
-                                      border: Border.all(
-                                        color: _desktopOverlayOn
-                                            ? AppColors.accent
-                                            : AppColors.border,
+                                    onTap: _toggleDesktopOverlay,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
                                       ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      _desktopOverlayOn ? l.widgetOn : l.widget,
-                                      style: TextStyle(
+                                      decoration: BoxDecoration(
                                         color: _desktopOverlayOn
-                                            ? AppColors.accent
-                                            : AppColors.muted,
-                                        fontSize: 11,
-                                        letterSpacing: 0.6,
+                                            ? AppColors.accent.withAlpha(0x33)
+                                            : AppColors.surface,
+                                        border: Border.all(
+                                          color: _desktopOverlayOn
+                                              ? AppColors.accent
+                                              : AppColors.border,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        _desktopOverlayOn
+                                            ? l.widgetOn
+                                            : l.widget,
+                                        style: TextStyle(
+                                          color: _desktopOverlayOn
+                                              ? AppColors.accent
+                                              : AppColors.muted,
+                                          fontSize: 11,
+                                          letterSpacing: 0.6,
+                                        ),
                                       ),
                                     ),
-                                  ),
                                   ),
                                 ),
                               ],
@@ -1464,11 +1467,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _ => null,
     };
     if (msg == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      behavior: SnackBarBehavior.floating,
-      duration: const Duration(seconds: 6),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 6),
+      ),
+    );
   }
 
   /// 인앱 단축키 — HardwareKeyboard 전역 핸들러(포커스 무관, 앱이 키보드
@@ -1488,7 +1493,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final shift = pressed.isShiftPressed;
     // Ctrl/Alt/Meta 조합은 여기서 처리하지 않는다 — 글로벌 핫키(hotkey_manager)
     // 및 OS 단축키와의 이중 발화 방지.
-    if (pressed.isControlPressed || pressed.isAltPressed || pressed.isMetaPressed) {
+    if (pressed.isControlPressed ||
+        pressed.isAltPressed ||
+        pressed.isMetaPressed) {
       return false;
     }
     final key = event.logicalKey;

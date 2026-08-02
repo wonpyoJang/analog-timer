@@ -20,6 +20,7 @@ import 'services/telemetry_service.dart';
 import 'services/sync_service.dart';
 import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
+import 'services/text_scale_service.dart';
 import 'widgets/desktop_title_bar.dart';
 
 Future<void> main(List<String> args) async {
@@ -45,6 +46,7 @@ Future<void> main(List<String> args) async {
   await TelemetryService.instance.init();
   await SyncService.instance.init();
   await TtsService.instance.init();
+  await TextScaleService.instance.init();
   await HotkeyService.instance.init();
   _installErrorHandlers();
   runApp(const AnalogTimerApp());
@@ -83,9 +85,28 @@ Future<Map<String, dynamic>?> _overlayArgsIfSubWindow() async {
 void overlayMain() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting();
+  await TextScaleService.instance.init();
   final tag = await PersistenceService.loadLocale();
   final locale = tag != null ? parseLocaleTag(tag) : null;
   runApp(OverlayApp(initialLocale: locale));
+}
+
+/// 사용자 지정 글씨 배율을 시스템 배율에 곱해 앱 전역에 적용 — 저시력 접근성.
+/// OS 접근성 배율을 존중(곱)하면서 최종값을 클램프해 레이아웃 파손을 막는다.
+Widget withUserTextScale(BuildContext context, Widget? child) {
+  final base = child ?? const SizedBox.shrink();
+  return ValueListenableBuilder<double>(
+    valueListenable: TextScaleService.instance.scaleListenable,
+    builder: (context, userScale, _) {
+      final mq = MediaQuery.of(context);
+      final system = mq.textScaler.scale(1.0); // 시스템 배율(1.0 기준 배수)
+      final effective = (system * userScale).clamp(0.5, 2.0);
+      return MediaQuery(
+        data: mq.copyWith(textScaler: TextScaler.linear(effective)),
+        child: base,
+      );
+    },
+  );
 }
 
 /// 오버레이 전용 앱 — shareData로 locale을 동적 변경 가능
@@ -121,6 +142,7 @@ class OverlayAppState extends State<OverlayApp> {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: _locale,
+      builder: withUserTextScale,
       home: const TimerOverlayWidget(),
     );
   }
@@ -216,8 +238,9 @@ class _AnalogTimerAppState extends State<AnalogTimerApp> {
         locale: _locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        // 커스텀 타이틀바를 모든 라우트 위에 — 설정/동기화 화면도 동일 톤.
-        builder: withDesktopTitleBar,
+        // 커스텀 타이틀바(데스크톱) + 사용자 글씨 배율을 모든 라우트 위에.
+        builder: (context, child) =>
+            withUserTextScale(context, withDesktopTitleBar(context, child)),
         home: const SplashScreen(),
       ),
     );

@@ -85,5 +85,14 @@
   "editCoachGrid": "Коснитесь ячейки, чтобы переместить",
   "editCoachDpad": "Стрелки для точной настройки · удерживайте для повтора",
   "editCoachControls": "⤢ Размер · ⇄ Сменить сторону · ✓ Готово",
-  "editCoachDismiss": "Коснитесь в любом месте, чтобы начать"
+  "editCoachDismiss": "Коснитесь в любом месте, чтобы начать",
+  "settingsTextSize": "Размер текста",
+  "textSizeSmall": "Мелкий",
+  "textSizeNormal": "Обычный",
+  "textSizeLarge": "Крупный",
+  "textSizeXLarge": "Очень крупный",
+  "textSizePreview": "Предпросмотр 25:00",
+  "a11yClose": "Закрыть",
+  "a11yEditSegment": "Изменить сегмент",
+  "a11yDismissBanner": "Скрыть"
 }

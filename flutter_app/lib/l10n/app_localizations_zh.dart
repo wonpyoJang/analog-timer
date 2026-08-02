@@ -621,6 +621,33 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get hotkeyRecordGuide2 =>
       'Pick one you don\'t already use elsewhere — adding Shift makes clashes rare.';
+
+  @override
+  String get settingsTextSize => '文字大小';
+
+  @override
+  String get textSizeSmall => '小';
+
+  @override
+  String get textSizeNormal => '标准';
+
+  @override
+  String get textSizeLarge => '大';
+
+  @override
+  String get textSizeXLarge => '特大';
+
+  @override
+  String get textSizePreview => '计时器 25:00 预览';
+
+  @override
+  String get a11yClose => '关闭';
+
+  @override
+  String get a11yEditSegment => '编辑区间';
+
+  @override
+  String get a11yDismissBanner => '关闭提示';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -902,4 +929,31 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get editCoachDismiss => '點按任意處開始';
+
+  @override
+  String get settingsTextSize => '文字大小';
+
+  @override
+  String get textSizeSmall => '小';
+
+  @override
+  String get textSizeNormal => '標準';
+
+  @override
+  String get textSizeLarge => '大';
+
+  @override
+  String get textSizeXLarge => '特大';
+
+  @override
+  String get textSizePreview => '計時器 25:00 預覽';
+
+  @override
+  String get a11yClose => '關閉';
+
+  @override
+  String get a11yEditSegment => '編輯區間';
+
+  @override
+  String get a11yDismissBanner => '關閉提示';
 }

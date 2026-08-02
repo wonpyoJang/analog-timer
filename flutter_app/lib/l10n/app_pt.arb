@@ -85,5 +85,14 @@
   "editCoachGrid": "Toque em uma célula para mover para lá",
   "editCoachDpad": "Setas para ajuste fino · segure para repetir",
   "editCoachControls": "⤢ Tamanho · ⇄ Trocar lado · ✓ Concluído",
-  "editCoachDismiss": "Toque em qualquer lugar para começar"
+  "editCoachDismiss": "Toque em qualquer lugar para começar",
+  "settingsTextSize": "Tamanho do texto",
+  "textSizeSmall": "Pequeno",
+  "textSizeNormal": "Normal",
+  "textSizeLarge": "Grande",
+  "textSizeXLarge": "Muito grande",
+  "textSizePreview": "Prévia 25:00",
+  "a11yClose": "Fechar",
+  "a11yEditSegment": "Editar segmento",
+  "a11yDismissBanner": "Dispensar"
 }

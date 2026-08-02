@@ -625,4 +625,31 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get hotkeyRecordGuide2 =>
       'Pick one you don\'t already use elsewhere — adding Shift makes clashes rare.';
+
+  @override
+  String get settingsTextSize => 'Ukuran teks';
+
+  @override
+  String get textSizeSmall => 'Kecil';
+
+  @override
+  String get textSizeNormal => 'Normal';
+
+  @override
+  String get textSizeLarge => 'Besar';
+
+  @override
+  String get textSizeXLarge => 'Sangat besar';
+
+  @override
+  String get textSizePreview => 'Pratinjau 25:00';
+
+  @override
+  String get a11yClose => 'Tutup';
+
+  @override
+  String get a11yEditSegment => 'Edit segmen';
+
+  @override
+  String get a11yDismissBanner => 'Tutup';
 }

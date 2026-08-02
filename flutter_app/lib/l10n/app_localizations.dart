@@ -1244,6 +1244,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick one you don\'t already use elsewhere — adding Shift makes clashes rare.'**
   String get hotkeyRecordGuide2;
+
+  /// No description provided for @settingsTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get settingsTextSize;
+
+  /// No description provided for @textSizeSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get textSizeSmall;
+
+  /// No description provided for @textSizeNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get textSizeNormal;
+
+  /// No description provided for @textSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get textSizeLarge;
+
+  /// No description provided for @textSizeXLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra large'**
+  String get textSizeXLarge;
+
+  /// No description provided for @textSizePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer 25:00 preview'**
+  String get textSizePreview;
+
+  /// No description provided for @a11yClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get a11yClose;
+
+  /// No description provided for @a11yEditSegment.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit segment'**
+  String get a11yEditSegment;
+
+  /// No description provided for @a11yDismissBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get a11yDismissBanner;
 }
 
 class _AppLocalizationsDelegate

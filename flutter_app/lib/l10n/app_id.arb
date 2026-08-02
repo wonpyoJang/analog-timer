@@ -85,5 +85,14 @@
   "editCoachGrid": "Ketuk sel untuk pindah ke sana",
   "editCoachDpad": "Panah untuk penyetelan halus · tahan untuk mengulang",
   "editCoachControls": "⤢ Ukuran · ⇄ Ganti sisi · ✓ Selesai",
-  "editCoachDismiss": "Ketuk di mana saja untuk mulai"
+  "editCoachDismiss": "Ketuk di mana saja untuk mulai",
+  "settingsTextSize": "Ukuran teks",
+  "textSizeSmall": "Kecil",
+  "textSizeNormal": "Normal",
+  "textSizeLarge": "Besar",
+  "textSizeXLarge": "Sangat besar",
+  "textSizePreview": "Pratinjau 25:00",
+  "a11yClose": "Tutup",
+  "a11yEditSegment": "Edit segmen",
+  "a11yDismissBanner": "Tutup"
 }

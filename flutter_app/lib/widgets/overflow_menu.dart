@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
+import 'a11y.dart';
 import '../services/desktop_service.dart';
 import '../services/sync_service.dart';
 import '../services/telemetry_service.dart';
@@ -56,19 +57,17 @@ class OverflowMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return Tooltip(
-      message: l.menuMore,
-      child: GestureDetector(
-        onTap: () => _show(context),
-        child: Container(
-          padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(Icons.more_horiz, size: 16, color: AppColors.muted),
+    return AccessibleIconButton(
+      label: l.menuMore,
+      onTap: () => _show(context),
+      child: Container(
+        padding: const EdgeInsets.all(7),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(8),
         ),
+        child: const Icon(Icons.more_horiz, size: 16, color: AppColors.muted),
       ),
     );
   }

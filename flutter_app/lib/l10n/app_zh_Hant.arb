@@ -85,5 +85,14 @@
   "editCoachGrid": "點按方格即可移到該處",
   "editCoachDpad": "方向鍵微調 · 長按可連續",
   "editCoachControls": "⤢ 大小 · ⇄ 切換左右 · ✓ 完成",
-  "editCoachDismiss": "點按任意處開始"
+  "editCoachDismiss": "點按任意處開始",
+  "settingsTextSize": "文字大小",
+  "textSizeSmall": "小",
+  "textSizeNormal": "標準",
+  "textSizeLarge": "大",
+  "textSizeXLarge": "特大",
+  "textSizePreview": "計時器 25:00 預覽",
+  "a11yClose": "關閉",
+  "a11yEditSegment": "編輯區間",
+  "a11yDismissBanner": "關閉提示"
 }
