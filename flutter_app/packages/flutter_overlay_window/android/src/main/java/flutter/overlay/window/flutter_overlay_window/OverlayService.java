@@ -469,6 +469,13 @@ public class OverlayService extends Service implements View.OnTouchListener {
                     mTrayAnimationTimer = new Timer();
                     mTrayAnimationTimer.schedule(mTrayTimerTask, 0, 25);
                 }
+                // 드래그 종료 위치를 Flutter에 통지 — 마지막 위치 저장용
+                if (wasDragging && flutterChannel != null) {
+                    Map<String, Object> position = new HashMap<>();
+                    position.put("x", pxToDp(params.x));
+                    position.put("y", pxToDp(params.y));
+                    flutterChannel.invokeMethod("onDragEnd", position);
+                }
                 // 드래그로 끝난 UP은 소비 — Flutter에는 이미 CANCEL 전달됨
                 return wasDragging;
             }

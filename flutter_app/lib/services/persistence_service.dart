@@ -10,6 +10,23 @@ class PersistenceService {
   static const _kHiddenDefaults = 'hidden_default_presets';
   static const _kOverlayHintCount = 'overlay_hint_count';
   static const _kDpadOnLeft = 'dpad_on_left';
+  static const _kOverlayPosX = 'overlay_pos_x';
+  static const _kOverlayPosY = 'overlay_pos_y';
+
+  /// 오버레이 창 마지막 위치(dp, topCenter gravity 기준) — 오버레이 isolate 전용
+  static Future<void> saveOverlayPos(double x, double y) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_kOverlayPosX, x);
+    await prefs.setDouble(_kOverlayPosY, y);
+  }
+
+  static Future<({double x, double y})?> loadOverlayPos() async {
+    final prefs = await SharedPreferences.getInstance();
+    final x = prefs.getDouble(_kOverlayPosX);
+    final y = prefs.getDouble(_kOverlayPosY);
+    if (x == null || y == null) return null;
+    return (x: x, y: y);
+  }
 
   /// 편집 D-pad 도킹 방향 — 오버레이 isolate에서 읽고 쓴다 (⇄ 전환 기억)
   static Future<bool> loadDpadOnLeft() async {
