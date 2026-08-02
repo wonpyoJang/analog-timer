@@ -1735,11 +1735,14 @@ class _OverlayClockPainter extends CustomPainter {
     final partialMin = elapsedMin % 60;
     final startAngle = swStartAngleRad ?? _minuteHandAngle(now);
     const swColor = Color(0xFF2EA84A);
+    // 색맹 대응: 스톱워치는 점선(dashed) — 타이머(채운 쐐기, solid)와 구분.
     for (int ring = 0; ring < min(fullLaps, maxRings); ring++) {
       final r = outermost - ring * step - ringW / 2;
-      canvas.drawCircle(
-        Offset(cx, cy),
-        r,
+      _drawDashedArc(
+        canvas,
+        Rect.fromCircle(center: Offset(cx, cy), radius: r),
+        -pi / 2,
+        2 * pi,
         Paint()
           ..color = swColor.withAlpha(0x77)
           ..style = PaintingStyle.stroke
@@ -1751,17 +1754,35 @@ class _OverlayClockPainter extends CustomPainter {
     if (curRing >= 0 && partialMin > 0) {
       final r = outermost - curRing * step - ringW / 2;
       final sweep = (partialMin / 60) * 2 * pi;
-      canvas.drawArc(
+      _drawDashedArc(
+        canvas,
         Rect.fromCircle(center: Offset(cx, cy), radius: r),
         startAngle,
         sweep,
-        false,
         Paint()
           ..color = swColor.withAlpha(0xCC)
           ..style = PaintingStyle.stroke
           ..strokeWidth = ringW
-          ..strokeCap = StrokeCap.round,
+          ..strokeCap = StrokeCap.butt,
       );
+    }
+  }
+
+  void _drawDashedArc(
+    Canvas canvas,
+    Rect rect,
+    double start,
+    double sweep,
+    Paint paint, {
+    double dash = 0.13,
+    double gap = 0.07,
+  }) {
+    final end = start + sweep;
+    double a = start;
+    while (a < end) {
+      final seg = min(dash, end - a);
+      canvas.drawArc(rect, a, seg, false, paint);
+      a += dash + gap;
     }
   }
 

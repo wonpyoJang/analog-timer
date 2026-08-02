@@ -136,12 +136,15 @@ class ClockPainter extends CustomPainter {
     final startAngle = swState.startAngleRadians ?? _minuteHandAngle();
     const swColor = Color(0xFF2EA84A);
 
-    // 완성 바퀴 (바깥 → 안)
+    // 완성 바퀴 (바깥 → 안) — 색맹 대응: 점선(dashed)으로 그려 타이머(채운
+    // 쐐기, solid)와 색 없이도 구분된다.
     for (int ring = 0; ring < min(fullLaps, maxRings); ring++) {
       final r = outermost - ring * step - ringW / 2;
-      canvas.drawCircle(
-        Offset(cx, cy),
-        r,
+      _drawDashedArc(
+        canvas,
+        Rect.fromCircle(center: Offset(cx, cy), radius: r),
+        -pi / 2,
+        2 * pi,
         Paint()
           ..color = swColor.withAlpha(0x77)
           ..style = PaintingStyle.stroke
@@ -150,23 +153,41 @@ class ClockPainter extends CustomPainter {
       );
     }
 
-    // 현재 진행 링
+    // 현재 진행 링 — 점선
     final curRing = min(fullLaps, maxRings - 1);
     if (curRing >= 0 && partialMin > 0) {
       final r = outermost - curRing * step - ringW / 2;
       final sweep = (partialMin / 60) * 2 * pi;
-      final rect = Rect.fromCircle(center: Offset(cx, cy), radius: r);
-      canvas.drawArc(
-        rect,
+      _drawDashedArc(
+        canvas,
+        Rect.fromCircle(center: Offset(cx, cy), radius: r),
         startAngle,
         sweep,
-        false,
         Paint()
           ..color = swColor.withAlpha(0xCC)
           ..style = PaintingStyle.stroke
           ..strokeWidth = ringW
-          ..strokeCap = StrokeCap.round,
+          ..strokeCap = StrokeCap.butt,
       );
+    }
+  }
+
+  /// 색맹 안전 패턴용 점선 호 — dash/gap(라디안 단위)으로 반복 렌더.
+  void _drawDashedArc(
+    Canvas canvas,
+    Rect rect,
+    double start,
+    double sweep,
+    Paint paint, {
+    double dash = 0.13,
+    double gap = 0.07,
+  }) {
+    final end = start + sweep;
+    double a = start;
+    while (a < end) {
+      final seg = min(dash, end - a);
+      canvas.drawArc(rect, a, seg, false, paint);
+      a += dash + gap;
     }
   }
 

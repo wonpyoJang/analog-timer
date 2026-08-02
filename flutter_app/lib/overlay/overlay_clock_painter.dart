@@ -113,11 +113,14 @@ class OverlayClockPainter extends CustomPainter {
     final partialMin = elapsedMin % 60;
     final startAngle = swStartAngleRad ?? _minuteHandAngle();
     const swColor = Color(0xFF2EA84A);
+    // 색맹 대응: 스톱워치는 점선(dashed)으로 — 타이머(채운 쐐기, solid)와 구분.
     for (int ring = 0; ring < min(fullLaps, maxRings); ring++) {
       final r = outermost - ring * step - ringW / 2;
-      canvas.drawCircle(
-        Offset(cx, cy),
-        r,
+      _drawDashedArc(
+        canvas,
+        Rect.fromCircle(center: Offset(cx, cy), radius: r),
+        -pi / 2,
+        2 * pi,
         Paint()
           ..color = swColor.withAlpha(0x77)
           ..style = PaintingStyle.stroke
@@ -129,17 +132,35 @@ class OverlayClockPainter extends CustomPainter {
     if (curRing >= 0 && partialMin > 0) {
       final r = outermost - curRing * step - ringW / 2;
       final sweep = (partialMin / 60) * 2 * pi;
-      canvas.drawArc(
+      _drawDashedArc(
+        canvas,
         Rect.fromCircle(center: Offset(cx, cy), radius: r),
         startAngle,
         sweep,
-        false,
         Paint()
           ..color = swColor.withAlpha(0xCC)
           ..style = PaintingStyle.stroke
           ..strokeWidth = ringW
-          ..strokeCap = StrokeCap.round,
+          ..strokeCap = StrokeCap.butt,
       );
+    }
+  }
+
+  void _drawDashedArc(
+    Canvas canvas,
+    Rect rect,
+    double start,
+    double sweep,
+    Paint paint, {
+    double dash = 0.13,
+    double gap = 0.07,
+  }) {
+    final end = start + sweep;
+    double a = start;
+    while (a < end) {
+      final seg = min(dash, end - a);
+      canvas.drawArc(rect, a, seg, false, paint);
+      a += dash + gap;
     }
   }
 
@@ -150,10 +171,14 @@ class OverlayClockPainter extends CustomPainter {
       final isQ = i % 15 == 0;
       final isM = i % 5 == 0;
       final r0 = isQ
-          ? R - R * 0.138 // R-22 at R=160
+          ? R -
+                R *
+                    0.138 // R-22 at R=160
           : isM
-              ? R - R * 0.100 // R-16 at R=160
-              : R - R * 0.056; // R-9  at R=160
+          ? R -
+                R *
+                    0.100 // R-16 at R=160
+          : R - R * 0.056; // R-9  at R=160
       canvas.drawLine(
         Offset(cx + cos(angle) * r0, cy + sin(angle) * r0),
         Offset(cx + cos(angle) * rOuter, cy + sin(angle) * rOuter),
@@ -161,13 +186,16 @@ class OverlayClockPainter extends CustomPainter {
           ..color = isQ
               ? Colors.black
               : isM
-                  ? const Color(0xFF333333)
-                  : const Color(0xFFAAAAAA)
+              ? const Color(0xFF333333)
+              : const Color(0xFFAAAAAA)
           ..strokeWidth = isQ
-              ? R * 0.031 // 5px at R=160
+              ? R *
+                    0.031 // 5px at R=160
               : isM
-                  ? R * 0.016 // 2.5px at R=160
-                  : R * 0.006 // 1px at R=160
+              ? R *
+                    0.016 // 2.5px at R=160
+              : R *
+                    0.006 // 1px at R=160
           ..strokeCap = StrokeCap.round,
       );
     }
@@ -221,10 +249,42 @@ class OverlayClockPainter extends CustomPainter {
     final secA = ((s + ms / 1000) / 60) * 2 * pi - pi / 2;
     final minA = ((m + (s + ms / 1000) / 60) / 60) * 2 * pi - pi / 2;
     final hourA = ((h + m / 60) / 12) * 2 * pi - pi / 2;
-    _drawHand(canvas, cx, cy, hourA, R * 0.48, R * 0.063, const Color(0xFF111111));
-    _drawHand(canvas, cx, cy, minA, R * 0.66, R * 0.044, const Color(0xFF111111));
-    _drawHand(canvas, cx, cy, secA, R * 0.79, R * 0.013, const Color(0xFFDD2222));
-    _drawHand(canvas, cx, cy, secA + pi, R * 0.17, R * 0.013, const Color(0xFFDD2222));
+    _drawHand(
+      canvas,
+      cx,
+      cy,
+      hourA,
+      R * 0.48,
+      R * 0.063,
+      const Color(0xFF111111),
+    );
+    _drawHand(
+      canvas,
+      cx,
+      cy,
+      minA,
+      R * 0.66,
+      R * 0.044,
+      const Color(0xFF111111),
+    );
+    _drawHand(
+      canvas,
+      cx,
+      cy,
+      secA,
+      R * 0.79,
+      R * 0.013,
+      const Color(0xFFDD2222),
+    );
+    _drawHand(
+      canvas,
+      cx,
+      cy,
+      secA + pi,
+      R * 0.17,
+      R * 0.013,
+      const Color(0xFFDD2222),
+    );
     canvas.drawCircle(
       Offset(cx, cy),
       R * 0.063, // 10px at R=160
