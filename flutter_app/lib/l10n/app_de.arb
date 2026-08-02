@@ -85,5 +85,14 @@
   "editCoachGrid": "Auf ein Feld tippen, um dorthin zu springen",
   "editCoachDpad": "Pfeile zum Feinjustieren · halten für Wiederholung",
   "editCoachControls": "⤢ Größe · ⇄ Seite wechseln · ✓ Fertig",
-  "editCoachDismiss": "Zum Starten irgendwo tippen"
+  "editCoachDismiss": "Zum Starten irgendwo tippen",
+  "settingsTextSize": "Schriftgröße",
+  "textSizeSmall": "Klein",
+  "textSizeNormal": "Normal",
+  "textSizeLarge": "Groß",
+  "textSizeXLarge": "Sehr groß",
+  "textSizePreview": "Timer 25:00 Vorschau",
+  "a11yClose": "Schließen",
+  "a11yEditSegment": "Abschnitt bearbeiten",
+  "a11yDismissBanner": "Schließen"
 }

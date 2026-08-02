@@ -85,5 +85,14 @@
   "editCoachGrid": "Oraya taşımak için bir hücreye dokunun",
   "editCoachDpad": "İnce ayar için oklar · tekrar için basılı tutun",
   "editCoachControls": "⤢ Boyut · ⇄ Taraf değiştir · ✓ Bitti",
-  "editCoachDismiss": "Başlamak için herhangi bir yere dokunun"
+  "editCoachDismiss": "Başlamak için herhangi bir yere dokunun",
+  "settingsTextSize": "Yazı boyutu",
+  "textSizeSmall": "Küçük",
+  "textSizeNormal": "Normal",
+  "textSizeLarge": "Büyük",
+  "textSizeXLarge": "Çok büyük",
+  "textSizePreview": "Önizleme 25:00",
+  "a11yClose": "Kapat",
+  "a11yEditSegment": "Bölümü düzenle",
+  "a11yDismissBanner": "Kapat"
 }

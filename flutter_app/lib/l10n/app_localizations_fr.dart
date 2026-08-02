@@ -625,4 +625,31 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get hotkeyRecordGuide2 =>
       'Pick one you don\'t already use elsewhere — adding Shift makes clashes rare.';
+
+  @override
+  String get settingsTextSize => 'Taille du texte';
+
+  @override
+  String get textSizeSmall => 'Petit';
+
+  @override
+  String get textSizeNormal => 'Normal';
+
+  @override
+  String get textSizeLarge => 'Grand';
+
+  @override
+  String get textSizeXLarge => 'Très grand';
+
+  @override
+  String get textSizePreview => 'Aperçu 25:00';
+
+  @override
+  String get a11yClose => 'Fermer';
+
+  @override
+  String get a11yEditSegment => 'Modifier le segment';
+
+  @override
+  String get a11yDismissBanner => 'Ignorer';
 }

@@ -623,4 +623,31 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get hotkeyRecordGuide2 =>
       'Pick one you don\'t already use elsewhere — adding Shift makes clashes rare.';
+
+  @override
+  String get settingsTextSize => 'Yazı boyutu';
+
+  @override
+  String get textSizeSmall => 'Küçük';
+
+  @override
+  String get textSizeNormal => 'Normal';
+
+  @override
+  String get textSizeLarge => 'Büyük';
+
+  @override
+  String get textSizeXLarge => 'Çok büyük';
+
+  @override
+  String get textSizePreview => 'Önizleme 25:00';
+
+  @override
+  String get a11yClose => 'Kapat';
+
+  @override
+  String get a11yEditSegment => 'Bölümü düzenle';
+
+  @override
+  String get a11yDismissBanner => 'Kapat';
 }

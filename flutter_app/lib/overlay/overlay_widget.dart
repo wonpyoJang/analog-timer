@@ -7,6 +7,7 @@ import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import '../l10n/app_localizations.dart';
 import '../main.dart' show parseLocaleTag, OverlayApp;
 import '../services/persistence_service.dart';
+import '../services/text_scale_service.dart';
 
 class TimerOverlayWidget extends StatefulWidget {
   const TimerOverlayWidget({super.key});
@@ -213,6 +214,12 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         final localeTag = map['localeTag'] as String?;
         if (localeTag != null) {
           OverlayApp.updateLocale(parseLocaleTag(localeTag));
+        }
+
+        // 글씨 배율 라이브 동기화 — 메인 앱 설정 변경 즉시 반영 (locale 패턴 동일)
+        final textScale = (map['textScale'] as num?)?.toDouble();
+        if (textScale != null && textScale != TextScaleService.instance.scale) {
+          TextScaleService.instance.scaleListenable.value = textScale;
         }
 
         // command 처리 — 메인 앱에서 resizeOverlay를 직접 못 하므로 위젯이 대신 실행

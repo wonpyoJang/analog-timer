@@ -624,4 +624,31 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get hotkeyRecordGuide2 =>
       'Pick one you don\'t already use elsewhere — adding Shift makes clashes rare.';
+
+  @override
+  String get settingsTextSize => 'टेक्स्ट आकार';
+
+  @override
+  String get textSizeSmall => 'छोटा';
+
+  @override
+  String get textSizeNormal => 'सामान्य';
+
+  @override
+  String get textSizeLarge => 'बड़ा';
+
+  @override
+  String get textSizeXLarge => 'बहुत बड़ा';
+
+  @override
+  String get textSizePreview => 'पूर्वावलोकन 25:00';
+
+  @override
+  String get a11yClose => 'बंद करें';
+
+  @override
+  String get a11yEditSegment => 'खंड संपादित करें';
+
+  @override
+  String get a11yDismissBanner => 'खारिज करें';
 }

@@ -85,5 +85,14 @@
   "editCoachGrid": "タップした位置へ移動",
   "editCoachDpad": "矢印で微調整・長押しで連続",
   "editCoachControls": "⤢ サイズ · ⇄ 左右切替 · ✓ 完了",
-  "editCoachDismiss": "画面をタップして開始"
+  "editCoachDismiss": "画面をタップして開始",
+  "settingsTextSize": "文字サイズ",
+  "textSizeSmall": "小",
+  "textSizeNormal": "標準",
+  "textSizeLarge": "大",
+  "textSizeXLarge": "特大",
+  "textSizePreview": "タイマー 25:00 プレビュー",
+  "a11yClose": "閉じる",
+  "a11yEditSegment": "区間を編集",
+  "a11yDismissBanner": "通知を閉じる"
 }

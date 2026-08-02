@@ -603,4 +603,31 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get hotkeyRecordGuide2 => '평소 안 쓰는 조합으로 고르세요 — Shift를 더하면 겹칠 일이 드물어요';
+
+  @override
+  String get settingsTextSize => '글씨 크기';
+
+  @override
+  String get textSizeSmall => '작게';
+
+  @override
+  String get textSizeNormal => '보통';
+
+  @override
+  String get textSizeLarge => '크게';
+
+  @override
+  String get textSizeXLarge => '아주 크게';
+
+  @override
+  String get textSizePreview => '타이머 25:00 미리보기';
+
+  @override
+  String get a11yClose => '닫기';
+
+  @override
+  String get a11yEditSegment => '구간 편집';
+
+  @override
+  String get a11yDismissBanner => '알림 닫기';
 }

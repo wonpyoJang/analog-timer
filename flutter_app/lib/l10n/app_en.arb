@@ -297,5 +297,14 @@
       }
     }
   },
-  "hotkeyRecordGuide2": "Pick one you don't already use elsewhere — adding Shift makes clashes rare."
+  "hotkeyRecordGuide2": "Pick one you don't already use elsewhere — adding Shift makes clashes rare.",
+  "settingsTextSize": "Text size",
+  "textSizeSmall": "Small",
+  "textSizeNormal": "Normal",
+  "textSizeLarge": "Large",
+  "textSizeXLarge": "Extra large",
+  "textSizePreview": "Timer 25:00 preview",
+  "a11yClose": "Close",
+  "a11yEditSegment": "Edit segment",
+  "a11yDismissBanner": "Dismiss"
 }

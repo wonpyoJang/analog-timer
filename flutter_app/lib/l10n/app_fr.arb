@@ -85,5 +85,14 @@
   "editCoachGrid": "Touchez une case pour vous y déplacer",
   "editCoachDpad": "Flèches pour un réglage fin · maintenez pour répéter",
   "editCoachControls": "⤢ Taille · ⇄ Changer de côté · ✓ Terminé",
-  "editCoachDismiss": "Touchez n'importe où pour commencer"
+  "editCoachDismiss": "Touchez n'importe où pour commencer",
+  "settingsTextSize": "Taille du texte",
+  "textSizeSmall": "Petit",
+  "textSizeNormal": "Normal",
+  "textSizeLarge": "Grand",
+  "textSizeXLarge": "Très grand",
+  "textSizePreview": "Aperçu 25:00",
+  "a11yClose": "Fermer",
+  "a11yEditSegment": "Modifier le segment",
+  "a11yDismissBanner": "Ignorer"
 }

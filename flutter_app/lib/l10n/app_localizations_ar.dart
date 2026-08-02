@@ -623,4 +623,31 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get hotkeyRecordGuide2 =>
       'Pick one you don\'t already use elsewhere — adding Shift makes clashes rare.';
+
+  @override
+  String get settingsTextSize => 'حجم الخط';
+
+  @override
+  String get textSizeSmall => 'صغير';
+
+  @override
+  String get textSizeNormal => 'عادي';
+
+  @override
+  String get textSizeLarge => 'كبير';
+
+  @override
+  String get textSizeXLarge => 'كبير جدًا';
+
+  @override
+  String get textSizePreview => 'معاينة 25:00';
+
+  @override
+  String get a11yClose => 'إغلاق';
+
+  @override
+  String get a11yEditSegment => 'تعديل المقطع';
+
+  @override
+  String get a11yDismissBanner => 'تجاهل';
 }
