@@ -508,7 +508,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsHotkeysDesc =>
-      '다른 앱에서도: Ctrl+Alt+Space 시작/정지 · Ctrl+Alt+N 다음 · Ctrl+Alt+L 랩. 창 안에선 Space·N·S·L·W';
+      '다른 앱을 쓰는 중에도 동작해요. 아래 항목을 눌러 키를 바꿀 수 있어요. 창 안에선 Space·N·S·L·W';
+
+  @override
+  String get hotkeyReset => '기본값 복원';
+
+  @override
+  String get hotkeyRecordPrompt => '새 키 조합을 눌러주세요';
 
   @override
   String get settingsTtsVoice => '음성 스타일';

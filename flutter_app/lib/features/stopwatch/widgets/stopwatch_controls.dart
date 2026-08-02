@@ -4,6 +4,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../bloc/stopwatch_bloc.dart';
 import '../bloc/stopwatch_event.dart';
+import '../../../services/hotkey_service.dart';
 import '../../../services/shortcut_hint_service.dart';
 import '../bloc/stopwatch_state.dart';
 
@@ -86,7 +87,7 @@ class StopwatchControls extends StatelessWidget {
                     label: l.btnLap,
                     // 스톱워치가 시작되지 않았으면 비활성(회색) — 무반응 혼란 방지.
                     enabled: active,
-                    tooltip: 'L · Ctrl+Alt+L',
+                    tooltip: 'L · ${HotkeyService.instance.describe('sw_lap')}',
                     onTap: active
                         ? () {
                             _lap(context, state);

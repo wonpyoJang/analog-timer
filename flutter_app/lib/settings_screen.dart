@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
 
 import 'l10n/app_localizations.dart';
 import 'services/battery_service.dart';
@@ -100,22 +101,54 @@ class SettingsScreen extends StatelessWidget {
           if (isDesktop) ...[
             ValueListenableBuilder<bool>(
               valueListenable: HotkeyService.instance.enabledListenable,
-              builder: (ctx, hkOn, _) => _SettingsTile(
-                icon: Icons.keyboard_outlined,
-                iconColor: AppColors.accent,
-                title: l.settingsHotkeys,
-                subtitle: l.settingsHotkeysDesc,
-                trailing: Switch(
-                  value: hkOn,
-                  onChanged: HotkeyService.instance.setEnabled,
-                  activeThumbColor: AppColors.accent,
-                  trackColor: WidgetStateProperty.resolveWith(
-                    (states) => states.contains(WidgetState.selected)
-                        ? AppColors.accent.withAlpha(0x55)
-                        : AppColors.surface,
+              builder: (ctx, hkOn, _) => Column(
+                children: [
+                  _SettingsTile(
+                    icon: Icons.keyboard_outlined,
+                    iconColor: AppColors.accent,
+                    title: l.settingsHotkeys,
+                    subtitle: l.settingsHotkeysDesc,
+                    trailing: Switch(
+                      value: hkOn,
+                      onChanged: HotkeyService.instance.setEnabled,
+                      activeThumbColor: AppColors.accent,
+                      trackColor: WidgetStateProperty.resolveWith(
+                        (states) => states.contains(WidgetState.selected)
+                            ? AppColors.accent.withAlpha(0x55)
+                            : AppColors.surface,
+                      ),
+                    ),
+                    onTap: () => HotkeyService.instance.setEnabled(!hkOn),
                   ),
-                ),
-                onTap: () => HotkeyService.instance.setEnabled(!hkOn),
+                  // 액션별 조합 — 탭하면 녹화 다이얼로그로 변경.
+                  if (hkOn)
+                    ValueListenableBuilder<int>(
+                      valueListenable: HotkeyService.instance.bindingsRev,
+                      builder: (ctx2, _, _) => Column(
+                        children: [
+                          _hotkeyRow(
+                              context, l.shortcutTimerToggle, 'timer_toggle'),
+                          _hotkeyRow(
+                              context, l.shortcutTimerNext, 'timer_next'),
+                          _hotkeyRow(context, l.shortcutSwLap, 'sw_lap'),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 16),
+                              child: TextButton(
+                                onPressed:
+                                    HotkeyService.instance.resetBindings,
+                                child: Text(l.hotkeyReset,
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.muted)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ),
             const _Divider(),
@@ -198,6 +231,94 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 핫키 액션 한 줄 — 라벨 + 현재 조합 뱃지. 탭하면 녹화 다이얼로그.
+Widget _hotkeyRow(BuildContext context, String label, String action) {
+  final combo = HotkeyService.instance.describe(action);
+  return InkWell(
+    onTap: () => _recordHotkey(context, label, action),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(56, 6, 20, 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label,
+                style:
+                    const TextStyle(fontSize: 13, color: AppColors.text)),
+          ),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.bg,
+              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(combo,
+                style: const TextStyle(
+                    fontSize: 12, color: AppColors.text)),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// 조합 녹화 다이얼로그 — 원하는 키를 누르면 미리보기, 저장으로 확정.
+Future<void> _recordHotkey(
+    BuildContext context, String label, String action) async {
+  final l = AppLocalizations.of(context);
+  HotKey? recorded;
+  await showDialog<void>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx2, setState) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(label,
+            style: const TextStyle(fontSize: 15, color: AppColors.text)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l.hotkeyRecordPrompt,
+                style:
+                    const TextStyle(fontSize: 12.5, color: AppColors.muted)),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.bg,
+                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: HotKeyRecorder(
+                initalHotKey: HotkeyService.instance.binding(action),
+                onHotKeyRecorded: (hk) => setState(() => recorded = hk),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx2),
+            child: Text(l.cancel,
+                style: const TextStyle(color: AppColors.muted)),
+          ),
+          TextButton(
+            onPressed: recorded == null
+                ? null
+                : () {
+                    HotkeyService.instance.setBinding(action, recorded!);
+                    Navigator.pop(ctx2);
+                  },
+            child: Text(l.save,
+                style: const TextStyle(color: AppColors.accent)),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 /// Windows 음성 이름 정리 — "Microsoft Zira - English (US)" → "Zira - English (US)".

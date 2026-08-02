@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
+import '../services/hotkey_service.dart';
 import '../services/platform_info.dart';
 import '../theme/app_theme.dart';
 
@@ -67,9 +68,12 @@ Future<void> showShortcutSheet(BuildContext context) {
           ),
           if (isDesktop) ...[
             section(l.shortcutGlobalSection),
-            row(l.shortcutTimerToggle, const ['Ctrl+Alt+Space']),
-            row(l.shortcutTimerNext, const ['Ctrl+Alt+N']),
-            row(l.shortcutSwLap, const ['Ctrl+Alt+L']),
+            row(l.shortcutTimerToggle,
+                [HotkeyService.instance.describe('timer_toggle')]),
+            row(l.shortcutTimerNext,
+                [HotkeyService.instance.describe('timer_next')]),
+            row(l.shortcutSwLap,
+                [HotkeyService.instance.describe('sw_lap')]),
           ],
           section(l.shortcutInAppSection),
           row(l.shortcutTimerToggle, const ['Space']),
