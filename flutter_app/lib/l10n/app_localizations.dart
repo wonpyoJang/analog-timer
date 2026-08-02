@@ -741,6 +741,42 @@ abstract class AppLocalizations {
   /// **'Please write a message first'**
   String get feedbackMessageRequired;
 
+  /// No description provided for @feedbackIncludeLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Include diagnostic logs (device info & recent actions — no personal data)'**
+  String get feedbackIncludeLogs;
+
+  /// No description provided for @reviewPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoying Analog Timer?'**
+  String get reviewPromptTitle;
+
+  /// No description provided for @reviewPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You just finished a session — nice work! 🎉\nIf you have a moment, tell the developer what you like or what could be better. It really helps.'**
+  String get reviewPromptBody;
+
+  /// No description provided for @reviewPromptAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Share thoughts'**
+  String get reviewPromptAccept;
+
+  /// No description provided for @reviewPromptLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get reviewPromptLater;
+
+  /// No description provided for @reviewPromptNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t ask again'**
+  String get reviewPromptNever;
+
   /// No description provided for @syncPageTitle.
   ///
   /// In en, this message translates to:
@@ -848,6 +884,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get syncScanCancel;
+
+  /// No description provided for @overlayLongPressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press the clock to adjust its size and position'**
+  String get overlayLongPressHint;
 }
 
 class _AppLocalizationsDelegate

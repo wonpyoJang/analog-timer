@@ -80,5 +80,6 @@
   "dayPlanEmpty": "لا توجد خطة لهذا اليوم",
   "planSaveAsCurrent": "حفظ كخطة",
   "planLoadIntoTimer": "تحميل في المؤقت",
-  "planSave": "حفظ"
+  "planSave": "حفظ",
+  "overlayLongPressHint": "اضغط مطولًا على الساعة لضبط الحجم والموضع"
 }

@@ -80,5 +80,6 @@
   "dayPlanEmpty": "この日の予定はありません",
   "planSaveAsCurrent": "計画として保存",
   "planLoadIntoTimer": "タイマーに読み込む",
-  "planSave": "保存"
+  "planSave": "保存",
+  "overlayLongPressHint": "時計を長押しするとサイズと位置を調整できます"
 }

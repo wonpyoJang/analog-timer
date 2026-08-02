@@ -344,6 +344,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get feedbackMessageRequired => 'Please write a message first';
 
   @override
+  String get feedbackIncludeLogs =>
+      'Include diagnostic logs (device info & recent actions — no personal data)';
+
+  @override
+  String get reviewPromptTitle => 'Enjoying Analog Timer?';
+
+  @override
+  String get reviewPromptBody =>
+      'You just finished a session — nice work! 🎉\nIf you have a moment, tell the developer what you like or what could be better. It really helps.';
+
+  @override
+  String get reviewPromptAccept => 'Share thoughts';
+
+  @override
+  String get reviewPromptLater => 'Later';
+
+  @override
+  String get reviewPromptNever => 'Don\'t ask again';
+
+  @override
   String get syncPageTitle => 'Device pairing';
 
   @override
@@ -401,4 +421,8 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get syncScanCancel => 'Cancel';
+
+  @override
+  String get overlayLongPressHint =>
+      'Удерживайте часы, чтобы настроить размер и положение';
 }

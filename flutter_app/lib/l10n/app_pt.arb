@@ -80,5 +80,6 @@
   "dayPlanEmpty": "Nenhum plano para este dia",
   "planSaveAsCurrent": "Guardar como plano",
   "planLoadIntoTimer": "Carregar no temporizador",
-  "planSave": "Salvar"
+  "planSave": "Salvar",
+  "overlayLongPressHint": "Toque e segure o relógio para ajustar o tamanho e a posição"
 }

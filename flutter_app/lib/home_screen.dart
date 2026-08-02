@@ -524,6 +524,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             Future(() {
               if (mounted) _syncOverlay();
             });
+          case 'hint_learned':
+            // 편집 모드를 실제 사용했으므로 온보딩 힌트 영구 종료
+            unawaited(PersistenceService.saveOverlayHintCount(999));
           case 'overlay_hide':
             // hide는 fire-and-forget OK — resizeOverlay(1,1)이므로 실패해도 health timer가 복원
             unawaited(OverlayService.hide());

@@ -8,6 +8,18 @@ class PersistenceService {
   static const _kPresets = 'presets';
   static const _kLocale = 'locale';
   static const _kHiddenDefaults = 'hidden_default_presets';
+  static const _kOverlayHintCount = 'overlay_hint_count';
+
+  /// 오버레이 길게 누르기 힌트 노출 횟수 — 편집 모드 사용 확인 시 999로 영구 종료
+  static Future<int> loadOverlayHintCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kOverlayHintCount) ?? 0;
+  }
+
+  static Future<void> saveOverlayHintCount(int count) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kOverlayHintCount, count);
+  }
 
   /// 숨긴 기본 프리셋의 builtinKey 목록 저장.
   static Future<void> saveHiddenDefaults(List<String> keys) async {

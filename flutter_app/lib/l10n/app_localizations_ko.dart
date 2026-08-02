@@ -337,6 +337,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get feedbackMessageRequired => '내용을 먼저 적어주세요';
 
   @override
+  String get feedbackIncludeLogs => '진단 로그 함께 보내기 (기기 환경·최근 사용 흐름 — 개인정보 미포함)';
+
+  @override
+  String get reviewPromptTitle => '아날로그 타이머, 잘 쓰고 계신가요?';
+
+  @override
+  String get reviewPromptBody =>
+      '방금 세션을 완주하셨네요, 수고하셨습니다! 🎉\n잠깐 시간이 되시면 좋았던 점이나 아쉬운 점을 들려주세요. 개발에 큰 힘이 됩니다.';
+
+  @override
+  String get reviewPromptAccept => '의견 보내기';
+
+  @override
+  String get reviewPromptLater => '나중에';
+
+  @override
+  String get reviewPromptNever => '다시 묻지 않기';
+
+  @override
   String get syncPageTitle => '기기 연결';
 
   @override
@@ -391,4 +410,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get syncScanCancel => '취소';
+
+  @override
+  String get overlayLongPressHint => '시계를 길게 누르면 크기·위치를 조절할 수 있어요';
 }

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import '../l10n/app_localizations.dart';
 import '../main.dart' show parseLocaleTag, OverlayApp;
 
 class TimerOverlayWidget extends StatefulWidget {
@@ -79,6 +80,19 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   // 핸들 탭으로 순환할 프리셋 (화면 너비 대비 비율)
   static const _sizePresets = [0.42, 0.58, 0.75];
 
+  // 위치 순환 (드래그 불가 기기 대응): ↕ 상단→중단→하단 / ↔ 중앙→좌→우
+  static const _topY = 53.0;
+  int _posIdx = 0;
+  int _posXIdx = 0;
+
+  // 편집 모드 — 길게 누르면 크기·위치 버튼 표시, 5초 무조작 시 자동 숨김
+  bool _editMode = false;
+  Timer? _editModeTimer;
+
+  // 길게 누르기 온보딩 힌트 — show 커맨드의 hintLongPress로 활성화
+  bool _showHint = false;
+  Timer? _hintTimer;
+
   int get _effectiveExpandedW {
     final custom = _customExpandedW;
     if (custom != null) {
@@ -152,10 +166,18 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         }
         if (command == 'show') {
           final w = map['screenWidthDp'] as int? ?? _screenWidthDp;
+          final hint = map['hintLongPress'] as bool? ?? false;
           setState(() {
             _screenWidthDp = w;
             _expanded = true;
+            _showHint = hint;
           });
+          if (hint) {
+            _hintTimer?.cancel();
+            _hintTimer = Timer(const Duration(seconds: 8), () {
+              if (mounted) setState(() => _showHint = false);
+            });
+          }
           await FlutterOverlayWindow.resizeOverlay(
             _effectiveExpandedW,
             _effectiveExpandedH,
@@ -252,6 +274,9 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   void dispose() {
     _clockTimer?.cancel();
     _nextFrameTimer?.cancel();
+    _editModeTimer?.cancel();
+    _hintTimer?.cancel();
+    _dpadRepeat?.cancel();
     _chaseCtrl.dispose();
     _blinkCtrl.dispose();
     _batteryBlinkCtrl.dispose();
@@ -303,7 +328,86 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     } catch (_) {}
   }
 
-  Future<void> _resetPosition() => _moveOverlay(0, 53);
+  Future<Offset> _getOverlayPosition() async {
+    try {
+      final res = await _overlayCh.invokeMethod<Map>('getOverlayPosition');
+      return Offset(
+        (res?['x'] as num?)?.toDouble() ?? 0,
+        (res?['y'] as num?)?.toDouble() ?? 0,
+      );
+    } catch (_) {
+      return Offset.zero;
+    }
+  }
+
+  // D-pad 미세 이동 — 탭 12dp, 홀드 시 50ms마다 4dp 연속 이동
+  static const _nudgeTapStep = 12.0;
+  static const _nudgeHoldStep = 4.0;
+  Offset _dpadPos = Offset.zero;
+  Timer? _dpadRepeat;
+
+  void _applyNudgeFrom(Offset base, double dx, double dy) {
+    final maxX = (_screenWidthDp - _effectiveExpandedW) / 2 + 24;
+    final maxY = (_screenHeightDp - 160).toDouble();
+    _dpadPos = Offset(
+      (base.dx + dx).clamp(-maxX, maxX),
+      (base.dy + dy).clamp(0.0, maxY),
+    );
+    _moveOverlay(_dpadPos.dx, _dpadPos.dy);
+    _restartEditModeTimer();
+  }
+
+  Future<void> _nudgeOnce(double ux, double uy) async {
+    _applyNudgeFrom(
+      await _getOverlayPosition(),
+      ux * _nudgeTapStep,
+      uy * _nudgeTapStep,
+    );
+  }
+
+  Future<void> _startNudgeRepeat(double ux, double uy) async {
+    _dpadRepeat?.cancel();
+    _dpadPos = await _getOverlayPosition();
+    _dpadRepeat = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      _applyNudgeFrom(_dpadPos, ux * _nudgeHoldStep, uy * _nudgeHoldStep);
+    });
+  }
+
+  void _stopNudgeRepeat() {
+    _dpadRepeat?.cancel();
+    _dpadRepeat = null;
+  }
+
+  Future<void> _resetPosition() {
+    _posIdx = 0;
+    _posXIdx = 0;
+    return _moveOverlay(0, _topY);
+  }
+
+  Future<void> _cycleOverlayPosition() async {
+    final winH = _expanded ? _effectiveExpandedH : 150;
+    // 하단은 네비게이션 바·제스처 영역을 피해 90dp 여유
+    final middleY = ((_screenHeightDp - winH) / 2).clamp(_topY, 5000.0);
+    final bottomY = (_screenHeightDp - winH - 90).toDouble().clamp(
+      _topY,
+      5000.0,
+    );
+    final targets = [_topY, middleY, bottomY];
+    _posIdx = (_posIdx + 1) % targets.length;
+    final pos = await _getOverlayPosition();
+    return _moveOverlay(pos.dx, targets[_posIdx]);
+  }
+
+  Future<void> _cycleOverlayPositionX() async {
+    final maxX = ((_screenWidthDp - _effectiveExpandedW) / 2).clamp(
+      0.0,
+      5000.0,
+    );
+    final targets = [0.0, -maxX, maxX];
+    _posXIdx = (_posXIdx + 1) % targets.length;
+    final pos = await _getOverlayPosition();
+    return _moveOverlay(targets[_posXIdx], pos.dy);
+  }
 
   Future<void> _setOverlaySize(int w, int h) async {
     if (_resizeInFlight) return;
@@ -365,7 +469,34 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     }
   }
 
+  void _enterEditMode() {
+    HapticFeedback.mediumImpact();
+    _hintTimer?.cancel();
+    setState(() {
+      _editMode = true;
+      _showHint = false;
+    });
+    _restartEditModeTimer();
+    // 온보딩 학습 완료 — 메인 앱이 힌트 카운트를 영구 종료 처리
+    _sendAction('hint_learned');
+  }
+
+  void _exitEditMode() {
+    _editModeTimer?.cancel();
+    _stopNudgeRepeat();
+    if (_editMode) setState(() => _editMode = false);
+  }
+
+  void _restartEditModeTimer() {
+    _editModeTimer?.cancel();
+    _editModeTimer = Timer(const Duration(seconds: 5), () {
+      _stopNudgeRepeat();
+      if (mounted) setState(() => _editMode = false);
+    });
+  }
+
   Future<void> _toggleExpanded(BuildContext ctx) async {
+    _exitEditMode();
     if (!_expanded) {
       setState(() => _expanded = true);
       await FlutterOverlayWindow.resizeOverlay(
@@ -378,7 +509,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         _expanded = false;
       });
       await FlutterOverlayWindow.resizeOverlay(_effectiveExpandedW, 150, true);
-      await _moveOverlay(0, 53);
+      await _resetPosition();
     }
   }
 
@@ -417,9 +548,18 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
           onPointerMove: _onPointerMove,
           child: GestureDetector(
             onTap: () {
-              if (!_wasDragging) _toggleExpanded(context);
+              if (_wasDragging) return;
+              // 편집 중 시계 탭 = 편집 종료 — 오탭이 축소·상단 리셋으로 튀지 않게
+              if (_editMode) {
+                _exitEditMode();
+                return;
+              }
+              _toggleExpanded(context);
             },
-            onDoubleTap: _resetPosition,
+            // 편집 중 더블탭 비활성 — D-pad 연속 탭을 더블탭이 가로채
+            // 정위치 리셋(위젯 점프)을 일으키는 것 방지 + 칩 탭 300ms 지연 제거
+            onDoubleTap: _editMode ? null : _resetPosition,
+            onLongPress: _enterEditMode,
             onScaleStart: _onScaleStart,
             onScaleUpdate: _onScaleUpdate,
             onScaleEnd: _onScaleEnd,
@@ -442,24 +582,113 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
                   ),
                   if (_timerActive || _swActive)
                     IgnorePointer(child: _buildClockCenterInfo()),
-                  // 크기 순환 버튼 — enableDrag:true로 인해 드래그는 항상 윈도우 이동,
-                  // 탭으로 프리셋(42%→58%→75%)을 순환하는 방식으로 대체
-                  Positioned(
-                    right: 4,
-                    bottom: 4,
-                    child: GestureDetector(
-                      onTap: _cycleOverlaySize,
-                      behavior: HitTestBehavior.opaque,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          Icons.open_in_full,
-                          color: Colors.white.withValues(alpha: 0.45),
-                          size: 14,
+                  // 편집 모드(길게 누르기)에서만 노출 — 크기·위치 순환 버튼.
+                  // enableDrag:true로 드래그는 항상 윈도우 이동이라 탭 순환 방식 사용
+                  if (_editMode) ...[
+                    Positioned(
+                      right: 4,
+                      bottom: 4,
+                      child: _cornerChipButton(Icons.open_in_full, () {
+                        _cycleOverlaySize();
+                        _restartEditModeTimer();
+                      }),
+                    ),
+                    // 위치 순환 — 터치 드래그가 불가능한 기기 대응, 상단→중단→하단
+                    Positioned(
+                      left: 4,
+                      bottom: 4,
+                      child: _cornerChipButton(Icons.swap_vert, () {
+                        _cycleOverlayPosition();
+                        _restartEditModeTimer();
+                      }),
+                    ),
+                    // 좌우 순환 — 중앙→좌→우
+                    Positioned(
+                      left: 4,
+                      top: 4,
+                      child: _cornerChipButton(Icons.swap_horiz, () {
+                        _cycleOverlayPositionX();
+                        _restartEditModeTimer();
+                      }),
+                    ),
+                    // D-pad — 드래그 없이 미세 이동 (탭 12dp / 홀드 연속)
+                    Positioned(
+                      top: 4,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: _dpadChip(Icons.keyboard_arrow_up, 0, -1),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 4,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: _dpadChip(Icons.keyboard_arrow_down, 0, 1),
+                      ),
+                    ),
+                    Positioned(
+                      left: 4,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: _dpadChip(Icons.keyboard_arrow_left, -1, 0),
+                      ),
+                    ),
+                    Positioned(
+                      right: 4,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: _dpadChip(Icons.keyboard_arrow_right, 1, 0),
+                      ),
+                    ),
+                  ],
+                  // 길게 누르기 온보딩 힌트 — 신규 사용자에게 최대 3회 노출
+                  if (_showHint && !_editMode)
+                    Positioned(
+                      left: 10,
+                      right: 10,
+                      bottom: 36,
+                      child: IgnorePointer(
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xE61A1A1C),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.touch_app,
+                                  color: Colors.white70,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    ).overlayLongPressHint,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -469,6 +698,51 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         // 컨트롤 버튼 행
         _buildControlBar(context),
       ],
+    );
+  }
+
+  /// D-pad 방향 칩 — 탭 1회 니지, 길게 누르면 연속 이동
+  Widget _dpadChip(IconData icon, double ux, double uy) {
+    return GestureDetector(
+      onTap: () => _nudgeOnce(ux, uy),
+      onLongPressStart: (_) => _startNudgeRepeat(ux, uy),
+      onLongPressEnd: (_) => _stopNudgeRepeat(),
+      onLongPressCancel: _stopNudgeRepeat,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: const Color(0xCC1A1A1C),
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFF4A4A4E), width: 1),
+          ),
+          child: Icon(icon, color: Colors.white70, size: 16),
+        ),
+      ),
+    );
+  }
+
+  // 흰 시계판·밝은 배경 위에서도 보이도록 어두운 원형 칩 배경 (X 버튼과 동일 톤)
+  Widget _cornerChipButton(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: const Color(0xCC1A1A1C),
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFF4A4A4E), width: 1),
+          ),
+          child: Icon(icon, color: Colors.white70, size: 14),
+        ),
+      ),
     );
   }
 

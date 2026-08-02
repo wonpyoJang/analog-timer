@@ -342,6 +342,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get feedbackMessageRequired => 'Please write a message first';
 
   @override
+  String get feedbackIncludeLogs =>
+      'Include diagnostic logs (device info & recent actions — no personal data)';
+
+  @override
+  String get reviewPromptTitle => 'Enjoying Analog Timer?';
+
+  @override
+  String get reviewPromptBody =>
+      'You just finished a session — nice work! 🎉\nIf you have a moment, tell the developer what you like or what could be better. It really helps.';
+
+  @override
+  String get reviewPromptAccept => 'Share thoughts';
+
+  @override
+  String get reviewPromptLater => 'Later';
+
+  @override
+  String get reviewPromptNever => 'Don\'t ask again';
+
+  @override
   String get syncPageTitle => 'Device pairing';
 
   @override
@@ -399,6 +419,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get syncScanCancel => 'Cancel';
+
+  @override
+  String get overlayLongPressHint => '长按时钟可调整大小和位置';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -665,4 +688,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get planSave => '儲存';
+
+  @override
+  String get overlayLongPressHint => '長按時鐘可調整大小和位置';
 }
