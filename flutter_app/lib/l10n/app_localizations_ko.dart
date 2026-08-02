@@ -412,5 +412,45 @@ class AppLocalizationsKo extends AppLocalizations {
   String get syncScanCancel => '취소';
 
   @override
+  String get tipWidgetToggle => '플로팅 위젯 켜기/끄기';
+
+  @override
+  String get tipWidgetRefresh => '위젯 새로고침 — 위젯이 멈추거나 사라졌을 때';
+
+  @override
+  String get tipAppRestart => '앱 다시 시작 (화면 멈춤 해소) — 기록과 경과 시간은 유지됩니다';
+
+  @override
+  String get tipOverlayOpacity => '위젯 투명도 조절';
+
+  @override
+  String get tipOverlayResize => '드래그하여 위젯 크기 조절';
+
+  @override
+  String get tipOverlayHide => '위젯 숨기기';
+
+  @override
+  String get tipStopwatchToggle => '스톱워치 시작/정지';
+
+  @override
+  String get settingsTts => '음성 안내';
+
+  @override
+  String get settingsTtsDesc => '세그먼트 전환과 타이머 완료를 소리로 알려줍니다';
+
+  @override
+  String get settingsTtsSample => '음성 안내가 켜졌습니다';
+
+  @override
+  String get ttsOnboardBody => '방금 같은 세그먼트 전환을 소리로도 알려드릴 수 있어요';
+
+  @override
+  String get ttsOnboardEnable => '켜보기';
+
+  @override
+  String get ttsVoiceMissingHint =>
+      'Windows 설정 > 시간 및 언어 > 음성에서 한국어 음성을 추가하면 더 자연스러워요';
+
+  @override
   String get overlayLongPressHint => '시계를 길게 누르면 크기·위치를 조절할 수 있어요';
 }

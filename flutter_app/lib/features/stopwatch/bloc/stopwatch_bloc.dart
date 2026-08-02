@@ -72,11 +72,19 @@ class StopwatchBloc extends Bloc<StopwatchEvent, StopwatchState> {
     _lastTick = DateTime.now();
     _ticker = Timer.periodic(const Duration(milliseconds: 16), (_) {
       final now = DateTime.now();
-      final elapsed = now.difference(_lastTick!).inMilliseconds;
-      _lastTick = now;
-      // 시계 역행(수동 변경/NTP/DST) 시 음수 elapsed 방어.
-      if (elapsed <= 0) return;
-      add(StopwatchTick(elapsed));
+      final diff = now.difference(_lastTick!);
+      // 시계 역행(수동 변경/NTP/DST) — 기준점 리셋 후 이번 tick 은 버린다.
+      if (diff.isNegative) {
+        _lastTick = now;
+        return;
+      }
+      final ms = diff.inMilliseconds;
+      if (ms == 0) return; // 1ms 미만 — 다음 tick 에 포함
+      // 기준점을 '소비한 ms 만큼만' 전진 — inMilliseconds 버림으로 생기는
+      // 소수 ms 를 이월한다. (기준점을 now 로 덮으면 매 tick 평균 ~0.35ms 가
+      // 영구 소실되어 실측 -2.2% 드리프트: 뽀모도로 25분이 실제 25분30초)
+      _lastTick = _lastTick!.add(Duration(milliseconds: ms));
+      add(StopwatchTick(ms));
     });
   }
 

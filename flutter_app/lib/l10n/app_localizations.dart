@@ -885,6 +885,84 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get syncScanCancel;
 
+  /// No description provided for @tipWidgetToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show or hide the floating widget'**
+  String get tipWidgetToggle;
+
+  /// No description provided for @tipWidgetRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh the widget (use if it is frozen or missing)'**
+  String get tipWidgetRefresh;
+
+  /// No description provided for @tipAppRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart the app to fix a frozen screen — records and elapsed time are kept'**
+  String get tipAppRestart;
+
+  /// No description provided for @tipOverlayOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust widget transparency'**
+  String get tipOverlayOpacity;
+
+  /// No description provided for @tipOverlayResize.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to resize the widget'**
+  String get tipOverlayResize;
+
+  /// No description provided for @tipOverlayHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide the widget'**
+  String get tipOverlayHide;
+
+  /// No description provided for @tipStopwatchToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start or stop the stopwatch'**
+  String get tipStopwatchToggle;
+
+  /// No description provided for @settingsTts.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice announcements'**
+  String get settingsTts;
+
+  /// No description provided for @settingsTtsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Speak segment changes and timer completion aloud'**
+  String get settingsTtsDesc;
+
+  /// No description provided for @settingsTtsSample.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice announcements are on'**
+  String get settingsTtsSample;
+
+  /// No description provided for @ttsOnboardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment changes like this can also be announced by voice'**
+  String get ttsOnboardBody;
+
+  /// No description provided for @ttsOnboardEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Try it'**
+  String get ttsOnboardEnable;
+
+  /// No description provided for @ttsVoiceMissingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For natural announcements, add your language\'s voice in Windows Settings > Time & Language > Speech'**
+  String get ttsVoiceMissingHint;
+
   /// No description provided for @overlayLongPressHint.
   ///
   /// In en, this message translates to:

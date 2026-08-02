@@ -29,6 +29,7 @@ import 'package:window_manager/window_manager.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
 import 'services/telemetry_service.dart';
+import 'services/tts_service.dart';
 import 'widgets/telemetry_consent.dart';
 import 'widgets/review_prompt.dart';
 import 'services/review_prompt_service.dart';
@@ -813,10 +814,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     final l = AppLocalizations.of(context);
 
+    // 음성 안내는 알림과 같은 문구를 읽는다(l10n 재사용) — 앱 로케일 음성으로.
+    final ttsLocale = Localizations.localeOf(context).toLanguageTag();
+
     if (cur.status == TimerStatus.done && prev.status != TimerStatus.done) {
       DesktopNotificationService.notify(
         l.notifyTimerDoneTitle,
         l.notifyTimerDoneBody,
+      );
+      TtsService.instance.speak(
+        '${l.notifyTimerDoneTitle}. ${l.notifyTimerDoneBody}',
+        localeTag: ttsLocale,
       );
     } else if (cur.currentSeg != prev.currentSeg &&
         cur.status == TimerStatus.running &&
@@ -829,7 +837,52 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         l.notifySegmentDoneTitle,
         l.notifySegmentDoneBody(prevName, curName),
       );
+      TtsService.instance.speak(
+        l.notifySegmentDoneBody(prevName, curName),
+        localeTag: ttsLocale,
+      );
+      // TTS 온보딩(1회) — 사용자가 전환을 3번째 경험한 직후에만 제안.
+      unawaited(_maybeShowTtsOnboarding());
     }
+  }
+
+  /// 맥락 트리거형 TTS 온보딩 — 팝업이 아닌 스낵바 1회. "켜보기"는 즉시 샘플
+  /// 발화로 가치를 체감시키고, 시스템에 앱 언어 음성이 없으면(예: en 음성만
+  /// 설치된 Windows) 음성 추가 경로를 안내한다. 무시하면 다시 뜨지 않는다.
+  Future<void> _maybeShowTtsOnboarding() async {
+    if (!await TtsService.instance.shouldShowOnboarding()) return;
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
+    final messenger = ScaffoldMessenger.of(context);
+    await TtsService.instance.markOnboardingShown();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l.ttsOnboardBody),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 12),
+        action: SnackBarAction(
+          label: l.ttsOnboardEnable,
+          textColor: AppColors.accent,
+          onPressed: () async {
+            await TtsService.instance.setEnabled(
+              true,
+              sample: l.settingsTtsSample,
+              localeTag: localeTag,
+            );
+            if (!await TtsService.instance.isLanguageAvailable(localeTag)) {
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(l.ttsVoiceMissingHint),
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 10),
+                ),
+              );
+            }
+          },
+        ),
+      ),
+    );
   }
 
   void _onLogUpdate(BuildContext ctx, TimerState cur) {
@@ -1134,7 +1187,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               ),
                               if (isAndroid || isIOS) ...[
                                 const SizedBox(width: 10),
-                                GestureDetector(
+                                Tooltip(
+                                  message: l.tipWidgetToggle,
+                                  child: GestureDetector(
                                   onTap: _toggleOverlay,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
@@ -1163,11 +1218,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       ),
                                     ),
                                   ),
+                                  ),
                                 ),
                               ],
                               if (isDesktop) ...[
                                 const SizedBox(width: 10),
-                                GestureDetector(
+                                Tooltip(
+                                  message: l.tipWidgetToggle,
+                                  child: GestureDetector(
                                   onTap: _toggleDesktopOverlay,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
@@ -1196,11 +1254,65 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       ),
                                     ),
                                   ),
+                                  ),
+                                ),
+                                // 위젯 재생성 — 위젯이 얼거나 사라졌을 때 수동 복구.
+                                if (_desktopOverlayOn) ...[
+                                  const SizedBox(width: 8),
+                                  Tooltip(
+                                    message: l.tipWidgetRefresh,
+                                    child: GestureDetector(
+                                    onTap: () => DesktopOverlayService.instance
+                                        .refresh(_overlayStateMap()),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(7),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        border: Border.all(
+                                          color: AppColors.border,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.refresh,
+                                        size: 16,
+                                        color: AppColors.muted,
+                                      ),
+                                    ),
+                                    ),
+                                  ),
+                                ],
+                                // 앱 재시작 — "시계 멈춤" 탈출구. 타이머는
+                                // savedAtMs 벽시계 보정으로 이어져 손실 없음.
+                                const SizedBox(width: 8),
+                                Tooltip(
+                                  message: l.tipAppRestart,
+                                  child: GestureDetector(
+                                  onTap: () =>
+                                      DesktopService.instance.restart(),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(7),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      border: Border.all(
+                                        color: AppColors.border,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.restart_alt,
+                                      size: 16,
+                                      color: AppColors.accent,
+                                    ),
+                                  ),
+                                  ),
                                 ),
                               ],
                               if (TelemetryService.instance.supported) ...[
                                 const SizedBox(width: 8),
-                                GestureDetector(
+                                Tooltip(
+                                  message: l.telemetryReportSetting,
+                                  child: GestureDetector(
                                   onTap: () => showTelemetrySettings(context),
                                   child: Container(
                                     padding: const EdgeInsets.all(7),
@@ -1217,11 +1329,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       color: AppColors.muted,
                                     ),
                                   ),
+                                  ),
                                 ),
                               ],
                               if (SyncService.instance.supported) ...[
                                 const SizedBox(width: 8),
-                                GestureDetector(
+                                Tooltip(
+                                  message: l.syncPageTitle,
+                                  child: GestureDetector(
                                   onTap: () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -1243,10 +1358,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       color: AppColors.muted,
                                     ),
                                   ),
+                                  ),
                                 ),
                               ],
                               const SizedBox(width: 10),
-                              GestureDetector(
+                              Tooltip(
+                                message: l.settings,
+                                child: GestureDetector(
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -1265,6 +1383,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     size: 16,
                                     color: AppColors.muted,
                                   ),
+                                ),
                                 ),
                               ),
                             ],

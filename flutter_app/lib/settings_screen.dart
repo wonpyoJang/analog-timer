@@ -7,6 +7,7 @@ import 'theme/app_theme.dart';
 import 'widgets/language_picker.dart';
 import 'widgets/feedback_page.dart';
 import 'services/platform_info.dart';
+import 'services/tts_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -89,6 +90,38 @@ class SettingsScreen extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const FeedbackPage()),
+            ),
+          ),
+
+          const _Divider(),
+
+          // ── 음성 안내 (TTS) — 세그먼트 전환/완료를 소리로 ────────
+          ValueListenableBuilder<bool>(
+            valueListenable: TtsService.instance.enabledListenable,
+            builder: (ctx, ttsOn, _) => _SettingsTile(
+              icon: Icons.record_voice_over_outlined,
+              iconColor: AppColors.accent,
+              title: l.settingsTts,
+              subtitle: l.settingsTtsDesc,
+              trailing: Switch(
+                value: ttsOn,
+                onChanged: (v) => TtsService.instance.setEnabled(
+                  v,
+                  sample: l.settingsTtsSample,
+                  localeTag: Localizations.localeOf(context).toLanguageTag(),
+                ),
+                activeThumbColor: AppColors.accent,
+                trackColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.selected)
+                      ? AppColors.accent.withAlpha(0x55)
+                      : AppColors.surface,
+                ),
+              ),
+              onTap: () => TtsService.instance.setEnabled(
+                !ttsOn,
+                sample: l.settingsTtsSample,
+                localeTag: Localizations.localeOf(context).toLanguageTag(),
+              ),
             ),
           ),
 

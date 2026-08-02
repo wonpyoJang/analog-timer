@@ -8,12 +8,16 @@ import 'dart:io';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 import 'overlay_clock_painter.dart';
+import '../services/desktop_service.dart';
+import '../services/native_confirm.dart';
+import '../services/telemetry_service.dart';
 import '../widgets/date_label.dart';
 import '../widgets/text_outline.dart';
 
 const _kOverlayPosX = 'overlay_pos_x';
 const _kOverlayPosY = 'overlay_pos_y';
 const _kOverlayScale = 'overlay_scale';
+const _kOverlayOpacity = 'overlay_opacity';
 
 /// 위치/스케일 전용 파일 스토어 — 서브엔진이 SharedPreferences 를 쓰면 자기
 /// 스냅샷 캐시로 파일 전체를 재작성해 메인 엔진이 저장한 타이머 상태/설정을
@@ -215,11 +219,39 @@ class _OverlayBodyState extends State<_OverlayBody>
   DateTime? _displayLastTick;
   late final AnimationController _blinkCtrl;
 
+  // 창 투명도 — 사이클 버튼(100→85→70→50→30%)으로 조절, 전용 파일에 저장.
+  // 호버 중에는 일시적으로 불투명하게 해 조작성을 보장한다.
+  static const _opacitySteps = [1.0, 0.85, 0.7, 0.5, 0.3];
+  double _opacity = 1.0;
+  bool _hoverOpaque = false;
+
+  void _applyWindowOpacity() {
+    unawaited(() async {
+      try {
+        await windowManager.setOpacity(_hoverOpaque ? 1.0 : _opacity);
+      } catch (_) {} // 일부 환경(레이어드 미지원)에선 무시 — 불투명 유지
+    }());
+  }
+
+  Future<void> _cycleOpacity() async {
+    final i = _opacitySteps.indexWhere((v) => (v - _opacity).abs() < 0.01);
+    setState(() => _opacity = _opacitySteps[(i + 1) % _opacitySteps.length]);
+    _applyWindowOpacity();
+    await _saveOverlayPrefs({_kOverlayOpacity: _opacity});
+  }
+
   @override
   void initState() {
     super.initState();
     _winPos = widget.initialPos;
     _applyState(widget.initial);
+    // 저장된 투명도 적용
+    unawaited(_loadOverlayPrefs().then((m) {
+      final v = ((m[_kOverlayOpacity] as num?)?.toDouble() ?? 1.0);
+      if (!mounted) return;
+      setState(() => _opacity = v.clamp(0.3, 1.0));
+      _applyWindowOpacity();
+    }));
     _clockTimer = Timer.periodic(
       const Duration(milliseconds: 250),
       (_) {
@@ -411,9 +443,18 @@ class _OverlayBodyState extends State<_OverlayBody>
   Widget build(BuildContext context) {
     // 내용은 고정 디자인 크기(_overlayBase)로 그리고, FittedBox 로 실제 창 크기에
     // 균일 스케일 → 크기 조절 시 시계·글자·버튼이 한꺼번에 비율대로 커지고 작아짐.
-    return Material(
-      color: const Color(0xFF0E0E0F),
-      child: Stack(
+    return MouseRegion(
+      onEnter: (_) {
+        _hoverOpaque = true;
+        _applyWindowOpacity();
+      },
+      onExit: (_) {
+        _hoverOpaque = false;
+        _applyWindowOpacity();
+      },
+      child: Material(
+        color: const Color(0xFF0E0E0F),
+        child: Stack(
         children: [
           Positioned.fill(
             child: FittedBox(
@@ -425,25 +466,112 @@ class _OverlayBodyState extends State<_OverlayBody>
               ),
             ),
           ),
+          // 좌상단 앱 재시작 — "시계 멈춤" 탈출구. 위젯은 별도 엔진이라 메인 창
+          // 렌더가 얼어도 이 버튼은 살아 있을 수 있다. 메인을 거치지 않고 이
+          // 엔진에서 직접 재기동을 예약하고 프로세스를 끝낸다(exit). 타이머는
+          // 30초 주기 저장 + savedAtMs 벽시계 보정으로 이어지므로 손실 없음.
+          Positioned(
+            left: 0,
+            top: 0,
+            child: Tooltip(
+              message: AppLocalizations.of(context).tipAppRestart,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _restartApp,
+                child: const MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.restart_alt,
+                      size: 13,
+                      color: Color(0xAAF0C040), // accent — 복구 액션임을 드러낸다
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // 좌하단 투명도 토글 — 타이머 조작이 아닌 '창 크롬' 컨트롤이므로
+          // 컨트롤 행이 아니라 리사이즈 그립과 동급의 작은 코너 아이콘으로 둔다.
+          Positioned(
+            left: 0,
+            bottom: 0,
+            child: Tooltip(
+              message: AppLocalizations.of(context).tipOverlayOpacity,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _cycleOpacity,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.opacity,
+                      size: 12,
+                      // 투명도를 낮춰둔 상태면 살짝 밝게 — 활성 상태 힌트
+                      color: _opacity < 0.99
+                          ? const Color(0xAAFFFFFF)
+                          : const Color(0x55FFFFFF),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
           // 우하단 리사이즈 그립 — 드래그로 창 크기 조절
           Positioned(
             right: 0,
             bottom: 0,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onPanStart: _onResizeStart,
-              child: const MouseRegion(
-                cursor: SystemMouseCursors.resizeUpLeftDownRight,
-                child: Padding(
-                  padding: EdgeInsets.all(3),
-                  child: _ResizeGrip(),
+            child: Tooltip(
+              message: AppLocalizations.of(context).tipOverlayResize,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanStart: _onResizeStart,
+                child: const MouseRegion(
+                  cursor: SystemMouseCursors.resizeUpLeftDownRight,
+                  child: Padding(
+                    padding: EdgeInsets.all(3),
+                    child: _ResizeGrip(),
+                  ),
                 ),
               ),
             ),
           ),
         ],
+        ),
       ),
     );
+  }
+
+  /// 앱 재시작 — 메인 엔진을 거치지 않는 직접 경로(메인이 얼어 있어도 동작).
+  /// 종료는 스크립트(taskkill)에 위임한다 — 서브엔진에서 exit() 를 부르면
+  /// 엔진 teardown 레이스로 0xC0000005 가 날 수 있다.
+  ///
+  /// 확인창은 네이티브(system-modal) — 이 경로가 쓰이는 상황은 대개 메인 렌더가
+  /// 죽어 있을 때라 Flutter 다이얼로그로는 고지가 보이지 않는다.
+  /// (메인이 얼어 있으면 상태 저장 요청도 닿지 않지만, 타이머는 30초 주기 저장 +
+  ///  savedAtMs 벽시계 보정으로 이어지므로 손실은 사실상 없다.)
+  bool _restarting = false;
+  Future<void> _restartApp() async {
+    if (_restarting) return;
+    _restarting = true;
+    final ok = await nativeConfirm(
+      title: DesktopService.restartTitle,
+      message: DesktopService.restartMessage,
+    );
+    if (ok != true) {
+      _restarting = false;
+      return;
+    }
+    // 복구 마커 — 메인 엔진이 얼어 있어도 남길 수 있는 파일 경로. 다음 실행이
+    // recovery 리포트로 전송(위젯 버튼 = 메인 freeze 의심 상황이므로 가치 높음).
+    await TelemetryService.instance.writeRecoveryMarker('widget_restart', {
+      'kind': 'widget_restart_button',
+      'atMs': DateTime.now().millisecondsSinceEpoch,
+    });
+    await TelemetryService.instance.markCleanExit();
+    await DesktopService.scheduleRelaunch(killSelf: true);
   }
 
   Widget _buildContent() {
@@ -572,22 +700,27 @@ class _OverlayBodyState extends State<_OverlayBody>
   Widget _controlBar() {
     const swColor = Color(0xFF2EA84A);
     final timerColor = _effectiveTimerColor;
+    final l = AppLocalizations.of(context);
 
-    Widget btn(IconData icon, Color color, VoidCallback onTap,
+    // 접근성: 아이콘만 있는 버튼이라 호버 툴팁(+스크린리더 시맨틱)으로 용도 고지.
+    Widget btn(IconData icon, Color color, VoidCallback onTap, String tip,
         {double size = 30}) {
-      return GestureDetector(
-        onTap: onTap,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: const Color(0xCC1A1A1C),
-              shape: BoxShape.circle,
-              border: Border.all(color: color.withValues(alpha: 0.4)),
+      return Tooltip(
+        message: tip,
+        child: GestureDetector(
+          onTap: onTap,
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: const Color(0xCC1A1A1C),
+                shape: BoxShape.circle,
+                border: Border.all(color: color.withValues(alpha: 0.4)),
+              ),
+              child: Icon(icon, color: color, size: size * 0.46),
             ),
-            child: Icon(icon, color: color, size: size * 0.46),
           ),
         ),
       );
@@ -598,15 +731,17 @@ class _OverlayBodyState extends State<_OverlayBody>
       children: [
         if (_timerActive) ...[
           btn(_timerRunning ? Icons.pause : Icons.play_arrow, timerColor,
-              () => _sendAction('timer_toggle')),
+              () => _sendAction('timer_toggle'),
+              _timerRunning ? l.btnPause : l.btnStart),
           // ⏭ 즉시 다음(카운트다운 없음)
           btn(Icons.skip_next, timerColor.withValues(alpha: 0.75),
-              () => _sendAction('timer_next')),
+              () => _sendAction('timer_next'), l.btnNext),
         ],
         if (_swActive || _swElapsedMs > 0)
           btn(_swRunning ? Icons.stop : Icons.play_arrow, swColor,
-              () => _sendAction('sw_toggle')),
-        btn(Icons.close, Colors.white54, () => _sendAction('overlay_hide')),
+              () => _sendAction('sw_toggle'), l.tipStopwatchToggle),
+        btn(Icons.close, Colors.white54, () => _sendAction('overlay_hide'),
+            l.tipOverlayHide),
       ],
     );
   }

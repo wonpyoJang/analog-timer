@@ -181,6 +181,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
 
   void _onTick(TimerTick event, Emitter<TimerState> emit) {
     if (state.status != TimerStatus.running) return;
+    // 시계 역행 방어(심층) — 티커가 거르지만 bloc 단독으로도 음수 tick 에
+    // 시간이 거꾸로 가면 안 된다.
+    if (event.elapsedMs <= 0) return;
     int remain = state.segRemainMs - event.elapsedMs;
 
     if (remain > 0) {
@@ -428,12 +431,19 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     _lastTick = DateTime.now();
     _ticker = Timer.periodic(const Duration(milliseconds: 16), (_) {
       final now = DateTime.now();
-      final elapsed = now.difference(_lastTick!).inMilliseconds;
-      _lastTick = now;
-      // 시계 역행(수동 변경/NTP 보정/DST) 시 음수 elapsed 로 타이머가 거꾸로
-      // 가는 것을 방지 — 해당 tick 은 건너뛴다.
-      if (elapsed <= 0) return;
-      add(TimerTick(elapsed));
+      final diff = now.difference(_lastTick!);
+      // 시계 역행(수동 변경/NTP 보정/DST) — 기준점 리셋 후 이번 tick 은 버린다.
+      if (diff.isNegative) {
+        _lastTick = now;
+        return;
+      }
+      final ms = diff.inMilliseconds;
+      if (ms == 0) return; // 1ms 미만 — 다음 tick 에 포함
+      // 기준점을 '소비한 ms 만큼만' 전진 — inMilliseconds 버림 소수부를 이월.
+      // (기준점을 now 로 덮으면 매 tick 평균 ~0.35ms 영구 소실 → 실측 -2.2%
+      // 드리프트. 스톱워치와 동일 결함)
+      _lastTick = _lastTick!.add(Duration(milliseconds: ms));
+      add(TimerTick(ms));
     });
   }
 

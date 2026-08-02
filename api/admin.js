@@ -52,6 +52,7 @@ export default function handler(req, res) {
 const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const fmt=t=>{const d=new Date(t);return d.toLocaleString('ko-KR');};
 function badge(r){
+  if(r.type==='recovery') return '<span class="badge" style="color:#7bd88f;border-color:#365">복구: '+esc(r.crashKind||'?')+'</span>';
   if(r.type==='env') return '<span class="badge env">ENV</span>';
   if(r.crashKind==='native') return '<span class="badge native">NATIVE 크래시</span>';
   if(r.crashKind==='widget') return '<span class="badge native">위젯 단독 사라짐</span>';
@@ -81,6 +82,7 @@ function render(reports){
     if(r.lastState) det+='<details><summary>마지막 상태</summary><pre>'+esc(JSON.stringify(r.lastState,null,2))+'</pre></details>';
     if(r.breadcrumbs&&r.breadcrumbs.length) det+='<details open><summary>직전 행동 '+r.breadcrumbs.length+'개 (크래시 전 사용 흐름)</summary><pre>'+esc(r.breadcrumbs.map(function(b){return new Date(b.t).toLocaleTimeString("ko-KR")+"  "+b.e+(b.d?" "+JSON.stringify(b.d):"");}).join("\\n"))+'</pre></details>';
     if(r.eventLog) det+='<details><summary>Windows 이벤트로그</summary><pre>'+esc(r.eventLog)+'</pre></details>';
+    if(r.extra) det+='<details open><summary>진단 (tdr 마커·heartbeat)</summary><pre>'+esc(JSON.stringify(r.extra,null,2))+'</pre></details>';
     if(r.stack) det+='<details><summary>스택</summary><pre>'+esc(r.stack)+'</pre></details>';
     return '<div class="card"><div class="row1">'+badge(r)+'<span class="muted">'+fmt(r.receivedAt)+'</span></div><div class="meta">'+meta+'</div>'+det+'</div>';
   }).join('');
@@ -117,7 +119,7 @@ function renderFb(items){
       const crumbs=(f.diagnostics.breadcrumbs||[]).map(function(c){
         const t=new Date(c.t).toLocaleTimeString('ko-KR');
         return t+'  '+c.e+(c.d?' '+JSON.stringify(c.d):'');
-      }).join('\n');
+      }).join('\\n');
       diag='<details style="margin-top:6px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">🔍 진단 로그 (환경·직전 행동)</summary>'
         +(crumbs?'<div class="muted" style="font-size:11px;margin-top:6px">직전 행동</div><pre>'+esc(crumbs)+'</pre>':'')
         +'<pre>'+esc(JSON.stringify({env:f.diagnostics.env,lastState:f.diagnostics.lastState},null,1))+'</pre>'

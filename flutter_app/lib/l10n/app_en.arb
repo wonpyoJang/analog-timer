@@ -203,5 +203,18 @@
   "syncErrorCodeLen": "Enter the 6-digit code",
   "syncScanQr": "Scan QR",
   "syncScanCancel": "Cancel",
+  "tipWidgetToggle": "Show or hide the floating widget",
+  "tipWidgetRefresh": "Refresh the widget (use if it is frozen or missing)",
+  "tipAppRestart": "Restart the app to fix a frozen screen — records and elapsed time are kept",
+  "tipOverlayOpacity": "Adjust widget transparency",
+  "tipOverlayResize": "Drag to resize the widget",
+  "tipOverlayHide": "Hide the widget",
+  "tipStopwatchToggle": "Start or stop the stopwatch",
+  "settingsTts": "Voice announcements",
+  "settingsTtsDesc": "Speak segment changes and timer completion aloud",
+  "settingsTtsSample": "Voice announcements are on",
+  "ttsOnboardBody": "Segment changes like this can also be announced by voice",
+  "ttsOnboardEnable": "Try it",
+  "ttsVoiceMissingHint": "For natural announcements, add your language's voice in Windows Settings > Time & Language > Speech",
   "overlayLongPressHint": "Long-press the clock to adjust its size and position"
 }

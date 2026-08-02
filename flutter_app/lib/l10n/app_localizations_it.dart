@@ -423,6 +423,50 @@ class AppLocalizationsIt extends AppLocalizations {
   String get syncScanCancel => 'Cancel';
 
   @override
+  String get tipWidgetToggle => 'Show or hide the floating widget';
+
+  @override
+  String get tipWidgetRefresh =>
+      'Refresh the widget (use if it is frozen or missing)';
+
+  @override
+  String get tipAppRestart =>
+      'Restart the app to fix a frozen screen — records and elapsed time are kept';
+
+  @override
+  String get tipOverlayOpacity => 'Adjust widget transparency';
+
+  @override
+  String get tipOverlayResize => 'Drag to resize the widget';
+
+  @override
+  String get tipOverlayHide => 'Hide the widget';
+
+  @override
+  String get tipStopwatchToggle => 'Start or stop the stopwatch';
+
+  @override
+  String get settingsTts => 'Voice announcements';
+
+  @override
+  String get settingsTtsDesc =>
+      'Speak segment changes and timer completion aloud';
+
+  @override
+  String get settingsTtsSample => 'Voice announcements are on';
+
+  @override
+  String get ttsOnboardBody =>
+      'Segment changes like this can also be announced by voice';
+
+  @override
+  String get ttsOnboardEnable => 'Try it';
+
+  @override
+  String get ttsVoiceMissingHint =>
+      'For natural announcements, add your language\'s voice in Windows Settings > Time & Language > Speech';
+
+  @override
   String get overlayLongPressHint =>
       'Tieni premuto l\'orologio per regolarne dimensioni e posizione';
 }
