@@ -561,4 +561,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get overlayLongPressHint =>
       'Long-press the clock, then tap a dot to move it there';
+
+  @override
+  String get editCoachGrid => 'Tap a cell to jump there';
+
+  @override
+  String get editCoachDpad => 'Arrows for fine-tuning · hold to repeat';
+
+  @override
+  String get editCoachControls => '⤢ Size · ⇄ Switch side · ✓ Done';
+
+  @override
+  String get editCoachDismiss => 'Tap anywhere to start';
 }

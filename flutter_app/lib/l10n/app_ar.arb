@@ -81,5 +81,9 @@
   "planSaveAsCurrent": "حفظ كخطة",
   "planLoadIntoTimer": "تحميل في المؤقت",
   "planSave": "حفظ",
-  "overlayLongPressHint": "اضغط مطولًا على الساعة ثم انقر على نقطة لنقلها إلى هناك"
+  "overlayLongPressHint": "اضغط مطولًا على الساعة ثم انقر على نقطة لنقلها إلى هناك",
+  "editCoachGrid": "انقر على خلية للانتقال إليها",
+  "editCoachDpad": "الأسهم للضبط الدقيق · اضغط مطولًا للتكرار",
+  "editCoachControls": "⤢ الحجم · ⇄ تبديل الجانب · ✓ تم",
+  "editCoachDismiss": "انقر في أي مكان للبدء"
 }

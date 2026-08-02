@@ -81,5 +81,9 @@
   "planSaveAsCurrent": "Salva come piano",
   "planLoadIntoTimer": "Carica nel timer",
   "planSave": "Salva",
-  "overlayLongPressHint": "Tieni premuto l'orologio, poi tocca un punto per spostarlo lì"
+  "overlayLongPressHint": "Tieni premuto l'orologio, poi tocca un punto per spostarlo lì",
+  "editCoachGrid": "Tocca una cella per spostarti lì",
+  "editCoachDpad": "Frecce per la regolazione fine · tieni premuto per ripetere",
+  "editCoachControls": "⤢ Dimensione · ⇄ Cambia lato · ✓ Fatto",
+  "editCoachDismiss": "Tocca ovunque per iniziare"
 }

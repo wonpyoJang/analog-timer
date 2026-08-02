@@ -561,4 +561,16 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get overlayLongPressHint =>
       'Saate uzun basın, ardından taşımak istediğiniz noktaya dokunun';
+
+  @override
+  String get editCoachGrid => 'Oraya taşımak için bir hücreye dokunun';
+
+  @override
+  String get editCoachDpad => 'İnce ayar için oklar · tekrar için basılı tutun';
+
+  @override
+  String get editCoachControls => '⤢ Boyut · ⇄ Taraf değiştir · ✓ Bitti';
+
+  @override
+  String get editCoachDismiss => 'Başlamak için herhangi bir yere dokunun';
 }

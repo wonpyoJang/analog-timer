@@ -562,4 +562,16 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get overlayLongPressHint =>
       'Toque e segure o relógio e depois toque em um ponto para movê-lo';
+
+  @override
+  String get editCoachGrid => 'Toque em uma célula para mover para lá';
+
+  @override
+  String get editCoachDpad => 'Setas para ajuste fino · segure para repetir';
+
+  @override
+  String get editCoachControls => '⤢ Tamanho · ⇄ Trocar lado · ✓ Concluído';
+
+  @override
+  String get editCoachDismiss => 'Toque em qualquer lugar para começar';
 }

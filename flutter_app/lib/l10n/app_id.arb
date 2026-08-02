@@ -81,5 +81,9 @@
   "planSaveAsCurrent": "Simpan sebagai rencana",
   "planLoadIntoTimer": "Muat ke timer",
   "planSave": "Simpan",
-  "overlayLongPressHint": "Tekan lama jam, lalu ketuk titik untuk memindahkannya ke sana"
+  "overlayLongPressHint": "Tekan lama jam, lalu ketuk titik untuk memindahkannya ke sana",
+  "editCoachGrid": "Ketuk sel untuk pindah ke sana",
+  "editCoachDpad": "Panah untuk penyetelan halus · tahan untuk mengulang",
+  "editCoachControls": "⤢ Ukuran · ⇄ Ganti sisi · ✓ Selesai",
+  "editCoachDismiss": "Ketuk di mana saja untuk mulai"
 }

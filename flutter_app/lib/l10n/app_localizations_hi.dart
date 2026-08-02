@@ -561,4 +561,17 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get overlayLongPressHint =>
       'घड़ी को देर तक दबाएँ, फिर उसे वहाँ ले जाने के लिए किसी बिंदु पर टैप करें';
+
+  @override
+  String get editCoachGrid => 'वहाँ जाने के लिए किसी सेल पर टैप करें';
+
+  @override
+  String get editCoachDpad =>
+      'बारीक समायोजन के लिए तीर · दबाए रखें दोहराने हेतु';
+
+  @override
+  String get editCoachControls => '⤢ आकार · ⇄ पक्ष बदलें · ✓ पूर्ण';
+
+  @override
+  String get editCoachDismiss => 'शुरू करने के लिए कहीं भी टैप करें';
 }

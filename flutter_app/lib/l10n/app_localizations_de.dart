@@ -562,4 +562,17 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get overlayLongPressHint =>
       'Uhr gedrückt halten und dann auf einen Punkt tippen, um sie dorthin zu verschieben';
+
+  @override
+  String get editCoachGrid => 'Auf ein Feld tippen, um dorthin zu springen';
+
+  @override
+  String get editCoachDpad =>
+      'Pfeile zum Feinjustieren · halten für Wiederholung';
+
+  @override
+  String get editCoachControls => '⤢ Größe · ⇄ Seite wechseln · ✓ Fertig';
+
+  @override
+  String get editCoachDismiss => 'Zum Starten irgendwo tippen';
 }

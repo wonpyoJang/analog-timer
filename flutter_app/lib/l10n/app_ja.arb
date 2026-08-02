@@ -81,5 +81,9 @@
   "planSaveAsCurrent": "計画として保存",
   "planLoadIntoTimer": "タイマーに読み込む",
   "planSave": "保存",
-  "overlayLongPressHint": "時計を長押しして、移動したい位置の点をタップしてください"
+  "overlayLongPressHint": "時計を長押しして、移動したい位置の点をタップしてください",
+  "editCoachGrid": "タップした位置へ移動",
+  "editCoachDpad": "矢印で微調整・長押しで連続",
+  "editCoachControls": "⤢ サイズ · ⇄ 左右切替 · ✓ 完了",
+  "editCoachDismiss": "画面をタップして開始"
 }
