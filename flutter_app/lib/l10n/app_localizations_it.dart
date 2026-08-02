@@ -661,6 +661,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Vibra all\'avvio, in pausa e al completamento';
 
   @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
+
+  @override
   String get settingsColorblind => 'Modalità daltonici';
 
   @override

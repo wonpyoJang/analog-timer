@@ -656,6 +656,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsHapticsDesc => '開始・一時停止・完了時に振動';
 
   @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
+
+  @override
   String get settingsColorblind => '色覚モード';
 
   @override

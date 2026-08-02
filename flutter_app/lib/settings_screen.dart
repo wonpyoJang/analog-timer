@@ -9,6 +9,7 @@ import 'widgets/key_caps.dart';
 import 'widgets/language_picker.dart';
 import 'widgets/feedback_page.dart';
 import 'services/platform_info.dart';
+import 'services/desktop_notification_service.dart';
 import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
 import 'services/text_scale_service.dart';
@@ -230,29 +231,56 @@ class SettingsScreen extends StatelessWidget {
 
           const _Divider(),
 
-          // ── 진동 피드백 (접근성) ──────────────────────────────
-          ValueListenableBuilder<bool>(
-            valueListenable: HapticService.instance.enabledListenable,
-            builder: (ctx, hOn, _) => _SettingsTile(
-              icon: Icons.vibration,
-              iconColor: AppColors.accent,
-              title: l.settingsHaptics,
-              subtitle: l.settingsHapticsDesc,
-              trailing: Switch(
-                value: hOn,
-                onChanged: HapticService.instance.setEnabled,
-                activeThumbColor: AppColors.accent,
-                trackColor: WidgetStateProperty.resolveWith(
-                  (states) => states.contains(WidgetState.selected)
-                      ? AppColors.accent.withAlpha(0x55)
-                      : AppColors.surface,
+          // ── 진동 피드백 (접근성, 모바일 전용 — 데스크톱엔 진동 모터가
+          //    없어 토글이 무의미하다) ───────────────────────────
+          if (!isDesktop) ...[
+            ValueListenableBuilder<bool>(
+              valueListenable: HapticService.instance.enabledListenable,
+              builder: (ctx, hOn, _) => _SettingsTile(
+                icon: Icons.vibration,
+                iconColor: AppColors.accent,
+                title: l.settingsHaptics,
+                subtitle: l.settingsHapticsDesc,
+                trailing: Switch(
+                  value: hOn,
+                  onChanged: HapticService.instance.setEnabled,
+                  activeThumbColor: AppColors.accent,
+                  trackColor: WidgetStateProperty.resolveWith(
+                    (states) => states.contains(WidgetState.selected)
+                        ? AppColors.accent.withAlpha(0x55)
+                        : AppColors.surface,
+                  ),
                 ),
+                onTap: () => HapticService.instance.setEnabled(!hOn),
               ),
-              onTap: () => HapticService.instance.setEnabled(!hOn),
             ),
-          ),
+            const _Divider(),
+          ],
 
-          const _Divider(),
+          // ── 알림 (데스크톱 — 구간 전환·완료 토스트) ───────────
+          if (isDesktop) ...[
+            ValueListenableBuilder<bool>(
+              valueListenable: DesktopNotificationService.enabledListenable,
+              builder: (ctx, nOn, _) => _SettingsTile(
+                icon: Icons.notifications_outlined,
+                iconColor: AppColors.accent,
+                title: l.settingsNotifications,
+                subtitle: l.settingsNotificationsDesc,
+                trailing: Switch(
+                  value: nOn,
+                  onChanged: DesktopNotificationService.setEnabled,
+                  activeThumbColor: AppColors.accent,
+                  trackColor: WidgetStateProperty.resolveWith(
+                    (states) => states.contains(WidgetState.selected)
+                        ? AppColors.accent.withAlpha(0x55)
+                        : AppColors.surface,
+                  ),
+                ),
+                onTap: () => DesktopNotificationService.setEnabled(!nOn),
+              ),
+            ),
+            const _Divider(),
+          ],
 
           // ── 색맹 모드 (접근성) ────────────────────────────────
           ValueListenableBuilder<bool>(

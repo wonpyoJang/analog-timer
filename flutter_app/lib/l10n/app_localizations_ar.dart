@@ -658,6 +658,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsHapticsDesc => 'اهتزاز عند البدء والإيقاف المؤقت والإكمال';
 
   @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
+
+  @override
   String get settingsColorblind => 'وضع عمى الألوان';
 
   @override

@@ -1311,6 +1311,18 @@ abstract class AppLocalizations {
   /// **'Vibrate on start, pause and completion'**
   String get settingsHapticsDesc;
 
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotifications;
+
+  /// No description provided for @settingsNotificationsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Toast when a segment changes or the timer completes'**
+  String get settingsNotificationsDesc;
+
   /// No description provided for @settingsColorblind.
   ///
   /// In en, this message translates to:

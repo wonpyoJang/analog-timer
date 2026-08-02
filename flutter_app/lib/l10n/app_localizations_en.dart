@@ -658,6 +658,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHapticsDesc => 'Vibrate on start, pause and completion';
 
   @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
+
+  @override
   String get settingsColorblind => 'Colorblind mode';
 
   @override

@@ -659,6 +659,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsHapticsDesc => 'आरंभ, विराम और पूर्णता पर कंपन';
 
   @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
+
+  @override
   String get settingsColorblind => 'वर्णांध मोड';
 
   @override

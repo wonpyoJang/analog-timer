@@ -638,6 +638,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsHapticsDesc => '시작·일시정지·완료 시 진동';
 
   @override
+  String get settingsNotifications => '알림';
+
+  @override
+  String get settingsNotificationsDesc => '구간이 바뀌거나 타이머가 끝나면 알림으로 표시';
+
+  @override
   String get settingsColorblind => '색맹 모드';
 
   @override

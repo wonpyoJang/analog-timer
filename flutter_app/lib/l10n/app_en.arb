@@ -309,6 +309,8 @@
   "a11yDismissBanner": "Dismiss",
   "settingsHaptics": "Haptic feedback",
   "settingsHapticsDesc": "Vibrate on start, pause and completion",
+  "settingsNotifications": "Notifications",
+  "settingsNotificationsDesc": "Toast when a segment changes or the timer completes",
   "settingsColorblind": "Colorblind mode",
   "settingsColorblindDesc": "Distinguish stopwatch by dashed pattern, not just color"
 }

@@ -659,6 +659,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Başlatma, duraklatma ve tamamlamada titret';
 
   @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Toast when a segment changes or the timer completes';
+
+  @override
   String get settingsColorblind => 'Renk körlüğü modu';
 
   @override
