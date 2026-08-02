@@ -487,4 +487,8 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get menuErrorReports => 'Error reports';
+
+  @override
+  String get overlayLongPressHint =>
+      'Удерживайте часы, чтобы настроить размер и положение';
 }

@@ -80,5 +80,6 @@
   "dayPlanEmpty": "इस दिन के लिए कोई योजना नहीं",
   "planSaveAsCurrent": "योजना के रूप में सहेजें",
   "planLoadIntoTimer": "टाइमर में लोड करें",
-  "planSave": "सहेजें"
+  "planSave": "सहेजें",
+  "overlayLongPressHint": "आकार और स्थिति समायोजित करने के लिए घड़ी को देर तक दबाएँ"
 }

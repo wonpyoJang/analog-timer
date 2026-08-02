@@ -178,12 +178,15 @@
   "reviewPromptAccept": "Share thoughts",
   "reviewPromptLater": "Later",
   "reviewPromptNever": "Don't ask again",
-
   "syncPageTitle": "Device pairing",
   "syncConnected": "✓ Connected",
   "syncRoomLabel": "Room: {id}",
   "@syncRoomLabel": {
-    "placeholders": { "id": { "type": "String" } }
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
   },
   "syncRoomDesc": "Timer, presets, and settings are shared across every device in this room.",
   "syncAddDevice": "Add another device",
@@ -219,5 +222,6 @@
   "menuAutoRecoveryNote": "Auto detection and recovery is on — you rarely need these.",
   "menuRefreshWidget": "Refresh widget",
   "menuRestartApp": "Restart app",
-  "menuErrorReports": "Error reports"
+  "menuErrorReports": "Error reports",
+  "overlayLongPressHint": "Long-press the clock to adjust its size and position"
 }

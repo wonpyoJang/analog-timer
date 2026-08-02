@@ -485,4 +485,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get menuErrorReports => 'Error reports';
+
+  @override
+  String get overlayLongPressHint => '時計を長押しするとサイズと位置を調整できます';
 }

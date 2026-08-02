@@ -107,6 +107,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _restoreState();
     } else if (isIOS) {
       _loadIosWidgetPref();
+      // Android/데스크톱과 동일하게 프로세스 킬 후 타이머/스톱워치 복원 —
+      // 이게 없으면 iOS 만 재실행 시 실행 중이던 상태가 전량 유실된다.
+      _restoreState();
     } else if (isDesktop) {
       _initDesktop();
       _restoreState();
@@ -155,18 +158,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _prevSyncTimer = s;
     if (!SyncService.instance.connected) return;
 
-    final significant =
-        prev == null ||
-        prev.status != s.status ||
-        prev.currentSeg != s.currentSeg ||
-        prev.loop != s.loop ||
-        !_segmentsEqual(prev.segments, s.segments);
-    if (!significant) return;
-
     // 방금 원격에서 적용한 상태 그대로라면 에코 — push 하지 않는다.
     // one-shot: 에코를 한 번 걸러내면 소거한다. 유지하면 사용자가 '원격과 같은
     // 상태'로 되돌아오는 정당한 로컬 변경(예: pause 후 다시 resume)까지 영원히
     // 억제되어 기기 간 desync 가 생긴다.
+    // significant 검사보다 먼저 수행 — tick 처럼 segRemainMs 만 다른
+    // non-significant 방출이 시그니처와 일치할 때도 소거해야, 잔류 시그니처가
+    // 이후의 정당한 push 를 삼키지 않는다.
     final sig = _lastRemoteTimerSig;
     if (sig != null &&
         sig.status == s.status &&
@@ -176,6 +174,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _lastRemoteTimerSig = null;
       return;
     }
+
+    final significant =
+        prev == null ||
+        prev.status != s.status ||
+        prev.currentSeg != s.currentSeg ||
+        prev.loop != s.loop ||
+        !_segmentsEqual(prev.segments, s.segments);
+    if (!significant) return;
     _pushTimer(s);
   }
 
@@ -254,6 +260,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           segRemainMs: segRemainMs,
           status: status,
           loop: loop,
+          // sync 는 세션이 계속되는 경로 — 오늘의 타이머 로그를 지우지 않는다.
+          preserveLog: true,
         ),
       );
     } catch (e) {
@@ -469,7 +477,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final swState = context.read<StopwatchBloc>().state;
 
     await PersistenceService.saveOverlayOn(
-        isDesktop ? _desktopOverlayOn : _overlayOn);
+      isDesktop ? _desktopOverlayOn : _overlayOn,
+    );
     await PersistenceService.saveTimerState(
       segments: timerState.segments.map((s) => s.toJson()).toList(),
       currentSeg: timerState.currentSeg,
@@ -517,6 +526,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             Future(() {
               if (mounted) _syncOverlay();
             });
+          case 'hint_learned':
+            // 편집 모드를 실제 사용했으므로 온보딩 힌트 영구 종료
+            unawaited(PersistenceService.saveOverlayHintCount(999));
           case 'overlay_hide':
             // hide는 fire-and-forget OK — resizeOverlay(1,1)이므로 실패해도 health timer가 복원
             unawaited(OverlayService.hide());

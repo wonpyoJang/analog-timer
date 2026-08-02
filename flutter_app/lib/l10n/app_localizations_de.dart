@@ -487,4 +487,8 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get menuErrorReports => 'Error reports';
+
+  @override
+  String get overlayLongPressHint =>
+      'Uhr gedrückt halten, um Größe und Position anzupassen';
 }

@@ -486,4 +486,8 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get menuErrorReports => 'Error reports';
+
+  @override
+  String get overlayLongPressHint =>
+      'Boyut ve konumu ayarlamak için saate uzun basın';
 }

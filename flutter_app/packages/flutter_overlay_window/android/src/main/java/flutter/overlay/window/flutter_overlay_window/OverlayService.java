@@ -22,6 +22,7 @@ import android.view.Display;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.WindowManager;
 
 import androidx.annotation.Nullable;
@@ -64,9 +65,12 @@ public class OverlayService extends Service implements View.OnTouchListener {
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
 
     private Handler mAnimationHandler = new Handler();
-    private float lastX, lastY;
+    private float dragDownX, dragDownY;
+    private int dragStartParamsX, dragStartParamsY;
     private int lastYPosition;
     private boolean dragging;
+    private boolean dispatchingCancel;
+    private int touchSlopSq = 25;
     private static final float MAXIMUM_OPACITY_ALLOWED_FOR_S_AND_HIGHER = 0.8f;
     private Point szWindow = new Point();
     private Timer mTrayAnimationTimer;
@@ -142,6 +146,13 @@ public class OverlayService extends Service implements View.OnTouchListener {
                 int height = call.argument("height");
                 boolean enableDrag = call.argument("enableDrag");
                 resizeOverlay(width, height, enableDrag, result);
+            } else if (call.method.equals("getOverlayPosition")) {
+                // 오버레이 isolate에서 현재 창 위치(dp) 조회 — D-pad 상대 이동용
+                WindowManager.LayoutParams params = (WindowManager.LayoutParams) flutterView.getLayoutParams();
+                Map<String, Object> position = new HashMap<>();
+                position.put("x", pxToDp(params.x));
+                position.put("y", pxToDp(params.y));
+                result.success(position);
             }
         });
         overlayMessageChannel.setMessageHandler((message, reply) -> {
@@ -195,6 +206,8 @@ public class OverlayService extends Service implements View.OnTouchListener {
             params.alpha = MAXIMUM_OPACITY_ALLOWED_FOR_S_AND_HIGHER;
         }
         params.gravity = WindowSetup.gravity;
+        int slop = ViewConfiguration.get(this).getScaledTouchSlop();
+        touchSlopSq = slop * slop;
         flutterView.setOnTouchListener(this);
         windowManager.addView(flutterView, params);
         moveOverlay(dx, dy, null);
@@ -397,54 +410,85 @@ public class OverlayService extends Service implements View.OnTouchListener {
 
     @Override
     public boolean onTouch(View view, MotionEvent event) {
-        if (windowManager != null && WindowSetup.enableDrag) {
-            WindowManager.LayoutParams params = (WindowManager.LayoutParams) flutterView.getLayoutParams();
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    dragging = false;
-                    lastX = event.getRawX();
-                    lastY = event.getRawY();
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    float dx = event.getRawX() - lastX;
-                    float dy = event.getRawY() - lastY;
-                    if (!dragging && dx * dx + dy * dy < 25) {
-                        return false;
-                    }
-                    lastX = event.getRawX();
-                    lastY = event.getRawY();
-                    boolean invertX = WindowSetup.gravity == (Gravity.TOP | Gravity.RIGHT)
-                            || WindowSetup.gravity == (Gravity.CENTER | Gravity.RIGHT)
-                            || WindowSetup.gravity == (Gravity.BOTTOM | Gravity.RIGHT);
-                    boolean invertY = WindowSetup.gravity == (Gravity.BOTTOM | Gravity.LEFT)
-                            || WindowSetup.gravity == Gravity.BOTTOM
-                            || WindowSetup.gravity == (Gravity.BOTTOM | Gravity.RIGHT);
-                    int xx = params.x + ((int) dx * (invertX ? -1 : 1));
-                    int yy = params.y + ((int) dy * (invertY ? -1 : 1));
-                    params.x = xx;
-                    params.y = yy;
-                    if (windowManager != null) {
-                        windowManager.updateViewLayout(flutterView, params);
-                    }
-                    dragging = true;
-                    break;
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_CANCEL:
-                    lastYPosition = params.y;
-                    if (!WindowSetup.positionGravity.equals("none")) {
-                        if (windowManager == null) return false;
-                        windowManager.updateViewLayout(flutterView, params);
-                        mTrayTimerTask = new TrayAnimationTimerTask();
-                        mTrayAnimationTimer = new Timer();
-                        mTrayAnimationTimer.schedule(mTrayTimerTask, 0, 25);
-                    }
-                    return false;
-                default:
-                    return false;
-            }
+        if (windowManager == null || !WindowSetup.enableDrag || dispatchingCancel) {
             return false;
         }
-        return false;
+        WindowManager.LayoutParams params = (WindowManager.LayoutParams) flutterView.getLayoutParams();
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                dragging = false;
+                dragDownX = event.getRawX();
+                dragDownY = event.getRawY();
+                dragStartParamsX = params.x;
+                dragStartParamsY = params.y;
+                return false;
+            case MotionEvent.ACTION_MOVE: {
+                // 멀티터치(핀치 리사이즈)는 Flutter가 처리 — 드래그 시작 금지
+                if (event.getPointerCount() > 1) {
+                    return dragging;
+                }
+                // 터치 시작점 기준 절대 오프셋 — 이벤트별 (int) 절삭 누적 시
+                // 고주사율 기기에서 느린 드래그가 통째로 소실되는 문제 방지
+                float dx = event.getRawX() - dragDownX;
+                float dy = event.getRawY() - dragDownY;
+                if (!dragging && dx * dx + dy * dy < touchSlopSq) {
+                    return false;
+                }
+                if (!dragging) {
+                    dragging = true;
+                    // 슬롭 통과 순간 재앵커 — 창이 슬롭만큼 점프하지 않도록
+                    dragDownX = event.getRawX();
+                    dragDownY = event.getRawY();
+                    dragStartParamsX = params.x;
+                    dragStartParamsY = params.y;
+                    dx = 0;
+                    dy = 0;
+                    // 창이 손가락을 그대로 추종하면 Flutter의 윈도우 상대 좌표는
+                    // 정지 상태로 보여 onTap이 오발사됨 — CANCEL로 제스처 중단
+                    sendCancelToFlutter(event);
+                }
+                boolean invertX = WindowSetup.gravity == (Gravity.TOP | Gravity.RIGHT)
+                        || WindowSetup.gravity == (Gravity.CENTER | Gravity.RIGHT)
+                        || WindowSetup.gravity == (Gravity.BOTTOM | Gravity.RIGHT);
+                boolean invertY = WindowSetup.gravity == (Gravity.BOTTOM | Gravity.LEFT)
+                        || WindowSetup.gravity == Gravity.BOTTOM
+                        || WindowSetup.gravity == (Gravity.BOTTOM | Gravity.RIGHT);
+                params.x = dragStartParamsX + (Math.round(dx) * (invertX ? -1 : 1));
+                params.y = dragStartParamsY + (Math.round(dy) * (invertY ? -1 : 1));
+                windowManager.updateViewLayout(flutterView, params);
+                return true;
+            }
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL: {
+                boolean wasDragging = dragging;
+                dragging = false;
+                lastYPosition = params.y;
+                if (!WindowSetup.positionGravity.equals("none")) {
+                    windowManager.updateViewLayout(flutterView, params);
+                    mTrayTimerTask = new TrayAnimationTimerTask();
+                    mTrayAnimationTimer = new Timer();
+                    mTrayAnimationTimer.schedule(mTrayTimerTask, 0, 25);
+                }
+                // 드래그로 끝난 UP은 소비 — Flutter에는 이미 CANCEL 전달됨
+                return wasDragging;
+            }
+            default:
+                return false;
+        }
+    }
+
+    /** 드래그 확정 시 Flutter로 합성 CANCEL 전달 — 진행 중이던 탭 제스처를 정리 */
+    private void sendCancelToFlutter(MotionEvent source) {
+        if (flutterView == null) return;
+        MotionEvent cancel = MotionEvent.obtain(source);
+        cancel.setAction(MotionEvent.ACTION_CANCEL);
+        dispatchingCancel = true;
+        try {
+            flutterView.dispatchTouchEvent(cancel);
+        } finally {
+            dispatchingCancel = false;
+            cancel.recycle();
+        }
     }
 
     private class TrayAnimationTimerTask extends TimerTask {

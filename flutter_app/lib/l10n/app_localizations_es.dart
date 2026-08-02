@@ -487,4 +487,8 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get menuErrorReports => 'Error reports';
+
+  @override
+  String get overlayLongPressHint =>
+      'Mantén pulsado el reloj para ajustar su tamaño y posición';
 }

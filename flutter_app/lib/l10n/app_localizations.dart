@@ -1004,6 +1004,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error reports'**
   String get menuErrorReports;
+
+  /// No description provided for @overlayLongPressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press the clock to adjust its size and position'**
+  String get overlayLongPressHint;
 }
 
 class _AppLocalizationsDelegate

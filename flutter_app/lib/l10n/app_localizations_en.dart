@@ -486,4 +486,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get menuErrorReports => 'Error reports';
+
+  @override
+  String get overlayLongPressHint =>
+      'Long-press the clock to adjust its size and position';
 }

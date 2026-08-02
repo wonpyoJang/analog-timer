@@ -80,5 +80,6 @@
   "dayPlanEmpty": "Aucun plan pour ce jour",
   "planSaveAsCurrent": "Enregistrer comme plan",
   "planLoadIntoTimer": "Charger dans la minuterie",
-  "planSave": "Sauvegarder"
+  "planSave": "Sauvegarder",
+  "overlayLongPressHint": "Appuyez longuement sur l'horloge pour ajuster sa taille et sa position"
 }
