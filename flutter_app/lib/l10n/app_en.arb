@@ -229,6 +229,8 @@
   "shortcutSwLap": "Lap",
   "shortcutWidgetToggle": "Toggle widget",
   "shortcutWidgetMove": "Move widget (click the widget first)",
+  "shortcutWidgetAnchor": "Snap widget to 3×3 grid",
+  "shortcutWidgetMirror": "Flip widget to opposite side",
   "keysHintTimerToggle": "Tip: Space or Ctrl+Alt+Space also starts/pauses the timer",
   "keysHintTimerNext": "Tip: N or Ctrl+Alt+N also skips to the next segment",
   "keysHintSwToggle": "Tip: the S key also starts/stops the stopwatch",

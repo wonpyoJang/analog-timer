@@ -491,6 +491,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shortcutWidgetMove => '위젯 이동 (위젯을 먼저 클릭)';
 
   @override
+  String get shortcutWidgetAnchor => '위젯 3×3 그리드 스냅';
+
+  @override
+  String get shortcutWidgetMirror => '위젯 반대편으로 대칭 이동';
+
+  @override
   String get keysHintTimerToggle =>
       '💡 Space 또는 Ctrl+Alt+Space로도 시작/일시정지할 수 있어요';
 
