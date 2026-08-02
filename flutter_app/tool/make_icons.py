@@ -53,6 +53,9 @@ def draw_clock(size: int, with_disc: bool) -> Image.Image:
 
 def main() -> None:
     art = Image.open(SRC).convert("RGBA")
+    # 타이틀바 로고(14px 표시) — 어두운 바에서도 보이는 링 렌디션 PNG.
+    draw_clock(64, with_disc=False).save(r"assets\icons\app_icon_small.png")
+    print("생성: assets/icons/app_icon_small.png")
     images = []
     for size in (16, 20, 24, 32, 40, 48, 64, 128, 256):
         if size <= 32:
