@@ -220,6 +220,9 @@ class _SegmentRowState extends State<_SegmentRow> {
                 contentPadding: EdgeInsets.zero,
               ),
               onChanged: (_) => _update(context),
+              // Enter = 다음 필드(분)로 — Tab과 같은 흐름을 Enter에도.
+              // 삭제 아이콘은 포커스를 안 받아(GestureDetector) 건너뛴다.
+              textInputAction: TextInputAction.next,
             ),
           ),
           SizedBox(
@@ -242,6 +245,8 @@ class _SegmentRowState extends State<_SegmentRow> {
                 contentPadding: const EdgeInsets.symmetric(vertical: 4),
               ),
               onChanged: (_) => _update(context),
+              // Enter = 다음 세그먼트 이름으로 — 연속 편집 흐름.
+              textInputAction: TextInputAction.next,
             ),
           ),
           const SizedBox(width: 4),

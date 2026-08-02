@@ -89,7 +89,9 @@ Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
     } catch (_) {}
     await windowManager.setPosition(initialPos);
     await windowManager.show();
-    await windowManager.focus();
+    // focus() 하지 않는다 — 위젯은 기동 6초 후(지연 복원) 생성되는데, 그때
+    // 포커스를 뺏으면 메인/타앱에서 타이핑 중이던 키(Tab 등)가 위젯 이동으로
+    // 오발동한다. 키보드 배치는 전역 핫키(widget_focus)로 진입.
   });
   runApp(
     DesktopOverlayApp(
@@ -427,6 +429,14 @@ class _OverlayBodyState extends State<_OverlayBody>
       await WindowController.fromWindowId(widget.mainWindowId)
           .invokeMethod('action', action);
     } catch (_) {}
+    // 버튼 탭은 "조작 후 하던 일로 복귀" 제스처 — 포커스를 되돌려서
+    // 이후의 Tab/화살표가 위젯에 잡히지 않게 한다(세그먼트 편집 중 Tab이
+    // 위젯 미러로 오발동하던 실사용 리포트). 드래그는 배치 의도라 유지.
+    unawaited(() async {
+      try {
+        await windowManager.blur();
+      } catch (_) {}
+    }());
   }
 
   // ── 크기 조절 (우하단 그립 드래그) ───────────────────────────
@@ -694,9 +704,14 @@ class _OverlayBodyState extends State<_OverlayBody>
 
     // Tab = 수평 대칭(좌↔우), Shift+Tab = 수직 대칭(상↔하) —
     // "위젯이 작업 영역을 가린다 → 반대편으로 휙"을 원탭으로.
+    //
+    // **키보드 배치 모드에서만** 소비한다(핫키 또는 화살표로 진입). 위젯
+    // 버튼을 클릭한 뒤 포커스가 위젯 창에 남아 있으면, 메인 창에서 세그먼트를
+    // 편집하려던 Tab이 위젯 미러로 오발동했다(실사용 리포트). 숫자키 동일.
     if (k == LogicalKeyboardKey.tab) {
+      if (!_kbMode) return false;
       if (e is KeyRepeatEvent) return true; // 미러는 리핏 무의미
-      _enterKbMode();
+      _enterKbMode(); // 타임아웃 연장
       unawaited(
           _mirror(horizontal: !HardwareKeyboard.instance.isShiftPressed));
       return true;
@@ -706,7 +721,8 @@ class _OverlayBodyState extends State<_OverlayBody>
     // (7·8·9=상단, 4·5·6=중단, 1·2·3=하단). 모바일의 그리드 편집과 동일 개념.
     final anchor = _digitOf(k);
     if (anchor != null) {
-      _enterKbMode();
+      if (!_kbMode) return false;
+      _enterKbMode(); // 타임아웃 연장
       unawaited(_snapToAnchor(anchor));
       return true;
     }
