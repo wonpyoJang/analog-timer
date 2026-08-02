@@ -1116,7 +1116,7 @@ abstract class AppLocalizations {
   /// No description provided for @overlayLongPressHint.
   ///
   /// In en, this message translates to:
-  /// **'Long-press the clock to adjust its size and position'**
+  /// **'Long-press the clock, then tap a dot to move it there'**
   String get overlayLongPressHint;
 }
 

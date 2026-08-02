@@ -545,5 +545,5 @@ class AppLocalizationsJa extends AppLocalizations {
   String get menuErrorReports => 'Error reports';
 
   @override
-  String get overlayLongPressHint => '時計を長押しするとサイズと位置を調整できます';
+  String get overlayLongPressHint => '時計を長押しして、移動したい位置の点をタップしてください';
 }

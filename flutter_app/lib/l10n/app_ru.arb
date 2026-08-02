@@ -81,5 +81,5 @@
   "planSaveAsCurrent": "Сохранить как план",
   "planLoadIntoTimer": "Загрузить в таймер",
   "planSave": "Сохранить",
-  "overlayLongPressHint": "Удерживайте часы, чтобы настроить размер и положение"
+  "overlayLongPressHint": "Удерживайте часы, затем коснитесь точки, чтобы переместить их туда"
 }

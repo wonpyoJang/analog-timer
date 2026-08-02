@@ -172,5 +172,5 @@
   "menuRefreshWidget": "위젯 새로고침",
   "menuRestartApp": "앱 재시작",
   "menuErrorReports": "오류 리포트",
-  "overlayLongPressHint": "시계를 길게 누르면 크기·위치를 조절할 수 있어요"
+  "overlayLongPressHint": "시계를 길게 누르고, 원하는 위치의 점을 탭하세요"
 }

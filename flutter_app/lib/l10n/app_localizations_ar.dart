@@ -547,5 +547,5 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get overlayLongPressHint =>
-      'اضغط مطولًا على الساعة لضبط الحجم والموضع';
+      'اضغط مطولًا على الساعة ثم انقر على نقطة لنقلها إلى هناك';
 }

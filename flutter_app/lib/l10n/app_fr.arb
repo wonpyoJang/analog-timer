@@ -81,5 +81,5 @@
   "planSaveAsCurrent": "Enregistrer comme plan",
   "planLoadIntoTimer": "Charger dans la minuterie",
   "planSave": "Sauvegarder",
-  "overlayLongPressHint": "Appuyez longuement sur l'horloge pour ajuster sa taille et sa position"
+  "overlayLongPressHint": "Appuyez longuement sur l'horloge, puis touchez un point pour la déplacer"
 }

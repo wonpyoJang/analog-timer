@@ -548,5 +548,5 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get overlayLongPressHint =>
-      'Удерживайте часы, чтобы настроить размер и положение';
+      'Удерживайте часы, затем коснитесь точки, чтобы переместить их туда';
 }

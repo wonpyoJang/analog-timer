@@ -548,5 +548,5 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get overlayLongPressHint =>
-      'Tekan lama jam untuk menyesuaikan ukuran dan posisi';
+      'Tekan lama jam, lalu ketuk titik untuk memindahkannya ke sana';
 }
