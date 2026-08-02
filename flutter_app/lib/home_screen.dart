@@ -669,6 +669,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onKeyEvent);
     WidgetsBinding.instance.removeObserver(this);
     _clockTimer?.cancel();
     _persistTimer?.cancel();
@@ -691,6 +692,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     HotkeyService.instance.onAction = _handleOverlayAction;
     // 단축키 맥락 힌트 — 버튼 3번째 클릭 시 액션별 1회 스낵바.
     ShortcutHintService.instance.onHint = _showShortcutHint;
+    // 인앱 단축키 — 포커스 무관 전역 키 핸들러.
+    HardwareKeyboard.instance.addHandler(_onKeyEvent);
     // 종료 직전 상태 저장만 — 실제 종료(exit)와 오버레이 정리는
     // DesktopService.quit() 및 프로세스 종료가 담당한다.
     DesktopService.instance.onQuit = () async {
@@ -1381,27 +1384,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       child: scaffold,
     );
 
-    // 인앱 단축키 — Space(타이머)/N(다음)/S(스톱워치)/L(랩)/W(위젯).
-    // 글로벌 핫키(Ctrl+Alt+…)와 달리 창이 포커스일 때만. 텍스트 입력 중엔
-    // _shortcut 가드가 무시한다(세그먼트 분·이름 편집 보호).
-    final withShortcuts = CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.space): () =>
-            _shortcut('timer_toggle'),
-        const SingleActivator(LogicalKeyboardKey.keyN): () =>
-            _shortcut('timer_next'),
-        const SingleActivator(LogicalKeyboardKey.keyS): () =>
-            _shortcut('sw_toggle'),
-        const SingleActivator(LogicalKeyboardKey.keyL): () =>
-            _shortcut('sw_lap'),
-        const SingleActivator(LogicalKeyboardKey.keyW): () =>
-            _shortcut('widget_toggle'),
-        // ? — 치트시트 (Shift+/ 및 물음표 전용 키 배열 모두 대응)
-        const SingleActivator(LogicalKeyboardKey.slash, shift: true): () =>
-            _shortcut('shortcut_sheet'),
-      },
-      child: Focus(autofocus: true, child: withAutoLog),
-    );
+    // 인앱 단축키는 build 트리가 아니라 HardwareKeyboard 핸들러로 처리한다
+    // (initState 의 _onKeyEvent). CallbackShortcuts 는 포커스가 그 노드 아래에
+    // 있어야만 동작하는데, 이 화면은 빈 곳 탭에서 unfocus() 를 호출해 포커스가
+    // 루트로 빠지므로 키가 도달하지 않았다(실사용 리포트로 확인된 결함).
+    final withShortcuts = withAutoLog;
 
     if (!isDesktop) return withShortcuts;
     // 데스크톱: 타이머 상태 전이를 감지해 알림/동기화 발신. segRemainMs 만
@@ -1436,14 +1423,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ));
   }
 
-  /// 인앱 단축키 공용 진입 — 텍스트 필드 편집 중이면 무시.
-  void _shortcut(String action) {
+  /// 인앱 단축키 — HardwareKeyboard 전역 핸들러(포커스 무관, 앱이 키보드
+  /// 포커스를 가진 동안만 OS 가 이벤트를 전달한다).
+  ///  Space 타이머 토글 · N 다음 · S 스톱워치 · L 랩 · W 위젯 · ? 치트시트
+  bool _onKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) return false;
+    // 텍스트 입력 중(세그먼트 이름·분 편집)엔 양보.
     final ctx = FocusManager.instance.primaryFocus?.context;
     if (ctx != null &&
         ctx.findAncestorStateOfType<EditableTextState>() != null) {
-      return;
+      return false;
     }
+    final pressed = HardwareKeyboard.instance;
+    final shift = pressed.isShiftPressed;
+    // Ctrl/Alt/Meta 조합은 여기서 처리하지 않는다 — 글로벌 핫키(hotkey_manager)
+    // 및 OS 단축키와의 이중 발화 방지.
+    if (pressed.isControlPressed || pressed.isAltPressed || pressed.isMetaPressed) {
+      return false;
+    }
+    final key = event.logicalKey;
+    String? action;
+    if (key == LogicalKeyboardKey.space && !shift) {
+      action = 'timer_toggle';
+    } else if (key == LogicalKeyboardKey.keyN && !shift) {
+      action = 'timer_next';
+    } else if (key == LogicalKeyboardKey.keyS && !shift) {
+      action = 'sw_toggle';
+    } else if (key == LogicalKeyboardKey.keyL && !shift) {
+      action = 'sw_lap';
+    } else if (key == LogicalKeyboardKey.keyW && !shift) {
+      action = 'widget_toggle';
+    } else if (key == LogicalKeyboardKey.question ||
+        (key == LogicalKeyboardKey.slash && shift)) {
+      action = 'shortcut_sheet';
+    }
+    if (action == null) return false;
     _handleOverlayAction(action);
+    return true; // 소비 — 다른 위젯으로 전파 방지
   }
 }
 
