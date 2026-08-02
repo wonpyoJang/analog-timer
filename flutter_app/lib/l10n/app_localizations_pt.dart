@@ -550,18 +550,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String get hotkeyRecordPrompt => 'Press the new key combination';
 
   @override
-  String get hotkeyNeedModifier =>
-      'Include Ctrl, Alt or Win (Shift alone would hijack normal typing)';
+  String get hotkeyNeedModifier => 'Add Ctrl, Alt or Win to the combo';
 
   @override
-  String get hotkeyDuplicate => 'Already used by another action';
+  String hotkeyDuplicate(String action) {
+    return 'Already used by \"$action\"';
+  }
+
+  @override
+  String hotkeyNow(String combo) {
+    return 'now: $combo';
+  }
 
   @override
   String get hotkeyTakenWarning => 'Taken by another app — tap to change';
 
   @override
   String get hotkeyRecordCaution =>
-      'This combo will stop working in other apps that use it';
+      'Other apps lose this combo while shortcuts are on';
 
   @override
   String get settingsTtsVoice => 'Voice style';

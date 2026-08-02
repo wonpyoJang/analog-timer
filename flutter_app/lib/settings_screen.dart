@@ -6,6 +6,7 @@ import 'l10n/app_localizations.dart';
 import 'services/battery_service.dart';
 import 'theme/app_theme.dart';
 import 'widgets/hotkey_record_field.dart';
+import 'widgets/key_caps.dart';
 import 'widgets/language_picker.dart';
 import 'widgets/feedback_page.dart';
 import 'services/platform_info.dart';
@@ -134,20 +135,23 @@ class SettingsScreen extends StatelessWidget {
                           _hotkeyRow(context, l.shortcutSwLap, 'sw_lap'),
                           _hotkeyRow(context, l.shortcutWidgetFocus,
                               'widget_focus'),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 16),
-                              child: TextButton(
-                                onPressed:
-                                    HotkeyService.instance.resetBindings,
-                                child: Text(l.hotkeyReset,
-                                    style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.muted)),
+                          // 시안 결정 4: 기본값과 달라졌을 때만 노출 —
+                          // 평소엔 시각 소음 0.
+                          if (HotkeyService.instance.isModified)
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 16),
+                                child: TextButton(
+                                  onPressed:
+                                      HotkeyService.instance.resetBindings,
+                                  child: Text(l.hotkeyReset,
+                                      style: const TextStyle(
+                                          fontSize: 11.5,
+                                          color: AppColors.faint)),
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ),
@@ -236,8 +240,11 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-/// 핫키 액션 한 줄 — 라벨 + 현재 조합 뱃지. 탭하면 녹화 다이얼로그.
-/// 등록 실패(다른 앱 선점) 시 ⚠ + 경고문 — "저장했는데 안 눌림" 원인 노출.
+/// 핫키 액션 한 줄 — 라벨 + 키캡 분리형 조합. 탭하면 녹화 다이얼로그.
+///
+/// 시안 결정 2: 선점(⚠) 상태는 **라벨 밑 왼쪽 힌트 줄**로, 키캡은 45%
+/// 디밍만 — 위험이 아니라 "미등록"이므로 빨간 테두리·행 배경 변화 없음.
+/// 문구 길이 가변(15개 언어)에도 레이아웃이 안전하다.
 Widget _hotkeyRow(BuildContext context, String label, String action) {
   final combo = HotkeyService.instance.describe(action);
   final l = AppLocalizations.of(context);
@@ -247,50 +254,45 @@ Widget _hotkeyRow(BuildContext context, String label, String action) {
       final taken = failed.contains(action);
       return InkWell(
         onTap: () => _recordHotkey(context, label, action),
+        borderRadius: BorderRadius.circular(9),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(56, 6, 20, 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          padding: const EdgeInsets.fromLTRB(56, 9, 20, 9),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(label,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label,
                         style: const TextStyle(
                             fontSize: 13, color: AppColors.text)),
-                  ),
-                  if (taken) ...[
-                    const Icon(Icons.warning_amber_rounded,
-                        size: 14, color: AppColors.danger),
-                    const SizedBox(width: 6),
+                    if (taken)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Row(
+                          children: [
+                            const Text('⚠',
+                                style: TextStyle(
+                                    fontSize: 10.5,
+                                    color: AppColors.danger,
+                                    height: 1)),
+                            const SizedBox(width: 5),
+                            Flexible(
+                              child: Text(l.hotkeyTakenWarning,
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFFC98080),
+                                      height: 1.4)),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.bg,
-                      border: Border.all(
-                          color:
-                              taken ? AppColors.danger : AppColors.border),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(combo,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: taken
-                                ? AppColors.danger
-                                : AppColors.text)),
-                  ),
-                ],
-              ),
-              if (taken)
-                Padding(
-                  padding: const EdgeInsets.only(top: 3),
-                  child: Text(l.hotkeyTakenWarning,
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(
-                          fontSize: 11, color: AppColors.danger)),
                 ),
+              ),
+              const SizedBox(width: 12),
+              KeyCaps(combo: combo, dim: taken),
             ],
           ),
         ),
@@ -299,9 +301,20 @@ Widget _hotkeyRow(BuildContext context, String label, String action) {
   );
 }
 
-/// 조합 녹화 다이얼로그 — 원하는 키를 누르면 미리보기, 저장으로 확정.
-///
-/// 여는 동안 전역 핫키를 해제한다(등록된 조합은 OS 가 가로채 녹화가 안 됨).
+/// 액션 id → 표시 라벨 (중복 오류 문구에 "어느 액션과 겹치는지" 명시용).
+String _actionLabel(AppLocalizations l, String action) => switch (action) {
+      'timer_toggle' => l.shortcutTimerToggle,
+      'timer_next' => l.shortcutTimerNext,
+      'sw_lap' => l.shortcutSwLap,
+      'widget_focus' => l.shortcutWidgetFocus,
+      _ => action,
+    };
+
+/// 조합 녹화 다이얼로그 — 시안 스펙(핫키 설정 UI):
+/// 제목 옆 "now: 현재조합" 컨텍스트, 미리보기 박스(대기 커서→진행형→확정),
+/// 오류/안내가 같은 슬롯을 공유해 높이가 흔들리지 않는다. 안내문은
+/// **조합 확정 후에만**(사실 서술 톤). 여는 동안 전역 핫키 해제(등록된
+/// 조합은 OS 가 가로채 녹화 불가).
 Future<void> _recordHotkey(
     BuildContext context, String label, String action) async {
   final l = AppLocalizations.of(context);
@@ -309,79 +322,116 @@ Future<void> _recordHotkey(
   await HotkeyService.instance.suspendForRecording();
   try {
     if (!context.mounted) return;
+    final current = HotkeyService.instance.describe(action);
     await showDialog<void>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx2, setState) {
-          // 검증: Ctrl/Alt/Win 없는 조합(Shift 단독 포함)은 일반 타이핑을
-          // 시스템 전역에서 강탈한다. 중복 조합은 조용히 등록 실패한다.
           final noMod =
               recorded != null && !HotkeyService.isSaneBinding(recorded!);
           final dup = recorded == null
               ? null
               : HotkeyService.instance.conflictingAction(action, recorded!);
-          final invalid = recorded == null || noMod || dup != null;
-          return AlertDialog(
-            backgroundColor: AppColors.surface,
-            title: Text(label,
-                style: const TextStyle(fontSize: 15, color: AppColors.text)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(l.hotkeyRecordPrompt,
-                    style: const TextStyle(
-                        fontSize: 12.5, color: AppColors.muted)),
-                const SizedBox(height: 14),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.bg,
-                    border: Border.all(color: AppColors.border),
-                    borderRadius: BorderRadius.circular(8),
+          final canSave = recorded != null && !noMod && dup == null;
+          return Dialog(
+            backgroundColor: const Color(0xFF1E1E21),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: const BorderSide(color: AppColors.border),
+            ),
+            child: Container(
+              width: 316,
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Expanded(
+                        child: Text(label,
+                            style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.text)),
+                      ),
+                      Text(l.hotkeyNow(current),
+                          style: const TextStyle(
+                              fontSize: 11, color: AppColors.faint)),
+                    ],
                   ),
-                  child: HotkeyRecordField(
-                    initial: HotkeyService.instance.binding(action),
+                  const SizedBox(height: 3),
+                  Text(l.hotkeyRecordPrompt,
+                      style: const TextStyle(
+                          fontSize: 12.5, color: AppColors.muted)),
+                  const SizedBox(height: 14),
+                  HotkeyRecordField(
+                    initial: null, // 대기 상태(커서)에서 시작 — 시안
+                    error: noMod || dup != null,
                     onRecorded: (hk) => setState(() => recorded = hk),
                   ),
-                ),
-                if (noMod || dup != null) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    noMod ? l.hotkeyNeedModifier : l.hotkeyDuplicate,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontSize: 11.5, color: AppColors.danger),
+                  // 오류/안내 공유 슬롯 — 높이 고정으로 다이얼로그 안 흔들림.
+                  Container(
+                    constraints: const BoxConstraints(minHeight: 30),
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.fromLTRB(4, 7, 4, 0),
+                    child: noMod
+                        ? Text(l.hotkeyNeedModifier,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontSize: 11.5,
+                                height: 1.5,
+                                color: AppColors.danger))
+                        : dup != null
+                            ? Text(l.hotkeyDuplicate(_actionLabel(l, dup)),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    fontSize: 11.5,
+                                    height: 1.5,
+                                    color: AppColors.danger))
+                            : canSave
+                                ? Text(l.hotkeyRecordCaution,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                        fontSize: 11.5,
+                                        height: 1.5,
+                                        color: AppColors.faint))
+                                : const SizedBox.shrink(),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx2),
+                        child: Text(l.cancel,
+                            style: const TextStyle(
+                                fontSize: 13, color: AppColors.muted)),
+                      ),
+                      const SizedBox(width: 6),
+                      TextButton(
+                        onPressed: canSave
+                            ? () {
+                                HotkeyService.instance
+                                    .setBinding(action, recorded!);
+                                Navigator.pop(ctx2);
+                              }
+                            : null,
+                        child: Text(l.save,
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: canSave
+                                    ? AppColors.accent
+                                    : AppColors.faint)),
+                      ),
+                    ],
                   ),
                 ],
-                // 사전 주의 한 줄 — 전역 핫키는 다른 앱의 같은 조합을 이긴다.
-                const SizedBox(height: 12),
-                Text(
-                  l.hotkeyRecordCaution,
-                  textAlign: TextAlign.center,
-                  style:
-                      const TextStyle(fontSize: 11, color: AppColors.faint),
-                ),
-              ],
+              ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx2),
-                child: Text(l.cancel,
-                    style: const TextStyle(color: AppColors.muted)),
-              ),
-              TextButton(
-                onPressed: invalid
-                    ? null
-                    : () {
-                        HotkeyService.instance.setBinding(action, recorded!);
-                        Navigator.pop(ctx2);
-                      },
-                child: Text(l.save,
-                    style: TextStyle(
-                        color: invalid ? AppColors.muted : AppColors.accent)),
-              ),
-            ],
           );
         },
       ),

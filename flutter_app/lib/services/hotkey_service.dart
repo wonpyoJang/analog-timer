@@ -233,6 +233,22 @@ class HotkeyService {
     if (enabled) await _register();
   }
 
+  /// 기본 조합에서 하나라도 바뀌었는지 — "기본값 복원" 버튼은 이때만 노출
+  /// (시안 결정 4: 평소엔 시각 소음 0).
+  bool get isModified {
+    final d = _defaults();
+    for (final a in actions) {
+      final cur = _bindings[a];
+      final def = d[a];
+      if (cur == null || def == null) continue;
+      if (cur.key != def.key ||
+          _modSet(cur.modifiers) != _modSet(def.modifiers)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// 다른 액션이 이미 쓰는 조합인지 — 중복 등록은 둘 중 하나가 조용히 실패한다.
   String? conflictingAction(String action, HotKey hk) {
     for (final e in _bindings.entries) {
