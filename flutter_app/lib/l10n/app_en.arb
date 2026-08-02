@@ -271,5 +271,15 @@
   "editCoachGrid": "Tap a cell to jump there",
   "editCoachDpad": "Arrows for fine-tuning · hold to repeat",
   "editCoachControls": "⤢ Size · ⇄ Switch side · ✓ Done",
-  "editCoachDismiss": "Tap anywhere to start"
+  "editCoachDismiss": "Tap anywhere to start",
+  "overlayKbGuide1": "←↑→↓ move · Shift = bigger",
+  "overlayKbGuide2": "1–9 snap · Tab mirror · Esc done",
+  "overlayKbHint": "Tip: move with keyboard — {combo}",
+  "@overlayKbHint": {
+    "placeholders": {
+      "combo": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1214,6 +1214,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap anywhere to start'**
   String get editCoachDismiss;
+
+  /// No description provided for @overlayKbGuide1.
+  ///
+  /// In en, this message translates to:
+  /// **'←↑→↓ move · Shift = bigger'**
+  String get overlayKbGuide1;
+
+  /// No description provided for @overlayKbGuide2.
+  ///
+  /// In en, this message translates to:
+  /// **'1–9 snap · Tab mirror · Esc done'**
+  String get overlayKbGuide2;
+
+  /// No description provided for @overlayKbHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: move with keyboard — {combo}'**
+  String overlayKbHint(String combo);
 }
 
 class _AppLocalizationsDelegate

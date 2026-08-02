@@ -198,7 +198,7 @@ class _OverlayBody extends StatefulWidget {
 }
 
 class _OverlayBodyState extends State<_OverlayBody>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WindowListener {
   bool _timerActive = false;
   bool _timerRunning = false;
   bool _swActive = false;
@@ -226,6 +226,53 @@ class _OverlayBodyState extends State<_OverlayBody>
   double _opacity = 1.0;
   bool _hoverOpaque = false;
 
+  // ── 키보드 배치 모드 안내 ─────────────────────────────────
+  // 핫키(widget_focus)나 이동 키 사용 시 accent 테두리 + 키 가이드로
+  // "지금 키보드가 위젯을 잡고 있다"를 보여준다. Esc/블러로 해제되고,
+  // 블러 이벤트가 서브엔진에서 안 올 가능성에 대비해 8초 타임아웃 병행.
+  bool _kbMode = false;
+  Timer? _kbModeTimer;
+
+  // 드래그 3회째 1회성 힌트 — "키보드로도 이동 가능" (맥락 힌트 서비스와
+  // 같은 절제 원칙, 저장은 오버레이 전용 파일).
+  String _focusCombo = '';
+  bool _dragHintVisible = false;
+  Timer? _dragHintTimer;
+
+  void _enterKbMode() {
+    if (!_kbMode && mounted) setState(() => _kbMode = true);
+    _kbModeTimer?.cancel();
+    _kbModeTimer = Timer(const Duration(seconds: 8), _exitKbMode);
+  }
+
+  void _exitKbMode() {
+    _kbModeTimer?.cancel();
+    _kbModeTimer = null;
+    if (_kbMode && mounted) setState(() => _kbMode = false);
+  }
+
+  @override
+  void onWindowBlur() => _exitKbMode();
+
+  Future<void> _maybeShowDragHint() async {
+    if (_focusCombo.isEmpty) return; // 핫키 꺼짐/조합 미전달 — 광고할 게 없음
+    final m = await _loadOverlayPrefs();
+    if (m['overlay_kb_hint_shown'] == true) return;
+    final n = ((m['overlay_drag_count'] as num?)?.toInt() ?? 0) + 1;
+    if (n < 3) {
+      await _saveOverlayPrefs({'overlay_drag_count': n});
+      return;
+    }
+    await _saveOverlayPrefs(
+        {'overlay_drag_count': n, 'overlay_kb_hint_shown': true});
+    if (!mounted) return;
+    setState(() => _dragHintVisible = true);
+    _dragHintTimer?.cancel();
+    _dragHintTimer = Timer(const Duration(seconds: 6), () {
+      if (mounted) setState(() => _dragHintVisible = false);
+    });
+  }
+
   void _applyWindowOpacity() {
     unawaited(() async {
       try {
@@ -247,6 +294,7 @@ class _OverlayBodyState extends State<_OverlayBody>
     _winPos = widget.initialPos;
     // 키보드 이동 — 위젯 창 포커스 시 화살표.
     HardwareKeyboard.instance.addHandler(_onMoveKey);
+    windowManager.addListener(this); // onWindowBlur → 키보드 모드 해제
     _applyState(widget.initial);
     // 저장된 투명도 적용
     unawaited(_loadOverlayPrefs().then((m) {
@@ -286,6 +334,7 @@ class _OverlayBodyState extends State<_OverlayBody>
           try {
             await windowManager.focus();
           } catch (_) {}
+          _enterKbMode(); // 테두리 + 키 가이드로 "키보드가 잡았다" 피드백
         }
         return null;
       });
@@ -323,6 +372,7 @@ class _OverlayBodyState extends State<_OverlayBody>
     _segRemainMs = (map['segRemainMs'] as num?)?.toInt() ?? 0;
     _swElapsedMs = (map['swElapsedMs'] as num?)?.toInt() ?? 0;
     _swStartAngleRad = (map['swStartAngleRad'] as num?)?.toDouble();
+    _focusCombo = map['widgetFocusCombo'] as String? ?? _focusCombo;
   }
 
   // push 사이(48ms)를 보간해 숫자가 부드럽게 흐르도록.
@@ -436,11 +486,15 @@ class _OverlayBodyState extends State<_OverlayBody>
       });
     } catch (_) {}
     _dragging = false;
+    unawaited(_maybeShowDragHint()); // 마우스 이동 직후가 키보드 대안을 알릴 적기
   }
 
   @override
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_onMoveKey);
+    windowManager.removeListener(this);
+    _kbModeTimer?.cancel();
+    _dragHintTimer?.cancel();
     _posSaveDebounce?.cancel();
     _clockTimer?.cancel();
     _displayTimer?.cancel();
@@ -548,11 +602,61 @@ class _OverlayBodyState extends State<_OverlayBody>
               ),
             ),
           ),
+          // 키보드 배치 가이드 — 모드 동안만. FittedBox 밖(실픽셀)이라
+          // 위젯을 작게 줄여도 글자가 같이 줄지 않는다.
+          if (_kbMode)
+            Positioned(
+              left: 6,
+              right: 6,
+              bottom: 20,
+              child: IgnorePointer(
+                child: _hintBox([
+                  AppLocalizations.of(context).overlayKbGuide1,
+                  AppLocalizations.of(context).overlayKbGuide2,
+                ]),
+              ),
+            ),
+          // 드래그 3회째 1회성 힌트 — "키보드로도 이동 가능"
+          if (_dragHintVisible && !_kbMode)
+            Positioned(
+              left: 6,
+              right: 6,
+              bottom: 20,
+              child: IgnorePointer(
+                child: _hintBox(
+                    [AppLocalizations.of(context).overlayKbHint(_focusCombo)]),
+              ),
+            ),
         ],
         ),
       ),
     );
   }
+
+  Widget _hintBox(List<String> lines) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          color: const Color(0xEE1A1A1C),
+          borderRadius: BorderRadius.circular(7),
+          border: Border.all(color: const Color(0xFF2E2E32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final line in lines)
+              Text(
+                line,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 10,
+                  height: 1.4,
+                  color: Color(0xFFC9C6C0),
+                ),
+              ),
+          ],
+        ),
+      );
 
   /// 키보드로 위젯 이동 — 위젯을 클릭(포커스)한 뒤 화살표.
   ///
@@ -579,6 +683,7 @@ class _OverlayBodyState extends State<_OverlayBody>
 
     // Esc = 포커스 반환 — 키보드 배치를 마치고 하던 앱으로 돌아간다.
     if (k == LogicalKeyboardKey.escape) {
+      _exitKbMode();
       unawaited(() async {
         try {
           await windowManager.blur();
@@ -591,6 +696,7 @@ class _OverlayBodyState extends State<_OverlayBody>
     // "위젯이 작업 영역을 가린다 → 반대편으로 휙"을 원탭으로.
     if (k == LogicalKeyboardKey.tab) {
       if (e is KeyRepeatEvent) return true; // 미러는 리핏 무의미
+      _enterKbMode();
       unawaited(
           _mirror(horizontal: !HardwareKeyboard.instance.isShiftPressed));
       return true;
@@ -600,6 +706,7 @@ class _OverlayBodyState extends State<_OverlayBody>
     // (7·8·9=상단, 4·5·6=중단, 1·2·3=하단). 모바일의 그리드 편집과 동일 개념.
     final anchor = _digitOf(k);
     if (anchor != null) {
+      _enterKbMode();
       unawaited(_snapToAnchor(anchor));
       return true;
     }
@@ -616,6 +723,7 @@ class _OverlayBodyState extends State<_OverlayBody>
     } else {
       return false;
     }
+    _enterKbMode(); // 클릭 포커스로 진입한 사용자도 여기서 가이드를 만난다
     final step = HardwareKeyboard.instance.isShiftPressed ? 60.0 : 10.0;
     _winPos = Offset(_winPos.dx + dx * step, _winPos.dy + dy * step);
     unawaited(windowManager.setPosition(_winPos));
@@ -742,7 +850,11 @@ class _OverlayBodyState extends State<_OverlayBody>
       child: Container(
       decoration: BoxDecoration(
         color: const Color(0xFF0E0E0F),
-        border: Border.all(color: const Color(0xFF2E2E32)),
+        // 키보드 배치 모드 = accent 테두리 — 포커스가 위젯에 있음을 표시
+        border: Border.all(
+          color: _kbMode ? const Color(0xCCF0C040) : const Color(0xFF2E2E32),
+          width: _kbMode ? 1.5 : 1.0,
+        ),
       ),
       padding: const EdgeInsets.all(8),
       child: Column(

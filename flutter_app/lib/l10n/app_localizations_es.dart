@@ -602,4 +602,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editCoachDismiss => 'Toca en cualquier lugar para empezar';
+
+  @override
+  String get overlayKbGuide1 => '←↑→↓ move · Shift = bigger';
+
+  @override
+  String get overlayKbGuide2 => '1–9 snap · Tab mirror · Esc done';
+
+  @override
+  String overlayKbHint(String combo) {
+    return 'Tip: move with keyboard — $combo';
+  }
 }
