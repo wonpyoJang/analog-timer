@@ -672,4 +672,16 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsColorblindDesc =>
       'Bedakan stopwatch dengan pola putus-putus, bukan hanya warna';
+
+  @override
+  String get settingsHourlyChime => 'Hourly time announcement';
+
+  @override
+  String get settingsHourlyChimeDesc =>
+      'Speaks the time on the hour · quiet 10 PM–8 AM';
+
+  @override
+  String hourlyChimeSpoken(String time) {
+    return 'It\'s $time';
+  }
 }

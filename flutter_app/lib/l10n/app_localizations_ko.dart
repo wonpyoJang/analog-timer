@@ -648,4 +648,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsColorblindDesc => '스톱워치를 색이 아닌 점선 패턴으로 구분';
+
+  @override
+  String get settingsHourlyChime => '정각 시보';
+
+  @override
+  String get settingsHourlyChimeDesc => '매시 정각에 시간을 읽어줘요 · 밤 10시~아침 8시는 쉬어요';
+
+  @override
+  String hourlyChimeSpoken(String time) {
+    return '$time입니다';
+  }
 }

@@ -20,10 +20,19 @@ class TtsService {
   static const String _kTransitionCount = 'tts_transition_count';
   static const String _kVoiceName = 'tts_voice_name';
   static const String _kVoiceLocale = 'tts_voice_locale';
+  static const String _kHourlyChime = 'tts_hourly_chime';
 
   /// 설정 화면 토글 바인딩용(BatteryService.monitoringEnabled 와 동일 패턴).
   final ValueNotifier<bool> enabledListenable = ValueNotifier<bool>(false);
   bool get enabled => enabledListenable.value;
+
+  /// 정각 시보 — 매시 정각에 시간을 읽어준다(기본 OFF, TTS 하위 옵션).
+  /// 뻐꾸기 시계 은유: 시간 인식이 약한 사용자에게 흐른 시간을 수동적으로
+  /// 알려주는 장치. 밤 10시~아침 8시는 내장 무음(상시 실행 사용자 배려).
+  final ValueNotifier<bool> hourlyChimeListenable = ValueNotifier<bool>(false);
+  bool get hourlyChime => hourlyChimeListenable.value;
+
+  int? _lastChimedHour; // "그 시각에 이미 발화했음" 가드(중복 방지)
 
   FlutterTts? _tts;
   String? _appliedLanguage;
@@ -38,12 +47,39 @@ class TtsService {
     try {
       final p = await SharedPreferences.getInstance();
       enabledListenable.value = p.getBool(_kEnabled) ?? false;
+      hourlyChimeListenable.value = p.getBool(_kHourlyChime) ?? false;
       final vn = p.getString(_kVoiceName);
       final vl = p.getString(_kVoiceLocale);
       if (vn != null && vl != null) {
         voiceListenable.value = {'name': vn, 'locale': vl};
       }
     } catch (_) {}
+  }
+
+  /// 정각 시보 토글 — [sample] 이 있으면 켜는 즉시 미리듣기.
+  Future<void> setHourlyChime(bool v,
+      {String? sample, String? localeTag}) async {
+    hourlyChimeListenable.value = v;
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.setBool(_kHourlyChime, v);
+    } catch (_) {}
+    if (v && sample != null && enabled) {
+      await speak(sample, localeTag: localeTag);
+    }
+  }
+
+  /// 정각 시보 판정+발화 — 시계 틱에서 호출(폴링). 조건:
+  /// TTS·시보 둘 다 ON, 정각(0분), 그 시각에 미발화, 주간(08~21시).
+  /// 절전 복귀로 0분을 건너뛴 시각은 발화하지 않는다(한밤 몰아서 발화 방지).
+  Future<void> maybeChimeHour(DateTime now, String text,
+      {String? localeTag}) async {
+    if (!enabled || !hourlyChime) return;
+    if (now.minute != 0) return;
+    if (now.hour >= 22 || now.hour < 8) return; // 야간 무음(내장)
+    if (_lastChimedHour == now.hour) return;
+    _lastChimedHour = now.hour;
+    await speak(text, localeTag: localeTag);
   }
 
   /// 시스템에 설치된 음성 목록 — [localeTag] 언어를 앞으로 정렬해 반환.

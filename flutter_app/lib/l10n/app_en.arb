@@ -312,5 +312,15 @@
   "settingsNotifications": "Notifications",
   "settingsNotificationsDesc": "Toast when a segment changes or the timer completes",
   "settingsColorblind": "Colorblind mode",
-  "settingsColorblindDesc": "Distinguish stopwatch by dashed pattern, not just color"
+  "settingsColorblindDesc": "Distinguish stopwatch by dashed pattern, not just color",
+  "settingsHourlyChime": "Hourly time announcement",
+  "settingsHourlyChimeDesc": "Speaks the time on the hour · quiet 10 PM–8 AM",
+  "hourlyChimeSpoken": "It's {time}",
+  "@hourlyChimeSpoken": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

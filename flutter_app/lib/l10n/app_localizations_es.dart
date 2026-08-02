@@ -671,4 +671,16 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settingsColorblindDesc =>
       'Distinguir el cronómetro por patrón discontinuo, no solo por color';
+
+  @override
+  String get settingsHourlyChime => 'Hourly time announcement';
+
+  @override
+  String get settingsHourlyChimeDesc =>
+      'Speaks the time on the hour · quiet 10 PM–8 AM';
+
+  @override
+  String hourlyChimeSpoken(String time) {
+    return 'It\'s $time';
+  }
 }

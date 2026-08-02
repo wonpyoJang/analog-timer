@@ -1334,6 +1334,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Distinguish stopwatch by dashed pattern, not just color'**
   String get settingsColorblindDesc;
+
+  /// No description provided for @settingsHourlyChime.
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly time announcement'**
+  String get settingsHourlyChime;
+
+  /// No description provided for @settingsHourlyChimeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaks the time on the hour · quiet 10 PM–8 AM'**
+  String get settingsHourlyChimeDesc;
+
+  /// No description provided for @hourlyChimeSpoken.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s {time}'**
+  String hourlyChimeSpoken(String time);
 }
 
 class _AppLocalizationsDelegate
