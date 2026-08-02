@@ -65,9 +65,8 @@ class _PresetEditPageState extends State<PresetEditPage> {
   void _reorder(int oldI, int newI) {
     setState(() {
       final n = [..._segs];
-      final moved = n.removeAt(oldI);
-      // 표준 onReorder: newIndex 는 '제거 전' 기준이라 뒤로 미는 경우 보정.
-      n.insert(newI > oldI ? newI - 1 : newI, moved);
+      // onReorderItem: newIndex 가 이미 '제거 후' 기준으로 보정되어 온다.
+      n.insert(newI, n.removeAt(oldI));
       _segs = n;
     });
   }
@@ -128,6 +127,8 @@ class _PresetEditPageState extends State<PresetEditPage> {
           TextField(
             controller: _nameCtrl,
             style: const TextStyle(color: AppColors.text, fontSize: 14),
+            // Enter = 첫 세그먼트 필드로 — Tab과 같은 흐름을 Enter에도.
+            textInputAction: TextInputAction.next,
             decoration: InputDecoration(
               hintText: l.presetNameHint,
               hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
@@ -153,7 +154,7 @@ class _PresetEditPageState extends State<PresetEditPage> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             buildDefaultDragHandles: false,
-            onReorder: _reorder,
+            onReorderItem: _reorder,
             children: [
               for (final e in _segs.asMap().entries)
                 _EditSegRow(
@@ -309,6 +310,8 @@ class _EditSegRowState extends State<_EditSegRow> {
                 contentPadding: EdgeInsets.zero,
               ),
               onChanged: (_) => _emit(),
+              // Enter = 분 필드로 (삭제 아이콘은 포커스 안 받음)
+              textInputAction: TextInputAction.next,
             ),
           ),
           SizedBox(
@@ -331,6 +334,8 @@ class _EditSegRowState extends State<_EditSegRow> {
                 contentPadding: const EdgeInsets.symmetric(vertical: 6),
               ),
               onChanged: (_) => _emit(),
+              // Enter = 다음 세그먼트 이름으로 — 연속 편집 흐름
+              textInputAction: TextInputAction.next,
             ),
           ),
           const SizedBox(width: 5),
