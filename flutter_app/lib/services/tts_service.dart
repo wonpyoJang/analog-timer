@@ -57,8 +57,11 @@ class TtsService {
   }
 
   /// 정각 시보 토글 — [sample] 이 있으면 켜는 즉시 미리듣기.
-  Future<void> setHourlyChime(bool v,
-      {String? sample, String? localeTag}) async {
+  Future<void> setHourlyChime(
+    bool v, {
+    String? sample,
+    String? localeTag,
+  }) async {
     hourlyChimeListenable.value = v;
     try {
       final p = await SharedPreferences.getInstance();
@@ -72,8 +75,11 @@ class TtsService {
   /// 정각 시보 판정+발화 — 시계 틱에서 호출(폴링). 조건:
   /// TTS·시보 둘 다 ON, 정각(0분), 그 시각에 미발화, 주간(08~21시).
   /// 절전 복귀로 0분을 건너뛴 시각은 발화하지 않는다(한밤 몰아서 발화 방지).
-  Future<void> maybeChimeHour(DateTime now, String text,
-      {String? localeTag}) async {
+  Future<void> maybeChimeHour(
+    DateTime now,
+    String text, {
+    String? localeTag,
+  }) async {
     if (!enabled || !hourlyChime) return;
     if (now.minute != 0) return;
     if (now.hour >= 22 || now.hour < 8) return; // 야간 무음(내장)
@@ -113,8 +119,11 @@ class TtsService {
 
   /// 음성 스타일 선택 — null 이면 시스템 기본으로 복귀.
   /// [sample] 이 있으면 곧바로 그 음성으로 미리듣기를 재생한다.
-  Future<void> setVoice(Map<String, String>? voice,
-      {String? sample, String? localeTag}) async {
+  Future<void> setVoice(
+    Map<String, String>? voice, {
+    String? sample,
+    String? localeTag,
+  }) async {
     voiceListenable.value = voice;
     _voiceApplied = false; // 다음 speak 에서 재적용
     _appliedLanguage = null;
@@ -134,8 +143,7 @@ class TtsService {
   }
 
   /// [sample] 이 있으면 켜는 즉시 읽어줘 사용자가 바로 확인할 수 있게 한다.
-  Future<void> setEnabled(bool v,
-      {String? sample, String? localeTag}) async {
+  Future<void> setEnabled(bool v, {String? sample, String? localeTag}) async {
     enabledListenable.value = v;
     try {
       final p = await SharedPreferences.getInstance();

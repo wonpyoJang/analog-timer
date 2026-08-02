@@ -98,5 +98,7 @@
   "settingsHaptics": "Umpan balik haptik",
   "settingsHapticsDesc": "Getar saat mulai, jeda, dan selesai",
   "settingsColorblind": "Mode buta warna",
-  "settingsColorblindDesc": "Bedakan stopwatch dengan pola putus-putus, bukan hanya warna"
+  "settingsColorblindDesc": "Bedakan stopwatch dengan pola putus-putus, bukan hanya warna",
+  "settingsHighContrast": "Kontras tinggi",
+  "settingsHighContrastDesc": "Cerahkan teks sekunder agar mudah dibaca"
 }

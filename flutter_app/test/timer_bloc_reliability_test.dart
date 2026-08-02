@@ -11,10 +11,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   List<Segment> segs3() => [
-        Segment(name: 'A', minutes: 5, color: const Color(0xFFE07A52)),
-        Segment(name: 'B', minutes: 5, color: const Color(0xFF52B0E0)),
-        Segment(name: 'C', minutes: 5, color: const Color(0xFF2EA84A)),
-      ];
+    Segment(name: 'A', minutes: 5, color: const Color(0xFFE07A52)),
+    Segment(name: 'B', minutes: 5, color: const Color(0xFF52B0E0)),
+    Segment(name: 'C', minutes: 5, color: const Color(0xFF2EA84A)),
+  ];
 
   Future<TimerBloc> startedBloc({bool loop = false}) async {
     final b = TimerBloc();
@@ -56,8 +56,7 @@ void main() {
     await b.close();
   });
 
-  test('[회귀] loop-wrap Next: 일시정지 후 Next 로 루프를 감아도 타이머가 흐른다',
-      () async {
+  test('[회귀] loop-wrap Next: 일시정지 후 Next 로 루프를 감아도 타이머가 흐른다', () async {
     final b = await startedBloc(loop: true);
     // 마지막 세그(C)로 이동
     b.add(TimerNext());
@@ -75,8 +74,11 @@ void main() {
     // 티커가 실제로 돌면 ~50ms 안에 segRemainMs 가 줄어든다 (dead-code 회귀 감지)
     final before = b.state.segRemainMs;
     await Future<void>.delayed(const Duration(milliseconds: 120));
-    expect(b.state.segRemainMs, lessThan(before),
-        reason: '티커 미기동 — loop-wrap _startTicker dead code 회귀');
+    expect(
+      b.state.segRemainMs,
+      lessThan(before),
+      reason: '티커 미기동 — loop-wrap _startTicker dead code 회귀',
+    );
     await b.close();
   });
 
@@ -117,8 +119,11 @@ void main() {
     b.add(const TimerTick(15 * 60 * 1000));
     await Future<void>.delayed(Duration.zero);
     expect(b.state.log.length, 300);
-    expect(b.state.logSeq, greaterThan(lastSeq),
-        reason: '캡 도달 후 신규 로그 감지 불가 — length 기반 diff 회귀');
+    expect(
+      b.state.logSeq,
+      greaterThan(lastSeq),
+      reason: '캡 도달 후 신규 로그 감지 불가 — length 기반 diff 회귀',
+    );
     await b.close();
   });
 
@@ -131,8 +136,11 @@ void main() {
     b.add(const TimerTick(-5000));
     await Future<void>.delayed(Duration.zero);
     expect(b.state.segRemainMs, lessThanOrEqualTo(before));
-    expect(b.state.segRemainMs, greaterThan(before - 6000),
-        reason: '음수 tick 으로 시간이 거꾸로/과소비되면 안 됨');
+    expect(
+      b.state.segRemainMs,
+      greaterThan(before - 6000),
+      reason: '음수 tick 으로 시간이 거꾸로/과소비되면 안 됨',
+    );
     await b.close();
   });
 
@@ -142,13 +150,15 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     final seqBefore = b.state.logSeq;
     expect(seqBefore, greaterThan(0));
-    b.add(TimerRestore(
-      segments: segs3(),
-      currentSeg: 1,
-      segRemainMs: 60 * 1000,
-      status: TimerStatus.paused,
-      loop: false,
-    ));
+    b.add(
+      TimerRestore(
+        segments: segs3(),
+        currentSeg: 1,
+        segRemainMs: 60 * 1000,
+        status: TimerStatus.paused,
+        loop: false,
+      ),
+    );
     await Future<void>.delayed(Duration.zero);
     expect(b.state.log, isEmpty);
     expect(b.state.logSeq, seqBefore); // 감소하지 않음

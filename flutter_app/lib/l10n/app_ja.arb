@@ -98,5 +98,7 @@
   "settingsHaptics": "触覚フィードバック",
   "settingsHapticsDesc": "開始・一時停止・完了時に振動",
   "settingsColorblind": "色覚モード",
-  "settingsColorblindDesc": "ストップウォッチを色でなく点線で区別"
+  "settingsColorblindDesc": "ストップウォッチを色でなく点線で区別",
+  "settingsHighContrast": "ハイコントラスト",
+  "settingsHighContrastDesc": "補助テキストを明るくして読みやすく"
 }

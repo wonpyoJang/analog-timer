@@ -32,17 +32,20 @@ void main() {
     bool never = false,
     bool done = false,
   }) {
-    File('${tmp.path}${Platform.pathSeparator}analog_timer_review.json')
-        .writeAsStringSync(jsonEncode({
-      'review_sessions_count': sessions,
-      if (firstRunAgoDays != null)
-        'review_first_run_ms': now - firstRunAgoDays * day,
-      'review_prompt_count': promptCount,
-      if (lastPromptAgoDays != null)
-        'review_last_prompt_ms': now - lastPromptAgoDays * day,
-      'review_dismissed_forever': never,
-      'review_done': done,
-    }));
+    File(
+      '${tmp.path}${Platform.pathSeparator}analog_timer_review.json',
+    ).writeAsStringSync(
+      jsonEncode({
+        'review_sessions_count': sessions,
+        if (firstRunAgoDays != null)
+          'review_first_run_ms': now - firstRunAgoDays * day,
+        'review_prompt_count': promptCount,
+        if (lastPromptAgoDays != null)
+          'review_last_prompt_ms': now - lastPromptAgoDays * day,
+        'review_dismissed_forever': never,
+        'review_done': done,
+      }),
+    );
   }
 
   test('모든 조건 충족 시 노출', () async {
@@ -92,9 +95,13 @@ void main() {
   test('recordPromptShown 이 count/시각 기록 + 즉시 재노출 차단', () async {
     seed();
     await svc.recordPromptShown();
-    final saved = jsonDecode(
-        File('${tmp.path}${Platform.pathSeparator}analog_timer_review.json')
-            .readAsStringSync()) as Map<String, dynamic>;
+    final saved =
+        jsonDecode(
+              File(
+                '${tmp.path}${Platform.pathSeparator}analog_timer_review.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, dynamic>;
     expect(saved['review_prompt_count'], 1);
     expect(saved['review_last_prompt_ms'], isNotNull);
     expect(await svc.shouldPrompt(), false);
@@ -103,9 +110,13 @@ void main() {
   test('dismissForever/markDone 이 기존 상태 보존하며 플래그만 추가', () async {
     seed(promptCount: 2, lastPromptAgoDays: 20);
     await svc.dismissForever();
-    final saved = jsonDecode(
-        File('${tmp.path}${Platform.pathSeparator}analog_timer_review.json')
-            .readAsStringSync()) as Map<String, dynamic>;
+    final saved =
+        jsonDecode(
+              File(
+                '${tmp.path}${Platform.pathSeparator}analog_timer_review.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, dynamic>;
     expect(saved['review_dismissed_forever'], true);
     expect(saved['review_prompt_count'], 2); // 기존 카운트 유지
     expect(await svc.shouldPrompt(), false);

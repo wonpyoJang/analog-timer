@@ -18,8 +18,10 @@ import 'platform_info.dart';
 /// (fail-safe: 최악이 '현행 유지'가 되도록).
 final DynamicLibrary _user32 = DynamicLibrary.open('user32.dll');
 final int Function(int, Pointer<IntPtr>) _getKeyboardLayoutList = _user32
-    .lookupFunction<Int32 Function(Int32, Pointer<IntPtr>),
-        int Function(int, Pointer<IntPtr>)>('GetKeyboardLayoutList');
+    .lookupFunction<
+      Int32 Function(Int32, Pointer<IntPtr>),
+      int Function(int, Pointer<IntPtr>)
+    >('GetKeyboardLayoutList');
 
 /// AltGr 를 쓰지 않는 것이 확실한 자판 언어 ID 허용 목록.
 /// (전체 LANGID — en-GB(0x0809)는 AltGr 가 있어 primary 언어만으로는

@@ -98,5 +98,7 @@
   "settingsHaptics": "Haptisches Feedback",
   "settingsHapticsDesc": "Vibrieren bei Start, Pause und Abschluss",
   "settingsColorblind": "Farbenblind-Modus",
-  "settingsColorblindDesc": "Stoppuhr per gestricheltem Muster unterscheiden, nicht nur per Farbe"
+  "settingsColorblindDesc": "Stoppuhr per gestricheltem Muster unterscheiden, nicht nur per Farbe",
+  "settingsHighContrast": "Hoher Kontrast",
+  "settingsHighContrastDesc": "Sekundärtext zur besseren Lesbarkeit aufhellen"
 }

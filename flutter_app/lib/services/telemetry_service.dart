@@ -27,16 +27,17 @@ class TelemetryService {
 
   /// 정상 종료 마커 — 네이티브 종료 직전(main.cpp)과 Dart 양쪽이 남긴다.
   /// 시작 시 존재하면 직전 세션이 정상 종료된 것. 없으면 크래시(첫 실행 제외).
-  File get _cleanFlag =>
-      File('${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_clean.flag');
+  File get _cleanFlag => File(
+    '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_clean.flag',
+  );
 
   /// crumb/heartbeat 공용 데이터 디렉토리.
   /// systemTemp 는 위젯 엔진 teardown 시 Flutter 가 정리하며 같이 지워질 수 있어,
   /// 앱 데이터 디렉토리(prefs 옆)에 둔다.
   String get _dataBase =>
       (Platform.isWindows && Platform.environment['APPDATA'] != null)
-          ? '${Platform.environment['APPDATA']}\\dev.analogtimer\\analog_timer'
-          : Directory.systemTemp.path;
+      ? '${Platform.environment['APPDATA']}\\dev.analogtimer\\analog_timer'
+      : Directory.systemTemp.path;
 
   /// breadcrumb 전용 파일 — SharedPreferences 는 메인/위젯 엔진이 각자 캐시를
   /// 통째로 파일에 flush 하므로, 위젯이 prefs 를 쓰면(위치/스케일) 메인이 추가한
@@ -95,10 +96,12 @@ class TelemetryService {
       try {
         // 부모 디렉토리 보장 — 첫 실행/재설치 직후엔 아직 없을 수 있다.
         await _heartbeatFile.parent.create(recursive: true);
-        await _heartbeatFile.writeAsString(jsonEncode({
-          't': DateTime.now().millisecondsSinceEpoch,
-          'frame': _lastFrameMs == 0 ? null : _lastFrameMs,
-        }));
+        await _heartbeatFile.writeAsString(
+          jsonEncode({
+            't': DateTime.now().millisecondsSinceEpoch,
+            'frame': _lastFrameMs == 0 ? null : _lastFrameMs,
+          }),
+        );
       } catch (_) {}
     }
 
@@ -106,15 +109,21 @@ class TelemetryService {
     _heartbeatTimer?.cancel();
     // 10초 주기 — 네이티브 워치독의 Dart 프리즈 감지(60초 정체 판정)가 충분히
     // 빠르게 반응하도록. 쓰기 부하는 수십 바이트 파일 하나라 무시 가능.
-    _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) => beat());
+    _heartbeatTimer = Timer.periodic(
+      const Duration(seconds: 10),
+      (_) => beat(),
+    );
   }
 
   /// 복구 이벤트 보고 — 자동/수동 복구가 "왜, 어떤 상태에서" 발동했는지 서버에
   /// 남긴다(type: 'recovery'). 재시작 직전에 불려도 유실되지 않도록 prefs 큐에
   /// 먼저 적재하고 곧바로 전송을 시도한다 — 실패분은 다음 실행 init 이 재전송.
   /// 디버깅 컨텍스트(당시 프레임 나이·tdr 마커·타이머 상태·breadcrumbs) 자동 동봉.
-  Future<void> reportRecovery(String kind,
-      {String? message, Map<String, dynamic>? extra}) async {
+  Future<void> reportRecovery(
+    String kind, {
+    String? message,
+    Map<String, dynamic>? extra,
+  }) async {
     if (!supported) return;
     try {
       final p = await SharedPreferences.getInstance();
@@ -140,7 +149,9 @@ class TelemetryService {
   }
 
   Future<void> _enqueueEvent(
-      SharedPreferences p, Map<String, dynamic> ev) async {
+    SharedPreferences p,
+    Map<String, dynamic> ev,
+  ) async {
     final list = (jsonDecode(p.getString(_kPendingEvents) ?? '[]') as List)
         .toList();
     list.add(ev);
@@ -168,10 +179,13 @@ class TelemetryService {
   /// 경합이 있어 쓰지 않고(breadcrumb 파일 분리와 같은 이유) systemTemp 파일
   /// 마커로 남긴다. 다음 실행의 _reportRecoveryMarkersIfAny 가 보고.
   Future<void> writeRecoveryMarker(
-      String name, Map<String, dynamic> data) async {
+    String name,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final f = File(
-          '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_$name.json');
+        '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_$name.json',
+      );
       await f.writeAsString(jsonEncode(data));
     } catch (_) {}
   }
@@ -186,7 +200,8 @@ class TelemetryService {
     for (final name in ['freeze_restart', 'janitor', 'widget_restart']) {
       try {
         final f = File(
-            '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_$name.json');
+          '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_$name.json',
+        );
         if (!await f.exists()) continue;
         final mtime = (await f.lastModified()).millisecondsSinceEpoch;
         final key = 'telemetry_rcv_${name}_ms';
@@ -194,8 +209,8 @@ class TelemetryService {
         await p.setInt(key, mtime);
         Map<String, dynamic> content = {};
         try {
-          content =
-              (jsonDecode(await f.readAsString()) as Map).cast<String, dynamic>();
+          content = (jsonDecode(await f.readAsString()) as Map)
+              .cast<String, dynamic>();
         } catch (_) {}
         await _enqueueEvent(p, <String, dynamic>{
           'type': 'recovery',
@@ -220,7 +235,8 @@ class TelemetryService {
     if (!Platform.isWindows) return {'exists': false};
     try {
       final flag = File(
-          '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_tdr.flag');
+        '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_tdr.flag',
+      );
       if (!await flag.exists()) return {'exists': false};
       final mtime = await flag.lastModified();
       return {
@@ -237,8 +253,7 @@ class TelemetryService {
   /// 사용후기 유도 등 "나쁜 경험 직후엔 하지 말아야 할 것"의 가드로 쓴다.
   bool lastSessionCrashed = false;
 
-  bool get supported =>
-      !kIsWeb && (Platform.isWindows || Platform.isMacOS);
+  bool get supported => !kIsWeb && (Platform.isWindows || Platform.isMacOS);
 
   /// 동의 상태 — true/false/null(아직 안 물음).
   Future<bool?> consent() async {
@@ -300,8 +315,7 @@ class TelemetryService {
       final crash = <String, dynamic>{
         'type': 'crash',
         'crashKind': 'native',
-        'message':
-            '비정상 종료 감지 — 이전 세션이 정상 종료 플래그를 남기지 못함(네이티브 크래시 가능성)',
+        'message': '비정상 종료 감지 — 이전 세션이 정상 종료 플래그를 남기지 못함(네이티브 크래시 가능성)',
         'lastState': lastStateRaw != null ? jsonDecode(lastStateRaw) : null,
         'breadcrumbs': prevCrumbs.isNotEmpty ? prevCrumbs : null,
         // 진단: 워치독 tdr 마커 + 직전 heartbeat.
@@ -343,7 +357,8 @@ class TelemetryService {
     if (!Platform.isWindows) return;
     try {
       final flag = File(
-          '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_tdr.flag');
+        '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_tdr.flag',
+      );
       if (!await flag.exists()) return;
       final mtime = (await flag.lastModified()).millisecondsSinceEpoch;
       const kReported = 'telemetry_tdr_reported_ms';
@@ -352,8 +367,7 @@ class TelemetryService {
       final crash = <String, dynamic>{
         'type': 'crash',
         'crashKind': 'tdr_restart',
-        'message':
-            'GPU TDR(드라이버 리셋) 감지 → 워치독이 앱 자가 재시작 (렌더 서피스 사망 복구)',
+        'message': 'GPU TDR(드라이버 리셋) 감지 → 워치독이 앱 자가 재시작 (렌더 서피스 사망 복구)',
         'lastState': {'tdrFlagMtime': mtime},
       };
       await p.setString(_kPending, jsonEncode(crash));
@@ -400,8 +414,11 @@ class TelemetryService {
   /// 무제한 전송 시 HttpClient 소켓이 초당 수십 개씩 누적된다.
   DateTime? _lastDartReport;
   String? _lastDartMessage;
-  Future<void> reportDartError(Object error, StackTrace? stack,
-      {Map<String, dynamic>? lastState}) async {
+  Future<void> reportDartError(
+    Object error,
+    StackTrace? stack, {
+    Map<String, dynamic>? lastState,
+  }) async {
     if (!supported) return;
     final now = DateTime.now();
     final msg = error.toString();
@@ -425,9 +442,10 @@ class TelemetryService {
   /// 크래시 감지(마커)에 안 걸리므로, 이 순간 직접 리포트한다(그 시점 GPU TDR/
   /// 이벤트로그 포함). 친구 증상 "위젯 혼자 반복적으로 사라짐"을 실시간 캡처하는 경로.
   DateTime? _lastWidgetReport;
-  Future<void> reportWidgetGone(
-      {Map<String, dynamic>? lastState,
-      List<Map<String, dynamic>>? breadcrumbsOverride}) async {
+  Future<void> reportWidgetGone({
+    Map<String, dynamic>? lastState,
+    List<Map<String, dynamic>>? breadcrumbsOverride,
+  }) async {
     if (!supported || !_enabled) return;
     // 반복 재생성 환경에서 과도한 전송 방지 — 최소 30초 간격.
     final now = DateTime.now();
@@ -493,7 +511,8 @@ class TelemetryService {
     final bc = crash['breadcrumbs'];
     if (bc is List && bc.isNotEmpty) {
       final lastT = (bc.last['t'] as num?)?.toInt();
-      if (lastT != null && (sinceMs == null || lastT > sinceMs)) sinceMs = lastT;
+      if (lastT != null && (sinceMs == null || lastT > sinceMs))
+        sinceMs = lastT;
     }
     crash['eventLog'] = await _collectEventLog(sinceMs: sinceMs);
     if (await _send(crash)) await p.remove(_kPending);
@@ -538,8 +557,8 @@ class TelemetryService {
         'platform': Platform.isWindows
             ? 'windows'
             : Platform.isMacOS
-                ? 'macos'
-                : 'other',
+            ? 'macos'
+            : 'other',
         'osVersion': Platform.operatingSystemVersion,
       };
       if (Platform.isWindows) {
@@ -580,8 +599,11 @@ class TelemetryService {
           r"Where-Object { $_.Message -match 'analog_timer|flutter|0xc0000005|0xc0000409' } | "
           r"Select-Object -First 6 | "
           r"ForEach-Object { '[APP] ' + $_.TimeCreated.ToString('MM-dd HH:mm:ss') + ' ' + $_.ProviderName + ': ' + ($_.Message.Split([char]10))[0] }";
-      final r = await Process.run('powershell', ['-NoProfile', '-Command', ps])
-          .timeout(const Duration(seconds: 10));
+      final r = await Process.run('powershell', [
+        '-NoProfile',
+        '-Command',
+        ps,
+      ]).timeout(const Duration(seconds: 10));
       final s = (r.stdout as String).trim();
       if (s.isNotEmpty) out.add(s);
     } catch (_) {}
@@ -593,8 +615,11 @@ class TelemetryService {
           r"-MaxEvents 8 -ErrorAction SilentlyContinue | "
           r"Select-Object -First 8 | "
           r"ForEach-Object { '[TDR/' + $_.Id + '] ' + $_.TimeCreated.ToString('MM-dd HH:mm:ss') + ' ' + $_.ProviderName + ': ' + ($_.Message.Split([char]10))[0] }";
-      final r = await Process.run('powershell', ['-NoProfile', '-Command', ps])
-          .timeout(const Duration(seconds: 10));
+      final r = await Process.run('powershell', [
+        '-NoProfile',
+        '-Command',
+        ps,
+      ]).timeout(const Duration(seconds: 10));
       final s = (r.stdout as String).trim();
       if (s.isNotEmpty) out.add(s);
     } catch (_) {}
@@ -604,6 +629,8 @@ class TelemetryService {
   String _genId() {
     final rnd = Random.secure();
     return List.generate(
-        16, (_) => rnd.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+      16,
+      (_) => rnd.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
   }
 }

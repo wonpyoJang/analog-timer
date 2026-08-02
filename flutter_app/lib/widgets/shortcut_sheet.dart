@@ -11,31 +11,40 @@ Future<void> showShortcutSheet(BuildContext context) {
   // 시안 결정 1: 조합 표기는 어디서나 키캡 분리형(KeyCaps)으로 통일.
   Widget key(String combo) => KeyCaps(combo: combo, fontSize: 12);
   Widget row(String label, List<String> combos) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-        child: Row(
-          children: [
-            Expanded(
-                child: Text(label,
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.text))),
-            for (var i = 0; i < combos.length; i++) ...[
-              if (i > 0)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 5),
-                  child: Text('·',
-                      style: TextStyle(color: AppColors.muted, fontSize: 12)),
-                ),
-              key(combos[i]),
-            ],
-          ],
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 13, color: AppColors.text),
+          ),
         ),
-      );
+        for (var i = 0; i < combos.length; i++) ...[
+          if (i > 0)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 5),
+              child: Text(
+                '·',
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
+              ),
+            ),
+          key(combos[i]),
+        ],
+      ],
+    ),
+  );
   Widget section(String title) => Padding(
-        padding: const EdgeInsets.fromLTRB(18, 14, 18, 4),
-        child: Text(title,
-            style: const TextStyle(
-                fontSize: 11, letterSpacing: 1.4, color: AppColors.faint)),
-      );
+    padding: const EdgeInsets.fromLTRB(18, 14, 18, 4),
+    child: Text(
+      title,
+      style: TextStyle(
+        fontSize: 11,
+        letterSpacing: 1.4,
+        color: AppColors.faint,
+      ),
+    ),
+  );
 
   return showModalBottomSheet<void>(
     context: context,
@@ -50,22 +59,27 @@ Future<void> showShortcutSheet(BuildContext context) {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 2, 18, 2),
-            child: Text(l.shortcutSheetTitle,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.text)),
+            child: Text(
+              l.shortcutSheetTitle,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
+            ),
           ),
           if (isDesktop) ...[
             section(l.shortcutGlobalSection),
-            row(l.shortcutTimerToggle,
-                [HotkeyService.instance.describe('timer_toggle')]),
-            row(l.shortcutTimerNext,
-                [HotkeyService.instance.describe('timer_next')]),
-            row(l.shortcutSwLap,
-                [HotkeyService.instance.describe('sw_lap')]),
-            row(l.shortcutWidgetFocus,
-                [HotkeyService.instance.describe('widget_focus')]),
+            row(l.shortcutTimerToggle, [
+              HotkeyService.instance.describe('timer_toggle'),
+            ]),
+            row(l.shortcutTimerNext, [
+              HotkeyService.instance.describe('timer_next'),
+            ]),
+            row(l.shortcutSwLap, [HotkeyService.instance.describe('sw_lap')]),
+            row(l.shortcutWidgetFocus, [
+              HotkeyService.instance.describe('widget_focus'),
+            ]),
           ],
           section(l.shortcutInAppSection),
           row(l.shortcutTimerToggle, const ['Space']),
@@ -75,8 +89,7 @@ Future<void> showShortcutSheet(BuildContext context) {
           if (isDesktop) row(l.shortcutWidgetToggle, const ['W']),
           if (isDesktop)
             row(l.shortcutWidgetMove, const ['←↑→↓', 'Shift+←↑→↓']),
-          if (isDesktop)
-            row(l.shortcutWidgetAnchor, const ['1–9']),
+          if (isDesktop) row(l.shortcutWidgetAnchor, const ['1–9']),
           if (isDesktop)
             row(l.shortcutWidgetMirror, const ['Tab', 'Shift+Tab']),
           if (isDesktop) row(l.shortcutWidgetBlur, const ['Esc']),

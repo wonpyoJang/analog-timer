@@ -98,5 +98,7 @@
   "settingsHaptics": "Respuesta háptica",
   "settingsHapticsDesc": "Vibrar al iniciar, pausar y completar",
   "settingsColorblind": "Modo daltónico",
-  "settingsColorblindDesc": "Distinguir el cronómetro por patrón discontinuo, no solo por color"
+  "settingsColorblindDesc": "Distinguir el cronómetro por patrón discontinuo, no solo por color",
+  "settingsHighContrast": "Alto contraste",
+  "settingsHighContrastDesc": "Aclara el texto secundario para leerlo mejor"
 }

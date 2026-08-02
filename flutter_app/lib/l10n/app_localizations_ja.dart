@@ -679,4 +679,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String hourlyChimeSpoken(String time) {
     return 'It\'s $time';
   }
+
+  @override
+  String get settingsHighContrast => 'ハイコントラスト';
+
+  @override
+  String get settingsHighContrastDesc => '補助テキストを明るくして読みやすく';
 }

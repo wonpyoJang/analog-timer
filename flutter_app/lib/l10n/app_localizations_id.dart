@@ -684,4 +684,11 @@ class AppLocalizationsId extends AppLocalizations {
   String hourlyChimeSpoken(String time) {
     return 'It\'s $time';
   }
+
+  @override
+  String get settingsHighContrast => 'Kontras tinggi';
+
+  @override
+  String get settingsHighContrastDesc =>
+      'Cerahkan teks sekunder agar mudah dibaca';
 }

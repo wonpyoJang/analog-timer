@@ -30,11 +30,7 @@ Future<void> maybeShowReviewPrompt(BuildContext context) async {
         ),
         content: Text(
           l.reviewPromptBody,
-          style: const TextStyle(
-            color: AppColors.muted,
-            fontSize: 13,
-            height: 1.5,
-          ),
+          style: TextStyle(color: AppColors.muted, fontSize: 13, height: 1.5),
         ),
         actionsAlignment: MainAxisAlignment.spaceBetween,
         actions: [
@@ -45,42 +41,45 @@ Future<void> maybeShowReviewPrompt(BuildContext context) async {
             },
             child: Text(
               l.reviewPromptNever,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: TextStyle(color: AppColors.muted, fontSize: 12),
             ),
           ),
-          Row(mainAxisSize: MainAxisSize.min, children: [
-            TextButton(
-              // "나중에" — 백오프는 recordPromptShown 이 이미 기록했으므로
-              // 그냥 닫기만 하면 다음 쿨다운 후 재노출된다.
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                l.reviewPromptLater,
-                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                // "나중에" — 백오프는 recordPromptShown 이 이미 기록했으므로
+                // 그냥 닫기만 하면 다음 쿨다운 후 재노출된다.
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  l.reviewPromptLater,
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
+                ),
               ),
-            ),
-            const SizedBox(width: 4),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.timerOrange,
+              const SizedBox(width: 4),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.timerOrange,
+                ),
+                onPressed: () async {
+                  await ReviewPromptService.instance.markDone();
+                  if (!ctx.mounted) return;
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const FeedbackPage(initialCategory: 'other'),
+                    ),
+                  );
+                },
+                child: Text(
+                  l.reviewPromptAccept,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
               ),
-              onPressed: () async {
-                await ReviewPromptService.instance.markDone();
-                if (!ctx.mounted) return;
-                Navigator.pop(ctx);
-                Navigator.push(
-                  ctx,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        const FeedbackPage(initialCategory: 'other'),
-                  ),
-                );
-              },
-              child: Text(
-                l.reviewPromptAccept,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-              ),
-            ),
-          ]),
+            ],
+          ),
         ],
       );
     },

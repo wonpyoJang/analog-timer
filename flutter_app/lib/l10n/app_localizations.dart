@@ -1352,6 +1352,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'It\'s {time}'**
   String hourlyChimeSpoken(String time);
+
+  /// No description provided for @settingsHighContrast.
+  ///
+  /// In en, this message translates to:
+  /// **'High contrast'**
+  String get settingsHighContrast;
+
+  /// No description provided for @settingsHighContrastDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Brighten secondary text for easier reading'**
+  String get settingsHighContrastDesc;
 }
 
 class _AppLocalizationsDelegate

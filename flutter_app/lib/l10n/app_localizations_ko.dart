@@ -659,4 +659,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String hourlyChimeSpoken(String time) {
     return '$time입니다';
   }
+
+  @override
+  String get settingsHighContrast => '고대비';
+
+  @override
+  String get settingsHighContrastDesc => '보조 텍스트를 더 밝게 해 가독성 향상';
 }

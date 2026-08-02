@@ -139,7 +139,9 @@ class _HotkeyRecordFieldState extends State<HotkeyRecordField> {
       child = KeyCaps(combo: _modsCombo(), fontSize: 13);
     } else if (_recorded != null) {
       child = KeyCaps(
-          combo: HotkeyService.describeHotKey(_recorded!), fontSize: 13);
+        combo: HotkeyService.describeHotKey(_recorded!),
+        fontSize: 13,
+      );
     } else {
       // 대기 — 깜빡이는 커서로 "입력을 듣고 있음"을 표현(시안).
       child = AnimatedOpacity(
@@ -193,8 +195,10 @@ class _DashedBorderPainter extends BoxPainter {
   @override
   void paint(Canvas canvas, Offset offset, ImageConfiguration cfg) {
     final rect = offset & (cfg.size ?? Size.zero);
-    final rrect =
-        RRect.fromRectAndRadius(rect.deflate(0.5), const Radius.circular(10));
+    final rrect = RRect.fromRectAndRadius(
+      rect.deflate(0.5),
+      const Radius.circular(10),
+    );
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
@@ -205,7 +209,9 @@ class _DashedBorderPainter extends BoxPainter {
       var d = 0.0;
       while (d < metric.length) {
         canvas.drawPath(
-            metric.extractPath(d, (d + dash).clamp(0, metric.length)), paint);
+          metric.extractPath(d, (d + dash).clamp(0, metric.length)),
+          paint,
+        );
         d += dash + gap;
       }
     }

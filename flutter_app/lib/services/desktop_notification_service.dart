@@ -12,8 +12,9 @@ class DesktopNotificationService {
   static bool _ready = false;
 
   static const _kEnabled = 'desktop_notifications_enabled';
-  static final ValueNotifier<bool> enabledListenable =
-      ValueNotifier<bool>(true);
+  static final ValueNotifier<bool> enabledListenable = ValueNotifier<bool>(
+    true,
+  );
   static bool get enabled => enabledListenable.value;
 
   static Future<void> init() async {

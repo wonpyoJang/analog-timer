@@ -98,5 +98,7 @@
   "settingsHaptics": "触感反馈",
   "settingsHapticsDesc": "开始、暂停和完成时振动",
   "settingsColorblind": "色盲模式",
-  "settingsColorblindDesc": "用虚线而非仅颜色区分秒表"
+  "settingsColorblindDesc": "用虚线而非仅颜色区分秒表",
+  "settingsHighContrast": "高对比度",
+  "settingsHighContrastDesc": "提亮次要文字以便阅读"
 }

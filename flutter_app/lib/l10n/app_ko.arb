@@ -211,5 +211,7 @@
   "settingsColorblindDesc": "스톱워치를 색이 아닌 점선 패턴으로 구분",
   "settingsHourlyChime": "정각 시보",
   "settingsHourlyChimeDesc": "매시 정각에 시간을 읽어줘요 · 밤 10시~아침 8시는 쉬어요",
-  "hourlyChimeSpoken": "{time}입니다"
+  "hourlyChimeSpoken": "{time}입니다",
+  "settingsHighContrast": "고대비",
+  "settingsHighContrastDesc": "보조 텍스트를 더 밝게 해 가독성 향상"
 }

@@ -98,5 +98,7 @@
   "settingsHaptics": "ردود فعل لمسية",
   "settingsHapticsDesc": "اهتزاز عند البدء والإيقاف المؤقت والإكمال",
   "settingsColorblind": "وضع عمى الألوان",
-  "settingsColorblindDesc": "تمييز ساعة الإيقاف بنمط متقطع وليس باللون فقط"
+  "settingsColorblindDesc": "تمييز ساعة الإيقاف بنمط متقطع وليس باللون فقط",
+  "settingsHighContrast": "تباين عالٍ",
+  "settingsHighContrastDesc": "تفتيح النص الثانوي لتسهيل القراءة"
 }

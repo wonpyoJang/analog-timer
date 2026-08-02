@@ -67,7 +67,7 @@ class OverflowMenuButton extends StatelessWidget {
           border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const Icon(Icons.more_horiz, size: 16, color: AppColors.muted),
+        child: Icon(Icons.more_horiz, size: 16, color: AppColors.muted),
       ),
     );
   }
@@ -196,13 +196,13 @@ class OverflowMenuButton extends StatelessWidget {
               it.hint!,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11.5, color: AppColors.faint),
+              style: TextStyle(fontSize: 11.5, color: AppColors.faint),
             ),
           ),
         ],
         if (it.chevron) ...[
           const SizedBox(width: 6),
-          const Icon(Icons.chevron_right, size: 15, color: AppColors.faint),
+          Icon(Icons.chevron_right, size: 15, color: AppColors.faint),
         ],
       ],
     ),
@@ -215,7 +215,7 @@ class OverflowMenuButton extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
     child: Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 10.5,
         letterSpacing: 1.6,
         color: AppColors.faint,

@@ -64,5 +64,19 @@ void main() {
       expect(t, greaterThan(m));
       expect(m, greaterThan(f));
     });
+
+    test('고대비 모드 — muted/faint가 기본보다 더 높은 대비(AAA급)', () {
+      AppColors.highContrast = false;
+      final mBase = contrast(AppColors.muted, AppColors.bg);
+      final fBase = contrast(AppColors.faint, AppColors.bg);
+      AppColors.highContrast = true;
+      final mHC = contrast(AppColors.muted, AppColors.bg);
+      final fHC = contrast(AppColors.faint, AppColors.bg);
+      AppColors.highContrast = false; // 원복
+      expect(mHC, greaterThan(mBase));
+      expect(fHC, greaterThan(fBase));
+      expect(mHC, greaterThanOrEqualTo(7.0)); // AAA 일반
+      expect(fHC, greaterThanOrEqualTo(7.0));
+    });
   });
 }

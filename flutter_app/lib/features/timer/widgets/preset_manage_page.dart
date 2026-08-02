@@ -122,15 +122,12 @@ class _PresetManagePageState extends State<PresetManagePage> {
         ),
         content: Text(
           l.deletePresetConfirm(_userPresets[i].name),
-          style: const TextStyle(color: AppColors.muted, fontSize: 13),
+          style: TextStyle(color: AppColors.muted, fontSize: 13),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              l.cancel,
-              style: const TextStyle(color: AppColors.muted),
-            ),
+            child: Text(l.cancel, style: TextStyle(color: AppColors.muted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -282,14 +279,14 @@ class _PresetCard extends StatelessWidget {
                   summary,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                  style: TextStyle(color: AppColors.muted, fontSize: 11),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
           if (builtin) ...[
-            const Icon(Icons.lock_outline, size: 16, color: AppColors.muted),
+            Icon(Icons.lock_outline, size: 16, color: AppColors.muted),
             const SizedBox(width: 4),
             _IconBtn(
               icon: hidden ? Icons.visibility_off : Icons.visibility,

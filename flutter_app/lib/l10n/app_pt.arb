@@ -98,5 +98,7 @@
   "settingsHaptics": "Resposta tátil",
   "settingsHapticsDesc": "Vibrar ao iniciar, pausar e concluir",
   "settingsColorblind": "Modo daltônico",
-  "settingsColorblindDesc": "Distinguir o cronômetro por traço, não só por cor"
+  "settingsColorblindDesc": "Distinguir o cronômetro por traço, não só por cor",
+  "settingsHighContrast": "Alto contraste",
+  "settingsHighContrastDesc": "Clareia o texto secundário para facilitar a leitura"
 }

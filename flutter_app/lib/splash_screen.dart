@@ -111,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Focus · Time · Flow',
                 style: TextStyle(
                   fontFamily: 'Pretendard',

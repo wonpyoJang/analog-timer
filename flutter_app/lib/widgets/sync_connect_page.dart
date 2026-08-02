@@ -131,12 +131,12 @@ class _SyncConnectPageState extends State<SyncConnectPage> {
               const SizedBox(height: 8),
               Text(
                 l.syncRoomLabel(SyncService.instance.roomId ?? ''),
-                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                style: TextStyle(color: AppColors.muted, fontSize: 13),
               ),
               const SizedBox(height: 6),
               Text(
                 l.syncRoomDesc,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 12,
                   height: 1.5,
@@ -176,7 +176,7 @@ class _SyncConnectPageState extends State<SyncConnectPage> {
               const SizedBox(height: 6),
               Text(
                 l.syncInviteDesc,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 12,
                   height: 1.5,
@@ -199,7 +199,7 @@ class _SyncConnectPageState extends State<SyncConnectPage> {
               const SizedBox(height: 6),
               Text(
                 l.syncJoinDesc,
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
               ),
               const SizedBox(height: 12),
               Row(
@@ -292,7 +292,7 @@ class _SyncConnectPageState extends State<SyncConnectPage> {
           const SizedBox(height: 4),
           Text(
             l.syncExpiry,
-            style: const TextStyle(color: AppColors.muted, fontSize: 11),
+            style: TextStyle(color: AppColors.muted, fontSize: 11),
           ),
         ],
       );
@@ -328,7 +328,7 @@ class _SyncConnectPageState extends State<SyncConnectPage> {
 
   InputDecoration _dec(String hint) => InputDecoration(
     hintText: hint,
-    hintStyle: const TextStyle(color: AppColors.muted),
+    hintStyle: TextStyle(color: AppColors.muted),
     isDense: true,
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     enabledBorder: OutlineInputBorder(

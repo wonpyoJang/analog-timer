@@ -679,6 +679,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String hourlyChimeSpoken(String time) {
     return 'It\'s $time';
   }
+
+  @override
+  String get settingsHighContrast => '高对比度';
+
+  @override
+  String get settingsHighContrastDesc => '提亮次要文字以便阅读';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -999,4 +1005,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsColorblindDesc => '用虛線而非僅顏色區分碼錶';
+
+  @override
+  String get settingsHighContrast => '高對比度';
+
+  @override
+  String get settingsHighContrastDesc => '提亮次要文字以便閱讀';
 }

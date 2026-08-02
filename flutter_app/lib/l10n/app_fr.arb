@@ -98,5 +98,7 @@
   "settingsHaptics": "Retour haptique",
   "settingsHapticsDesc": "Vibrer au démarrage, en pause et à la fin",
   "settingsColorblind": "Mode daltonien",
-  "settingsColorblindDesc": "Distinguer le chronomètre par des pointillés, pas seulement la couleur"
+  "settingsColorblindDesc": "Distinguer le chronomètre par des pointillés, pas seulement la couleur",
+  "settingsHighContrast": "Contraste élevé",
+  "settingsHighContrastDesc": "Éclaircir le texte secondaire pour une meilleure lisibilité"
 }

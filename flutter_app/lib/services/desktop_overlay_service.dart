@@ -231,14 +231,16 @@ class DesktopOverlayService {
     // '위젯 단독 사라짐'을 어드민에서 볼 수 있게 한다.
     // 위젯 재생성 직전에 breadcrumb 를 읽어둔다(재생성 중엔 파일 접근이 깨짐).
     final crumbs = await TelemetryService.instance.snapshotCrumbs();
-    unawaited(TelemetryService.instance.reportWidgetGone(
-      lastState: {
-        'overlayOn': true,
-        'event': 'auto_recreate',
-        'recreateCount': _recreateCount,
-      },
-      breadcrumbsOverride: crumbs,
-    ));
+    unawaited(
+      TelemetryService.instance.reportWidgetGone(
+        lastState: {
+          'overlayOn': true,
+          'event': 'auto_recreate',
+          'recreateCount': _recreateCount,
+        },
+        breadcrumbsOverride: crumbs,
+      ),
+    );
 
     // IPC 만 일시 실패한 '살아있는 창'일 수도 있다 — 그대로 버리면 update 를
     // 영영 못 받는 always-on-top 유령이 된다. 베스트에포트로 숨기고 교체한다.

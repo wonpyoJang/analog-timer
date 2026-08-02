@@ -98,5 +98,7 @@
   "settingsHaptics": "हैप्टिक फ़ीडबैक",
   "settingsHapticsDesc": "आरंभ, विराम और पूर्णता पर कंपन",
   "settingsColorblind": "वर्णांध मोड",
-  "settingsColorblindDesc": "स्टॉपवॉच को केवल रंग नहीं, धराशायी पैटर्न से पहचानें"
+  "settingsColorblindDesc": "स्टॉपवॉच को केवल रंग नहीं, धराशायी पैटर्न से पहचानें",
+  "settingsHighContrast": "उच्च कंट्रास्ट",
+  "settingsHighContrastDesc": "आसान पठन हेतु द्वितीयक टेक्स्ट को उज्जवल करें"
 }

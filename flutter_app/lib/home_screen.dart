@@ -1482,11 +1482,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } else {
       time = DateFormat.jm(localeTag).format(now);
     }
-    unawaited(TtsService.instance.maybeChimeHour(
-      now,
-      AppLocalizations.of(context).hourlyChimeSpoken(time),
-      localeTag: localeTag,
-    ));
+    unawaited(
+      TtsService.instance.maybeChimeHour(
+        now,
+        AppLocalizations.of(context).hourlyChimeSpoken(time),
+        localeTag: localeTag,
+      ),
+    );
   }
 
   /// 단축키 맥락 힌트 스낵바 — 방금 누른 버튼의 단축키를 1회 알려준다.
@@ -1728,10 +1730,7 @@ class _Legend extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(
-          label,
-          style: const TextStyle(color: AppColors.muted, fontSize: 11),
-        ),
+        Text(label, style: TextStyle(color: AppColors.muted, fontSize: 11)),
       ],
     );
   }

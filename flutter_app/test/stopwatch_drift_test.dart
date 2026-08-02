@@ -18,8 +18,13 @@ void main() {
     await b.close();
     final driftPct = (swMs - wallMs) / wallMs * 100;
     // ignore: avoid_print
-    print('wall=${wallMs}ms sw=${swMs}ms drift=${driftPct.toStringAsFixed(3)}%');
-    expect((swMs - wallMs).abs(), lessThan(wallMs * 0.01),
-        reason: '스톱워치 드리프트 1% 초과: wall=$wallMs sw=$swMs');
+    print(
+      'wall=${wallMs}ms sw=${swMs}ms drift=${driftPct.toStringAsFixed(3)}%',
+    );
+    expect(
+      (swMs - wallMs).abs(),
+      lessThan(wallMs * 0.01),
+      reason: '스톱워치 드리프트 1% 초과: wall=$wallMs sw=$swMs',
+    );
   });
 }

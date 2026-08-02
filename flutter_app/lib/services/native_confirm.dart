@@ -20,13 +20,18 @@ Future<bool?> nativeConfirm({
   if (!isWindows) return true; // 다른 플랫폼은 호출측이 별도 처리
   String esc(String s) => s.replaceAll("'", "''");
   // 4096(system modal) + 1(확인/취소)
-  final script = "exit (New-Object -ComObject WScript.Shell).Popup("
+  final script =
+      "exit (New-Object -ComObject WScript.Shell).Popup("
       "'${esc(message)}', $timeoutSeconds, '${esc(title)}', 4097)";
   try {
-    final r = await Process.run(
-      'powershell',
-      ['-NoProfile', '-Command', script],
-    ).timeout(Duration(seconds: timeoutSeconds > 0 ? timeoutSeconds + 20 : 600));
+    final r =
+        await Process.run('powershell', [
+          '-NoProfile',
+          '-Command',
+          script,
+        ]).timeout(
+          Duration(seconds: timeoutSeconds > 0 ? timeoutSeconds + 20 : 600),
+        );
     if (r.exitCode == 1) return true;
     if (r.exitCode == 2) return false;
     return null; // -1(타임아웃) 등

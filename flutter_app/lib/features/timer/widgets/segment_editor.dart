@@ -30,7 +30,7 @@ class SegmentEditor extends StatelessWidget {
             children: [
               Text(
                 l.timerSegments,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 11,
                   letterSpacing: 1.2,
@@ -175,7 +175,7 @@ class _SegmentRowState extends State<_SegmentRow> {
           // 드래그 핸들 — 순서 변경
           ReorderableDragStartListener(
             index: widget.index,
-            child: const MouseRegion(
+            child: MouseRegion(
               cursor: SystemMouseCursors.grab,
               child: Padding(
                 padding: EdgeInsets.only(right: 6),
@@ -252,7 +252,7 @@ class _SegmentRowState extends State<_SegmentRow> {
           const SizedBox(width: 4),
           Text(
             l.minutesUnit,
-            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+            style: TextStyle(color: AppColors.muted, fontSize: 12),
           ),
           const SizedBox(width: 4),
           AccessibleIconButton(
@@ -260,7 +260,7 @@ class _SegmentRowState extends State<_SegmentRow> {
             onTap: () => context.read<TimerBloc>().add(
               TimerSegmentRemoved(widget.index),
             ),
-            child: const Icon(Icons.close, size: 16, color: AppColors.muted),
+            child: Icon(Icons.close, size: 16, color: AppColors.muted),
           ),
         ],
       ),
@@ -288,7 +288,7 @@ class _AddButton extends StatelessWidget {
         child: Text(
           l.addSegment,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.muted, fontSize: 11),
+          style: TextStyle(color: AppColors.muted, fontSize: 11),
         ),
       ),
     );
@@ -314,7 +314,7 @@ class _LoopToggle extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           l.loopToggle,
-          style: const TextStyle(color: AppColors.muted, fontSize: 12),
+          style: TextStyle(color: AppColors.muted, fontSize: 12),
         ),
       ],
     );
