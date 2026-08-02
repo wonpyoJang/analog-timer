@@ -93,6 +93,39 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   bool _showHint = false;
   Timer? _hintTimer;
 
+  // 축소 pill 창 맞춤 — 데드존 최소화용 측정·리사이즈 상태
+  final GlobalKey _pillMeasureKey = GlobalKey();
+  Size? _lastPillWinSize;
+  bool _pillFitScheduled = false;
+
+  void _schedulePillFit() {
+    if (_pillFitScheduled) return;
+    _pillFitScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pillFitScheduled = false;
+      _fitWindowToPill();
+    });
+  }
+
+  Future<void> _fitWindowToPill() async {
+    if (_expanded || !mounted || _resizeInFlight) return;
+    final box =
+        _pillMeasureKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    // 그림자(blur 12, offset y4)까지 담을 여백 — 64 미만은 프리웜 가드에 걸림
+    final w = (box.size.width.ceil() + 16).clamp(64, _screenWidthDp);
+    final h = (box.size.height.ceil() + 20).clamp(64, 200);
+    final next = Size(w.toDouble(), h.toDouble());
+    final last = _lastPillWinSize;
+    if (last != null &&
+        (next.width - last.width).abs() < 2 &&
+        (next.height - last.height).abs() < 2) {
+      return;
+    }
+    _lastPillWinSize = next;
+    await FlutterOverlayWindow.resizeOverlay(w, h, true);
+  }
+
   int get _effectiveExpandedW {
     final custom = _customExpandedW;
     if (custom != null) {
@@ -161,6 +194,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         // command 처리 — 메인 앱에서 resizeOverlay를 직접 못 하므로 위젯이 대신 실행
         final command = map['command'] as String?;
         if (command == 'hide') {
+          _lastPillWinSize = null;
           await FlutterOverlayWindow.resizeOverlay(1, 1, true);
           return;
         }
@@ -178,6 +212,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
               if (mounted) setState(() => _showHint = false);
             });
           }
+          _lastPillWinSize = null;
           await FlutterOverlayWindow.resizeOverlay(
             _effectiveExpandedW,
             _effectiveExpandedH,
@@ -412,6 +447,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   Future<void> _setOverlaySize(int w, int h) async {
     if (_resizeInFlight) return;
     _resizeInFlight = true;
+    _lastPillWinSize = null;
     setState(() => _customExpandedW = w);
     try {
       await FlutterOverlayWindow.resizeOverlay(w, h, true);
@@ -498,6 +534,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   Future<void> _toggleExpanded(BuildContext ctx) async {
     _exitEditMode();
     if (!_expanded) {
+      _lastPillWinSize = null;
       setState(() => _expanded = true);
       await FlutterOverlayWindow.resizeOverlay(
         _effectiveExpandedW,
@@ -505,10 +542,10 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         true,
       );
     } else {
+      // 창 축소는 post-frame의 _fitWindowToPill이 pill 실측 크기로 수행
       setState(() {
         _expanded = false;
       });
-      await FlutterOverlayWindow.resizeOverlay(_effectiveExpandedW, 150, true);
       await _resetPosition();
     }
   }
@@ -925,59 +962,79 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
       borderMode = 'idle';
     }
 
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Listener(
-        onPointerDown: _onPointerDown,
-        onPointerMove: _onPointerMove,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onDoubleTap: () {
-            if (!_wasDragging) _toggleExpanded(context);
-          },
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: 44,
-              minWidth: 44,
-              maxWidth: _effectiveExpandedW.toDouble(),
+    // 매 빌드 후 pill 자연 크기에 창을 맞춤 — 투명 영역이 하부 앱
+    // 터치를 삼키는 데드존 최소화
+    _schedulePillFit();
+
+    return Stack(
+      children: [
+        // 무제약 측정용 복제본 — 창 크기와 무관한 자연 크기를 얻어
+        // FittedBox 축소로 인한 재측정 피드백 루프를 차단
+        Offstage(
+          child: UnconstrainedBox(
+            alignment: Alignment.topLeft,
+            child: KeyedSubtree(
+              key: _pillMeasureKey,
+              child: _pillVisual(borderMode),
             ),
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_chaseCtrl, _blinkCtrl]),
-              builder: (context, child) {
-                return CustomPaint(
-                  foregroundPainter: _PillBorderPainter(
-                    mode: borderMode,
-                    frac: _timerFrac,
-                    timerColor: _effectiveTimerColor,
-                    chasePhase: _chaseCtrl.value,
-                  ),
-                  child: child,
-                );
+          ),
+        ),
+        Align(
+          alignment: Alignment.topCenter,
+          child: Listener(
+            onPointerDown: _onPointerDown,
+            onPointerMove: _onPointerMove,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onDoubleTap: () {
+                if (!_wasDragging) _toggleExpanded(context);
               },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xEE1A1A1C),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFF2E2E32), width: 1),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.center,
-                  child: _buildPillContent(),
-                ),
-              ),
+              child: _pillVisual(borderMode),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _pillVisual(String borderMode) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: 44,
+        minWidth: 44,
+        maxWidth: _effectiveExpandedW.toDouble(),
+      ),
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_chaseCtrl, _blinkCtrl]),
+        builder: (context, child) {
+          return CustomPaint(
+            foregroundPainter: _PillBorderPainter(
+              mode: borderMode,
+              frac: _timerFrac,
+              timerColor: _effectiveTimerColor,
+              chasePhase: _chaseCtrl.value,
+            ),
+            child: child,
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          decoration: BoxDecoration(
+            color: const Color(0xEE1A1A1C),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFF2E2E32), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.6),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: _buildPillContent(),
           ),
         ),
       ),
