@@ -12,6 +12,18 @@ class PersistenceService {
   static const _kDpadOnLeft = 'dpad_on_left';
   static const _kOverlayPosX = 'overlay_pos_x';
   static const _kOverlayPosY = 'overlay_pos_y';
+  static const _kOverlayCustomW = 'overlay_custom_w';
+
+  /// 오버레이 사용자 지정 너비(dp) — null이면 기본 42% 공식. 오버레이 isolate 전용
+  static Future<void> saveOverlayCustomW(int w) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kOverlayCustomW, w);
+  }
+
+  static Future<int?> loadOverlayCustomW() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kOverlayCustomW);
+  }
 
   /// 오버레이 창 마지막 위치(dp, topCenter gravity 기준) — 오버레이 isolate 전용
   static Future<void> saveOverlayPos(double x, double y) async {

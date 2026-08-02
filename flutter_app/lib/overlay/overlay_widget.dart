@@ -158,6 +158,10 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     PersistenceService.loadDpadOnLeft().then((v) {
       if (mounted && v) setState(() => _dpadOnLeft = v);
     });
+    // 사용자 지정 크기 복원 — 앱 재시작 후에도 유지
+    PersistenceService.loadOverlayCustomW().then((w) {
+      if (mounted && w != null) setState(() => _customExpandedW = w);
+    });
     // 네이티브 드래그 종료 통지 — 드래그로 옮긴 위치도 저장
     _overlayCh.setMethodCallHandler((call) async {
       if (call.method == 'onDragEnd') {
@@ -491,6 +495,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   Future<void> _setOverlaySize(int w, int h) async {
     if (_resizeInFlight) return;
     setState(() => _customExpandedW = w);
+    PersistenceService.saveOverlayCustomW(w);
     // 편집 캔버스는 풀스크린 유지 — 실제 창 크기는 _finishEdit에서 반영
     if (_editMode) return;
     _resizeInFlight = true;
