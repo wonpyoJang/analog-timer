@@ -80,8 +80,10 @@ class OverflowMenuButton extends StatelessWidget {
         Overlay.of(context).context.findRenderObject() as RenderBox?;
     if (box == null || overlay == null) return;
     // 버튼 오른쪽 끝에 맞춰 아래로 펼친다(시안: top 82, right 14).
-    final anchor = box.localToGlobal(box.size.bottomRight(Offset.zero),
-        ancestor: overlay);
+    final anchor = box.localToGlobal(
+      box.size.bottomRight(Offset.zero),
+      ancestor: overlay,
+    );
     final position = RelativeRect.fromLTRB(
       anchor.dx - 252,
       anchor.dy + 6,
@@ -104,12 +106,14 @@ class OverflowMenuButton extends StatelessWidget {
           chevron: true,
           onTap: onOpenSync,
         ),
-      OverflowMenuItem(
-        icon: Icons.keyboard_outlined,
-        label: l.menuShortcuts,
-        hint: '?',
-        onTap: onShowShortcuts,
-      ),
+      // 단축키 시트는 물리 키보드가 전제 — 모바일(Android/iOS)에서는 숨긴다
+      if (isDesktop)
+        OverflowMenuItem(
+          icon: Icons.keyboard_outlined,
+          label: l.menuShortcuts,
+          hint: '?',
+          onTap: onShowShortcuts,
+        ),
     ];
     final trouble = <OverflowMenuItem>[
       // 레이블은 메뉴 전용 단문(툴팁 문장을 재사용하면 줄이 넘친다).
@@ -158,105 +162,105 @@ class OverflowMenuButton extends StatelessWidget {
   }
 
   PopupMenuItem<void> _row(OverflowMenuItem it) => PopupMenuItem<void>(
-        height: 42,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        onTap: it.onTap,
-        child: Row(
-          children: [
-            SizedBox(
-              width: 18,
-              child: Icon(it.icon,
-                  size: 15,
-                  color: it.accent ? AppColors.accent : AppColors.muted),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                it.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13.5,
-                  color: it.accent ? AppColors.accent : AppColors.text,
-                ),
-              ),
-            ),
-            // 힌트는 폭을 제한한다 — 무제한이면 긴 번역(영어·독일어)이 공간을
-            // 다 먹어 정작 레이블이 잘린다(실제 발생).
-            if (it.hint != null) ...[
-              const SizedBox(width: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 108),
-                child: Text(
-                  it.hint!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style:
-                      const TextStyle(fontSize: 11.5, color: AppColors.faint),
-                ),
-              ),
-            ],
-            if (it.chevron) ...[
-              const SizedBox(width: 6),
-              const Icon(Icons.chevron_right, size: 15, color: AppColors.faint),
-            ],
-          ],
+    height: 42,
+    padding: const EdgeInsets.symmetric(horizontal: 12),
+    onTap: it.onTap,
+    child: Row(
+      children: [
+        SizedBox(
+          width: 18,
+          child: Icon(
+            it.icon,
+            size: 15,
+            color: it.accent ? AppColors.accent : AppColors.muted,
+          ),
         ),
-      );
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            it.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13.5,
+              color: it.accent ? AppColors.accent : AppColors.text,
+            ),
+          ),
+        ),
+        // 힌트는 폭을 제한한다 — 무제한이면 긴 번역(영어·독일어)이 공간을
+        // 다 먹어 정작 레이블이 잘린다(실제 발생).
+        if (it.hint != null) ...[
+          const SizedBox(width: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 108),
+            child: Text(
+              it.hint!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11.5, color: AppColors.faint),
+            ),
+          ),
+        ],
+        if (it.chevron) ...[
+          const SizedBox(width: 6),
+          const Icon(Icons.chevron_right, size: 15, color: AppColors.faint),
+        ],
+      ],
+    ),
+  );
 
   /// 그룹 헤더 — 탭 불가(enabled:false)라 메뉴가 닫히지 않는다.
   PopupMenuItem<void> _header(String text) => PopupMenuItem<void>(
-        enabled: false,
-        height: 26,
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 10.5,
-            letterSpacing: 1.6,
-            color: AppColors.faint,
-          ),
-        ),
-      );
+    enabled: false,
+    height: 26,
+    padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontSize: 10.5,
+        letterSpacing: 1.6,
+        color: AppColors.faint,
+      ),
+    ),
+  );
 
   /// 자동 복구 안내 — 이 메뉴의 존재 이유(불안 완화)를 직접 말해주는 문구.
   PopupMenuItem<void> _note(String text) => PopupMenuItem<void>(
-        enabled: false,
-        height: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-          decoration: BoxDecoration(
-            color: AppColors.swGreen.withValues(alpha: 0.07),
-            border:
-                Border.all(color: AppColors.swGreen.withValues(alpha: 0.18)),
-            borderRadius: BorderRadius.circular(8),
+    enabled: false,
+    height: 52,
+    padding: const EdgeInsets.symmetric(horizontal: 10),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: AppColors.swGreen.withValues(alpha: 0.07),
+        border: Border.all(color: AppColors.swGreen.withValues(alpha: 0.18)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 5),
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: AppColors.swGreen,
+              shape: BoxShape.circle,
+            ),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 5),
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: AppColors.swGreen,
-                  shape: BoxShape.circle,
-                ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 11,
+                height: 1.5,
+                color: Color(0xFF8FBF9C),
               ),
-              const SizedBox(width: 7),
-              Expanded(
-                child: Text(
-                  text,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    height: 1.5,
-                    color: Color(0xFF8FBF9C),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }
