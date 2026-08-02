@@ -159,6 +159,7 @@
   "shortcutSwToggle": "스톱워치 시작/정지",
   "shortcutSwLap": "랩",
   "shortcutWidgetToggle": "위젯 켜기/끄기",
+  "shortcutWidgetMove": "위젯 이동 (위젯을 먼저 클릭)",
   "keysHintTimerToggle": "💡 Space 또는 Ctrl+Alt+Space로도 시작/일시정지할 수 있어요",
   "keysHintTimerNext": "💡 N 또는 Ctrl+Alt+N으로도 다음 세그먼트로 넘어갈 수 있어요",
   "keysHintSwToggle": "💡 S 키로도 스톱워치를 시작/정지할 수 있어요",

@@ -1035,6 +1035,12 @@ abstract class AppLocalizations {
   /// **'Toggle widget'**
   String get shortcutWidgetToggle;
 
+  /// No description provided for @shortcutWidgetMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move widget (click the widget first)'**
+  String get shortcutWidgetMove;
+
   /// No description provided for @keysHintTimerToggle.
   ///
   /// In en, this message translates to:

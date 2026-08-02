@@ -502,6 +502,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shortcutWidgetToggle => 'Toggle widget';
 
   @override
+  String get shortcutWidgetMove => 'Move widget (click the widget first)';
+
+  @override
   String get keysHintTimerToggle =>
       'Tip: Space or Ctrl+Alt+Space also starts/pauses the timer';
 
