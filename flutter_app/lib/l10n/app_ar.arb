@@ -81,5 +81,5 @@
   "planSaveAsCurrent": "حفظ كخطة",
   "planLoadIntoTimer": "تحميل في المؤقت",
   "planSave": "حفظ",
-  "overlayLongPressHint": "اضغط مطولًا على الساعة لضبط الحجم والموضع"
+  "overlayLongPressHint": "اضغط مطولًا على الساعة ثم انقر على نقطة لنقلها إلى هناك"
 }

@@ -489,5 +489,5 @@ class AppLocalizationsKo extends AppLocalizations {
   String get menuErrorReports => '오류 리포트';
 
   @override
-  String get overlayLongPressHint => '시계를 길게 누르면 크기·위치를 조절할 수 있어요';
+  String get overlayLongPressHint => '시계를 길게 누르고, 원하는 위치의 점을 탭하세요';
 }

@@ -505,5 +505,5 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get overlayLongPressHint =>
-      'Long-press the clock to adjust its size and position';
+      'Long-press the clock, then tap a dot to move it there';
 }

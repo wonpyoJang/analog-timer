@@ -505,5 +505,5 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get overlayLongPressHint =>
-      'आकार और स्थिति समायोजित करने के लिए घड़ी को देर तक दबाएँ';
+      'घड़ी को देर तक दबाएँ, फिर उसे वहाँ ले जाने के लिए किसी बिंदु पर टैप करें';
 }

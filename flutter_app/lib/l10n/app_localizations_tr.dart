@@ -505,5 +505,5 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get overlayLongPressHint =>
-      'Boyut ve konumu ayarlamak için saate uzun basın';
+      'Saate uzun basın, ardından taşımak istediğiniz noktaya dokunun';
 }

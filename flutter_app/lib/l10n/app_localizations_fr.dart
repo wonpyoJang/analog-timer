@@ -506,5 +506,5 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get overlayLongPressHint =>
-      'Appuyez longuement sur l\'horloge pour ajuster sa taille et sa position';
+      'Appuyez longuement sur l\'horloge, puis touchez un point pour la déplacer';
 }

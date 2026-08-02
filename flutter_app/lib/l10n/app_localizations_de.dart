@@ -506,5 +506,5 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get overlayLongPressHint =>
-      'Uhr gedrückt halten, um Größe und Position anzupassen';
+      'Uhr gedrückt halten und dann auf einen Punkt tippen, um sie dorthin zu verschieben';
 }

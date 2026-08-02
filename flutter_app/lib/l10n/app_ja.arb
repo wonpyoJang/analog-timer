@@ -81,5 +81,5 @@
   "planSaveAsCurrent": "計画として保存",
   "planLoadIntoTimer": "タイマーに読み込む",
   "planSave": "保存",
-  "overlayLongPressHint": "時計を長押しするとサイズと位置を調整できます"
+  "overlayLongPressHint": "時計を長押しして、移動したい位置の点をタップしてください"
 }

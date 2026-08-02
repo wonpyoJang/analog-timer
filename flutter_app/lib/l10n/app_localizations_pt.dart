@@ -506,5 +506,5 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get overlayLongPressHint =>
-      'Toque e segure o relógio para ajustar o tamanho e a posição';
+      'Toque e segure o relógio e depois toque em um ponto para movê-lo';
 }

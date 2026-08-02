@@ -81,5 +81,5 @@
   "planSaveAsCurrent": "Plan olarak kaydet",
   "planLoadIntoTimer": "Zamanlayıcıya yükle",
   "planSave": "Kaydet",
-  "overlayLongPressHint": "Boyut ve konumu ayarlamak için saate uzun basın"
+  "overlayLongPressHint": "Saate uzun basın, ardından taşımak istediğiniz noktaya dokunun"
 }

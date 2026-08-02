@@ -81,5 +81,5 @@
   "planSaveAsCurrent": "Als Plan speichern",
   "planLoadIntoTimer": "In Timer laden",
   "planSave": "Speichern",
-  "overlayLongPressHint": "Uhr gedrückt halten, um Größe und Position anzupassen"
+  "overlayLongPressHint": "Uhr gedrückt halten und dann auf einen Punkt tippen, um sie dorthin zu verschieben"
 }
