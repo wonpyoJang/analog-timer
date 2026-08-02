@@ -81,5 +81,9 @@
   "planSaveAsCurrent": "Plan olarak kaydet",
   "planLoadIntoTimer": "Zamanlayıcıya yükle",
   "planSave": "Kaydet",
-  "overlayLongPressHint": "Saate uzun basın, ardından taşımak istediğiniz noktaya dokunun"
+  "overlayLongPressHint": "Saate uzun basın, ardından taşımak istediğiniz noktaya dokunun",
+  "editCoachGrid": "Oraya taşımak için bir hücreye dokunun",
+  "editCoachDpad": "İnce ayar için oklar · tekrar için basılı tutun",
+  "editCoachControls": "⤢ Boyut · ⇄ Taraf değiştir · ✓ Bitti",
+  "editCoachDismiss": "Başlamak için herhangi bir yere dokunun"
 }

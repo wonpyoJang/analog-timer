@@ -568,4 +568,16 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get overlayLongPressHint =>
       'اضغط مطولًا على الساعة ثم انقر على نقطة لنقلها إلى هناك';
+
+  @override
+  String get editCoachGrid => 'انقر على خلية للانتقال إليها';
+
+  @override
+  String get editCoachDpad => 'الأسهم للضبط الدقيق · اضغط مطولًا للتكرار';
+
+  @override
+  String get editCoachControls => '⤢ الحجم · ⇄ تبديل الجانب · ✓ تم';
+
+  @override
+  String get editCoachDismiss => 'انقر في أي مكان للبدء';
 }

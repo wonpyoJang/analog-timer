@@ -549,4 +549,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get overlayLongPressHint => '시계를 길게 누르고, 원하는 위치의 점을 탭하세요';
+
+  @override
+  String get editCoachGrid => '탭해서 원하는 칸으로 이동';
+
+  @override
+  String get editCoachDpad => '화살표로 미세 조정 · 꾹 누르면 계속';
+
+  @override
+  String get editCoachControls => '⤢ 크기 · ⇄ 좌우 전환 · ✓ 완료';
+
+  @override
+  String get editCoachDismiss => '화면을 탭하면 시작합니다';
 }

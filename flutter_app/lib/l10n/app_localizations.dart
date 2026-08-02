@@ -1154,6 +1154,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Long-press the clock, then tap a dot to move it there'**
   String get overlayLongPressHint;
+
+  /// No description provided for @editCoachGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a cell to jump there'**
+  String get editCoachGrid;
+
+  /// No description provided for @editCoachDpad.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrows for fine-tuning · hold to repeat'**
+  String get editCoachDpad;
+
+  /// No description provided for @editCoachControls.
+  ///
+  /// In en, this message translates to:
+  /// **'⤢ Size · ⇄ Switch side · ✓ Done'**
+  String get editCoachControls;
+
+  /// No description provided for @editCoachDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap anywhere to start'**
+  String get editCoachDismiss;
 }
 
 class _AppLocalizationsDelegate

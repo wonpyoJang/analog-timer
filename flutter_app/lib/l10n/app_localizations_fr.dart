@@ -569,4 +569,17 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get overlayLongPressHint =>
       'Appuyez longuement sur l\'horloge, puis touchez un point pour la déplacer';
+
+  @override
+  String get editCoachGrid => 'Touchez une case pour vous y déplacer';
+
+  @override
+  String get editCoachDpad =>
+      'Flèches pour un réglage fin · maintenez pour répéter';
+
+  @override
+  String get editCoachControls => '⤢ Taille · ⇄ Changer de côté · ✓ Terminé';
+
+  @override
+  String get editCoachDismiss => 'Touchez n\'importe où pour commencer';
 }

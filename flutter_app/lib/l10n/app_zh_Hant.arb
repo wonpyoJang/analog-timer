@@ -81,5 +81,9 @@
   "planSaveAsCurrent": "儲存為計畫",
   "planLoadIntoTimer": "載入計時器",
   "planSave": "儲存",
-  "overlayLongPressHint": "長按時鐘，然後點按想要移動到的位置圓點"
+  "overlayLongPressHint": "長按時鐘，然後點按想要移動到的位置圓點",
+  "editCoachGrid": "點按方格即可移到該處",
+  "editCoachDpad": "方向鍵微調 · 長按可連續",
+  "editCoachControls": "⤢ 大小 · ⇄ 切換左右 · ✓ 完成",
+  "editCoachDismiss": "點按任意處開始"
 }

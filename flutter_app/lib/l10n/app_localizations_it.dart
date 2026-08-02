@@ -569,4 +569,17 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get overlayLongPressHint =>
       'Tieni premuto l\'orologio, poi tocca un punto per spostarlo lì';
+
+  @override
+  String get editCoachGrid => 'Tocca una cella per spostarti lì';
+
+  @override
+  String get editCoachDpad =>
+      'Frecce per la regolazione fine · tieni premuto per ripetere';
+
+  @override
+  String get editCoachControls => '⤢ Dimensione · ⇄ Cambia lato · ✓ Fatto';
+
+  @override
+  String get editCoachDismiss => 'Tocca ovunque per iniziare';
 }

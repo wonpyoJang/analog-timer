@@ -569,4 +569,17 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get overlayLongPressHint =>
       'Tekan lama jam, lalu ketuk titik untuk memindahkannya ke sana';
+
+  @override
+  String get editCoachGrid => 'Ketuk sel untuk pindah ke sana';
+
+  @override
+  String get editCoachDpad =>
+      'Panah untuk penyetelan halus · tahan untuk mengulang';
+
+  @override
+  String get editCoachControls => '⤢ Ukuran · ⇄ Ganti sisi · ✓ Selesai';
+
+  @override
+  String get editCoachDismiss => 'Ketuk di mana saja untuk mulai';
 }

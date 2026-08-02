@@ -81,5 +81,9 @@
   "planSaveAsCurrent": "Enregistrer comme plan",
   "planLoadIntoTimer": "Charger dans la minuterie",
   "planSave": "Sauvegarder",
-  "overlayLongPressHint": "Appuyez longuement sur l'horloge, puis touchez un point pour la déplacer"
+  "overlayLongPressHint": "Appuyez longuement sur l'horloge, puis touchez un point pour la déplacer",
+  "editCoachGrid": "Touchez une case pour vous y déplacer",
+  "editCoachDpad": "Flèches pour un réglage fin · maintenez pour répéter",
+  "editCoachControls": "⤢ Taille · ⇄ Changer de côté · ✓ Terminé",
+  "editCoachDismiss": "Touchez n'importe où pour commencer"
 }

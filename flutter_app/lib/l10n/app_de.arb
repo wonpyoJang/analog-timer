@@ -81,5 +81,9 @@
   "planSaveAsCurrent": "Als Plan speichern",
   "planLoadIntoTimer": "In Timer laden",
   "planSave": "Speichern",
-  "overlayLongPressHint": "Uhr gedrückt halten und dann auf einen Punkt tippen, um sie dorthin zu verschieben"
+  "overlayLongPressHint": "Uhr gedrückt halten und dann auf einen Punkt tippen, um sie dorthin zu verschieben",
+  "editCoachGrid": "Auf ein Feld tippen, um dorthin zu springen",
+  "editCoachDpad": "Pfeile zum Feinjustieren · halten für Wiederholung",
+  "editCoachControls": "⤢ Größe · ⇄ Seite wechseln · ✓ Fertig",
+  "editCoachDismiss": "Zum Starten irgendwo tippen"
 }

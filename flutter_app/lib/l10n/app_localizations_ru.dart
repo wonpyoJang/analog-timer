@@ -569,4 +569,17 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get overlayLongPressHint =>
       'Удерживайте часы, затем коснитесь точки, чтобы переместить их туда';
+
+  @override
+  String get editCoachGrid => 'Коснитесь ячейки, чтобы переместить';
+
+  @override
+  String get editCoachDpad =>
+      'Стрелки для точной настройки · удерживайте для повтора';
+
+  @override
+  String get editCoachControls => '⤢ Размер · ⇄ Сменить сторону · ✓ Готово';
+
+  @override
+  String get editCoachDismiss => 'Коснитесь в любом месте, чтобы начать';
 }

@@ -13,6 +13,18 @@ class PersistenceService {
   static const _kOverlayPosX = 'overlay_pos_x';
   static const _kOverlayPosY = 'overlay_pos_y';
   static const _kOverlayCustomW = 'overlay_custom_w';
+  static const _kEditCoachCount = 'edit_coach_count';
+
+  /// 편집 모드 코치 오버레이 노출 횟수 — 최대 2회 후 종료. 오버레이 isolate 전용
+  static Future<int> loadEditCoachCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kEditCoachCount) ?? 0;
+  }
+
+  static Future<void> saveEditCoachCount(int count) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kEditCoachCount, count);
+  }
 
   /// 오버레이 사용자 지정 너비(dp) — null이면 기본 42% 공식. 오버레이 isolate 전용
   static Future<void> saveOverlayCustomW(int w) async {

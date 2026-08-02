@@ -178,5 +178,9 @@
   "menuRefreshWidget": "위젯 새로고침",
   "menuRestartApp": "앱 재시작",
   "menuErrorReports": "오류 리포트",
-  "overlayLongPressHint": "시계를 길게 누르고, 원하는 위치의 점을 탭하세요"
+  "overlayLongPressHint": "시계를 길게 누르고, 원하는 위치의 점을 탭하세요",
+  "editCoachGrid": "탭해서 원하는 칸으로 이동",
+  "editCoachDpad": "화살표로 미세 조정 · 꾹 누르면 계속",
+  "editCoachControls": "⤢ 크기 · ⇄ 좌우 전환 · ✓ 완료",
+  "editCoachDismiss": "화면을 탭하면 시작합니다"
 }

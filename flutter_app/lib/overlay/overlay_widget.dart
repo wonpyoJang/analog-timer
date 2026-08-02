@@ -95,6 +95,9 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   bool _showHint = false;
   Timer? _hintTimer;
 
+  // 편집 모드 코치 오버레이 — 첫 진입 시 그리드·D-pad 사용법 라벨 (최대 2회)
+  bool _showEditCoach = false;
+
   // 축소 pill 창 맞춤 — 데드존 최소화용 측정·리사이즈 상태
   final GlobalKey _pillMeasureKey = GlobalKey();
   Size? _lastPillWinSize;
@@ -219,7 +222,12 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
           _editModeTimer?.cancel();
           _stopNudgeRepeat();
           _lastPillWinSize = null;
-          if (_editMode) setState(() => _editMode = false);
+          if (_editMode) {
+            setState(() {
+              _editMode = false;
+              _showEditCoach = false;
+            });
+          }
           await FlutterOverlayWindow.resizeOverlay(1, 1, true);
           return;
         }
@@ -232,6 +240,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
             _screenWidthDp = w;
             _expanded = true;
             _editMode = false;
+            _showEditCoach = false;
             _showHint = hint;
           });
           if (hint) {
@@ -569,6 +578,14 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
       _gridIdx = _nearestAnchorIdx(pos);
     });
     _restartEditModeTimer();
+    // 첫 진입 코치 오버레이 — 최대 2회 노출 후 종료
+    final coachCount = await PersistenceService.loadEditCoachCount();
+    if (coachCount < 2 && mounted && _editMode) {
+      setState(() => _showEditCoach = true);
+      // 코치를 읽는 동안 8초 자동 종료 중단 — 탭으로 닫을 때 타이머 재시작
+      _editModeTimer?.cancel();
+      await PersistenceService.saveEditCoachCount(coachCount + 1);
+    }
     // 온보딩 학습 완료 — 메인 앱이 힌트 카운트를 영구 종료 처리
     _sendAction('hint_learned');
     // 창을 풀스크린으로 — 컨트롤을 화면에 고정, 시계는 창 내 좌표로 이동.
@@ -587,7 +604,10 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     _stopNudgeRepeat();
     if (!_editMode) return;
     final p = _editPosToParams();
-    setState(() => _editMode = false);
+    setState(() {
+      _editMode = false;
+      _showEditCoach = false;
+    });
     await FlutterOverlayWindow.resizeOverlay(
       _effectiveExpandedW,
       _effectiveExpandedH,
@@ -796,7 +816,99 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
             child: _buildEdgePad(),
           ),
         ),
+        // 첫 진입 코치 오버레이 — 그리드·D-pad 사용법 라벨 (최상단, 탭=닫기)
+        if (_showEditCoach) _buildEditCoach(context),
       ],
+    );
+  }
+
+  Widget _buildEditCoach(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final w = _effectiveExpandedW.toDouble();
+    return Positioned.fill(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          setState(() => _showEditCoach = false);
+          _restartEditModeTimer();
+        },
+        child: Stack(
+          children: [
+            Container(color: Colors.black.withValues(alpha: 0.35)),
+            // 그리드 설명 — 시계 중앙에 겹쳐 어느 컨트롤인지 명확히
+            Positioned(
+              left: _editPos.dx,
+              width: w,
+              top: (_editPos.dy + w / 2 - 26).clamp(
+                60.0,
+                (_screenHeightDp - 140).toDouble(),
+              ),
+              child: Center(
+                child: _coachBubble(Icons.grid_view_rounded, l.editCoachGrid),
+              ),
+            ),
+            // D-pad 설명 — 도킹된 쪽, 패드 높이에 맞춰
+            Align(
+              alignment: Alignment(_dpadOnLeft ? -0.42 : 0.42, 0.34),
+              child: _coachBubble(Icons.control_camera, l.editCoachDpad),
+            ),
+            // 컨트롤 범례 + 시작 안내 — 하단 고정
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 40,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _coachBubble(Icons.tune, l.editCoachControls),
+                  const SizedBox(height: 12),
+                  Text(
+                    l.editCoachDismiss,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _coachBubble(IconData icon, String text) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 268),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xF21A1A1C),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFE07A52).withValues(alpha: 0.55),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: const Color(0xFFE07A52), size: 17),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12.5,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

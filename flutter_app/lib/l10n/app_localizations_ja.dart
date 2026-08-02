@@ -566,4 +566,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get overlayLongPressHint => '時計を長押しして、移動したい位置の点をタップしてください';
+
+  @override
+  String get editCoachGrid => 'タップした位置へ移動';
+
+  @override
+  String get editCoachDpad => '矢印で微調整・長押しで連続';
+
+  @override
+  String get editCoachControls => '⤢ サイズ · ⇄ 左右切替 · ✓ 完了';
+
+  @override
+  String get editCoachDismiss => '画面をタップして開始';
 }

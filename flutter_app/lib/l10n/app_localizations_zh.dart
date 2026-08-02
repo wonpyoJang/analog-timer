@@ -566,6 +566,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get overlayLongPressHint => '长按时钟，然后点按想要移动到的位置圆点';
+
+  @override
+  String get editCoachGrid => '点按方格即可移到该处';
+
+  @override
+  String get editCoachDpad => '方向键微调 · 长按可连续';
+
+  @override
+  String get editCoachControls => '⤢ 大小 · ⇄ 切换左右 · ✓ 完成';
+
+  @override
+  String get editCoachDismiss => '点按任意处开始';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -835,4 +847,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get overlayLongPressHint => '長按時鐘，然後點按想要移動到的位置圓點';
+
+  @override
+  String get editCoachGrid => '點按方格即可移到該處';
+
+  @override
+  String get editCoachDpad => '方向鍵微調 · 長按可連續';
+
+  @override
+  String get editCoachControls => '⤢ 大小 · ⇄ 切換左右 · ✓ 完成';
+
+  @override
+  String get editCoachDismiss => '點按任意處開始';
 }
