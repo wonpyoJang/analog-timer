@@ -423,9 +423,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (isDesktop) {
         if (overlayOn) {
           if (mounted) setState(() => _desktopOverlayOn = true);
-          try {
-            await DesktopOverlayService.instance.show(_overlayStateMap());
-          } catch (_) {}
+          // freeze 예방: 서브엔진(두 번째 D3D 디바이스) 생성을 메인 엔진
+          // 워밍업 이후로 늦춘다 — 기동 직후 두 엔진이 GPU 초기화를 경합하는
+          // 구간이 heartbeat 정지(freeze_restart)의 유력 발생 지점.
+          // 지연 후 "직전 1초 내 프레임이 나왔는지"를 확인하고 만들며,
+          // 렌더가 이미 죽어 있으면 2초 간격으로 살아날 때까지 대기한다
+          // (죽은 메인 옆에 서브엔진을 세워봐야 경합만 보탠다).
+          // 수동 Widget ON 토글은 이 경로가 아니라서 여전히 즉시 뜬다.
+          _deferredOverlayRestore();
         }
         return;
       }
@@ -771,6 +776,42 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         DesktopOverlayService.instance.hide();
         setState(() => _desktopOverlayOn = false);
     }
+  }
+
+  /// 기동 시 오버레이 복원 지연 — freeze 예방.
+  ///
+  /// 메인 엔진 워밍업(첫 프레임 후 6초)을 기다렸다가, 직전 1초 내 프레임이
+  /// 실제로 나오는지 확인한 뒤에만 서브엔진을 만든다. 렌더가 죽어 있으면
+  /// 2초 간격으로 살아날 때까지 재시도(그 동안 update 루프는 컨트롤러
+  /// 부재 상태라 재생성 백오프 경로가 함께 돌지만, show 성공 후엔 수렴).
+  static const _overlayRestoreDelay = Duration(seconds: 6);
+
+  void _deferredOverlayRestore() {
+    Timer(_overlayRestoreDelay, _tryOverlayRestore);
+  }
+
+  Future<void> _tryOverlayRestore() async {
+    if (!mounted || !_desktopOverlayOn) return; // 그 사이 사용자가 껐으면 중단
+    final frame = Completer<void>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!frame.isCompleted) frame.complete();
+    });
+    WidgetsBinding.instance.scheduleFrame();
+    bool alive;
+    try {
+      await frame.future.timeout(const Duration(seconds: 1));
+      alive = true;
+    } on TimeoutException {
+      alive = false;
+    }
+    if (!mounted || !_desktopOverlayOn) return;
+    if (!alive) {
+      Timer(const Duration(seconds: 2), _tryOverlayRestore);
+      return;
+    }
+    try {
+      await DesktopOverlayService.instance.show(_overlayStateMap());
+    } catch (_) {}
   }
 
   /// 오버레이로 보낼 현재 타이머/스톱워치 상태 스냅샷.
