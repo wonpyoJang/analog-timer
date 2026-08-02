@@ -80,10 +80,9 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
   // 핸들 탭으로 순환할 프리셋 (화면 너비 대비 비율)
   static const _sizePresets = [0.42, 0.58, 0.75];
 
-  // 위치 순환 (드래그 불가 기기 대응): ↕ 상단→중단→하단 / ↔ 중앙→좌→우
+  // 위치 그리드 (드래그 불가 기기 대응) — 현재 선택된 앵커 (row*3+col)
   static const _topY = 53.0;
-  int _posIdx = 0;
-  int _posXIdx = 0;
+  int _gridIdx = 1;
 
   // 편집 모드 — 길게 누르면 크기·위치 버튼 표시, 5초 무조작 시 자동 숨김
   bool _editMode = false;
@@ -311,7 +310,6 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     _nextFrameTimer?.cancel();
     _editModeTimer?.cancel();
     _hintTimer?.cancel();
-    _dpadRepeat?.cancel();
     _chaseCtrl.dispose();
     _blinkCtrl.dispose();
     _batteryBlinkCtrl.dispose();
@@ -375,73 +373,50 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
     }
   }
 
-  // D-pad 미세 이동 — 탭 12dp, 홀드 시 50ms마다 4dp 연속 이동
-  static const _nudgeTapStep = 12.0;
-  static const _nudgeHoldStep = 4.0;
-  Offset _dpadPos = Offset.zero;
-  Timer? _dpadRepeat;
-
-  void _applyNudgeFrom(Offset base, double dx, double dy) {
-    final maxX = (_screenWidthDp - _effectiveExpandedW) / 2 + 24;
-    final maxY = (_screenHeightDp - 160).toDouble();
-    _dpadPos = Offset(
-      (base.dx + dx).clamp(-maxX, maxX),
-      (base.dy + dy).clamp(0.0, maxY),
-    );
-    _moveOverlay(_dpadPos.dx, _dpadPos.dy);
-    _restartEditModeTimer();
-  }
-
-  Future<void> _nudgeOnce(double ux, double uy) async {
-    _applyNudgeFrom(
-      await _getOverlayPosition(),
-      ux * _nudgeTapStep,
-      uy * _nudgeTapStep,
-    );
-  }
-
-  Future<void> _startNudgeRepeat(double ux, double uy) async {
-    _dpadRepeat?.cancel();
-    _dpadPos = await _getOverlayPosition();
-    _dpadRepeat = Timer.periodic(const Duration(milliseconds: 50), (_) {
-      _applyNudgeFrom(_dpadPos, ux * _nudgeHoldStep, uy * _nudgeHoldStep);
-    });
-  }
-
-  void _stopNudgeRepeat() {
-    _dpadRepeat?.cancel();
-    _dpadRepeat = null;
-  }
-
-  Future<void> _resetPosition() {
-    _posIdx = 0;
-    _posXIdx = 0;
-    return _moveOverlay(0, _topY);
-  }
-
-  Future<void> _cycleOverlayPosition() async {
-    final winH = _expanded ? _effectiveExpandedH : 150;
-    // 하단은 네비게이션 바·제스처 영역을 피해 90dp 여유
-    final middleY = ((_screenHeightDp - winH) / 2).clamp(_topY, 5000.0);
-    final bottomY = (_screenHeightDp - winH - 90).toDouble().clamp(
-      _topY,
-      5000.0,
-    );
-    final targets = [_topY, middleY, bottomY];
-    _posIdx = (_posIdx + 1) % targets.length;
-    final pos = await _getOverlayPosition();
-    return _moveOverlay(pos.dx, targets[_posIdx]);
-  }
-
-  Future<void> _cycleOverlayPositionX() async {
+  // 3×3 위치 그리드 — 화면 9앵커 좌표 (x: 좌/중/우, y: 상/중/하)
+  ({List<double> xs, List<double> ys}) _gridAnchors() {
+    final winH = _effectiveExpandedH;
     final maxX = ((_screenWidthDp - _effectiveExpandedW) / 2).clamp(
       0.0,
       5000.0,
     );
-    final targets = [0.0, -maxX, maxX];
-    _posXIdx = (_posXIdx + 1) % targets.length;
+    final midY = ((_screenHeightDp - winH) / 2).clamp(_topY, 5000.0);
+    // 하단은 네비게이션 바·제스처 영역을 피해 90dp 여유
+    final botY = (_screenHeightDp - winH - 90).toDouble().clamp(_topY, 5000.0);
+    return (xs: [-maxX, 0.0, maxX], ys: [_topY, midY, botY]);
+  }
+
+  Future<void> _selectGridCell(int col, int row) async {
+    final a = _gridAnchors();
+    setState(() => _gridIdx = row * 3 + col);
+    _restartEditModeTimer();
+    await _moveOverlay(a.xs[col], a.ys[row]);
+  }
+
+  /// 편집 진입 시 현재 창 위치에서 가장 가까운 앵커를 하이라이트
+  Future<void> _syncGridIdx() async {
     final pos = await _getOverlayPosition();
-    return _moveOverlay(targets[_posXIdx], pos.dy);
+    final a = _gridAnchors();
+    int nearest(List<double> ts, double v) {
+      var bestIdx = 0;
+      var bestDist = double.infinity;
+      for (var i = 0; i < ts.length; i++) {
+        final d = (ts[i] - v).abs();
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = i;
+        }
+      }
+      return bestIdx;
+    }
+
+    final idx = nearest(a.ys, pos.dy) * 3 + nearest(a.xs, pos.dx);
+    if (mounted && _editMode) setState(() => _gridIdx = idx);
+  }
+
+  Future<void> _resetPosition() {
+    _gridIdx = 1; // 상단 중앙 앵커
+    return _moveOverlay(0, _topY);
   }
 
   Future<void> _setOverlaySize(int w, int h) async {
@@ -512,6 +487,7 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
       _editMode = true;
       _showHint = false;
     });
+    _syncGridIdx();
     _restartEditModeTimer();
     // 온보딩 학습 완료 — 메인 앱이 힌트 카운트를 영구 종료 처리
     _sendAction('hint_learned');
@@ -519,14 +495,12 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
 
   void _exitEditMode() {
     _editModeTimer?.cancel();
-    _stopNudgeRepeat();
     if (_editMode) setState(() => _editMode = false);
   }
 
   void _restartEditModeTimer() {
     _editModeTimer?.cancel();
-    _editModeTimer = Timer(const Duration(seconds: 5), () {
-      _stopNudgeRepeat();
+    _editModeTimer = Timer(const Duration(seconds: 8), () {
       if (mounted) setState(() => _editMode = false);
     });
   }
@@ -606,82 +580,31 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  CustomPaint(
-                    painter: _OverlayClockPainter(
-                      timerActive: _timerActive,
-                      segRemainMs: _segRemainMs,
-                      segColor: _effectiveTimerColor,
-                      swActive: _swActive,
-                      swElapsedMs: _swElapsedMs,
-                      swStartAngleRad: _swStartAngleRad,
+                  Opacity(
+                    opacity: _editMode ? 0.35 : 1.0,
+                    child: CustomPaint(
+                      painter: _OverlayClockPainter(
+                        timerActive: _timerActive,
+                        segRemainMs: _segRemainMs,
+                        segColor: _effectiveTimerColor,
+                        swActive: _swActive,
+                        swElapsedMs: _swElapsedMs,
+                        swStartAngleRad: _swStartAngleRad,
+                      ),
+                      child: const SizedBox.expand(),
                     ),
-                    child: const SizedBox.expand(),
                   ),
-                  if (_timerActive || _swActive)
+                  if ((_timerActive || _swActive) && !_editMode)
                     IgnorePointer(child: _buildClockCenterInfo()),
-                  // 편집 모드(길게 누르기)에서만 노출 — 크기·위치 순환 버튼.
-                  // enableDrag:true로 드래그는 항상 윈도우 이동이라 탭 순환 방식 사용
-                  if (_editMode) ...[
-                    Positioned(
-                      right: 4,
-                      bottom: 4,
-                      child: _cornerChipButton(Icons.open_in_full, () {
-                        _cycleOverlaySize();
-                        _restartEditModeTimer();
-                      }),
-                    ),
-                    // 위치 순환 — 터치 드래그가 불가능한 기기 대응, 상단→중단→하단
-                    Positioned(
-                      left: 4,
-                      bottom: 4,
-                      child: _cornerChipButton(Icons.swap_vert, () {
-                        _cycleOverlayPosition();
-                        _restartEditModeTimer();
-                      }),
-                    ),
-                    // 좌우 순환 — 중앙→좌→우
-                    Positioned(
-                      left: 4,
-                      top: 4,
-                      child: _cornerChipButton(Icons.swap_horiz, () {
-                        _cycleOverlayPositionX();
-                        _restartEditModeTimer();
-                      }),
-                    ),
-                    // D-pad — 드래그 없이 미세 이동 (탭 12dp / 홀드 연속)
-                    Positioned(
-                      top: 4,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: _dpadChip(Icons.keyboard_arrow_up, 0, -1),
+                  // 편집 모드(길게 누르기): 3×3 그리드 — 점 탭 한 번으로
+                  // 화면 9앵커 중 원하는 위치로 이동 (드래그 불가 기기 대응)
+                  if (_editMode)
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: _buildPositionGrid(),
                       ),
                     ),
-                    Positioned(
-                      bottom: 4,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: _dpadChip(Icons.keyboard_arrow_down, 0, 1),
-                      ),
-                    ),
-                    Positioned(
-                      left: 4,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(
-                        child: _dpadChip(Icons.keyboard_arrow_left, -1, 0),
-                      ),
-                    ),
-                    Positioned(
-                      right: 4,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(
-                        child: _dpadChip(Icons.keyboard_arrow_right, 1, 0),
-                      ),
-                    ),
-                  ],
                   // 길게 누르기 온보딩 힌트 — 신규 사용자에게 최대 3회 노출
                   if (_showHint && !_editMode)
                     Positioned(
@@ -732,33 +655,74 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
           ),
         ),
         const SizedBox(height: 8),
-        // 컨트롤 버튼 행
-        _buildControlBar(context),
+        // 컨트롤 버튼 행 — 편집 중엔 크기·완료만
+        _editMode ? _buildEditBar() : _buildControlBar(context),
       ],
     );
   }
 
-  /// D-pad 방향 칩 — 탭 1회 니지, 길게 누르면 연속 이동
-  Widget _dpadChip(IconData icon, double ux, double uy) {
-    return GestureDetector(
-      onTap: () => _nudgeOnce(ux, uy),
-      onLongPressStart: (_) => _startNudgeRepeat(ux, uy),
-      onLongPressEnd: (_) => _stopNudgeRepeat(),
-      onLongPressCancel: _stopNudgeRepeat,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: const Color(0xCC1A1A1C),
-            shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFF4A4A4E), width: 1),
+  Widget _buildPositionGrid() {
+    return Column(
+      children: [
+        for (var row = 0; row < 3; row++)
+          Expanded(
+            child: Row(
+              children: [
+                for (var col = 0; col < 3; col++)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: _gridCell(col, row),
+                    ),
+                  ),
+              ],
+            ),
           ),
-          child: Icon(icon, color: Colors.white70, size: 16),
+      ],
+    );
+  }
+
+  Widget _gridCell(int col, int row) {
+    final selected = _gridIdx == row * 3 + col;
+    const accent = Color(0xFFE07A52);
+    return GestureDetector(
+      onTap: () => _selectGridCell(col, row),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? accent : Colors.white38,
+            width: selected ? 2 : 1,
+          ),
+          color: selected
+              ? accent.withValues(alpha: 0.15)
+              : Colors.black.withValues(alpha: 0.25),
+        ),
+        child: Center(
+          child: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: selected ? accent : Colors.white70,
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildEditBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _cornerChipButton(Icons.open_in_full, () {
+          _cycleOverlaySize();
+          _restartEditModeTimer();
+        }),
+        _cornerChipButton(Icons.check, _exitEditMode),
+      ],
     );
   }
 
