@@ -488,6 +488,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shortcutWidgetToggle => '위젯 켜기/끄기';
 
   @override
+  String get shortcutWidgetMove => '위젯 이동 (위젯을 먼저 클릭)';
+
+  @override
   String get keysHintTimerToggle =>
       '💡 Space 또는 Ctrl+Alt+Space로도 시작/일시정지할 수 있어요';
 

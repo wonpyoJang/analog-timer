@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../l10n/app_localizations.dart';
 import 'dart:io';
 import 'package:screen_retriever/screen_retriever.dart';
@@ -244,6 +245,8 @@ class _OverlayBodyState extends State<_OverlayBody>
   void initState() {
     super.initState();
     _winPos = widget.initialPos;
+    // 키보드 이동 — 위젯 창 포커스 시 화살표.
+    HardwareKeyboard.instance.addHandler(_onMoveKey);
     _applyState(widget.initial);
     // 저장된 투명도 적용
     unawaited(_loadOverlayPrefs().then((m) {
@@ -432,6 +435,8 @@ class _OverlayBodyState extends State<_OverlayBody>
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onMoveKey);
+    _posSaveDebounce?.cancel();
     _clockTimer?.cancel();
     _displayTimer?.cancel();
     _topmostTimer?.cancel();
@@ -542,6 +547,42 @@ class _OverlayBodyState extends State<_OverlayBody>
         ),
       ),
     );
+  }
+
+  /// 키보드로 위젯 이동 — 위젯을 클릭(포커스)한 뒤 화살표.
+  ///
+  /// 화살표 10px 미세 이동, Shift+화살표 60px. 홀드 리핏(KeyRepeatEvent)
+  /// 지원으로 꾹 누르면 연속 이동. 오버레이는 별도 엔진이라 이 핸들러는
+  /// 위젯 창이 키보드 포커스일 때만 이벤트를 받는다 — 전역 핫키 오염 없음.
+  /// (모바일의 3×3 그리드 편집과 달리 데스크톱은 정밀 배치가 목적)
+  Timer? _posSaveDebounce;
+  bool _onMoveKey(KeyEvent e) {
+    if (e is! KeyDownEvent && e is! KeyRepeatEvent) return false;
+    final k = e.logicalKey;
+    double dx = 0, dy = 0;
+    if (k == LogicalKeyboardKey.arrowLeft) {
+      dx = -1;
+    } else if (k == LogicalKeyboardKey.arrowRight) {
+      dx = 1;
+    } else if (k == LogicalKeyboardKey.arrowUp) {
+      dy = -1;
+    } else if (k == LogicalKeyboardKey.arrowDown) {
+      dy = 1;
+    } else {
+      return false;
+    }
+    final step = HardwareKeyboard.instance.isShiftPressed ? 60.0 : 10.0;
+    _winPos = Offset(_winPos.dx + dx * step, _winPos.dy + dy * step);
+    unawaited(windowManager.setPosition(_winPos));
+    // 홀드 리핏 중 매 이벤트 파일 쓰기 방지 — 이동이 멎으면 저장.
+    _posSaveDebounce?.cancel();
+    _posSaveDebounce = Timer(const Duration(milliseconds: 400), () {
+      _saveOverlayPrefs({
+        _kOverlayPosX: _winPos.dx,
+        _kOverlayPosY: _winPos.dy,
+      });
+    });
+    return true;
   }
 
   /// 앱 재시작 — 메인 엔진을 거치지 않는 직접 경로(메인이 얼어 있어도 동작).
