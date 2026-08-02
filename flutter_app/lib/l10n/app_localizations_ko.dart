@@ -517,6 +517,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get hotkeyRecordPrompt => '새 키 조합을 눌러주세요';
 
   @override
+  String get hotkeyNeedModifier =>
+      'Ctrl·Alt·Win 중 하나가 필요해요 (Shift만으로는 일반 타이핑을 가로채요)';
+
+  @override
+  String get hotkeyDuplicate => '다른 동작이 이미 쓰는 조합이에요';
+
+  @override
   String get settingsTtsVoice => '음성 스타일';
 
   @override

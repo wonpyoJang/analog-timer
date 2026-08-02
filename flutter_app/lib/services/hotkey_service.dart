@@ -60,28 +60,97 @@ class HotkeyService {
   /// 사람이 읽는 조합 문자열 — 설정·치트시트·툴팁 공용.
   String describe(String action) {
     final hk = _bindings[action];
-    if (hk == null) return '';
-    final parts = <String>[
-      for (final m in hk.modifiers ?? <HotKeyModifier>[])
-        switch (m) {
-          HotKeyModifier.control => 'Ctrl',
-          HotKeyModifier.shift => 'Shift',
-          HotKeyModifier.alt => 'Alt',
-          HotKeyModifier.meta => 'Win',
-          _ => m.name,
-        },
+    return hk == null ? '' : describeHotKey(hk);
+  }
+
+  /// HotKey → Windows 관례 표기("Ctrl+Shift+Alt+L").
+  /// 패키지의 HotKeyVirtualView 는 맥 기호(⌃⇧⌥)로 그려서 쓰지 않는다.
+  static String describeHotKey(HotKey hk) {
+    final order = [
+      HotKeyModifier.control,
+      HotKeyModifier.shift,
+      HotKeyModifier.alt,
+      HotKeyModifier.meta,
     ];
-    // 'Key N' → 'N', 'Space' 는 그대로. (key 는 Physical/Logical 양쪽 가능)
-    final k = hk.key;
-    String keyName = switch (k) {
-      PhysicalKeyboardKey() => k.debugName ?? '?',
-      LogicalKeyboardKey() when k.keyLabel.isNotEmpty => k.keyLabel,
-      LogicalKeyboardKey() => k.debugName ?? '?',
+    final mods = hk.modifiers ?? <HotKeyModifier>[];
+    final parts = <String>[
+      for (final m in order)
+        if (mods.contains(m))
+          switch (m) {
+            HotKeyModifier.control => 'Ctrl',
+            HotKeyModifier.shift => 'Shift',
+            HotKeyModifier.alt => 'Alt',
+            HotKeyModifier.meta => 'Win',
+            _ => m.name,
+          },
+    ];
+    parts.add(_keyLabel(hk.key));
+    return parts.join('+');
+  }
+
+  /// 키 라벨 — **release 안전 + 이벤트 무관**.
+  /// debugName 은 릴리즈에서 null 이고, lookUpLayout 은 그 키를 실제로 누른
+  /// 적이 있어야 매핑이 생긴다(둘 다 실화면 '?' 표기 버그의 원인이었음).
+  /// USB HID usage 로 직접 라벨링한다.
+  static String _keyLabel(KeyboardKey k) {
+    if (k is LogicalKeyboardKey) {
+      if (k == LogicalKeyboardKey.space) return 'Space';
+      final label = k.keyLabel;
+      if (label.trim().isNotEmpty) {
+        return label.length == 1 ? label.toUpperCase() : label;
+      }
+      return '?';
+    }
+    if (k is! PhysicalKeyboardKey) return '?';
+    final u = k.usbHidUsage;
+    if (u >= 0x070004 && u <= 0x07001d) {
+      return String.fromCharCode(0x41 + (u - 0x070004)); // A–Z
+    }
+    if (u >= 0x07001e && u <= 0x070026) {
+      return String.fromCharCode(0x31 + (u - 0x07001e)); // 1–9
+    }
+    if (u >= 0x07003a && u <= 0x070045) {
+      return 'F${u - 0x07003a + 1}'; // F1–F12
+    }
+    return switch (u) {
+      0x070027 => '0',
+      0x070028 => 'Enter',
+      0x070029 => 'Esc',
+      0x07002a => 'Backspace',
+      0x07002b => 'Tab',
+      0x07002c => 'Space',
+      0x07002d => '-',
+      0x07002e => '=',
+      0x07002f => '[',
+      0x070030 => ']',
+      0x070031 => r'\',
+      0x070033 => ';',
+      0x070034 => "'",
+      0x070035 => '`',
+      0x070036 => ',',
+      0x070037 => '.',
+      0x070038 => '/',
+      0x07004a => 'Home',
+      0x07004b => 'PgUp',
+      0x07004c => 'Del',
+      0x07004d => 'End',
+      0x07004e => 'PgDn',
+      0x07004f => '→',
+      0x070050 => '←',
+      0x070051 => '↓',
+      0x070052 => '↑',
       _ => '?',
     };
-    keyName = keyName.replaceFirst(RegExp(r'^Key '), '');
-    parts.add(keyName);
-    return parts.join('+');
+  }
+
+  /// 안전한 전역 조합인지 — Ctrl/Alt/Win 중 하나는 필수.
+  /// Shift 단독은 일반 타이핑(예: Shift+/ = '?')을 시스템 전역에서 강탈한다 —
+  /// 실제로 구버전 녹화기가 Shift+/ 를 저장해 '?' 입력이 막히는 사고가 났다.
+  static bool isSaneBinding(HotKey hk) {
+    final mods = hk.modifiers ?? const <HotKeyModifier>[];
+    return mods.contains(HotKeyModifier.control) ||
+        mods.contains(HotKeyModifier.alt) ||
+        mods.contains(HotKeyModifier.meta);
   }
 
   Future<void> init() async {
@@ -102,6 +171,12 @@ class HotkeyService {
                 (jsonDecode(raw) as Map).cast<String, dynamic>());
           } catch (_) {}
         }
+        // 불량 바인딩 정화 — 구버전 녹화기가 저장한 Shift 단독 조합 등은
+        // 일반 타이핑을 전역 강탈하므로 기본값으로 되돌리고 prefs 를 지운다.
+        if (hk != null && !isSaneBinding(hk)) {
+          hk = null;
+          await p.remove('$_kBindPrefix$action');
+        }
         _bindings[action] = hk ?? defaults[action]!;
       }
       bindingsRev.value++;
@@ -121,6 +196,43 @@ class HotkeyService {
       await _unregister();
     }
   }
+
+  /// 녹화 중 전역 핫키 일시 해제 — **필수**.
+  ///
+  /// system scope 핫키는 OS 가 키를 가로채(RegisterHotKey) 포커스 앱으로
+  /// 전달하지 않는다. 등록된 상태로 녹화하면 사용자가 그 조합(특히 현재
+  /// 조합)을 눌러도 마지막 키가 Flutter 에 도달하지 않아 "수식키 3개 이상은
+  /// 녹화가 안 된다"처럼 보인다(실사용 지적). 녹화 창을 열 때 해제하고
+  /// 닫을 때 되돌린다.
+  /// 녹화 중 표식 — 인앱 단축키 핸들러(home_screen)도 이 동안 물러난다.
+  /// (안 그러면 Space 를 녹화하려는 순간 타이머가 토글된다)
+  bool recording = false;
+
+  Future<void> suspendForRecording() async {
+    recording = true;
+    await _unregister();
+  }
+
+  Future<void> resumeAfterRecording() async {
+    recording = false;
+    if (enabled) await _register();
+  }
+
+  /// 다른 액션이 이미 쓰는 조합인지 — 중복 등록은 둘 중 하나가 조용히 실패한다.
+  String? conflictingAction(String action, HotKey hk) {
+    for (final e in _bindings.entries) {
+      if (e.key == action) continue;
+      final o = e.value;
+      if (o.key == hk.key &&
+          _modSet(o.modifiers) == _modSet(hk.modifiers)) {
+        return e.key;
+      }
+    }
+    return null;
+  }
+
+  String _modSet(List<HotKeyModifier>? m) =>
+      ((m ?? <HotKeyModifier>[]).map((e) => e.name).toList()..sort()).join(',');
 
   /// 액션 조합 변경 — 녹화 UI 에서 호출. scope 는 항상 system 으로 강제.
   Future<void> setBinding(String action, HotKey recorded) async {
