@@ -1122,8 +1122,8 @@ abstract class AppLocalizations {
   /// No description provided for @hotkeyNeedModifier.
   ///
   /// In en, this message translates to:
-  /// **'Add Ctrl, Alt or Win to the combo'**
-  String get hotkeyNeedModifier;
+  /// **'Almost — hold Ctrl, Alt or Win together with {key}'**
+  String hotkeyNeedModifier(String key);
 
   /// No description provided for @hotkeyDuplicate.
   ///
@@ -1232,6 +1232,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tip: move with keyboard — {combo}'**
   String overlayKbHint(String combo);
+
+  /// No description provided for @hotkeyRecordGuide1.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold Ctrl or Alt first, then tap a letter — like {example}.'**
+  String hotkeyRecordGuide1(String example);
+
+  /// No description provided for @hotkeyRecordGuide2.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one you don\'t already use elsewhere — adding Shift makes clashes rare.'**
+  String get hotkeyRecordGuide2;
 }
 
 class _AppLocalizationsDelegate

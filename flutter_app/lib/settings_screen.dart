@@ -301,6 +301,30 @@ Widget _hotkeyRow(BuildContext context, String label, String action) {
   );
 }
 
+/// 초심자 힌트 본문 — 번역문 속 {example} 자리에 실제 키캡([Ctrl][L])을
+/// 인라인으로 끼워 넣는다(개체 치환 문자로 분할 후 WidgetSpan 삽입).
+Widget _guideText(AppLocalizations l) {
+  const marker = '￼';
+  final line1 = l.hotkeyRecordGuide1(marker).split(marker);
+  const style = TextStyle(
+      fontSize: 11.5, height: 1.8, color: Color(0xFFA8A5A0));
+  return Text.rich(
+    TextSpan(children: [
+      for (var i = 0; i < line1.length; i++) ...[
+        if (i > 0)
+          const WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: KeyCaps(combo: 'Ctrl+L', fontSize: 10),
+          ),
+        TextSpan(text: line1[i]),
+      ],
+      const TextSpan(text: '\n'),
+      TextSpan(text: l.hotkeyRecordGuide2),
+    ]),
+    style: style,
+  );
+}
+
 /// 액션 id → 표시 라벨 (중복 오류 문구에 "어느 액션과 겹치는지" 명시용).
 String _actionLabel(AppLocalizations l, String action) => switch (action) {
       'timer_toggle' => l.shortcutTimerToggle,
@@ -319,6 +343,7 @@ Future<void> _recordHotkey(
     BuildContext context, String label, String action) async {
   final l = AppLocalizations.of(context);
   HotKey? recorded;
+  var touched = false; // 키 입력 시작 → 초심자 힌트 숨김(시안)
   await HotkeyService.instance.suspendForRecording();
   try {
     if (!context.mounted) return;
@@ -371,14 +396,50 @@ Future<void> _recordHotkey(
                     initial: null, // 대기 상태(커서)에서 시작 — 시안
                     error: noMod || dup != null,
                     onRecorded: (hk) => setState(() => recorded = hk),
+                    onActivity: () {
+                      if (!touched) setState(() => touched = true);
+                    },
                   ),
+                  // 초심자 힌트 — 대기 상태에만. 키를 누르기 시작하면 사라져
+                  // 경험자에겐 방해가 없다(시안). 둘째 줄: 앱이 감지 못하는
+                  // 타앱 로컬 단축키 충돌을 사전에 줄이는 선택 가이드.
+                  if (!touched && recorded == null)
+                    Container(
+                      margin: const EdgeInsets.only(top: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 11, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(9),
+                        border: Border.all(
+                            color: AppColors.accent.withValues(alpha: 0.14)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('ℹ',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.accent,
+                                  height: 1.8)),
+                          const SizedBox(width: 8),
+                          Expanded(child: _guideText(l)),
+                        ],
+                      ),
+                    ),
                   // 오류/안내 공유 슬롯 — 높이 고정으로 다이얼로그 안 흔들림.
                   Container(
                     constraints: const BoxConstraints(minHeight: 30),
                     alignment: Alignment.center,
                     padding: const EdgeInsets.fromLTRB(4, 7, 4, 0),
                     child: noMod
-                        ? Text(l.hotkeyNeedModifier,
+                        // 누른 키를 인정하며 방법을 가르치는 톤(시안) —
+                        // {key}엔 수식키를 뗀 키 이름만 넣는다.
+                        ? Text(
+                            l.hotkeyNeedModifier(HotkeyService.describeHotKey(
+                                HotKey(
+                                    key: recorded!.key,
+                                    scope: HotKeyScope.system))),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                                 fontSize: 11.5,

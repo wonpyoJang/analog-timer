@@ -102,7 +102,7 @@ function SettingsWindow({ dialog }) {
 function RecordDialog({ state }) {
   // state: waiting | modifiers | captured | nomod | dup
   const preview = { waiting: null, modifiers: 'Ctrl+Shift+Alt+…', captured: 'Ctrl+Shift+Alt+L', nomod: 'L', dup: 'Ctrl+Shift+Alt+Space' }[state];
-  const err = state === 'nomod' ? 'Add Ctrl, Alt or Win to the combo' : state === 'dup' ? 'Already used by “Start / Pause”' : null;
+  const err = state === 'nomod' ? 'Almost — hold Ctrl, Alt or Win together with L' : state === 'dup' ? 'Already used by “Start / Pause”' : null;
   const canSave = state === 'captured';
   return (
     <div style={{ width: 316, background: '#1E1E21', border: `1px solid ${S.border}`, borderRadius: 14, padding: '18px 20px 12px', fontFamily: F, boxShadow: '0 8px 18px rgba(0,0,0,0.4), 0 30px 60px rgba(0,0,0,0.55)' }}>
@@ -111,6 +111,12 @@ function RecordDialog({ state }) {
         <span style={{ fontSize: 11, color: S.faint }}>now: Ctrl+Shift+Alt+L</span>
       </div>
       <div style={{ fontSize: 12.5, color: S.muted, marginTop: 3 }}>Press the new key combination</div>
+      {state === 'waiting' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 11px', borderRadius: 9, background: 'rgba(240,192,64,0.05)', border: '1px solid rgba(240,192,64,0.14)' }}>
+          <span style={{ fontSize: 12, color: S.accent, flexShrink: 0 }}>{'\u2139'}</span>
+          <span style={{ fontSize: 11.5, color: '#A8A5A0', lineHeight: 1.8 }}>Hold <b style={{ color: S.text, fontWeight: 600 }}>Ctrl</b> or <b style={{ color: S.text, fontWeight: 600 }}>Alt</b> first, then tap a letter — like <span style={{ whiteSpace: 'nowrap', display: 'inline-block', verticalAlign: 'middle' }}><KeyCaps combo="Ctrl+L" size={10} /></span>.<br />Pick one you don't already use elsewhere — adding <b style={{ color: S.text, fontWeight: 600 }}>Shift</b> makes clashes rare.</span>
+        </div>
+      )}
       <div style={{ minHeight: 54, margin: '14px 0 0', borderRadius: 10, background: S.bg, border: `1px ${preview ? 'solid' : 'dashed'} ${err ? 'rgba(224,82,82,0.55)' : S.border}`, display: 'grid', placeItems: 'center', padding: '10px 12px' }}>
         {preview
           ? <KeyCaps combo={preview} size={13} />
@@ -169,9 +175,9 @@ function BadgeCompare() {
 
 function Page() {
   const dialogStates = [
-    ['대기', 'waiting', '커서 깜빡임 — 빈 안내문 대신'],
+    ['대기', 'waiting', '처음 쓰는 사람용 방법 안내 포함'],
     ['수식키 진행', 'modifiers', '"…" 키캡으로 진행형 표시'],
-    ['유효하지 않음', 'nomod', 'Save 비활성 + 박스 테두리 danger'],
+    ['유효하지 않음', 'nomod', '누른 키를 인정하며 방법을 알려줌'],
     ['중복', 'dup', '어느 액션과 겹치는지 명시'],
   ];
   return (
@@ -200,7 +206,8 @@ function Page() {
           목록 우하단 faint 텍스트버튼. 기본값과 달라진 항목이 있을 때만 노출하면 평소엔 시각 소음 0.
         </Note>
         <Note title="추가 제안">
-          다이얼로그 제목 옆에 <b style={{ color: S.text }}>현재 조합("now: …")</b>을 faint로 표기 — 무엇에서 무엇으로 바꾸는지 컨텍스트 제공. 대기 상태는 안내문 반복 대신 <b style={{ color: S.text }}>깜빡이는 커서</b>로 "입력을 듣고 있음"을 표현.
+          다이얼로그 제목 옆에 <b style={{ color: S.text }}>현재 조합("now: …")</b>을 faint로 표기 — 무엇에서 무엇으로 바꾸는지 컨텍스트 제공. 대기 상태는 안내문 반복 대신 <b style={{ color: S.text }}>깜빡이는 커서</b>로 "입력을 듣고 있음"을 표현.<br /><br />
+          <b style={{ color: S.text }}>처음 녹화하는 사람 안내</b> — 대기 상태에만 힌트 박스 한 줄: "Ctrl이나 Alt를 먼저 누른 채 글자를 톡" + 예시 키캡. 키를 누르기 시작하면 사라져 경험자에겐 방해 없음. 오류 문구도 "Almost — hold Ctrl…"처럼 방법을 가르치는 톤으로. 힌트 둘째 줄에서 평소 쓰는 단축키와 겹치지 않게 고르라고 안내 — 앱이 감지 못하는 충돌(다른 앱 로컬 단축키)을 사전에 줄임.
         </Note>
       </div>
     </div>

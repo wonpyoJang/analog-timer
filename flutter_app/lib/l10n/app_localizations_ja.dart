@@ -548,7 +548,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get hotkeyRecordPrompt => 'Press the new key combination';
 
   @override
-  String get hotkeyNeedModifier => 'Add Ctrl, Alt or Win to the combo';
+  String hotkeyNeedModifier(String key) {
+    return 'Almost — hold Ctrl, Alt or Win together with $key';
+  }
 
   @override
   String hotkeyDuplicate(String action) {
@@ -610,4 +612,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String overlayKbHint(String combo) {
     return 'Tip: move with keyboard — $combo';
   }
+
+  @override
+  String hotkeyRecordGuide1(String example) {
+    return 'Hold Ctrl or Alt first, then tap a letter — like $example.';
+  }
+
+  @override
+  String get hotkeyRecordGuide2 =>
+      'Pick one you don\'t already use elsewhere — adding Shift makes clashes rare.';
 }

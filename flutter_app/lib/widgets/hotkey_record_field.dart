@@ -21,11 +21,16 @@ class HotkeyRecordField extends StatefulWidget {
   /// 확정된 조합이 유효하지 않을 때(수식키 부재/중복) 박스 테두리를 danger 로.
   final bool error;
 
+  /// 어떤 키든 눌리기 시작하면 호출(수식키 홀드 포함) — 다이얼로그의
+  /// 초심자 힌트를 숨기는 트리거(시안: 경험자에겐 방해 없음).
+  final VoidCallback? onActivity;
+
   const HotkeyRecordField({
     super.key,
     this.initial,
     required this.onRecorded,
     this.error = false,
+    this.onActivity,
   });
 
   @override
@@ -85,6 +90,7 @@ class _HotkeyRecordFieldState extends State<HotkeyRecordField> {
       return true;
     }
     if (event is! KeyDownEvent) return false;
+    widget.onActivity?.call();
     final key = event.physicalKey;
     if (_modKeys.containsKey(key)) {
       setState(() => _heldMods = _currentMods());
