@@ -231,6 +231,9 @@ class _OverlayBodyState extends State<_OverlayBody>
   DateTime? _displayLastTick;
   late final AnimationController _blinkCtrl;
 
+  // 시스템 "동작 줄이기" — 종료 임박 깜빡임을 정적으로(광과민 대응).
+  bool _reduceMotion = false;
+
   // 창 투명도 — 사이클 버튼(100→85→70→50→30%)으로 조절, 전용 파일에 저장.
   // 호버 중에는 일시적으로 불투명하게 해 조작성을 보장한다.
   static const _opacitySteps = [1.0, 0.85, 0.7, 0.5, 0.3];
@@ -362,7 +365,7 @@ class _OverlayBodyState extends State<_OverlayBody>
     final wasEnding = _ending;
     setState(() => _readState(map));
     if (_ending && !wasEnding) {
-      _blinkCtrl.repeat(reverse: true);
+      if (!_reduceMotion) _blinkCtrl.repeat(reverse: true);
     } else if (!_ending && wasEnding) {
       _blinkCtrl
         ..stop()
@@ -510,6 +513,21 @@ class _OverlayBodyState extends State<_OverlayBody>
     } catch (_) {}
     _dragging = false;
     unawaited(_maybeShowDragHint()); // 마우스 이동 직후가 키보드 대안을 알릴 적기
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduce = MediaQuery.of(context).disableAnimations;
+    if (reduce != _reduceMotion) {
+      _reduceMotion = reduce;
+      if (reduce) {
+        _blinkCtrl.stop();
+        _blinkCtrl.value = 1.0;
+      } else if (_ending) {
+        _blinkCtrl.repeat(reverse: true);
+      }
+    }
   }
 
   @override
@@ -948,7 +966,7 @@ class _OverlayBodyState extends State<_OverlayBody>
     return AnimatedBuilder(
       animation: _blinkCtrl,
       builder: (context, _) {
-        final opacity = _ending ? _blinkCtrl.value : 1.0;
+        final opacity = (_ending && !_reduceMotion) ? _blinkCtrl.value : 1.0;
         return Opacity(
           opacity: opacity.clamp(0.3, 1.0),
           child: Column(
