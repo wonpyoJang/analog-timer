@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import '../services/persistence_service.dart';
 import '../services/platform_info.dart';
 
 class OverlayService {
@@ -35,10 +36,21 @@ class OverlayService {
       await Future.delayed(const Duration(milliseconds: 800));
     }
 
+    // 길게 누르기 온보딩 — 편집 모드 미사용자에 한해 최대 3회 노출
+    final hintCount = await PersistenceService.loadOverlayHintCount();
+    final showHint = hintCount < 3;
+    if (showHint) {
+      await PersistenceService.saveOverlayHintCount(hintCount + 1);
+    }
+
     // isActive 여부에 관계없이 항상 'show' 전달
     // — 이전 세션에서 서비스가 살아있지만 엔진이 죽은 경우(레이스)도 커버
     await FlutterOverlayWindow.shareData(
-      jsonEncode({'command': 'show', 'screenWidthDp': screenWidthDp}),
+      jsonEncode({
+        'command': 'show',
+        'screenWidthDp': screenWidthDp,
+        'hintLongPress': showHint,
+      }),
     );
   }
 

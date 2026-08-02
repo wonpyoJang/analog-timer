@@ -80,5 +80,6 @@
   "dayPlanEmpty": "Tidak ada rencana untuk hari ini",
   "planSaveAsCurrent": "Simpan sebagai rencana",
   "planLoadIntoTimer": "Muat ke timer",
-  "planSave": "Simpan"
+  "planSave": "Simpan",
+  "overlayLongPressHint": "Tekan lama jam untuk menyesuaikan ukuran dan posisi"
 }

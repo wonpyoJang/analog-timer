@@ -80,5 +80,6 @@
   "dayPlanEmpty": "Bu gün için plan yok",
   "planSaveAsCurrent": "Plan olarak kaydet",
   "planLoadIntoTimer": "Zamanlayıcıya yükle",
-  "planSave": "Kaydet"
+  "planSave": "Kaydet",
+  "overlayLongPressHint": "Boyut ve konumu ayarlamak için saate uzun basın"
 }

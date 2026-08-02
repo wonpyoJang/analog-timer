@@ -80,5 +80,6 @@
   "dayPlanEmpty": "Kein Plan für diesen Tag",
   "planSaveAsCurrent": "Als Plan speichern",
   "planLoadIntoTimer": "In Timer laden",
-  "planSave": "Speichern"
+  "planSave": "Speichern",
+  "overlayLongPressHint": "Uhr gedrückt halten, um Größe und Position anzupassen"
 }

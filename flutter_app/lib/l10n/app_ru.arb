@@ -80,5 +80,6 @@
   "dayPlanEmpty": "Нет плана на этот день",
   "planSaveAsCurrent": "Сохранить как план",
   "planLoadIntoTimer": "Загрузить в таймер",
-  "planSave": "Сохранить"
+  "planSave": "Сохранить",
+  "overlayLongPressHint": "Удерживайте часы, чтобы настроить размер и положение"
 }

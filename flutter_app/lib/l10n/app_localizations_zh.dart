@@ -485,6 +485,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get menuErrorReports => 'Error reports';
+
+  @override
+  String get overlayLongPressHint => '长按时钟可调整大小和位置';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -751,4 +754,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get planSave => '儲存';
+
+  @override
+  String get overlayLongPressHint => '長按時鐘可調整大小和位置';
 }

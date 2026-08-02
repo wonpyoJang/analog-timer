@@ -487,4 +487,8 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get menuErrorReports => 'Error reports';
+
+  @override
+  String get overlayLongPressHint =>
+      'Tekan lama jam untuk menyesuaikan ukuran dan posisi';
 }

@@ -486,4 +486,8 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get menuErrorReports => 'Error reports';
+
+  @override
+  String get overlayLongPressHint =>
+      'आकार और स्थिति समायोजित करने के लिए घड़ी को देर तक दबाएँ';
 }

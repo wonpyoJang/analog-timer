@@ -487,4 +487,8 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get menuErrorReports => 'Error reports';
+
+  @override
+  String get overlayLongPressHint =>
+      'Tieni premuto l\'orologio per regolarne dimensioni e posizione';
 }

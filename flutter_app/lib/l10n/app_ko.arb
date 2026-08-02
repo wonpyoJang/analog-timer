@@ -109,12 +109,15 @@
   "reviewPromptAccept": "의견 보내기",
   "reviewPromptLater": "나중에",
   "reviewPromptNever": "다시 묻지 않기",
-
   "syncPageTitle": "기기 연결",
   "syncConnected": "✓ 연결됨",
   "syncRoomLabel": "방 코드: {id}",
   "@syncRoomLabel": {
-    "placeholders": { "id": { "type": "String" } }
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
   },
   "syncRoomDesc": "이 방의 모든 기기끼리 타이머·프리셋·설정이 동기화됩니다.",
   "syncAddDevice": "다른 기기 더 추가",
@@ -150,5 +153,6 @@
   "menuAutoRecoveryNote": "멈춤 자동 감지·복구 켜짐 — 보통 직접 누를 일이 없습니다.",
   "menuRefreshWidget": "위젯 새로고침",
   "menuRestartApp": "앱 재시작",
-  "menuErrorReports": "오류 리포트"
+  "menuErrorReports": "오류 리포트",
+  "overlayLongPressHint": "시계를 길게 누르면 크기·위치를 조절할 수 있어요"
 }

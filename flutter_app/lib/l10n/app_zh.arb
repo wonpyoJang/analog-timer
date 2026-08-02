@@ -80,5 +80,6 @@
   "dayPlanEmpty": "这一天没有计划",
   "planSaveAsCurrent": "保存为计划",
   "planLoadIntoTimer": "载入计时器",
-  "planSave": "保存"
+  "planSave": "保存",
+  "overlayLongPressHint": "长按时钟可调整大小和位置"
 }
