@@ -91,10 +91,12 @@ class DesktopService with WindowListener, TrayListener {
         // 연속 3회(15초 창 3번) 확인 후에만 발동 — 일시 부하 오탐 방지.
         if (++_staleCount < 3) return;
         _staleCount = 0;
-        unawaited(TelemetryService.instance.logEvent('freeze_detected', {
-          'kind': 'frame_stall',
-          'frameAgeSec': ((now - frameMs) / 1000).round(),
-        }));
+        unawaited(
+          TelemetryService.instance.logEvent('freeze_detected', {
+            'kind': 'frame_stall',
+            'frameAgeSec': ((now - frameMs) / 1000).round(),
+          }),
+        );
         await restart(
           reason: 'auto_frame_stall',
           confirmTimeoutSeconds: 20,
@@ -117,9 +119,7 @@ class DesktopService with WindowListener, TrayListener {
     // teardown 레이스(크래시·좀비) 없이 한 번에 닫힌다. preventClose 미사용.
     trayManager.addListener(this);
     await trayManager.setIcon(
-      isWindows
-          ? 'assets/icons/app_icon.ico'
-          : 'assets/icons/app_icon.png',
+      isWindows ? 'assets/icons/app_icon.ico' : 'assets/icons/app_icon.png',
     );
     await trayManager.setToolTip('Analog Timer');
     await _rebuildMenu('대기 중');
@@ -197,17 +197,19 @@ class DesktopService with WindowListener, TrayListener {
     try {
       final exe = Platform.resolvedExecutable;
       final bat = File(
-          '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_relaunch.bat');
-      await bat.writeAsString('@echo off\r\n'
-          'ping -n 3 127.0.0.1 >nul\r\n'
-          '${killSelf ? 'taskkill /F /PID $pid >nul 2>&1\r\nping -n 3 127.0.0.1 >nul\r\n' : ''}'
-          'start "" "$exe"\r\n'
-          'del "%~f0"\r\n');
-      final p = await Process.start(
-        'cmd',
-        ['/c', bat.path],
-        mode: ProcessStartMode.detached,
+        '${Directory.systemTemp.path}${Platform.pathSeparator}analog_timer_relaunch.bat',
       );
+      await bat.writeAsString(
+        '@echo off\r\n'
+        'ping -n 3 127.0.0.1 >nul\r\n'
+        '${killSelf ? 'taskkill /F /PID $pid >nul 2>&1\r\nping -n 3 127.0.0.1 >nul\r\n' : ''}'
+        'start "" "$exe"\r\n'
+        'del "%~f0"\r\n',
+      );
+      final p = await Process.start('cmd', [
+        '/c',
+        bat.path,
+      ], mode: ProcessStartMode.detached);
       // detached 라도 spawn 자체가 실패하면 여기서 throw — pid 확인으로 방어.
       return p.pid > 0;
     } catch (_) {
@@ -221,7 +223,8 @@ class DesktopService with WindowListener, TrayListener {
   /// 트레이 경로는 Dart 가 살아 있는 한 동작한다.
   /// 재시작 확인 문구 — 무엇이 보존되고 무엇이 일어나는지 명시(고지 후 동의).
   static const String restartTitle = 'Analog Timer — 다시 시작';
-  static const String restartMessage = '화면 멈춤을 해소하기 위해 앱을 다시 시작합니다.\n\n'
+  static const String restartMessage =
+      '화면 멈춤을 해소하기 위해 앱을 다시 시작합니다.\n\n'
       '· 타이머 기록과 경과 시간은 그대로 유지됩니다\n'
       '· 앱이 잠시 닫힌 뒤 약 5초 후 자동으로 다시 열립니다\n\n'
       '계속할까요?';
@@ -250,27 +253,41 @@ class DesktopService with WindowListener, TrayListener {
       );
       final proceed = ok == true || (ok == null && proceedOnTimeout);
       if (!proceed) {
-        unawaited(TelemetryService.instance
-            .logEvent('restart_declined', {'reason': reason}));
+        unawaited(
+          TelemetryService.instance.logEvent('restart_declined', {
+            'reason': reason,
+          }),
+        );
         // 복구 거절도 리포트 — "감지는 됐는데 사용자가 막음" 빈도 추적.
-        unawaited(TelemetryService.instance.reportRecovery('restart_declined',
-            extra: {'reason': reason, 'answer': ok == false ? 'cancel' : 'timeout'}));
+        unawaited(
+          TelemetryService.instance.reportRecovery(
+            'restart_declined',
+            extra: {
+              'reason': reason,
+              'answer': ok == false ? 'cancel' : 'timeout',
+            },
+          ),
+        );
         _restarting = false;
         return;
       }
     }
     unawaited(
-        TelemetryService.instance.logEvent('manual_restart', {'reason': reason}));
+      TelemetryService.instance.logEvent('manual_restart', {'reason': reason}),
+    );
     // 복구 리포트 — 트리거(reason)·확인 방식·당시 상태를 디버깅 가능하게 동봉.
     // 큐 적재가 먼저라 재시작으로 프로세스가 죽어도 다음 실행이 재전송한다.
-    await TelemetryService.instance.reportRecovery('restart', extra: {
-      'reason': reason,
-      'confirmedBy': !confirm
-          ? 'no_prompt'
-          : ok == true
-              ? 'user_ok'
-              : 'countdown_timeout',
-    });
+    await TelemetryService.instance.reportRecovery(
+      'restart',
+      extra: {
+        'reason': reason,
+        'confirmedBy': !confirm
+            ? 'no_prompt'
+            : ok == true
+            ? 'user_ok'
+            : 'countdown_timeout',
+      },
+    );
     // 상태 저장(타이머 연속성) — 실패해도 30초 주기 저장분으로 이어진다.
     final cb = onQuit;
     if (cb != null) {

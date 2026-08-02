@@ -15,6 +15,7 @@ import 'services/tts_service.dart';
 import 'services/text_scale_service.dart';
 import 'services/haptic_service.dart';
 import 'services/colorblind_service.dart';
+import 'services/high_contrast_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -77,7 +78,7 @@ class SettingsScreen extends StatelessWidget {
             title: l.settingsLanguage,
             trailing: Text(
               langLabel,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.muted,
                 fontSize: 13,
                 fontFamily: 'Pretendard',
@@ -164,7 +165,7 @@ class SettingsScreen extends StatelessWidget {
                                       HotkeyService.instance.resetBindings,
                                   child: Text(
                                     l.hotkeyReset,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 11.5,
                                       color: AppColors.faint,
                                     ),
@@ -246,8 +247,9 @@ class SettingsScreen extends StatelessWidget {
                         onChanged: (v) => TtsService.instance.setHourlyChime(
                           v,
                           sample: l.settingsTtsSample,
-                          localeTag:
-                              Localizations.localeOf(context).toLanguageTag(),
+                          localeTag: Localizations.localeOf(
+                            context,
+                          ).toLanguageTag(),
                         ),
                         activeThumbColor: AppColors.accent,
                         trackColor: WidgetStateProperty.resolveWith(
@@ -259,8 +261,9 @@ class SettingsScreen extends StatelessWidget {
                       onTap: () => TtsService.instance.setHourlyChime(
                         !chimeOn,
                         sample: l.settingsTtsSample,
-                        localeTag:
-                            Localizations.localeOf(context).toLanguageTag(),
+                        localeTag: Localizations.localeOf(
+                          context,
+                        ).toLanguageTag(),
                       ),
                     ),
                   ),
@@ -318,6 +321,30 @@ class SettingsScreen extends StatelessWidget {
             ),
             const _Divider(),
           ],
+
+          // ── 고대비 (접근성) ───────────────────────────────────
+          ValueListenableBuilder<bool>(
+            valueListenable: HighContrastService.instance.enabledListenable,
+            builder: (ctx, hcOn, _) => _SettingsTile(
+              icon: Icons.contrast,
+              iconColor: AppColors.accent,
+              title: l.settingsHighContrast,
+              subtitle: l.settingsHighContrastDesc,
+              trailing: Switch(
+                value: hcOn,
+                onChanged: HighContrastService.instance.setEnabled,
+                activeThumbColor: AppColors.accent,
+                trackColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.selected)
+                      ? AppColors.accent.withAlpha(0x55)
+                      : AppColors.surface,
+                ),
+              ),
+              onTap: () => HighContrastService.instance.setEnabled(!hcOn),
+            ),
+          ),
+
+          const _Divider(),
 
           // ── 색맹 모드 (접근성) ────────────────────────────────
           ValueListenableBuilder<bool>(
@@ -537,20 +564,14 @@ Future<void> _recordHotkey(
                       ),
                       Text(
                         l.hotkeyNow(current),
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.faint,
-                        ),
+                        style: TextStyle(fontSize: 11, color: AppColors.faint),
                       ),
                     ],
                   ),
                   const SizedBox(height: 3),
                   Text(
                     l.hotkeyRecordPrompt,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      color: AppColors.muted,
-                    ),
+                    style: TextStyle(fontSize: 12.5, color: AppColors.muted),
                   ),
                   const SizedBox(height: 14),
                   HotkeyRecordField(
@@ -632,7 +653,7 @@ Future<void> _recordHotkey(
                         ? Text(
                             l.hotkeyRecordCaution,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
                               height: 1.5,
                               color: AppColors.faint,
@@ -648,7 +669,7 @@ Future<void> _recordHotkey(
                         onPressed: () => Navigator.pop(ctx2),
                         child: Text(
                           l.cancel,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             color: AppColors.muted,
                           ),
@@ -728,10 +749,7 @@ Future<void> _pickTtsVoice(BuildContext context, AppLocalizations l) async {
                 ? null
                 : Text(
                     sub,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.muted,
-                    ),
+                    style: TextStyle(fontSize: 11, color: AppColors.muted),
                   ),
             trailing: selected
                 ? const Icon(Icons.check, size: 16, color: AppColors.accent)
@@ -746,7 +764,7 @@ Future<void> _pickTtsVoice(BuildContext context, AppLocalizations l) async {
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                 child: Text(
                   l.settingsTtsVoice,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     letterSpacing: 1.2,
                     color: AppColors.muted,
@@ -778,10 +796,7 @@ Future<void> _pickTtsVoice(BuildContext context, AppLocalizations l) async {
                   padding: const EdgeInsets.all(16),
                   child: Text(
                     l.ttsVoiceMissingHint,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.muted,
-                    ),
+                    style: TextStyle(fontSize: 12, color: AppColors.muted),
                   ),
                 ),
             ],
@@ -846,7 +861,7 @@ class _SettingsTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Pretendard',
                         color: AppColors.muted,
                         fontSize: 12,
@@ -935,7 +950,7 @@ class _TextSizeTile extends StatelessWidget {
                   // 미리보기 — 화면 전체가 이미 배율을 타므로 현재 크기 그대로 보임
                   Text(
                     l.textSizePreview,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Pretendard',
                       color: AppColors.muted,
                       fontSize: 14,

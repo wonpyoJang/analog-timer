@@ -23,37 +23,37 @@ class DesktopTitleBar extends StatelessWidget {
     return Material(
       color: const Color(0xFF111112),
       child: SizedBox(
-      height: height,
-      child: DragToMoveArea(
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF111112),
-            border: Border(bottom: BorderSide(color: AppColors.border)),
-          ),
-          padding: const EdgeInsets.only(left: 10),
-          child: Row(
-            children: [
-              // 앱 로고 — 어두운 바에서도 보이는 링 렌디션(작업표시줄과 동일).
-              Image.asset(
-                'assets/icons/app_icon_small.png',
-                width: 14,
-                height: 14,
-                filterQuality: FilterQuality.medium,
-              ),
-              const SizedBox(width: 9),
-              const Expanded(
-                child: Text(
-                  'Analog Timer',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF9C9A96)),
+        height: height,
+        child: DragToMoveArea(
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF111112),
+              border: Border(bottom: BorderSide(color: AppColors.border)),
+            ),
+            padding: const EdgeInsets.only(left: 10),
+            child: Row(
+              children: [
+                // 앱 로고 — 어두운 바에서도 보이는 링 렌디션(작업표시줄과 동일).
+                Image.asset(
+                  'assets/icons/app_icon_small.png',
+                  width: 14,
+                  height: 14,
+                  filterQuality: FilterQuality.medium,
                 ),
-              ),
-              const _CaptionButton(kind: _CaptionKind.minimize),
-              const _CaptionButton(kind: _CaptionKind.maximize),
-              const _CaptionButton(kind: _CaptionKind.close),
-            ],
+                const SizedBox(width: 9),
+                const Expanded(
+                  child: Text(
+                    'Analog Timer',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF9C9A96)),
+                  ),
+                ),
+                const _CaptionButton(kind: _CaptionKind.minimize),
+                const _CaptionButton(kind: _CaptionKind.maximize),
+                const _CaptionButton(kind: _CaptionKind.close),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

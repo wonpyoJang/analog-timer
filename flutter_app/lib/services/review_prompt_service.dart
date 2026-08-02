@@ -35,7 +35,12 @@ class ReviewPromptService {
   static const _kNever = 'review_dismissed_forever';
   static const _kDone = 'review_done';
   static const _allKeys = [
-    _kSessions, _kFirstRun, _kLastPrompt, _kPromptCount, _kNever, _kDone,
+    _kSessions,
+    _kFirstRun,
+    _kLastPrompt,
+    _kPromptCount,
+    _kNever,
+    _kDone,
   ];
 
   /// 테스트용 저장 디렉토리 오버라이드 — 지정 시 무조건 파일 백엔드 사용.
@@ -53,7 +58,8 @@ class ReviewPromptService {
       final appdata = Platform.environment['APPDATA'];
       if (appdata != null) {
         return File(
-            '$appdata\\dev.analogtimer\\analog_timer\\analog_timer_review.json');
+          '$appdata\\dev.analogtimer\\analog_timer\\analog_timer_review.json',
+        );
       }
     }
     return null; // 모바일 등: 단일 엔진 → prefs race 없음

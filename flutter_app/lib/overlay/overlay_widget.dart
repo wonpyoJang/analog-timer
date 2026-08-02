@@ -9,6 +9,7 @@ import '../main.dart' show parseLocaleTag, OverlayApp;
 import '../services/persistence_service.dart';
 import '../services/text_scale_service.dart';
 import '../services/colorblind_service.dart';
+import '../services/high_contrast_service.dart';
 
 class TimerOverlayWidget extends StatefulWidget {
   const TimerOverlayWidget({super.key});
@@ -250,6 +251,14 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
         final colorblind = map['colorblind'] as bool?;
         if (colorblind != null && colorblind != _colorblind) {
           setState(() => _colorblind = colorblind);
+        }
+
+        // 고대비 모드 라이브 동기화 — AppColors getter 재평가 위해 리빌드
+        final highContrast = map['highContrast'] as bool?;
+        if (highContrast != null &&
+            highContrast != HighContrastService.instance.enabled) {
+          HighContrastService.instance.applyLive(highContrast);
+          setState(() {});
         }
 
         // command 처리 — 메인 앱에서 resizeOverlay를 직접 못 하므로 위젯이 대신 실행

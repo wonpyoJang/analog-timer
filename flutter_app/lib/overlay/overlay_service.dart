@@ -4,6 +4,7 @@ import '../services/persistence_service.dart';
 import '../services/platform_info.dart';
 import '../services/text_scale_service.dart';
 import '../services/colorblind_service.dart';
+import '../services/high_contrast_service.dart';
 
 class OverlayService {
   static Future<bool> get isPermissionGranted async {
@@ -111,6 +112,8 @@ class OverlayService {
         'textScale': TextScaleService.instance.scale,
         // 색맹 모드 라이브 전파
         'colorblind': ColorblindService.instance.enabled,
+        // 고대비 모드 라이브 전파
+        'highContrast': HighContrastService.instance.enabled,
       }),
     );
   }

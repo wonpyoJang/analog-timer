@@ -26,10 +26,10 @@ class _Attachment {
   _Attachment(this.file, this.kind) : name = file.uri.pathSegments.last;
 
   IconData get icon => switch (kind) {
-        'video' => Icons.videocam,
-        'audio' => Icons.mic,
-        _ => Icons.image,
-      };
+    'video' => Icons.videocam,
+    'audio' => Icons.mic,
+    _ => Icons.image,
+  };
 }
 
 class _FeedbackPageState extends State<FeedbackPage> {
@@ -63,7 +63,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
           ? await picker.pickVideo(source: ImageSource.gallery)
           : await picker.pickImage(source: ImageSource.gallery);
       if (x == null) return;
-      setState(() => _files.add(_Attachment(File(x.path), video ? 'video' : 'image')));
+      setState(
+        () => _files.add(_Attachment(File(x.path), video ? 'video' : 'image')),
+      );
     } catch (_) {
       // 데스크톱 등에서 picker 미지원 시 무시
     }
@@ -164,8 +166,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
     if (ok) {
       // 피드백을 보낸 사용자에게는 후기 유도 다이얼로그를 더 띄우지 않는다.
       unawaited(ReviewPromptService.instance.markDone());
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l.feedbackSent)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.feedbackSent)));
       Navigator.pop(context);
     } else {
       setState(() {
@@ -184,8 +187,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.text,
         elevation: 0,
-        title: Text(l.feedbackTitle,
-            style: const TextStyle(fontSize: 15, letterSpacing: 0.5)),
+        title: Text(
+          l.feedbackTitle,
+          style: const TextStyle(fontSize: 15, letterSpacing: 0.5),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -214,43 +219,65 @@ class _FeedbackPageState extends State<FeedbackPage> {
           ),
           const SizedBox(height: 16),
           // 첨부 버튼
-          Wrap(spacing: 10, runSpacing: 8, children: [
-            _attachBtn(Icons.photo_outlined, l.feedbackAttachPhoto,
-                () => _pick(false)),
-            _attachBtn(Icons.videocam_outlined, l.feedbackAttachVideo,
-                () => _pick(true)),
-            // 음성 녹음 — 녹음 중엔 빨간 점 + 경과시간 + 탭하여 종료
-            GestureDetector(
-              onTap: _sending ? null : _toggleRecord,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                decoration: BoxDecoration(
-                  color: _recording
-                      ? AppColors.danger.withAlpha(0x22)
-                      : AppColors.surface,
-                  border: Border.all(
-                      color: _recording ? AppColors.danger : AppColors.border),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(_recording ? Icons.stop_circle_outlined : Icons.mic_none,
-                      size: 16,
-                      color: _recording ? AppColors.danger : AppColors.muted),
-                  const SizedBox(width: 6),
-                  Text(
-                    _recording
-                        ? '${l.feedbackRecording} $_recLabel'
-                        : l.feedbackRecordVoice,
-                    style: TextStyle(
-                        color:
-                            _recording ? AppColors.danger : AppColors.muted,
-                        fontSize: 12),
-                  ),
-                ]),
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
+            children: [
+              _attachBtn(
+                Icons.photo_outlined,
+                l.feedbackAttachPhoto,
+                () => _pick(false),
               ),
-            ),
-          ]),
+              _attachBtn(
+                Icons.videocam_outlined,
+                l.feedbackAttachVideo,
+                () => _pick(true),
+              ),
+              // 음성 녹음 — 녹음 중엔 빨간 점 + 경과시간 + 탭하여 종료
+              GestureDetector(
+                onTap: _sending ? null : _toggleRecord,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _recording
+                        ? AppColors.danger.withAlpha(0x22)
+                        : AppColors.surface,
+                    border: Border.all(
+                      color: _recording ? AppColors.danger : AppColors.border,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _recording
+                            ? Icons.stop_circle_outlined
+                            : Icons.mic_none,
+                        size: 16,
+                        color: _recording ? AppColors.danger : AppColors.muted,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _recording
+                            ? '${l.feedbackRecording} $_recLabel'
+                            : l.feedbackRecordVoice,
+                        style: TextStyle(
+                          color: _recording
+                              ? AppColors.danger
+                              : AppColors.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 10),
           // 첨부 목록
           for (final a in _files.asMap().entries)
@@ -262,38 +289,42 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 border: Border.all(color: AppColors.border),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(children: [
-                Icon(a.value.icon, size: 16, color: AppColors.muted),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(a.value.name,
+              child: Row(
+                children: [
+                  Icon(a.value.icon, size: 16, color: AppColors.muted),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          a.value.name,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                              color: AppColors.text, fontSize: 12)),
-                      if (_sending)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: LinearProgressIndicator(
-                            value: a.value.progress,
-                            minHeight: 3,
-                            backgroundColor: AppColors.border,
-                            color: AppColors.timerOrange,
+                            color: AppColors.text,
+                            fontSize: 12,
                           ),
                         ),
-                    ],
+                        if (_sending)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: LinearProgressIndicator(
+                              value: a.value.progress,
+                              minHeight: 3,
+                              backgroundColor: AppColors.border,
+                              color: AppColors.timerOrange,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                if (!_sending)
-                  IconButton(
-                    icon: const Icon(Icons.close,
-                        size: 15, color: AppColors.muted),
-                    onPressed: () =>
-                        setState(() => _files.removeAt(a.key)),
-                  ),
-              ]),
+                  if (!_sending)
+                    IconButton(
+                      icon: Icon(Icons.close, size: 15, color: AppColors.muted),
+                      onPressed: () => setState(() => _files.removeAt(a.key)),
+                    ),
+                ],
+              ),
             ),
           // 진단 로그 동봉 체크박스 (기기 환경·최근 행동 흐름 — 개인정보 미포함)
           Padding(
@@ -302,32 +333,35 @@ class _FeedbackPageState extends State<FeedbackPage> {
               onTap: _sending
                   ? null
                   : () => setState(() => _includeLogs = !_includeLogs),
-              child: Row(children: [
-                Icon(
-                  _includeLogs
-                      ? Icons.check_box
-                      : Icons.check_box_outline_blank,
-                  size: 18,
-                  color:
-                      _includeLogs ? AppColors.timerOrange : AppColors.muted,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l.feedbackIncludeLogs,
-                    style:
-                        const TextStyle(color: AppColors.muted, fontSize: 12),
+              child: Row(
+                children: [
+                  Icon(
+                    _includeLogs
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                    size: 18,
+                    color: _includeLogs
+                        ? AppColors.timerOrange
+                        : AppColors.muted,
                   ),
-                ),
-              ]),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l.feedbackIncludeLogs,
+                      style: TextStyle(color: AppColors.muted, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 6, bottom: 6),
-              child: Text(_error!,
-                  style:
-                      const TextStyle(color: AppColors.danger, fontSize: 12)),
+              child: Text(
+                _error!,
+                style: const TextStyle(color: AppColors.danger, fontSize: 12),
+              ),
             ),
           const SizedBox(height: 12),
           GestureDetector(
@@ -346,13 +380,18 @@ class _FeedbackPageState extends State<FeedbackPage> {
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
-                    : Text(l.feedbackSend,
+                    : Text(
+                        l.feedbackSend,
                         style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600)),
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -368,15 +407,21 @@ class _FeedbackPageState extends State<FeedbackPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: sel ? AppColors.timerOrange.withAlpha(0x33) : AppColors.surface,
+          color: sel
+              ? AppColors.timerOrange.withAlpha(0x33)
+              : AppColors.surface,
           border: Border.all(
-              color: sel ? AppColors.timerOrange : AppColors.border),
+            color: sel ? AppColors.timerOrange : AppColors.border,
+          ),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(label,
-            style: TextStyle(
-                color: sel ? AppColors.timerOrange : AppColors.muted,
-                fontSize: 13)),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: sel ? AppColors.timerOrange : AppColors.muted,
+            fontSize: 13,
+          ),
+        ),
       ),
     );
   }
@@ -391,27 +436,32 @@ class _FeedbackPageState extends State<FeedbackPage> {
             border: Border.all(color: AppColors.border),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(icon, size: 16, color: AppColors.muted),
-            const SizedBox(width: 6),
-            Text(label,
-                style:
-                    const TextStyle(color: AppColors.muted, fontSize: 12)),
-          ]),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: AppColors.muted),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
+              ),
+            ],
+          ),
         ),
       );
 
   InputDecoration _dec(String hint) => InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: AppColors.muted, fontSize: 13),
-        isDense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.border)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.timerOrange)),
-      );
+    hintText: hint,
+    hintStyle: TextStyle(color: AppColors.muted, fontSize: 13),
+    isDense: true,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: AppColors.border),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: AppColors.timerOrange),
+    ),
+  );
 }

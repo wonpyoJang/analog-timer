@@ -60,7 +60,7 @@ class StopwatchControls extends StatelessWidget {
           children: [
             Text(
               '⏲ ${l.stopwatchSection}',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.muted,
                 fontSize: 11,
                 letterSpacing: 1.2,

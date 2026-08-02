@@ -51,7 +51,7 @@ class LapList extends StatelessWidget {
           child: state.laps.isEmpty
               ? Text(
                   l.noLaps,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
@@ -83,7 +83,7 @@ class LapList extends StatelessWidget {
                               ),
                               Text(
                                 _fmt(e.value.totalMs),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.muted,
                                   fontSize: 11,
                                 ),
@@ -113,7 +113,7 @@ class TimerLog extends StatelessWidget {
           child: state.log.isEmpty
               ? Text(
                   l.noEvents,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
@@ -140,7 +140,7 @@ class TimerLog extends StatelessWidget {
                                 '${e.time.hour.toString().padLeft(2, '0')}:'
                                 '${e.time.minute.toString().padLeft(2, '0')}:'
                                 '${e.time.second.toString().padLeft(2, '0')} ',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.muted,
                                   fontSize: 10,
                                 ),
@@ -187,7 +187,7 @@ class _Panel extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.muted,
               fontSize: 11,
               letterSpacing: 1.0,

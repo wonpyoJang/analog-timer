@@ -98,5 +98,7 @@
   "settingsHaptics": "Тактильная отдача",
   "settingsHapticsDesc": "Вибрация при старте, паузе и завершении",
   "settingsColorblind": "Режим для дальтоников",
-  "settingsColorblindDesc": "Отличать секундомер пунктиром, а не только цветом"
+  "settingsColorblindDesc": "Отличать секундомер пунктиром, а не только цветом",
+  "settingsHighContrast": "Высокий контраст",
+  "settingsHighContrastDesc": "Осветлить второстепенный текст для удобства чтения"
 }

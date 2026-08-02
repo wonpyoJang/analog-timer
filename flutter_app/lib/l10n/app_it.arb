@@ -98,5 +98,7 @@
   "settingsHaptics": "Feedback aptico",
   "settingsHapticsDesc": "Vibra all'avvio, in pausa e al completamento",
   "settingsColorblind": "Modalità daltonici",
-  "settingsColorblindDesc": "Distingui il cronometro con tratteggio, non solo col colore"
+  "settingsColorblindDesc": "Distingui il cronometro con tratteggio, non solo col colore",
+  "settingsHighContrast": "Contrasto elevato",
+  "settingsHighContrastDesc": "Schiarisci il testo secondario per leggerlo meglio"
 }

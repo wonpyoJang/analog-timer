@@ -94,7 +94,8 @@ class FeedbackService {
       'deviceId': deviceId,
       'category': category,
       'message': message,
-      if (contact != null && contact.trim().isNotEmpty) 'contact': contact.trim(),
+      if (contact != null && contact.trim().isNotEmpty)
+        'contact': contact.trim(),
       'attachments': attachments,
       if (diagnostics != null && diagnostics.isNotEmpty)
         'diagnostics': diagnostics,
@@ -108,7 +109,9 @@ class FeedbackService {
   String? _publicUrlFrom(String uploadUrl, String? pathname) {
     if (pathname == null) return null;
     try {
-      final host = Uri.parse(uploadUrl).host; // <storeid>.blob.vercel-storage.com 형태
+      final host = Uri.parse(
+        uploadUrl,
+      ).host; // <storeid>.blob.vercel-storage.com 형태
       final storeId = host.split('.').first;
       if (storeId.isEmpty) return null;
       return 'https://$storeId.public.blob.vercel-storage.com/$pathname';
@@ -137,7 +140,9 @@ class FeedbackService {
   }
 
   Future<Map<String, dynamic>?> _postJson(
-      String url, Map<String, dynamic> body) async {
+    String url,
+    Map<String, dynamic> body,
+  ) async {
     HttpClient? c;
     try {
       c = HttpClient()..connectionTimeout = const Duration(seconds: 10);

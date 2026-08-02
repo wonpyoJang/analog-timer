@@ -80,9 +80,7 @@ class _PresetEditPageState extends State<PresetEditPage> {
       return;
     }
     if (_segs.isEmpty) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.atLeastOneSegment)),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l.atLeastOneSegment)));
       return;
     }
     Navigator.pop(context, Preset(name: name, loop: _loop, segments: _segs));
@@ -121,7 +119,11 @@ class _PresetEditPageState extends State<PresetEditPage> {
         children: [
           Text(
             l.presetName,
-            style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.2),
+            style: TextStyle(
+              color: AppColors.muted,
+              fontSize: 11,
+              letterSpacing: 1.2,
+            ),
           ),
           const SizedBox(height: 8),
           TextField(
@@ -131,9 +133,12 @@ class _PresetEditPageState extends State<PresetEditPage> {
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
               hintText: l.presetNameHint,
-              hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
+              hintStyle: TextStyle(color: AppColors.muted, fontSize: 14),
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: AppColors.border),
@@ -147,7 +152,11 @@ class _PresetEditPageState extends State<PresetEditPage> {
           const SizedBox(height: 22),
           Text(
             l.segments,
-            style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.2),
+            style: TextStyle(
+              color: AppColors.muted,
+              fontSize: 11,
+              letterSpacing: 1.2,
+            ),
           ),
           const SizedBox(height: 10),
           ReorderableListView(
@@ -179,7 +188,7 @@ class _PresetEditPageState extends State<PresetEditPage> {
               child: Text(
                 l.addSegment,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
               ),
             ),
           ),
@@ -196,7 +205,7 @@ class _PresetEditPageState extends State<PresetEditPage> {
               const SizedBox(width: 8),
               Text(
                 l.loopToggle,
-                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                style: TextStyle(color: AppColors.muted, fontSize: 13),
               ),
             ],
           ),
@@ -253,7 +262,11 @@ class _EditSegRowState extends State<_EditSegRow> {
     if (picked != null) {
       final mins = int.tryParse(_minCtrl.text) ?? widget.segment.minutes;
       widget.onChanged(
-        widget.segment.copyWith(name: _nameCtrl.text, minutes: mins, color: picked),
+        widget.segment.copyWith(
+          name: _nameCtrl.text,
+          minutes: mins,
+          color: picked,
+        ),
       );
     }
   }
@@ -273,11 +286,15 @@ class _EditSegRowState extends State<_EditSegRow> {
         children: [
           ReorderableDragStartListener(
             index: widget.index,
-            child: const MouseRegion(
+            child: MouseRegion(
               cursor: SystemMouseCursors.grab,
               child: Padding(
                 padding: EdgeInsets.only(right: 6),
-                child: Icon(Icons.drag_indicator, size: 18, color: AppColors.muted),
+                child: Icon(
+                  Icons.drag_indicator,
+                  size: 18,
+                  color: AppColors.muted,
+                ),
               ),
             ),
           ),
@@ -293,7 +310,10 @@ class _EditSegRowState extends State<_EditSegRow> {
                   decoration: BoxDecoration(
                     color: widget.segment.color,
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.text.withAlpha(0x33), width: 1),
+                    border: Border.all(
+                      color: AppColors.text.withAlpha(0x33),
+                      width: 1,
+                    ),
                   ),
                 ),
               ),
@@ -339,11 +359,14 @@ class _EditSegRowState extends State<_EditSegRow> {
             ),
           ),
           const SizedBox(width: 5),
-          Text(l.minutesUnit, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+          Text(
+            l.minutesUnit,
+            style: TextStyle(color: AppColors.muted, fontSize: 12),
+          ),
           const SizedBox(width: 6),
           GestureDetector(
             onTap: widget.onRemove,
-            child: const MouseRegion(
+            child: MouseRegion(
               cursor: SystemMouseCursors.click,
               child: Icon(Icons.close, size: 17, color: AppColors.muted),
             ),

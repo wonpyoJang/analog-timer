@@ -98,5 +98,7 @@
   "settingsHaptics": "Dokunsal geri bildirim",
   "settingsHapticsDesc": "Başlatma, duraklatma ve tamamlamada titret",
   "settingsColorblind": "Renk körlüğü modu",
-  "settingsColorblindDesc": "Kronometreyi yalnızca renkle değil kesik çizgiyle ayırt et"
+  "settingsColorblindDesc": "Kronometreyi yalnızca renkle değil kesik çizgiyle ayırt et",
+  "settingsHighContrast": "Yüksek kontrast",
+  "settingsHighContrastDesc": "İkincil metni okumayı kolaylaştırmak için aydınlat"
 }

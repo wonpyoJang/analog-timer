@@ -23,6 +23,7 @@ import 'services/tts_service.dart';
 import 'services/text_scale_service.dart';
 import 'services/haptic_service.dart';
 import 'services/colorblind_service.dart';
+import 'services/high_contrast_service.dart';
 import 'widgets/desktop_title_bar.dart';
 
 Future<void> main(List<String> args) async {
@@ -51,6 +52,7 @@ Future<void> main(List<String> args) async {
   await TextScaleService.instance.init();
   await HapticService.instance.init();
   await ColorblindService.instance.init();
+  await HighContrastService.instance.init();
   await HotkeyService.instance.init();
   _installErrorHandlers();
   runApp(const AnalogTimerApp());
@@ -91,6 +93,7 @@ void overlayMain() async {
   await initializeDateFormatting();
   await TextScaleService.instance.init();
   await ColorblindService.instance.init();
+  await HighContrastService.instance.init();
   final tag = await PersistenceService.loadLocale();
   final locale = tag != null ? parseLocaleTag(tag) : null;
   runApp(OverlayApp(initialLocale: locale));
@@ -100,17 +103,21 @@ void overlayMain() async {
 /// OS 접근성 배율을 존중(곱)하면서 최종값을 클램프해 레이아웃 파손을 막는다.
 Widget withUserTextScale(BuildContext context, Widget? child) {
   final base = child ?? const SizedBox.shrink();
-  return ValueListenableBuilder<double>(
-    valueListenable: TextScaleService.instance.scaleListenable,
-    builder: (context, userScale, _) {
-      final mq = MediaQuery.of(context);
-      final system = mq.textScaler.scale(1.0); // 시스템 배율(1.0 기준 배수)
-      final effective = (system * userScale).clamp(0.5, 2.0);
-      return MediaQuery(
-        data: mq.copyWith(textScaler: TextScaler.linear(effective)),
-        child: base,
-      );
-    },
+  // 고대비 토글 변경 시 전체 리빌드 → AppColors.muted/faint getter 재평가.
+  return ValueListenableBuilder<bool>(
+    valueListenable: HighContrastService.instance.enabledListenable,
+    builder: (context, _, _) => ValueListenableBuilder<double>(
+      valueListenable: TextScaleService.instance.scaleListenable,
+      builder: (context, userScale, _) {
+        final mq = MediaQuery.of(context);
+        final system = mq.textScaler.scale(1.0); // 시스템 배율(1.0 기준 배수)
+        final effective = (system * userScale).clamp(0.5, 2.0);
+        return MediaQuery(
+          data: mq.copyWith(textScaler: TextScaler.linear(effective)),
+          child: base,
+        );
+      },
+    ),
   );
 }
 

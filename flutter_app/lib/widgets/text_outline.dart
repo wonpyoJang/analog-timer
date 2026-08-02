@@ -6,8 +6,7 @@ List<Shadow> textOutline({
   Color color = const Color(0xCC0A0A0C),
   Offset offset = const Offset(0, 1.5),
   double blur = 2,
-}) =>
-    [Shadow(color: color, offset: offset, blurRadius: blur)];
+}) => [Shadow(color: color, offset: offset, blurRadius: blur)];
 
 /// 가변 배경(흰 다이얼 · 색 부채꼴 · 시침/분침) 위 글자 가독성용 —
 /// stroke 외곽선 + drop shadow 를 함께 입힌다.

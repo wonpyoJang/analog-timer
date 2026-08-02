@@ -47,17 +47,32 @@ class Preset {
 
   /// 현재 언어로 생성하는 기본 프리셋(집중=주황 segColors[3], 휴식=파랑 segColors[1]).
   static List<Preset> defaultsFor(AppLocalizations l) => [
-    Preset(name: l.presetPomodoro, loop: true, builtinKey: 'pomodoro', segments: [
-      Segment(name: l.segFocus, minutes: 25, color: AppColors.segColors[3]),
-      Segment(name: l.segBreak, minutes: 5, color: AppColors.segColors[1]),
-    ]),
-    Preset(name: l.preset5217, loop: true, builtinKey: 'fifty2seventeen', segments: [
-      Segment(name: l.segFocus, minutes: 52, color: AppColors.segColors[3]),
-      Segment(name: l.segBreak, minutes: 17, color: AppColors.segColors[1]),
-    ]),
-    Preset(name: l.presetDeepwork, loop: false, builtinKey: 'deepwork', segments: [
-      Segment(name: l.segFocus, minutes: 90, color: AppColors.segColors[3]),
-      Segment(name: l.segBreak, minutes: 20, color: AppColors.segColors[1]),
-    ]),
+    Preset(
+      name: l.presetPomodoro,
+      loop: true,
+      builtinKey: 'pomodoro',
+      segments: [
+        Segment(name: l.segFocus, minutes: 25, color: AppColors.segColors[3]),
+        Segment(name: l.segBreak, minutes: 5, color: AppColors.segColors[1]),
+      ],
+    ),
+    Preset(
+      name: l.preset5217,
+      loop: true,
+      builtinKey: 'fifty2seventeen',
+      segments: [
+        Segment(name: l.segFocus, minutes: 52, color: AppColors.segColors[3]),
+        Segment(name: l.segBreak, minutes: 17, color: AppColors.segColors[1]),
+      ],
+    ),
+    Preset(
+      name: l.presetDeepwork,
+      loop: false,
+      builtinKey: 'deepwork',
+      segments: [
+        Segment(name: l.segFocus, minutes: 90, color: AppColors.segColors[3]),
+        Segment(name: l.segBreak, minutes: 20, color: AppColors.segColors[1]),
+      ],
+    ),
   ];
 }

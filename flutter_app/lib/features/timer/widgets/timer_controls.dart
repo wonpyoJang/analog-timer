@@ -25,7 +25,7 @@ class TimerControls extends StatelessWidget {
           children: [
             Text(
               '⏱ ${l.timerSection}',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.muted,
                 fontSize: 11,
                 letterSpacing: 1.2,
@@ -45,13 +45,15 @@ class TimerControls extends StatelessWidget {
                     enabled: !isRunning,
                     primary: true,
                     color: AppColors.timerOrange,
-                    tooltip: 'Space · ${HotkeyService.instance.describe('timer_toggle')}',
+                    tooltip:
+                        'Space · ${HotkeyService.instance.describe('timer_toggle')}',
                     onTap: isRunning
                         ? null
                         : () {
                             context.read<TimerBloc>().add(const TimerStart());
-                            ShortcutHintService.instance
-                                .buttonPressed('timer_toggle');
+                            ShortcutHintService.instance.buttonPressed(
+                              'timer_toggle',
+                            );
                           },
                   ),
                 ),
@@ -60,12 +62,14 @@ class TimerControls extends StatelessWidget {
                   child: _Btn(
                     label: l.btnPause,
                     enabled: isRunning,
-                    tooltip: 'Space · ${HotkeyService.instance.describe('timer_toggle')}',
+                    tooltip:
+                        'Space · ${HotkeyService.instance.describe('timer_toggle')}',
                     onTap: isRunning
                         ? () {
                             context.read<TimerBloc>().add(const TimerPause());
-                            ShortcutHintService.instance
-                                .buttonPressed('timer_toggle');
+                            ShortcutHintService.instance.buttonPressed(
+                              'timer_toggle',
+                            );
                           }
                         : null,
                   ),
@@ -82,12 +86,14 @@ class TimerControls extends StatelessWidget {
                     enabled: !isIdle,
                     color: AppColors.accent,
                     accentOutline: true,
-                    tooltip: 'N · ${HotkeyService.instance.describe('timer_next')}',
+                    tooltip:
+                        'N · ${HotkeyService.instance.describe('timer_next')}',
                     onTap: !isIdle
                         ? () {
                             context.read<TimerBloc>().add(const TimerNext());
-                            ShortcutHintService.instance
-                                .buttonPressed('timer_next');
+                            ShortcutHintService.instance.buttonPressed(
+                              'timer_next',
+                            );
                           }
                         : null,
                   ),

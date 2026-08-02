@@ -98,5 +98,7 @@
   "settingsHaptics": "觸覺回饋",
   "settingsHapticsDesc": "開始、暫停和完成時震動",
   "settingsColorblind": "色盲模式",
-  "settingsColorblindDesc": "用虛線而非僅顏色區分碼錶"
+  "settingsColorblindDesc": "用虛線而非僅顏色區分碼錶",
+  "settingsHighContrast": "高對比度",
+  "settingsHighContrastDesc": "提亮次要文字以便閱讀"
 }

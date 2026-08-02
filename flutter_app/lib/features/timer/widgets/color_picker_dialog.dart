@@ -53,7 +53,11 @@ Future<Color?> showSegColorPicker(BuildContext context, Color current) {
                           ),
                         ),
                         child: c.toARGB32() == cur
-                            ? const Icon(Icons.check, size: 18, color: Colors.white)
+                            ? const Icon(
+                                Icons.check,
+                                size: 18,
+                                color: Colors.white,
+                              )
                             : null,
                       ),
                     ),

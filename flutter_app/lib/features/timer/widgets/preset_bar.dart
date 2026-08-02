@@ -137,7 +137,7 @@ class _PresetBarState extends State<PresetBar> {
           style: const TextStyle(color: AppColors.text, fontSize: 13),
           decoration: InputDecoration(
             hintText: l.presetNameHint,
-            hintStyle: const TextStyle(color: AppColors.muted, fontSize: 13),
+            hintStyle: TextStyle(color: AppColors.muted, fontSize: 13),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: AppColors.border),
@@ -152,10 +152,7 @@ class _PresetBarState extends State<PresetBar> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, null),
-            child: Text(
-              l.cancel,
-              style: const TextStyle(color: AppColors.muted),
-            ),
+            child: Text(l.cancel, style: TextStyle(color: AppColors.muted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text),
@@ -272,7 +269,7 @@ class _PresetChip extends StatelessWidget {
             AccessibleIconButton(
               label: '${AppLocalizations.of(context).delete}: ${preset.name}',
               onTap: onDelete,
-              child: const MouseRegion(
+              child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: Padding(
                   padding: EdgeInsets.all(4),
@@ -351,11 +348,11 @@ class _ManageChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.tune, size: 14, color: AppColors.muted),
+              Icon(Icons.tune, size: 14, color: AppColors.muted),
               const SizedBox(width: 5),
               Text(
                 l.manage,
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
               ),
             ],
           ),

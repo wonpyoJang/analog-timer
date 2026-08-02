@@ -52,7 +52,7 @@ class _DayLogViewState extends State<DayLogView> {
         children: [
           Text(
             l.dayLogTitle,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.muted,
               fontSize: 11,
               letterSpacing: 1.2,
@@ -69,7 +69,7 @@ class _DayLogViewState extends State<DayLogView> {
           else if (_entries!.isEmpty)
             Text(
               l.dayLogEmpty,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.muted,
                 fontSize: 12,
                 fontStyle: FontStyle.italic,
@@ -125,7 +125,7 @@ class _LogEntryRow extends StatelessWidget {
           ),
           Text(
             '$timeStr ',
-            style: const TextStyle(color: AppColors.muted, fontSize: 10),
+            style: TextStyle(color: AppColors.muted, fontSize: 10),
           ),
           Text(
             '$typeIcon ',

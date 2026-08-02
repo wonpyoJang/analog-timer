@@ -21,18 +21,24 @@ Future<void> showTelemetryConsent(BuildContext context) async {
       ),
       content: Text(
         l.telemetryConsentBody,
-        style: const TextStyle(color: AppColors.muted, fontSize: 13, height: 1.5),
+        style: TextStyle(color: AppColors.muted, fontSize: 13, height: 1.5),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
-          child: Text(l.telemetryDeny, style: const TextStyle(color: AppColors.muted)),
+          child: Text(
+            l.telemetryDeny,
+            style: TextStyle(color: AppColors.muted),
+          ),
         ),
         TextButton(
           onPressed: () => Navigator.pop(ctx, true),
           child: Text(
             l.telemetryAllow,
-            style: const TextStyle(color: AppColors.timerOrange, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              color: AppColors.timerOrange,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -64,7 +70,11 @@ Future<void> showTelemetrySettings(BuildContext context) async {
           children: [
             Text(
               l.telemetryConsentBody,
-              style: const TextStyle(color: AppColors.muted, fontSize: 13, height: 1.5),
+              style: TextStyle(
+                color: AppColors.muted,
+                fontSize: 13,
+                height: 1.5,
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -91,7 +101,7 @@ Future<void> showTelemetrySettings(BuildContext context) async {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l.cancel, style: const TextStyle(color: AppColors.muted)),
+            child: Text(l.cancel, style: TextStyle(color: AppColors.muted)),
           ),
         ],
       ),

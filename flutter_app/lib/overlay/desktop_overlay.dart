@@ -11,6 +11,7 @@ import 'package:window_manager/window_manager.dart';
 import 'overlay_clock_painter.dart';
 import '../services/desktop_service.dart';
 import '../services/colorblind_service.dart';
+import '../services/high_contrast_service.dart';
 import '../services/native_confirm.dart';
 import '../services/telemetry_service.dart';
 import '../widgets/date_label.dart';
@@ -67,6 +68,7 @@ Size _sizeForScale(double s) =>
 /// 위치는 Dart 에서 직접 추적(드래그 시 setPosition)하고 prefs 에 저장한다.
 Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
   await ColorblindService.instance.init();
+  await HighContrastService.instance.init();
   final ovPrefs = await _loadOverlayPrefs();
   final scale = ((ovPrefs[_kOverlayScale] as num?)?.toDouble() ?? 1.0).clamp(
     _scaleMin,

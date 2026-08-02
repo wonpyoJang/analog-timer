@@ -45,8 +45,9 @@ class HotkeyService {
   /// 등록에 실패한 액션들 — 다른 앱이 선점한 조합. Windows 는 원래 이 실패를
   /// 조용히 삼키므로(hotkey_manager_windows 로컬 패치로 전파) 설정에 ⚠ 로
   /// 노출해 "저장했는데 안 눌림"의 원인을 사용자가 알 수 있게 한다.
-  final ValueNotifier<Set<String>> failedActions =
-      ValueNotifier<Set<String>>(const {});
+  final ValueNotifier<Set<String>> failedActions = ValueNotifier<Set<String>>(
+    const {},
+  );
 
   /// 액션 콜백 — home_screen 의 액션 핸들러('timer_toggle' 등)로 연결된다.
   void Function(String action)? onAction;
@@ -55,14 +56,14 @@ class HotkeyService {
   bool _registered = false;
 
   Map<String, HotKey> _defaults() => {
-        'timer_toggle': _key(PhysicalKeyboardKey.space),
-        'timer_next': _key(PhysicalKeyboardKey.keyN),
-        'sw_lap': _key(PhysicalKeyboardKey.keyL),
-        // 위젯은 skipTaskbar(툴윈도우)라 Alt+Tab 에 안 뜬다(위젯 관례) —
-        // 마우스 없이 포커스하는 유일한 경로가 이 핫키다. 포커스 후
-        // 1~9/화살표/Tab 으로 배치하고 Esc 로 이전 앱에 돌아간다.
-        'widget_focus': _key(PhysicalKeyboardKey.keyW),
-      };
+    'timer_toggle': _key(PhysicalKeyboardKey.space),
+    'timer_next': _key(PhysicalKeyboardKey.keyN),
+    'sw_lap': _key(PhysicalKeyboardKey.keyL),
+    // 위젯은 skipTaskbar(툴윈도우)라 Alt+Tab 에 안 뜬다(위젯 관례) —
+    // 마우스 없이 포커스하는 유일한 경로가 이 핫키다. 포커스 후
+    // 1~9/화살표/Tab 으로 배치하고 Esc 로 이전 앱에 돌아간다.
+    'widget_focus': _key(PhysicalKeyboardKey.keyW),
+  };
 
   /// 기본 조합의 모디파이어 — 설치된 자판 레이아웃으로 1회 판별.
   /// AltGr 레이아웃 없음(한/미/일 등)이 확실하면 Ctrl+Alt(3키 — 멤브레인
@@ -71,15 +72,15 @@ class HotkeyService {
   static final bool _simpleCombo = computeSimpleComboSafe();
 
   HotKey _key(PhysicalKeyboardKey code) => HotKey(
-        key: code,
-        modifiers: [
-          HotKeyModifier.control,
-          if (!_simpleCombo) HotKeyModifier.shift,
-          HotKeyModifier.alt,
-        ],
-        // inapp 이 아닌 system — 포커스가 다른 앱에 있어도 동작해야 한다.
-        scope: HotKeyScope.system,
-      );
+    key: code,
+    modifiers: [
+      HotKeyModifier.control,
+      if (!_simpleCombo) HotKeyModifier.shift,
+      HotKeyModifier.alt,
+    ],
+    // inapp 이 아닌 system — 포커스가 다른 앱에 있어도 동작해야 한다.
+    scope: HotKeyScope.system,
+  );
 
   HotKey? binding(String action) => _bindings[action];
 
@@ -194,7 +195,8 @@ class HotkeyService {
         if (raw != null) {
           try {
             hk = HotKey.fromJson(
-                (jsonDecode(raw) as Map).cast<String, dynamic>());
+              (jsonDecode(raw) as Map).cast<String, dynamic>(),
+            );
           } catch (_) {}
         }
         // 불량 바인딩 정화 — 구버전 녹화기가 저장한 Shift 단독 조합 등은
@@ -270,8 +272,7 @@ class HotkeyService {
     for (final e in _bindings.entries) {
       if (e.key == action) continue;
       final o = e.value;
-      if (o.key == hk.key &&
-          _modSet(o.modifiers) == _modSet(hk.modifiers)) {
+      if (o.key == hk.key && _modSet(o.modifiers) == _modSet(hk.modifiers)) {
         return e.key;
       }
     }
@@ -294,8 +295,9 @@ class HotkeyService {
       await p.setString('$_kBindPrefix$action', jsonEncode(hk.toJson()));
     } catch (_) {}
     bindingsRev.value++;
-    unawaited(TelemetryService.instance
-        .logEvent('hotkey_rebind', {'action': action}));
+    unawaited(
+      TelemetryService.instance.logEvent('hotkey_rebind', {'action': action}),
+    );
     if (enabled) {
       await _unregister();
       await _register();
@@ -361,8 +363,11 @@ class HotkeyService {
       await hotKeyManager.register(
         hk,
         keyDownHandler: (_) {
-          unawaited(TelemetryService.instance
-              .logEvent('global_hotkey', {'action': action}));
+          unawaited(
+            TelemetryService.instance.logEvent('global_hotkey', {
+              'action': action,
+            }),
+          );
           onAction?.call(action);
         },
       );
@@ -373,7 +378,9 @@ class HotkeyService {
   }
 
   bool _sameCombo(HotKey a, HotKey? b) =>
-      b != null && a.key == b.key && _modSet(a.modifiers) == _modSet(b.modifiers);
+      b != null &&
+      a.key == b.key &&
+      _modSet(a.modifiers) == _modSet(b.modifiers);
 
   Future<void> _unregister() async {
     _registered = false;
