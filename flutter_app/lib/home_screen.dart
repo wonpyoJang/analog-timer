@@ -763,6 +763,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         context.read<StopwatchBloc>().add(const StopwatchLap());
       case 'widget_toggle':
         if (isDesktop) _toggleDesktopOverlay();
+      case 'widget_focus':
+        DesktopOverlayService.instance.focusOverlay();
       case 'shortcut_sheet':
         showShortcutSheet(context);
       case 'overlay_hide':

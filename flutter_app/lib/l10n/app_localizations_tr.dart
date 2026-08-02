@@ -512,6 +512,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shortcutWidgetMirror => 'Flip widget to opposite side';
 
   @override
+  String get shortcutWidgetFocus => 'Focus widget (start keyboard placement)';
+
+  @override
+  String get shortcutWidgetBlur => 'Return to previous app';
+
+  @override
   String get keysHintTimerToggle =>
       'Tip: Space or Ctrl+Alt+Space also starts/pauses the timer';
 

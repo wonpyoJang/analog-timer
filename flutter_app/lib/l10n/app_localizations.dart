@@ -1053,6 +1053,18 @@ abstract class AppLocalizations {
   /// **'Flip widget to opposite side'**
   String get shortcutWidgetMirror;
 
+  /// No description provided for @shortcutWidgetFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus widget (start keyboard placement)'**
+  String get shortcutWidgetFocus;
+
+  /// No description provided for @shortcutWidgetBlur.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to previous app'**
+  String get shortcutWidgetBlur;
+
   /// No description provided for @keysHintTimerToggle.
   ///
   /// In en, this message translates to:

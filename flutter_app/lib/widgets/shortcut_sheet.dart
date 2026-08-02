@@ -74,6 +74,8 @@ Future<void> showShortcutSheet(BuildContext context) {
                 [HotkeyService.instance.describe('timer_next')]),
             row(l.shortcutSwLap,
                 [HotkeyService.instance.describe('sw_lap')]),
+            row(l.shortcutWidgetFocus,
+                [HotkeyService.instance.describe('widget_focus')]),
           ],
           section(l.shortcutInAppSection),
           row(l.shortcutTimerToggle, const ['Space']),
@@ -87,6 +89,7 @@ Future<void> showShortcutSheet(BuildContext context) {
             row(l.shortcutWidgetAnchor, const ['1–9']),
           if (isDesktop)
             row(l.shortcutWidgetMirror, const ['Tab', 'Shift+Tab']),
+          if (isDesktop) row(l.shortcutWidgetBlur, const ['Esc']),
           row(l.shortcutSheetTitle, const ['?']),
           const SizedBox(height: 8),
         ],
