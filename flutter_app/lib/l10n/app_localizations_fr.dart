@@ -454,4 +454,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsTtsSample => 'Voice announcements are on';
+
+  @override
+  String get ttsOnboardBody =>
+      'Segment changes like this can also be announced by voice';
+
+  @override
+  String get ttsOnboardEnable => 'Try it';
+
+  @override
+  String get ttsVoiceMissingHint =>
+      'For natural announcements, add your language\'s voice in Windows Settings > Time & Language > Speech';
 }

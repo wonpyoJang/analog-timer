@@ -829,7 +829,48 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         l.notifySegmentDoneBody(prevName, curName),
         localeTag: ttsLocale,
       );
+      // TTS 온보딩(1회) — 사용자가 전환을 3번째 경험한 직후에만 제안.
+      unawaited(_maybeShowTtsOnboarding());
     }
+  }
+
+  /// 맥락 트리거형 TTS 온보딩 — 팝업이 아닌 스낵바 1회. "켜보기"는 즉시 샘플
+  /// 발화로 가치를 체감시키고, 시스템에 앱 언어 음성이 없으면(예: en 음성만
+  /// 설치된 Windows) 음성 추가 경로를 안내한다. 무시하면 다시 뜨지 않는다.
+  Future<void> _maybeShowTtsOnboarding() async {
+    if (!await TtsService.instance.shouldShowOnboarding()) return;
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
+    final messenger = ScaffoldMessenger.of(context);
+    await TtsService.instance.markOnboardingShown();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l.ttsOnboardBody),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 12),
+        action: SnackBarAction(
+          label: l.ttsOnboardEnable,
+          textColor: AppColors.accent,
+          onPressed: () async {
+            await TtsService.instance.setEnabled(
+              true,
+              sample: l.settingsTtsSample,
+              localeTag: localeTag,
+            );
+            if (!await TtsService.instance.isLanguageAvailable(localeTag)) {
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(l.ttsVoiceMissingHint),
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 10),
+                ),
+              );
+            }
+          },
+        ),
+      ),
+    );
   }
 
   void _onLogUpdate(BuildContext ctx, TimerState cur) {

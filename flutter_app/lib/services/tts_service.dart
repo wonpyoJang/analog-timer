@@ -16,6 +16,8 @@ class TtsService {
   static final TtsService instance = TtsService._();
 
   static const String _kEnabled = 'tts_enabled';
+  static const String _kOnboardShown = 'tts_onboarding_shown';
+  static const String _kTransitionCount = 'tts_transition_count';
 
   /// 설정 화면 토글 바인딩용(BatteryService.monitoringEnabled 와 동일 패턴).
   final ValueNotifier<bool> enabledListenable = ValueNotifier<bool>(false);
@@ -47,6 +49,45 @@ class TtsService {
         await _tts?.stop();
       } catch (_) {}
     }
+  }
+
+  /// 온보딩 판정 — 세그먼트 전환 1회 경험을 집계하고, "3번째 전환 직후 1회"
+  /// 타이밍이면 true. TTS 가 이미 켜져 있거나 이전에 노출했으면 false.
+  /// (맥락 트리거형: 사용자가 전환의 가치를 막 체감한 순간에만 제안한다)
+  Future<bool> shouldShowOnboarding() async {
+    if (enabled) return false;
+    try {
+      final p = await SharedPreferences.getInstance();
+      if (p.getBool(_kOnboardShown) ?? false) return false;
+      final n = (p.getInt(_kTransitionCount) ?? 0) + 1;
+      await p.setInt(_kTransitionCount, n);
+      return n >= 3;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// 온보딩 노출 마킹 — 수락/무시와 무관하게 다시 뜨지 않는다.
+  Future<void> markOnboardingShown() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.setBool(_kOnboardShown, true);
+    } catch (_) {}
+  }
+
+  /// 시스템에 [tag] 언어 음성이 설치돼 있는지 — 미설치면 기본(외국어) 음성으로
+  /// 읽혀 어색하므로, 온보딩에서 음성 추가 안내를 덧붙이는 데 쓴다.
+  /// 판별 실패 시 true(경고 억제 — 보수적).
+  Future<bool> isLanguageAvailable(String tag) async {
+    try {
+      _tts ??= FlutterTts();
+      final langs = await _tts!.getLanguages;
+      if (langs is List && langs.isNotEmpty) {
+        final lc = tag.split('-').first.toLowerCase();
+        return langs.any((e) => e.toString().toLowerCase().startsWith(lc));
+      }
+    } catch (_) {}
+    return true;
   }
 
   /// [localeTag] 예: 'ko-KR', 'en-US' — 앱 로케일에서 만들어 넘긴다.

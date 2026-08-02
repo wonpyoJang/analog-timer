@@ -440,4 +440,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsTtsSample => '음성 안내가 켜졌습니다';
+
+  @override
+  String get ttsOnboardBody => '방금 같은 세그먼트 전환을 소리로도 알려드릴 수 있어요';
+
+  @override
+  String get ttsOnboardEnable => '켜보기';
+
+  @override
+  String get ttsVoiceMissingHint =>
+      'Windows 설정 > 시간 및 언어 > 음성에서 한국어 음성을 추가하면 더 자연스러워요';
 }

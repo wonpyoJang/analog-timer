@@ -944,6 +944,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Voice announcements are on'**
   String get settingsTtsSample;
+
+  /// No description provided for @ttsOnboardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment changes like this can also be announced by voice'**
+  String get ttsOnboardBody;
+
+  /// No description provided for @ttsOnboardEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Try it'**
+  String get ttsOnboardEnable;
+
+  /// No description provided for @ttsVoiceMissingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For natural announcements, add your language\'s voice in Windows Settings > Time & Language > Speech'**
+  String get ttsVoiceMissingHint;
 }
 
 class _AppLocalizationsDelegate

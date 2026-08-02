@@ -209,5 +209,8 @@
   "tipStopwatchToggle": "Start or stop the stopwatch",
   "settingsTts": "Voice announcements",
   "settingsTtsDesc": "Speak segment changes and timer completion aloud",
-  "settingsTtsSample": "Voice announcements are on"
+  "settingsTtsSample": "Voice announcements are on",
+  "ttsOnboardBody": "Segment changes like this can also be announced by voice",
+  "ttsOnboardEnable": "Try it",
+  "ttsVoiceMissingHint": "For natural announcements, add your language's voice in Windows Settings > Time & Language > Speech"
 }
