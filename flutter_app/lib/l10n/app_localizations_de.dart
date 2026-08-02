@@ -480,6 +480,15 @@ class AppLocalizationsDe extends AppLocalizations {
       'Auto detection and recovery is on — you rarely need these.';
 
   @override
+  String get settingsTtsVoice => 'Voice style';
+
+  @override
+  String get settingsTtsVoiceDefault => 'System default';
+
+  @override
+  String get settingsTtsVoicePreview => 'This is how announcements will sound';
+
+  @override
   String get menuRefreshWidget => 'Refresh widget';
 
   @override

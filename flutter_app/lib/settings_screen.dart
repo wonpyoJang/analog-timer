@@ -125,6 +125,24 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
+          // ── 음성 스타일 (TTS 켜졌을 때만) — 선택 즉시 미리듣기 ────
+          ValueListenableBuilder<bool>(
+            valueListenable: TtsService.instance.enabledListenable,
+            builder: (ctx, ttsOn, _) => !ttsOn
+                ? const SizedBox.shrink()
+                : ValueListenableBuilder<Map<String, String>?>(
+                    valueListenable: TtsService.instance.voiceListenable,
+                    builder: (ctx2, voice, _) => _SettingsTile(
+                      icon: Icons.graphic_eq,
+                      iconColor: AppColors.accent,
+                      title: l.settingsTtsVoice,
+                      subtitle: _voiceDisplayName(voice) ??
+                          l.settingsTtsVoiceDefault,
+                      onTap: () => _pickTtsVoice(context, l),
+                    ),
+                  ),
+          ),
+
           const _Divider(),
 
           // ── 배터리 모니터링 (모바일 전용) ─────────────────────
@@ -154,6 +172,91 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Windows 음성 이름 정리 — "Microsoft Zira - English (US)" → "Zira - English (US)".
+String? _voiceDisplayName(Map<String, String>? v) {
+  if (v == null) return null;
+  return v['name']!.replaceFirst(RegExp(r'^Microsoft\s+'), '');
+}
+
+/// 음성 스타일 선택 바텀시트 — 항목 탭 = 선택 + 즉시 미리듣기.
+/// 시트를 닫지 않아 여러 음성을 연달아 들어보고 고를 수 있다.
+Future<void> _pickTtsVoice(BuildContext context, AppLocalizations l) async {
+  final localeTag = Localizations.localeOf(context).toLanguageTag();
+  final voices = await TtsService.instance.availableVoices(localeTag);
+  if (!context.mounted) return;
+  await showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: AppColors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: ValueListenableBuilder<Map<String, String>?>(
+        valueListenable: TtsService.instance.voiceListenable,
+        builder: (ctx2, current, _) {
+          Widget row({
+            required String label,
+            required bool selected,
+            required VoidCallback onTap,
+            String? sub,
+          }) =>
+              ListTile(
+                dense: true,
+                title: Text(label,
+                    style: TextStyle(
+                        fontSize: 13.5,
+                        color: selected ? AppColors.accent : AppColors.text)),
+                subtitle: sub == null
+                    ? null
+                    : Text(sub,
+                        style: const TextStyle(
+                            fontSize: 11, color: AppColors.muted)),
+                trailing: selected
+                    ? const Icon(Icons.check, size: 16, color: AppColors.accent)
+                    : null,
+                onTap: onTap,
+              );
+          return ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: Text(l.settingsTtsVoice,
+                    style: const TextStyle(
+                        fontSize: 12,
+                        letterSpacing: 1.2,
+                        color: AppColors.muted)),
+              ),
+              row(
+                label: l.settingsTtsVoiceDefault,
+                selected: current == null,
+                onTap: () => TtsService.instance.setVoice(null,
+                    sample: l.settingsTtsVoicePreview, localeTag: localeTag),
+              ),
+              for (final v in voices)
+                row(
+                  label: _voiceDisplayName(v)!,
+                  sub: v['locale'],
+                  selected: current != null && current['name'] == v['name'],
+                  onTap: () => TtsService.instance.setVoice(v,
+                      sample: l.settingsTtsVoicePreview, localeTag: localeTag),
+                ),
+              if (voices.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(l.ttsVoiceMissingHint,
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.muted)),
+                ),
+            ],
+          );
+        },
+      ),
+    ),
+  );
 }
 
 class _SettingsTile extends StatelessWidget {
