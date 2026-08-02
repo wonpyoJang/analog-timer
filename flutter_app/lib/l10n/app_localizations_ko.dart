@@ -532,7 +532,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get hotkeyRecordPrompt => '새 키 조합을 눌러주세요';
 
   @override
-  String get hotkeyNeedModifier => 'Ctrl·Alt·Win 중 하나를 조합에 넣어주세요';
+  String hotkeyNeedModifier(String key) {
+    return '거의 됐어요 — Ctrl·Alt·Win 중 하나를 $key와 함께 눌러주세요';
+  }
 
   @override
   String hotkeyDuplicate(String action) {
@@ -593,4 +595,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String overlayKbHint(String combo) {
     return '팁: 키보드로도 옮길 수 있어요 — $combo';
   }
+
+  @override
+  String hotkeyRecordGuide1(String example) {
+    return 'Ctrl이나 Alt를 먼저 누른 채 글자를 톡 — 예: $example';
+  }
+
+  @override
+  String get hotkeyRecordGuide2 => '평소 안 쓰는 조합으로 고르세요 — Shift를 더하면 겹칠 일이 드물어요';
 }

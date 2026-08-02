@@ -242,7 +242,7 @@
   "settingsHotkeysDesc": "Work from any app. Tap an item below to change its keys. In-app: Space, N, S, L, W",
   "hotkeyReset": "Restore defaults",
   "hotkeyRecordPrompt": "Press the new key combination",
-  "hotkeyNeedModifier": "Add Ctrl, Alt or Win to the combo",
+  "hotkeyNeedModifier": "Almost — hold Ctrl, Alt or Win together with {key}",
   "hotkeyDuplicate": "Already used by \"{action}\"",
   "@hotkeyDuplicate": {
     "placeholders": {
@@ -281,5 +281,21 @@
         "type": "String"
       }
     }
-  }
+  },
+  "@hotkeyNeedModifier": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "hotkeyRecordGuide1": "Hold Ctrl or Alt first, then tap a letter — like {example}.",
+  "@hotkeyRecordGuide1": {
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "hotkeyRecordGuide2": "Pick one you don't already use elsewhere — adding Shift makes clashes rare."
 }

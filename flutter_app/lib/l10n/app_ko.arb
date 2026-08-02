@@ -173,7 +173,7 @@
   "settingsHotkeysDesc": "다른 앱을 쓰는 중에도 동작해요. 아래 항목을 눌러 키를 바꿀 수 있어요. 창 안에선 Space·N·S·L·W",
   "hotkeyReset": "기본값 복원",
   "hotkeyRecordPrompt": "새 키 조합을 눌러주세요",
-  "hotkeyNeedModifier": "Ctrl·Alt·Win 중 하나를 조합에 넣어주세요",
+  "hotkeyNeedModifier": "거의 됐어요 — Ctrl·Alt·Win 중 하나를 {key}와 함께 눌러주세요",
   "hotkeyDuplicate": "\"{action}\" 이 이미 쓰는 조합이에요",
   "hotkeyNow": "현재: {combo}",
   "hotkeyTakenWarning": "다른 앱이 사용 중인 조합이에요 — 눌러서 바꿔주세요",
@@ -191,5 +191,7 @@
   "editCoachDismiss": "화면을 탭하면 시작합니다",
   "overlayKbGuide1": "←↑→↓ 이동 · Shift = 크게",
   "overlayKbGuide2": "1–9 구역 이동 · Tab 반전 · Esc 완료",
-  "overlayKbHint": "팁: 키보드로도 옮길 수 있어요 — {combo}"
+  "overlayKbHint": "팁: 키보드로도 옮길 수 있어요 — {combo}",
+  "hotkeyRecordGuide1": "Ctrl이나 Alt를 먼저 누른 채 글자를 톡 — 예: {example}",
+  "hotkeyRecordGuide2": "평소 안 쓰는 조합으로 고르세요 — Shift를 더하면 겹칠 일이 드물어요"
 }
