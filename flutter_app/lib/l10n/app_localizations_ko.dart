@@ -464,6 +464,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get menuAutoRecoveryNote => '멈춤 자동 감지·복구 켜짐 — 보통 직접 누를 일이 없습니다.';
 
   @override
+  String get settingsTtsVoice => '음성 스타일';
+
+  @override
+  String get settingsTtsVoiceDefault => '시스템 기본';
+
+  @override
+  String get settingsTtsVoicePreview => '안내 음성은 이렇게 들려요';
+
+  @override
   String get menuRefreshWidget => '위젯 새로고침';
 
   @override

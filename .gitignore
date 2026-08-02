@@ -8,3 +8,7 @@ package-lock.json
 
 # 임시 커밋 메시지 파일
 .commitmsg*.txt
+
+# TDR/freeze 재현 실험 로그 (로컬 전용)
+repro*.log
+repro*.ps1

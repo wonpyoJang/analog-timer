@@ -987,6 +987,24 @@ abstract class AppLocalizations {
   /// **'Auto detection and recovery is on — you rarely need these.'**
   String get menuAutoRecoveryNote;
 
+  /// No description provided for @settingsTtsVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice style'**
+  String get settingsTtsVoice;
+
+  /// No description provided for @settingsTtsVoiceDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get settingsTtsVoiceDefault;
+
+  /// No description provided for @settingsTtsVoicePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'This is how announcements will sound'**
+  String get settingsTtsVoicePreview;
+
   /// No description provided for @menuRefreshWidget.
   ///
   /// In en, this message translates to:

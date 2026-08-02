@@ -18,6 +18,8 @@ class TtsService {
   static const String _kEnabled = 'tts_enabled';
   static const String _kOnboardShown = 'tts_onboarding_shown';
   static const String _kTransitionCount = 'tts_transition_count';
+  static const String _kVoiceName = 'tts_voice_name';
+  static const String _kVoiceLocale = 'tts_voice_locale';
 
   /// 설정 화면 토글 바인딩용(BatteryService.monitoringEnabled 와 동일 패턴).
   final ValueNotifier<bool> enabledListenable = ValueNotifier<bool>(false);
@@ -26,11 +28,73 @@ class TtsService {
   FlutterTts? _tts;
   String? _appliedLanguage;
 
+  /// 선택된 음성 스타일 — null 이면 시스템 기본(로케일 기반 setLanguage 만).
+  /// 설정 화면 표시용으로도 노출한다({'name','locale'} 형태).
+  final ValueNotifier<Map<String, String>?> voiceListenable =
+      ValueNotifier<Map<String, String>?>(null);
+  bool _voiceApplied = false;
+
   Future<void> init() async {
     try {
       final p = await SharedPreferences.getInstance();
       enabledListenable.value = p.getBool(_kEnabled) ?? false;
+      final vn = p.getString(_kVoiceName);
+      final vl = p.getString(_kVoiceLocale);
+      if (vn != null && vl != null) {
+        voiceListenable.value = {'name': vn, 'locale': vl};
+      }
     } catch (_) {}
+  }
+
+  /// 시스템에 설치된 음성 목록 — [localeTag] 언어를 앞으로 정렬해 반환.
+  /// (Windows: WinRT 설치 음성. 항목 = {'name': ..., 'locale': ...})
+  Future<List<Map<String, String>>> availableVoices(String localeTag) async {
+    try {
+      _tts ??= FlutterTts();
+      final raw = await _tts!.getVoices;
+      if (raw is! List) return [];
+      final voices = <Map<String, String>>[];
+      for (final v in raw) {
+        if (v is Map) {
+          final name = v['name']?.toString();
+          final loc = v['locale']?.toString();
+          if (name != null && loc != null) {
+            voices.add({'name': name, 'locale': loc});
+          }
+        }
+      }
+      final lc = localeTag.split('-').first.toLowerCase();
+      voices.sort((a, b) {
+        final am = a['locale']!.toLowerCase().startsWith(lc) ? 0 : 1;
+        final bm = b['locale']!.toLowerCase().startsWith(lc) ? 0 : 1;
+        return am != bm ? am - bm : a['name']!.compareTo(b['name']!);
+      });
+      return voices;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// 음성 스타일 선택 — null 이면 시스템 기본으로 복귀.
+  /// [sample] 이 있으면 곧바로 그 음성으로 미리듣기를 재생한다.
+  Future<void> setVoice(Map<String, String>? voice,
+      {String? sample, String? localeTag}) async {
+    voiceListenable.value = voice;
+    _voiceApplied = false; // 다음 speak 에서 재적용
+    _appliedLanguage = null;
+    try {
+      final p = await SharedPreferences.getInstance();
+      if (voice == null) {
+        await p.remove(_kVoiceName);
+        await p.remove(_kVoiceLocale);
+      } else {
+        await p.setString(_kVoiceName, voice['name']!);
+        await p.setString(_kVoiceLocale, voice['locale']!);
+      }
+    } catch (_) {}
+    if (sample != null && enabled) {
+      await speak(sample, localeTag: localeTag);
+    }
   }
 
   /// [sample] 이 있으면 켜는 즉시 읽어줘 사용자가 바로 확인할 수 있게 한다.
@@ -96,7 +160,23 @@ class TtsService {
     if (!enabled || text.trim().isEmpty) return;
     try {
       _tts ??= FlutterTts();
-      if (localeTag != null && localeTag != _appliedLanguage) {
+      final voice = voiceListenable.value;
+      if (voice != null) {
+        // 사용자가 고른 음성 스타일 — setLanguage 보다 우선한다.
+        if (!_voiceApplied) {
+          try {
+            await _tts!.setVoice(voice);
+            _voiceApplied = true;
+          } catch (_) {
+            // 미지원/음성 소멸(시스템에서 제거) — 로케일 폴백
+            if (localeTag != null) {
+              try {
+                await _tts!.setLanguage(localeTag);
+              } catch (_) {}
+            }
+          }
+        }
+      } else if (localeTag != null && localeTag != _appliedLanguage) {
         try {
           await _tts!.setLanguage(localeTag);
           _appliedLanguage = localeTag;
