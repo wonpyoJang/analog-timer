@@ -1,25 +1,15 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/hotkey_service.dart';
+import 'key_caps.dart';
 import '../services/platform_info.dart';
 import '../theme/app_theme.dart';
 
 /// 단축키 치트시트 — ⋯ 메뉴 "단축키" 또는 인앱 `?` 키로 연다.
 Future<void> showShortcutSheet(BuildContext context) {
   final l = AppLocalizations.of(context);
-  Widget key(String combo) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: AppColors.bg,
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(combo,
-            style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.text,
-                fontFamily: 'Pretendard')),
-      );
+  // 시안 결정 1: 조합 표기는 어디서나 키캡 분리형(KeyCaps)으로 통일.
+  Widget key(String combo) => KeyCaps(combo: combo, fontSize: 12);
   Widget row(String label, List<String> combos) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
         child: Row(

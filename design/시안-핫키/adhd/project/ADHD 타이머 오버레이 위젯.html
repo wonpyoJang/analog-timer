@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADHD 타이머 — 플로팅 오버레이 위젯</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background:
+      radial-gradient(1200px 700px at 18% -10%, #18181b 0%, transparent 60%),
+      radial-gradient(900px 600px at 100% 110%, #161617 0%, transparent 55%),
+      #0E0E0F;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 48px 32px;
+    font-family: 'Noto Sans KR', system-ui, sans-serif;
+  }
+  /* ending blink — timer near completion */
+  @keyframes ovBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.32; } }
+  .ov-blink { animation: ovBlink 0.7s steps(1, end) infinite; }
+  @media (prefers-reduced-motion: reduce) { .ov-blink { animation: none; } }
+  /* stopwatch chasing arc */
+  @keyframes ovChase { to { stroke-dashoffset: -100; } }
+  .ov-chase { animation: ovChase 2.4s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .ov-chase { animation: none; } }
+  button { font-family: inherit; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="android-frame.jsx"></script>
+  <script type="text/babel" src="overlay-widget.jsx"></script>
+  <script type="text/babel" src="prototype.jsx"></script>
+</body>
+</html>

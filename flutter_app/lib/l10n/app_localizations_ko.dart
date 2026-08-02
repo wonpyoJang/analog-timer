@@ -532,17 +532,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String get hotkeyRecordPrompt => '새 키 조합을 눌러주세요';
 
   @override
-  String get hotkeyNeedModifier =>
-      'Ctrl·Alt·Win 중 하나가 필요해요 (Shift만으로는 일반 타이핑을 가로채요)';
+  String get hotkeyNeedModifier => 'Ctrl·Alt·Win 중 하나를 조합에 넣어주세요';
 
   @override
-  String get hotkeyDuplicate => '다른 동작이 이미 쓰는 조합이에요';
+  String hotkeyDuplicate(String action) {
+    return '\"$action\" 이 이미 쓰는 조합이에요';
+  }
+
+  @override
+  String hotkeyNow(String combo) {
+    return '현재: $combo';
+  }
 
   @override
   String get hotkeyTakenWarning => '다른 앱이 사용 중인 조합이에요 — 눌러서 바꿔주세요';
 
   @override
-  String get hotkeyRecordCaution => '이 조합을 쓰는 다른 앱에서는 해당 키가 동작하지 않게 돼요';
+  String get hotkeyRecordCaution => '단축키가 켜져 있는 동안 다른 앱은 이 조합을 못 써요';
 
   @override
   String get settingsTtsVoice => '음성 스타일';

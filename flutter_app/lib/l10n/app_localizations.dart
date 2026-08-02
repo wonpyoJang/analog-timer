@@ -1122,14 +1122,20 @@ abstract class AppLocalizations {
   /// No description provided for @hotkeyNeedModifier.
   ///
   /// In en, this message translates to:
-  /// **'Include Ctrl, Alt or Win (Shift alone would hijack normal typing)'**
+  /// **'Add Ctrl, Alt or Win to the combo'**
   String get hotkeyNeedModifier;
 
   /// No description provided for @hotkeyDuplicate.
   ///
   /// In en, this message translates to:
-  /// **'Already used by another action'**
-  String get hotkeyDuplicate;
+  /// **'Already used by \"{action}\"'**
+  String hotkeyDuplicate(String action);
+
+  /// No description provided for @hotkeyNow.
+  ///
+  /// In en, this message translates to:
+  /// **'now: {combo}'**
+  String hotkeyNow(String combo);
 
   /// No description provided for @hotkeyTakenWarning.
   ///
@@ -1140,7 +1146,7 @@ abstract class AppLocalizations {
   /// No description provided for @hotkeyRecordCaution.
   ///
   /// In en, this message translates to:
-  /// **'This combo will stop working in other apps that use it'**
+  /// **'Other apps lose this combo while shortcuts are on'**
   String get hotkeyRecordCaution;
 
   /// No description provided for @settingsTtsVoice.
