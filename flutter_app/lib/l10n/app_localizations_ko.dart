@@ -582,4 +582,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get editCoachDismiss => '화면을 탭하면 시작합니다';
+
+  @override
+  String get overlayKbGuide1 => '←↑→↓ 이동 · Shift = 크게';
+
+  @override
+  String get overlayKbGuide2 => '1–9 구역 이동 · Tab 반전 · Esc 완료';
+
+  @override
+  String overlayKbHint(String combo) {
+    return '팁: 키보드로도 옮길 수 있어요 — $combo';
+  }
 }

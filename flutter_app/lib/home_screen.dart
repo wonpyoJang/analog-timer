@@ -802,6 +802,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       'swStartAngleRad': swState.startAngleRadians,
       'batteryLow': BatteryService.instance.lowBattery.value,
       'batteryLevel': BatteryService.instance.level.value,
+      // 위젯 쪽 "키보드로도 이동" 힌트용 — 핫키가 꺼져 있으면 빈 문자열
+      // (죽은 조합을 광고하지 않는다).
+      'widgetFocusCombo': HotkeyService.instance.enabled
+          ? HotkeyService.instance.describe('widget_focus')
+          : '',
     };
   }
 

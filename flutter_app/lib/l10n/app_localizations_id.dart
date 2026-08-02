@@ -603,4 +603,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get editCoachDismiss => 'Ketuk di mana saja untuk mulai';
+
+  @override
+  String get overlayKbGuide1 => '←↑→↓ move · Shift = bigger';
+
+  @override
+  String get overlayKbGuide2 => '1–9 snap · Tab mirror · Esc done';
+
+  @override
+  String overlayKbHint(String combo) {
+    return 'Tip: move with keyboard — $combo';
+  }
 }
