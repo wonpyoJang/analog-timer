@@ -685,4 +685,24 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsHighContrastDesc => '補助テキストを明るくして読みやすく';
+
+  @override
+  String get multiTimerTitle => 'マルチタイマー';
+
+  @override
+  String get multiTimerAdd => 'タイマーを追加';
+
+  @override
+  String get multiTimerNameHint => 'タイマー名';
+
+  @override
+  String get multiTimerEmpty => 'タイマーがありません。＋で追加。';
+
+  @override
+  String get multiTimerDone => '完了';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return 'タイマー$count件完了';
+  }
 }

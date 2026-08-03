@@ -100,5 +100,18 @@
   "settingsColorblind": "Modalità daltonici",
   "settingsColorblindDesc": "Distingui il cronometro con tratteggio, non solo col colore",
   "settingsHighContrast": "Contrasto elevato",
-  "settingsHighContrastDesc": "Schiarisci il testo secondario per leggerlo meglio"
+  "settingsHighContrastDesc": "Schiarisci il testo secondario per leggerlo meglio",
+  "multiTimerTitle": "Più timer",
+  "multiTimerAdd": "Aggiungi timer",
+  "multiTimerNameHint": "Nome del timer",
+  "multiTimerEmpty": "Nessun timer. Tocca + per aggiungerne uno.",
+  "multiTimerDone": "Fatto",
+  "multiTimerAllDone": "{count} timer terminati",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

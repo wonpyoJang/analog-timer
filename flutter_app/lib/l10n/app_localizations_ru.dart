@@ -691,4 +691,24 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsHighContrastDesc =>
       'Осветлить второстепенный текст для удобства чтения';
+
+  @override
+  String get multiTimerTitle => 'Несколько таймеров';
+
+  @override
+  String get multiTimerAdd => 'Добавить таймер';
+
+  @override
+  String get multiTimerNameHint => 'Название таймера';
+
+  @override
+  String get multiTimerEmpty => 'Пока нет таймеров. Нажмите +, чтобы добавить.';
+
+  @override
+  String get multiTimerDone => 'Готово';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return 'Завершено таймеров: $count';
+  }
 }

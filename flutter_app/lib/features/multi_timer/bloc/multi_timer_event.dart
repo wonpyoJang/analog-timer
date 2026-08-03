@@ -1,0 +1,76 @@
+import 'package:equatable/equatable.dart';
+import '../models/countdown_timer.dart';
+
+abstract class MultiTimerEvent extends Equatable {
+  const MultiTimerEvent();
+  @override
+  List<Object?> get props => [];
+}
+
+class MtAdd extends MultiTimerEvent {
+  final String name;
+  final int totalMs;
+  const MtAdd(this.name, this.totalMs);
+  @override
+  List<Object?> get props => [name, totalMs];
+}
+
+class MtRemove extends MultiTimerEvent {
+  final String id;
+  const MtRemove(this.id);
+  @override
+  List<Object?> get props => [id];
+}
+
+class MtRename extends MultiTimerEvent {
+  final String id;
+  final String name;
+  const MtRename(this.id, this.name);
+  @override
+  List<Object?> get props => [id, name];
+}
+
+class MtSetDuration extends MultiTimerEvent {
+  final String id;
+  final int totalMs;
+  const MtSetDuration(this.id, this.totalMs);
+  @override
+  List<Object?> get props => [id, totalMs];
+}
+
+class MtStart extends MultiTimerEvent {
+  final String id;
+  const MtStart(this.id);
+  @override
+  List<Object?> get props => [id];
+}
+
+class MtPause extends MultiTimerEvent {
+  final String id;
+  const MtPause(this.id);
+  @override
+  List<Object?> get props => [id];
+}
+
+class MtReset extends MultiTimerEvent {
+  final String id;
+  const MtReset(this.id);
+  @override
+  List<Object?> get props => [id];
+}
+
+/// 내부 틱 — 경과 밀리초를 running 타이머 전부에서 차감.
+class MtTick extends MultiTimerEvent {
+  final int elapsedMs;
+  const MtTick(this.elapsedMs);
+  @override
+  List<Object?> get props => [elapsedMs];
+}
+
+/// 앱 재시작 복원 — 저장된 타이머 목록으로 교체.
+class MtRestore extends MultiTimerEvent {
+  final List<CountdownTimer> timers;
+  const MtRestore(this.timers);
+  @override
+  List<Object?> get props => [timers];
+}

@@ -213,5 +213,18 @@
   "settingsHourlyChimeDesc": "매시 정각에 시간을 읽어줘요 · 밤 10시~아침 8시는 쉬어요",
   "hourlyChimeSpoken": "{time}입니다",
   "settingsHighContrast": "고대비",
-  "settingsHighContrastDesc": "보조 텍스트를 더 밝게 해 가독성 향상"
+  "settingsHighContrastDesc": "보조 텍스트를 더 밝게 해 가독성 향상",
+  "multiTimerTitle": "멀티 타이머",
+  "multiTimerAdd": "타이머 추가",
+  "multiTimerNameHint": "타이머 이름",
+  "multiTimerEmpty": "아직 타이머가 없어요. +로 추가하세요.",
+  "multiTimerDone": "완료",
+  "multiTimerAllDone": "타이머 {count}개 완료",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -690,4 +690,25 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settingsHighContrastDesc =>
       'Aclara el texto secundario para leerlo mejor';
+
+  @override
+  String get multiTimerTitle => 'Varios temporizadores';
+
+  @override
+  String get multiTimerAdd => 'Añadir temporizador';
+
+  @override
+  String get multiTimerNameHint => 'Nombre del temporizador';
+
+  @override
+  String get multiTimerEmpty =>
+      'Aún no hay temporizadores. Toca + para añadir.';
+
+  @override
+  String get multiTimerDone => 'Listo';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return '$count temporizadores terminados';
+  }
 }

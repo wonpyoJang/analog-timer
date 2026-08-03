@@ -691,4 +691,24 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsHighContrastDesc =>
       'Cerahkan teks sekunder agar mudah dibaca';
+
+  @override
+  String get multiTimerTitle => 'Beberapa timer';
+
+  @override
+  String get multiTimerAdd => 'Tambah timer';
+
+  @override
+  String get multiTimerNameHint => 'Nama timer';
+
+  @override
+  String get multiTimerEmpty => 'Belum ada timer. Ketuk + untuk menambah.';
+
+  @override
+  String get multiTimerDone => 'Selesai';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return '$count timer selesai';
+  }
 }

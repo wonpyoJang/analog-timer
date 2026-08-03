@@ -100,5 +100,18 @@
   "settingsColorblind": "वर्णांध मोड",
   "settingsColorblindDesc": "स्टॉपवॉच को केवल रंग नहीं, धराशायी पैटर्न से पहचानें",
   "settingsHighContrast": "उच्च कंट्रास्ट",
-  "settingsHighContrastDesc": "आसान पठन हेतु द्वितीयक टेक्स्ट को उज्जवल करें"
+  "settingsHighContrastDesc": "आसान पठन हेतु द्वितीयक टेक्स्ट को उज्जवल करें",
+  "multiTimerTitle": "कई टाइमर",
+  "multiTimerAdd": "टाइमर जोड़ें",
+  "multiTimerNameHint": "टाइमर नाम",
+  "multiTimerEmpty": "अभी कोई टाइमर नहीं। जोड़ने के लिए + दबाएँ।",
+  "multiTimerDone": "पूर्ण",
+  "multiTimerAllDone": "{count} टाइमर समाप्त",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

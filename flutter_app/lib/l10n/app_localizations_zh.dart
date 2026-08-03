@@ -685,6 +685,26 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsHighContrastDesc => '提亮次要文字以便阅读';
+
+  @override
+  String get multiTimerTitle => '多个计时器';
+
+  @override
+  String get multiTimerAdd => '添加计时器';
+
+  @override
+  String get multiTimerNameHint => '计时器名称';
+
+  @override
+  String get multiTimerEmpty => '还没有计时器，点 + 添加。';
+
+  @override
+  String get multiTimerDone => '完成';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return '$count 个计时器完成';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -1011,4 +1031,24 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsHighContrastDesc => '提亮次要文字以便閱讀';
+
+  @override
+  String get multiTimerTitle => '多個計時器';
+
+  @override
+  String get multiTimerAdd => '新增計時器';
+
+  @override
+  String get multiTimerNameHint => '計時器名稱';
+
+  @override
+  String get multiTimerEmpty => '還沒有計時器，點 + 新增。';
+
+  @override
+  String get multiTimerDone => '完成';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return '$count 個計時器完成';
+  }
 }

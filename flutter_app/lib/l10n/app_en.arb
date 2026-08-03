@@ -324,5 +324,18 @@
     }
   },
   "settingsHighContrast": "High contrast",
-  "settingsHighContrastDesc": "Brighten secondary text for easier reading"
+  "settingsHighContrastDesc": "Brighten secondary text for easier reading",
+  "multiTimerTitle": "Multiple timers",
+  "multiTimerAdd": "Add timer",
+  "multiTimerNameHint": "Timer name",
+  "multiTimerEmpty": "No timers yet. Tap + to add one.",
+  "multiTimerDone": "Done",
+  "multiTimerAllDone": "{count} timers finished",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

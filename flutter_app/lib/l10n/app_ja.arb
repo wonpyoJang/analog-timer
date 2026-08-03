@@ -100,5 +100,18 @@
   "settingsColorblind": "色覚モード",
   "settingsColorblindDesc": "ストップウォッチを色でなく点線で区別",
   "settingsHighContrast": "ハイコントラスト",
-  "settingsHighContrastDesc": "補助テキストを明るくして読みやすく"
+  "settingsHighContrastDesc": "補助テキストを明るくして読みやすく",
+  "multiTimerTitle": "マルチタイマー",
+  "multiTimerAdd": "タイマーを追加",
+  "multiTimerNameHint": "タイマー名",
+  "multiTimerEmpty": "タイマーがありません。＋で追加。",
+  "multiTimerDone": "完了",
+  "multiTimerAllDone": "タイマー{count}件完了",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

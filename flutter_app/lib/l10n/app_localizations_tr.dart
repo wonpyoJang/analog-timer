@@ -690,4 +690,25 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsHighContrastDesc =>
       'İkincil metni okumayı kolaylaştırmak için aydınlat';
+
+  @override
+  String get multiTimerTitle => 'Birden fazla zamanlayıcı';
+
+  @override
+  String get multiTimerAdd => 'Zamanlayıcı ekle';
+
+  @override
+  String get multiTimerNameHint => 'Zamanlayıcı adı';
+
+  @override
+  String get multiTimerEmpty =>
+      'Henüz zamanlayıcı yok. Eklemek için +\'ya dokunun.';
+
+  @override
+  String get multiTimerDone => 'Bitti';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return '$count zamanlayıcı bitti';
+  }
 }

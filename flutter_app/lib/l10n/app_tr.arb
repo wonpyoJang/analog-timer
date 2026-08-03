@@ -100,5 +100,18 @@
   "settingsColorblind": "Renk körlüğü modu",
   "settingsColorblindDesc": "Kronometreyi yalnızca renkle değil kesik çizgiyle ayırt et",
   "settingsHighContrast": "Yüksek kontrast",
-  "settingsHighContrastDesc": "İkincil metni okumayı kolaylaştırmak için aydınlat"
+  "settingsHighContrastDesc": "İkincil metni okumayı kolaylaştırmak için aydınlat",
+  "multiTimerTitle": "Birden fazla zamanlayıcı",
+  "multiTimerAdd": "Zamanlayıcı ekle",
+  "multiTimerNameHint": "Zamanlayıcı adı",
+  "multiTimerEmpty": "Henüz zamanlayıcı yok. Eklemek için +'ya dokunun.",
+  "multiTimerDone": "Bitti",
+  "multiTimerAllDone": "{count} zamanlayıcı bitti",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

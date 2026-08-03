@@ -665,4 +665,24 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsHighContrastDesc => '보조 텍스트를 더 밝게 해 가독성 향상';
+
+  @override
+  String get multiTimerTitle => '멀티 타이머';
+
+  @override
+  String get multiTimerAdd => '타이머 추가';
+
+  @override
+  String get multiTimerNameHint => '타이머 이름';
+
+  @override
+  String get multiTimerEmpty => '아직 타이머가 없어요. +로 추가하세요.';
+
+  @override
+  String get multiTimerDone => '완료';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return '타이머 $count개 완료';
+  }
 }

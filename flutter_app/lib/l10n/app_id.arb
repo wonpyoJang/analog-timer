@@ -100,5 +100,18 @@
   "settingsColorblind": "Mode buta warna",
   "settingsColorblindDesc": "Bedakan stopwatch dengan pola putus-putus, bukan hanya warna",
   "settingsHighContrast": "Kontras tinggi",
-  "settingsHighContrastDesc": "Cerahkan teks sekunder agar mudah dibaca"
+  "settingsHighContrastDesc": "Cerahkan teks sekunder agar mudah dibaca",
+  "multiTimerTitle": "Beberapa timer",
+  "multiTimerAdd": "Tambah timer",
+  "multiTimerNameHint": "Nama timer",
+  "multiTimerEmpty": "Belum ada timer. Ketuk + untuk menambah.",
+  "multiTimerDone": "Selesai",
+  "multiTimerAllDone": "{count} timer selesai",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

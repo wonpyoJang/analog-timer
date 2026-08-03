@@ -39,6 +39,7 @@ class OverflowMenuButton extends StatelessWidget {
   final VoidCallback onOpenSync;
   final VoidCallback onOpenTelemetry;
   final VoidCallback onShowShortcuts;
+  final VoidCallback onOpenMultiTimer;
 
   /// 위젯 새로고침 — 위젯이 켜져 있을 때만 노출된다.
   final bool widgetOn;
@@ -50,6 +51,7 @@ class OverflowMenuButton extends StatelessWidget {
     required this.onOpenSync,
     required this.onOpenTelemetry,
     required this.onShowShortcuts,
+    required this.onOpenMultiTimer,
     required this.widgetOn,
     required this.onRefreshWidget,
   });
@@ -91,6 +93,12 @@ class OverflowMenuButton extends StatelessWidget {
     );
 
     final items = <OverflowMenuItem>[
+      OverflowMenuItem(
+        icon: Icons.timer_outlined,
+        label: l.multiTimerTitle,
+        chevron: true,
+        onTap: onOpenMultiTimer,
+      ),
       OverflowMenuItem(
         icon: Icons.settings_outlined,
         label: l.settings,

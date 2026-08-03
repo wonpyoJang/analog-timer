@@ -688,4 +688,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsHighContrastDesc => 'تفتيح النص الثانوي لتسهيل القراءة';
+
+  @override
+  String get multiTimerTitle => 'مؤقتات متعددة';
+
+  @override
+  String get multiTimerAdd => 'إضافة مؤقت';
+
+  @override
+  String get multiTimerNameHint => 'اسم المؤقت';
+
+  @override
+  String get multiTimerEmpty => 'لا مؤقتات بعد. اضغط + للإضافة.';
+
+  @override
+  String get multiTimerDone => 'تم';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return 'انتهى $count مؤقتات';
+  }
 }
