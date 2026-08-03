@@ -10,6 +10,33 @@ class PersistenceService {
   static const _kHiddenDefaults = 'hidden_default_presets';
   static const _kOverlayHintCount = 'overlay_hint_count';
   static const _kDpadOnLeft = 'dpad_on_left';
+  static const _kMultiTimerData = 'multi_timer_data';
+
+  /// 멀티 타이머 목록 저장 — 상태 전이 시에만 호출(tick마다 금지).
+  static Future<void> saveMultiTimerState(
+    List<Map<String, dynamic>> timers,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _kMultiTimerData,
+      jsonEncode({
+        'timers': timers,
+        'savedAtMs': DateTime.now().millisecondsSinceEpoch,
+      }),
+    );
+  }
+
+  static Future<Map<String, dynamic>?> loadMultiTimerState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString(_kMultiTimerData);
+    if (str == null) return null;
+    try {
+      return jsonDecode(str) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static const _kOverlayPosX = 'overlay_pos_x';
   static const _kOverlayPosY = 'overlay_pos_y';
   static const _kOverlayCustomW = 'overlay_custom_w';

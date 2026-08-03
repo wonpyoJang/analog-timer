@@ -100,5 +100,18 @@
   "settingsColorblind": "Mode daltonien",
   "settingsColorblindDesc": "Distinguer le chronomètre par des pointillés, pas seulement la couleur",
   "settingsHighContrast": "Contraste élevé",
-  "settingsHighContrastDesc": "Éclaircir le texte secondaire pour une meilleure lisibilité"
+  "settingsHighContrastDesc": "Éclaircir le texte secondaire pour une meilleure lisibilité",
+  "multiTimerTitle": "Minuteurs multiples",
+  "multiTimerAdd": "Ajouter un minuteur",
+  "multiTimerNameHint": "Nom du minuteur",
+  "multiTimerEmpty": "Aucun minuteur. Touchez + pour en ajouter.",
+  "multiTimerDone": "Terminé",
+  "multiTimerAllDone": "{count} minuteurs terminés",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

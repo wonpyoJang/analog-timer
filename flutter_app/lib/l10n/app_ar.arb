@@ -100,5 +100,18 @@
   "settingsColorblind": "وضع عمى الألوان",
   "settingsColorblindDesc": "تمييز ساعة الإيقاف بنمط متقطع وليس باللون فقط",
   "settingsHighContrast": "تباين عالٍ",
-  "settingsHighContrastDesc": "تفتيح النص الثانوي لتسهيل القراءة"
+  "settingsHighContrastDesc": "تفتيح النص الثانوي لتسهيل القراءة",
+  "multiTimerTitle": "مؤقتات متعددة",
+  "multiTimerAdd": "إضافة مؤقت",
+  "multiTimerNameHint": "اسم المؤقت",
+  "multiTimerEmpty": "لا مؤقتات بعد. اضغط + للإضافة.",
+  "multiTimerDone": "تم",
+  "multiTimerAllDone": "انتهى {count} مؤقتات",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -100,5 +100,18 @@
   "settingsColorblind": "Режим для дальтоников",
   "settingsColorblindDesc": "Отличать секундомер пунктиром, а не только цветом",
   "settingsHighContrast": "Высокий контраст",
-  "settingsHighContrastDesc": "Осветлить второстепенный текст для удобства чтения"
+  "settingsHighContrastDesc": "Осветлить второстепенный текст для удобства чтения",
+  "multiTimerTitle": "Несколько таймеров",
+  "multiTimerAdd": "Добавить таймер",
+  "multiTimerNameHint": "Название таймера",
+  "multiTimerEmpty": "Пока нет таймеров. Нажмите +, чтобы добавить.",
+  "multiTimerDone": "Готово",
+  "multiTimerAllDone": "Завершено таймеров: {count}",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

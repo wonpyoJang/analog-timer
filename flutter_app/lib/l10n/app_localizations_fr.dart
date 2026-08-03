@@ -691,4 +691,24 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsHighContrastDesc =>
       'Éclaircir le texte secondaire pour une meilleure lisibilité';
+
+  @override
+  String get multiTimerTitle => 'Minuteurs multiples';
+
+  @override
+  String get multiTimerAdd => 'Ajouter un minuteur';
+
+  @override
+  String get multiTimerNameHint => 'Nom du minuteur';
+
+  @override
+  String get multiTimerEmpty => 'Aucun minuteur. Touchez + pour en ajouter.';
+
+  @override
+  String get multiTimerDone => 'Terminé';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return '$count minuteurs terminés';
+  }
 }

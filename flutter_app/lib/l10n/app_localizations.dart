@@ -1364,6 +1364,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Brighten secondary text for easier reading'**
   String get settingsHighContrastDesc;
+
+  /// No description provided for @multiTimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiple timers'**
+  String get multiTimerTitle;
+
+  /// No description provided for @multiTimerAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add timer'**
+  String get multiTimerAdd;
+
+  /// No description provided for @multiTimerNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer name'**
+  String get multiTimerNameHint;
+
+  /// No description provided for @multiTimerEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No timers yet. Tap + to add one.'**
+  String get multiTimerEmpty;
+
+  /// No description provided for @multiTimerDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get multiTimerDone;
+
+  /// No description provided for @multiTimerAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} timers finished'**
+  String multiTimerAllDone(int count);
 }
 
 class _AppLocalizationsDelegate

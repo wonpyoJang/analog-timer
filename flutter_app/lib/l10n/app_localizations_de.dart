@@ -691,4 +691,24 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsHighContrastDesc =>
       'Sekundärtext zur besseren Lesbarkeit aufhellen';
+
+  @override
+  String get multiTimerTitle => 'Mehrere Timer';
+
+  @override
+  String get multiTimerAdd => 'Timer hinzufügen';
+
+  @override
+  String get multiTimerNameHint => 'Timer-Name';
+
+  @override
+  String get multiTimerEmpty => 'Noch keine Timer. Auf + tippen.';
+
+  @override
+  String get multiTimerDone => 'Fertig';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return '$count Timer beendet';
+  }
 }

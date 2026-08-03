@@ -18,6 +18,7 @@ import 'features/stopwatch/widgets/stopwatch_controls.dart';
 import 'widgets/clock_painter.dart';
 import 'widgets/bottom_panels.dart';
 import 'settings_screen.dart';
+import 'features/multi_timer/widgets/multi_timer_screen.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
 import 'live_activity/live_activity_service.dart';
@@ -1358,6 +1359,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     showTelemetrySettings(context),
                                 onShowShortcuts: () =>
                                     showShortcutSheet(context),
+                                onOpenMultiTimer: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const MultiTimerScreen(),
+                                  ),
+                                ),
                               ),
                             ],
                           ),

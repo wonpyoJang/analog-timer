@@ -100,5 +100,18 @@
   "settingsColorblind": "色盲模式",
   "settingsColorblindDesc": "用虚线而非仅颜色区分秒表",
   "settingsHighContrast": "高对比度",
-  "settingsHighContrastDesc": "提亮次要文字以便阅读"
+  "settingsHighContrastDesc": "提亮次要文字以便阅读",
+  "multiTimerTitle": "多个计时器",
+  "multiTimerAdd": "添加计时器",
+  "multiTimerNameHint": "计时器名称",
+  "multiTimerEmpty": "还没有计时器，点 + 添加。",
+  "multiTimerDone": "完成",
+  "multiTimerAllDone": "{count} 个计时器完成",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

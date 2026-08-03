@@ -690,4 +690,24 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get settingsHighContrastDesc =>
       'आसान पठन हेतु द्वितीयक टेक्स्ट को उज्जवल करें';
+
+  @override
+  String get multiTimerTitle => 'कई टाइमर';
+
+  @override
+  String get multiTimerAdd => 'टाइमर जोड़ें';
+
+  @override
+  String get multiTimerNameHint => 'टाइमर नाम';
+
+  @override
+  String get multiTimerEmpty => 'अभी कोई टाइमर नहीं। जोड़ने के लिए + दबाएँ।';
+
+  @override
+  String get multiTimerDone => 'पूर्ण';
+
+  @override
+  String multiTimerAllDone(int count) {
+    return '$count टाइमर समाप्त';
+  }
 }

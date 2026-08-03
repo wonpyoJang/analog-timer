@@ -100,5 +100,18 @@
   "settingsColorblind": "色盲模式",
   "settingsColorblindDesc": "用虛線而非僅顏色區分碼錶",
   "settingsHighContrast": "高對比度",
-  "settingsHighContrastDesc": "提亮次要文字以便閱讀"
+  "settingsHighContrastDesc": "提亮次要文字以便閱讀",
+  "multiTimerTitle": "多個計時器",
+  "multiTimerAdd": "新增計時器",
+  "multiTimerNameHint": "計時器名稱",
+  "multiTimerEmpty": "還沒有計時器，點 + 新增。",
+  "multiTimerDone": "完成",
+  "multiTimerAllDone": "{count} 個計時器完成",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

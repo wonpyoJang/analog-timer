@@ -100,5 +100,18 @@
   "settingsColorblind": "Farbenblind-Modus",
   "settingsColorblindDesc": "Stoppuhr per gestricheltem Muster unterscheiden, nicht nur per Farbe",
   "settingsHighContrast": "Hoher Kontrast",
-  "settingsHighContrastDesc": "Sekundärtext zur besseren Lesbarkeit aufhellen"
+  "settingsHighContrastDesc": "Sekundärtext zur besseren Lesbarkeit aufhellen",
+  "multiTimerTitle": "Mehrere Timer",
+  "multiTimerAdd": "Timer hinzufügen",
+  "multiTimerNameHint": "Timer-Name",
+  "multiTimerEmpty": "Noch keine Timer. Auf + tippen.",
+  "multiTimerDone": "Fertig",
+  "multiTimerAllDone": "{count} Timer beendet",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

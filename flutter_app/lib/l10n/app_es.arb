@@ -100,5 +100,18 @@
   "settingsColorblind": "Modo daltónico",
   "settingsColorblindDesc": "Distinguir el cronómetro por patrón discontinuo, no solo por color",
   "settingsHighContrast": "Alto contraste",
-  "settingsHighContrastDesc": "Aclara el texto secundario para leerlo mejor"
+  "settingsHighContrastDesc": "Aclara el texto secundario para leerlo mejor",
+  "multiTimerTitle": "Varios temporizadores",
+  "multiTimerAdd": "Añadir temporizador",
+  "multiTimerNameHint": "Nombre del temporizador",
+  "multiTimerEmpty": "Aún no hay temporizadores. Toca + para añadir.",
+  "multiTimerDone": "Listo",
+  "multiTimerAllDone": "{count} temporizadores terminados",
+  "@multiTimerAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
