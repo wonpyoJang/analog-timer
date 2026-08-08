@@ -21,6 +21,7 @@ import 'settings_screen.dart';
 import 'features/multi_timer/widgets/multi_timer_screen.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
+import 'overlay/overlay_coordinator.dart';
 import 'live_activity/live_activity_service.dart';
 import 'pip/pip_service.dart';
 import 'services/battery_service.dart';
@@ -108,6 +109,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final now = DateTime.now();
     _viewDate = DateTime(now.year, now.month, now.day);
     WidgetsBinding.instance.addObserver(this);
+    // 멀티 오버레이가 켜지면 단일 오버레이를 끄도록 훅 등록(상호 배타).
+    OverlayCoordinator.instance.hideSingleOverlay = _hideOverlayForMutex;
     LiveActivityService.init();
     ReviewPromptService.instance.recordSessionStart(); // 후기 유도 — 세션 카운트
     _prevTimer = context.read<TimerBloc>().state;
@@ -584,6 +587,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     setState(() => _overlayOn = true);
     _syncHealthTimer();
     PersistenceService.saveOverlayOn(true);
+    unawaited(OverlayCoordinator.instance.onSingleOverlayEnabled());
+  }
+
+  /// 상호 배타 — 멀티 오버레이 활성화 시 호출돼 단일 오버레이를 끈다.
+  Future<void> _hideOverlayForMutex() async {
+    if (!isAndroid || !_overlayOn) return;
+    await OverlayService.hide();
+    if (!mounted) return;
+    setState(() => _overlayOn = false);
+    _syncHealthTimer();
+    PersistenceService.saveOverlayOn(false);
+    NativeWidgetService.cancelNotification();
   }
 
   void _startTimer() {
@@ -687,6 +702,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_onKeyEvent);
     WidgetsBinding.instance.removeObserver(this);
+    if (identical(
+      OverlayCoordinator.instance.hideSingleOverlay,
+      _hideOverlayForMutex,
+    )) {
+      OverlayCoordinator.instance.hideSingleOverlay = null;
+    }
     _clockTimer?.cancel();
     _persistTimer?.cancel();
     _overlayHealthTimer?.cancel();
@@ -1190,6 +1211,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       PersistenceService.saveOverlayOn(true);
       // 즉시 상태 전송 — 첫 heartbeat(~1s) 전까지 기본값 노출 방지
       _syncOverlay();
+      // 상호 배타 — 멀티 오버레이를 꺼 플랫폼 스레드 경합 제거.
+      unawaited(OverlayCoordinator.instance.onSingleOverlayEnabled());
     }
     unawaited(pushCurrentSettings());
   }

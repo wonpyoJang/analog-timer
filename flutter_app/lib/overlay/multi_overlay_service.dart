@@ -28,39 +28,29 @@ class MultiOverlayService {
   }
 
   /// id 창을 만들거나(없으면) 갱신한다.
+  ///
+  /// 매초 push 하지 않는다 — 상태 변화(start/pause/reset/complete/rename) 시에만 호출하고,
+  /// 네이티브 뷰가 [remainMs]/[running] 으로 마감시각을 잡아 자체적으로 매초 갱신한다.
+  /// 이렇게 하면 플랫폼 스레드가 다른 오버레이 엔진으로 바빠도 표시 시간이 정확하다.
   static Future<void> show({
     required String id,
     required String name,
-    required String time,
     required int colorValue,
-    double frac = 1.0,
+    required int totalMs,
+    required int remainMs,
+    required bool running,
     bool done = false,
+    String doneText = '',
   }) => _send(
     'show',
     id,
     name: name,
-    time: time,
     color: colorValue,
-    frac: frac,
+    totalMs: totalMs,
+    remainMs: remainMs,
+    running: running,
     done: done,
-  );
-
-  /// 기존 id 창의 남은시간/진행률만 갱신(없으면 자동 생성).
-  static Future<void> update({
-    required String id,
-    required String name,
-    required String time,
-    required int colorValue,
-    double frac = 1.0,
-    bool done = false,
-  }) => _send(
-    'update',
-    id,
-    name: name,
-    time: time,
-    color: colorValue,
-    frac: frac,
-    done: done,
+    doneText: doneText,
   );
 
   /// id 창을 닫는다. 마지막 창이면 서비스가 스스로 종료한다.
@@ -78,19 +68,23 @@ class MultiOverlayService {
     String method,
     String id, {
     required String name,
-    required String time,
     required int color,
-    required double frac,
+    required int totalMs,
+    required int remainMs,
+    required bool running,
     required bool done,
+    required String doneText,
   }) async {
     if (!isAndroid) return;
     await _channel.invokeMethod(method, {
       'id': id,
       'name': name,
-      'time': time,
       'color': color,
-      'frac': frac,
+      'totalMs': totalMs,
+      'remainMs': remainMs,
+      'running': running,
       'done': done,
+      'doneText': doneText,
     });
   }
 }

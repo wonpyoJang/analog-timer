@@ -10,6 +10,7 @@ import '../../../services/haptic_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
 import '../../../overlay/multi_overlay_service.dart';
+import '../../../overlay/overlay_coordinator.dart';
 import '../bloc/multi_timer_bloc.dart';
 import '../bloc/multi_timer_event.dart';
 import '../bloc/multi_timer_state.dart';
@@ -60,6 +61,16 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   void initState() {
     super.initState();
     _restore();
+    // 단일 오버레이가 켜지면 멀티 오버레이를 전부 닫도록 훅 등록(상호 배타).
+    OverlayCoordinator.instance.closeMultiOverlays = _closeAllOverlaysForMutex;
+  }
+
+  /// 상호 배타 — 단일 오버레이 활성화 시 호출돼 멀티 오버레이를 전부 닫는다.
+  Future<void> _closeAllOverlaysForMutex() async {
+    if (_overlayIds.isEmpty) return;
+    await MultiOverlayService.closeAll();
+    _lastPushed.clear();
+    if (mounted) setState(() => _overlayIds.clear());
   }
 
   Future<void> _restore() async {
@@ -169,6 +180,8 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       }
     }
     if (!mounted) return;
+    // 상호 배타 — 단일 오버레이(2nd 엔진)를 꺼 플랫폼 스레드 경합 제거.
+    unawaited(OverlayCoordinator.instance.onMultiOverlayEnabled());
     setState(() => _overlayIds.add(timer.id));
     _syncOverlays(l, bloc.state);
   }
@@ -189,17 +202,20 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       if (!_overlayIds.contains(t.id)) continue;
       final color = AppColors.segColors[i % AppColors.segColors.length]
           .toARGB32();
-      final time = t.done ? l.multiTimerDone : _fmt(t.remainMs);
-      final key = '${t.name}|$time|${t.done}';
-      if (_lastPushed[t.id] == key) continue; // 표시 변화 없음 — 호출 절약
+      // 상태 전이(시작/정지/리셋/완료/이름·지속시간 변경) 시에만 push. 매초 남은시간은
+      // 네이티브가 자체 계산하므로 key 에 remainMs/시간 문자열을 넣지 않는다.
+      final key = '${t.name}|${t.running}|${t.done}|${t.totalMs}';
+      if (_lastPushed[t.id] == key) continue;
       _lastPushed[t.id] = key;
       MultiOverlayService.show(
         id: t.id,
         name: t.name,
-        time: time,
         colorValue: color,
-        frac: t.frac,
+        totalMs: t.totalMs,
+        remainMs: t.remainMs,
+        running: t.running,
         done: t.done,
+        doneText: l.multiTimerDone,
       );
     }
   }
@@ -207,6 +223,12 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   @override
   void dispose() {
     _saveTrailing?.cancel();
+    if (identical(
+      OverlayCoordinator.instance.closeMultiOverlays,
+      _closeAllOverlaysForMutex,
+    )) {
+      OverlayCoordinator.instance.closeMultiOverlays = null;
+    }
     // 화면을 떠나면 bloc(ticker)이 정지 → 멈춘 pill이 남지 않도록 정리.
     if (_overlayIds.isNotEmpty) MultiOverlayService.closeAll();
     super.dispose();
