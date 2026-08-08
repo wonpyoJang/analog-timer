@@ -43,6 +43,9 @@ class MultiOverlayService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private var pendingStop: Runnable? = null
 
+    /** 드래그 중인 창 id — 그 창의 초 단위 콘텐츠 갱신(invalidate)을 억제해 이동과 경쟁 방지. */
+    private var draggingId: String? = null
+
     private class PillHandle(
         val view: CircleTimerView,
         val params: WindowManager.LayoutParams,
@@ -97,8 +100,13 @@ class MultiOverlayService : Service() {
     ) {
         cancelPendingStop() // 다시 켜짐 — 예약된 정지 취소
         val existing = pills[id]
-        if (existing != null) existing.view.setState(name, time, color, frac, done)
-        else addPill(id, name, time, color, frac, done)
+        if (existing != null) {
+            // 드래그 중인 창은 콘텐츠 invalidate 를 건너뛴다(이동과 경쟁 방지). 드래그 종료 시 갱신됨.
+            if (id == draggingId) return
+            existing.view.setState(name, time, color, frac, done)
+        } else {
+            addPill(id, name, time, color, frac, done)
+        }
     }
 
     /** id 창을 닫는다. 마지막이 닫히면 즉시 stop 하지 않고 디바운스 예약한다. */
@@ -128,6 +136,7 @@ class MultiOverlayService : Service() {
 
     private fun handleClose(id: String?) {
         id ?: return
+        if (id == draggingId) draggingId = null
         val handle = pills.remove(id) ?: return
         runCatching { windowManager.removeView(handle.view) }
     }
@@ -135,6 +144,7 @@ class MultiOverlayService : Service() {
     fun closeAll() {
         // 화면 이탈(dispose) 등 전체 종료 — 디바운스 없이 즉시 정지.
         cancelPendingStop()
+        draggingId = null
         for (handle in pills.values) runCatching { windowManager.removeView(handle.view) }
         pills.clear()
         stopSelfSafely()
@@ -158,7 +168,10 @@ class MultiOverlayService : Service() {
             size,
             size,
             overlayWindowType(),
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            // Service context 로 addView 한 창은 HW 가속이 기본 OFF → 이동 시 Canvas(anti-alias
+            // arc·text)를 CPU 로 매번 재래스터해 드래그가 끊긴다. HW_ACCELERATED 로 GPU 합성.
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.START
@@ -168,7 +181,7 @@ class MultiOverlayService : Service() {
         }
 
         val handle = PillHandle(view, params)
-        attachDrag(handle)
+        attachDrag(id, handle)
         runCatching { windowManager.addView(view, params) }
             .exceptionOrNull()?.let { Log.e(TAG, "addView failed id=$id", it) }
         pills[id] = handle
@@ -252,13 +265,21 @@ class MultiOverlayService : Service() {
 
     // ----- 드래그 (getRawX/Y 절대 오프셋; OverlayService.onTouch 패턴 복제) -----
 
-    private fun attachDrag(handle: PillHandle) {
+    private fun attachDrag(id: String, handle: PillHandle) {
         var downRawX = 0f
         var downRawY = 0f
         var startX = 0
         var startY = 0
         var dragging = false
+        var frameScheduled = false
         val slopSq = (dp(6)).let { (it * it).toFloat() }
+
+        // MOVE 마다 updateViewLayout(WMS IPC+트래버설)을 호출하면 고주사율 입력에서 폭주한다.
+        // 프레임당 1회만 최신 좌표를 반영(postOnAnimation = vsync 정렬)해 부드럽게.
+        val applyLayout = Runnable {
+            frameScheduled = false
+            runCatching { windowManager.updateViewLayout(handle.view, handle.params) }
+        }
 
         handle.view.setOnTouchListener { _, event ->
             when (event.actionMasked) {
@@ -274,13 +295,30 @@ class MultiOverlayService : Service() {
                     val dx = event.rawX - downRawX
                     val dy = event.rawY - downRawY
                     if (!dragging && dx * dx + dy * dy < slopSq) return@setOnTouchListener true
-                    dragging = true
+                    if (!dragging) {
+                        dragging = true
+                        draggingId = id // 드래그 시작 — 콘텐츠 갱신 억제
+                    }
                     handle.params.x = startX + Math.round(dx)
                     handle.params.y = startY + Math.round(dy)
-                    runCatching { windowManager.updateViewLayout(handle.view, handle.params) }
+                    if (!frameScheduled) {
+                        frameScheduled = true
+                        handle.view.postOnAnimation(applyLayout)
+                    }
                     true
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> true
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    if (dragging) {
+                        dragging = false
+                        if (draggingId == id) draggingId = null
+                        // 마지막 좌표를 즉시 반영하고, 억제됐던 콘텐츠를 1회 갱신.
+                        handle.view.removeCallbacks(applyLayout)
+                        frameScheduled = false
+                        runCatching { windowManager.updateViewLayout(handle.view, handle.params) }
+                        handle.view.invalidate()
+                    }
+                    true
+                }
                 else -> false
             }
         }
