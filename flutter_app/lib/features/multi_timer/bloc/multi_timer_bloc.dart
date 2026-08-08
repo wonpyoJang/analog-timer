@@ -14,6 +14,7 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
     on<MtAdd>(_onAdd);
     on<MtRemove>(_onRemove);
     on<MtExtend>(_onExtend);
+    on<MtAck>(_onAck);
     on<MtRename>(_onRename);
     on<MtSetDuration>(_onSetDuration);
     on<MtStart>(_onStart);
@@ -43,10 +44,28 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
   void _onExtend(MtExtend e, Emitter<MultiTimerState> emit) {
     emit(
       state.copyWith(
-        timers: _map(
-          (t) => t.copyWith(remainMs: t.remainMs + e.addMs),
-          onlyId: e.id,
-        ),
+        timers: _map((t) {
+          if (t.done) {
+            // 알람에서 +1:00/+5:00 — 러닝 복귀, 연장=확인으로 간주(재알림 중단).
+            return t.copyWith(
+              remainMs: e.addMs,
+              running: true,
+              done: false,
+              acked: true,
+              extendCount: t.extendCount + 1,
+            );
+          }
+          return t.copyWith(remainMs: t.remainMs + e.addMs);
+        }, onlyId: e.id),
+      ),
+    );
+    _syncTicker();
+  }
+
+  void _onAck(MtAck e, Emitter<MultiTimerState> emit) {
+    emit(
+      state.copyWith(
+        timers: _map((t) => t.copyWith(acked: true), onlyId: e.id),
       ),
     );
   }
@@ -155,7 +174,13 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
       final r = t.remainMs - elapsedMs;
       if (r <= 0) {
         justCompleted.add(t.id);
-        return t.copyWith(remainMs: 0, running: false, done: true);
+        return t.copyWith(
+          remainMs: 0,
+          running: false,
+          done: true,
+          acked: false, // 확인 전까지 "울리는 중" — 1분 재알림 대상
+          doneAtMs: DateTime.now().millisecondsSinceEpoch,
+        );
       }
       return t.copyWith(remainMs: r);
     }).toList();

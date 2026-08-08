@@ -13,6 +13,7 @@ class CareService {
   static const _kPreAlarm = 'care_pre_alarm_min';
   static const _kQuietHours = 'care_quiet_hours';
   static const _kTone = 'care_message_tone';
+  static const _kRealarm = 'care_realarm';
 
   /// 프리-알림 분(0=OFF, 1/2/5). 기본 2분(시안).
   final ValueNotifier<int> preAlarmMin = ValueNotifier<int>(2);
@@ -23,6 +24,9 @@ class CareService {
   /// 알람 문구 톤: 'warm' | 'neutral' | 'brief'. 기본 중립.
   final ValueNotifier<String> messageTone = ValueNotifier<String>('neutral');
 
+  /// 확인까지 재알림(요리 시안 §5, 기본 ON) — 완료 미확인 타이머를 1분마다 다시 울림.
+  final ValueNotifier<bool> realarm = ValueNotifier<bool>(true);
+
   Future<void> init() async {
     try {
       final p = await SharedPreferences.getInstance();
@@ -32,6 +36,15 @@ class CareService {
       if (t != null && ['warm', 'neutral', 'brief'].contains(t)) {
         messageTone.value = t;
       }
+      realarm.value = p.getBool(_kRealarm) ?? true;
+    } catch (_) {}
+  }
+
+  Future<void> setRealarm(bool v) async {
+    realarm.value = v;
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.setBool(_kRealarm, v);
     } catch (_) {}
   }
 

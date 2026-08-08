@@ -1210,4 +1210,87 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get preAlarmExtend => '+5 min';
+
+  @override
+  String get catAll => 'All';
+
+  @override
+  String get catCooking => 'Cooking';
+
+  @override
+  String get catFocus => 'Focus';
+
+  @override
+  String get catChore => 'Chores';
+
+  @override
+  String get presetRecent => 'Recent';
+
+  @override
+  String get cookRamen => 'Ramen';
+
+  @override
+  String get cookPasta => 'Boil pasta';
+
+  @override
+  String get cookEgg => 'Soft-boiled egg';
+
+  @override
+  String get cookSauce => 'Reduce sauce';
+
+  @override
+  String get cookRice => 'Soak rice';
+
+  @override
+  String get alarmDoneTitle => 'Timer finished';
+
+  @override
+  String alarmMultiDone(int n) {
+    return '$n finished';
+  }
+
+  @override
+  String alarmOf(String d) {
+    return '$d timer';
+  }
+
+  @override
+  String get alarmAck => 'Done ✓';
+
+  @override
+  String get alarmAckOnly => 'Acknowledge';
+
+  @override
+  String alarmExtended(int n) {
+    return 'Extended $n×';
+  }
+
+  @override
+  String get alarmRealarmNote => 'Rings again every minute until you confirm';
+
+  @override
+  String get alarmRinging => 'Done · ringing';
+
+  @override
+  String alarmAgoMin(int n, int r) {
+    return '$n min ago · rang $r×';
+  }
+
+  @override
+  String get alarmStillRunning => 'Still running';
+
+  @override
+  String get alarmNextUp => 'Next ↓';
+
+  @override
+  String ttsOverdue(String name, int n) {
+    return '$name, $n minutes over';
+  }
+
+  @override
+  String get careRealarm => 'Re-ring until confirmed';
+
+  @override
+  String get careRealarmDesc =>
+      'finished timers ring every minute until acknowledged';
 }

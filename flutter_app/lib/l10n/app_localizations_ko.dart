@@ -1179,4 +1179,86 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get preAlarmExtend => '+5분';
+
+  @override
+  String get catAll => '전체';
+
+  @override
+  String get catCooking => '요리';
+
+  @override
+  String get catFocus => '집중';
+
+  @override
+  String get catChore => '집안일';
+
+  @override
+  String get presetRecent => '최근';
+
+  @override
+  String get cookRamen => '라면';
+
+  @override
+  String get cookPasta => '파스타 삶기';
+
+  @override
+  String get cookEgg => '반숙 계란';
+
+  @override
+  String get cookSauce => '소스 졸이기';
+
+  @override
+  String get cookRice => '쌀 불리기';
+
+  @override
+  String get alarmDoneTitle => '타이머 완료';
+
+  @override
+  String alarmMultiDone(int n) {
+    return '$n개 완료';
+  }
+
+  @override
+  String alarmOf(String d) {
+    return '$d 타이머';
+  }
+
+  @override
+  String get alarmAck => '확인 ✓';
+
+  @override
+  String get alarmAckOnly => '확인만 하기';
+
+  @override
+  String alarmExtended(int n) {
+    return '연장 · $n회';
+  }
+
+  @override
+  String get alarmRealarmNote => '확인할 때까지 1분마다 다시 울려요';
+
+  @override
+  String get alarmRinging => '완료 · 울리는 중';
+
+  @override
+  String alarmAgoMin(int n, int r) {
+    return '$n분 전 완료 · $r회 울림';
+  }
+
+  @override
+  String get alarmStillRunning => '계속 진행 중';
+
+  @override
+  String get alarmNextUp => '다음 ↓';
+
+  @override
+  String ttsOverdue(String name, int n) {
+    return '$name, $n분 지났어요';
+  }
+
+  @override
+  String get careRealarm => '확인까지 재알림';
+
+  @override
+  String get careRealarmDesc => '완료된 타이머를 확인할 때까지 1분마다 다시 울림';
 }

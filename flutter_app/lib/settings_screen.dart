@@ -441,6 +441,26 @@ class SettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
+            ValueListenableBuilder<bool>(
+              valueListenable: CareService.instance.realarm,
+              builder: (ctx, rOn, _) => _SettingsTile(
+                icon: Icons.notification_important_outlined,
+                iconColor: AppColors.accent,
+                title: l.careRealarm,
+                subtitle: l.careRealarmDesc,
+                trailing: Switch(
+                  value: rOn,
+                  onChanged: CareService.instance.setRealarm,
+                  activeThumbColor: AppColors.accent,
+                  trackColor: WidgetStateProperty.resolveWith(
+                    (states) => states.contains(WidgetState.selected)
+                        ? AppColors.accent.withAlpha(0x55)
+                        : AppColors.surface,
+                  ),
+                ),
+                onTap: () => CareService.instance.setRealarm(!rOn),
+              ),
+            ),
             ValueListenableBuilder<String>(
               valueListenable: CareService.instance.messageTone,
               builder: (ctx, tone, _) => Column(
