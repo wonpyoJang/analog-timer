@@ -13,6 +13,15 @@ class CountdownTimer extends Equatable {
   /// remainMs 가 0에 도달해 완료된 상태. 리셋으로 해제된다.
   final bool done;
 
+  /// 완료를 사용자가 확인했는가 — false 면 "울리는 중"(1분 재알림 대상).
+  final bool acked;
+
+  /// 완료 시각(epoch ms) — 재알림 경과("2분 지났어요") 계산용.
+  final int doneAtMs;
+
+  /// 완료 후 +연장 횟수 — 알람 화면 이력 표시("+1:00 연장 · 2회").
+  final int extendCount;
+
   CountdownTimer({
     String? id,
     required this.name,
@@ -20,6 +29,9 @@ class CountdownTimer extends Equatable {
     int? remainMs,
     this.running = false,
     this.done = false,
+    this.acked = true,
+    this.doneAtMs = 0,
+    this.extendCount = 0,
   }) : id = id ?? _nextId(),
        remainMs = remainMs ?? totalMs;
 
@@ -33,6 +45,9 @@ class CountdownTimer extends Equatable {
     int? remainMs,
     bool? running,
     bool? done,
+    bool? acked,
+    int? doneAtMs,
+    int? extendCount,
   }) => CountdownTimer(
     id: id,
     name: name ?? this.name,
@@ -40,6 +55,9 @@ class CountdownTimer extends Equatable {
     remainMs: remainMs ?? this.remainMs,
     running: running ?? this.running,
     done: done ?? this.done,
+    acked: acked ?? this.acked,
+    doneAtMs: doneAtMs ?? this.doneAtMs,
+    extendCount: extendCount ?? this.extendCount,
   );
 
   double get frac =>
@@ -52,6 +70,9 @@ class CountdownTimer extends Equatable {
     'remainMs': remainMs,
     'running': running,
     'done': done,
+    'acked': acked,
+    'doneAtMs': doneAtMs,
+    'extendCount': extendCount,
   };
 
   static CountdownTimer fromJson(Map<String, dynamic> json) => CountdownTimer(
@@ -61,8 +82,11 @@ class CountdownTimer extends Equatable {
     remainMs: (json['remainMs'] as num?)?.toInt(),
     running: json['running'] as bool? ?? false,
     done: json['done'] as bool? ?? false,
+    acked: json['acked'] as bool? ?? true,
+    doneAtMs: (json['doneAtMs'] as num?)?.toInt() ?? 0,
+    extendCount: (json['extendCount'] as num?)?.toInt() ?? 0,
   );
 
   @override
-  List<Object?> get props => [id, name, totalMs, remainMs, running, done];
+  List<Object?> get props => [id, name, totalMs, remainMs, running, done, acked, doneAtMs, extendCount];
 }

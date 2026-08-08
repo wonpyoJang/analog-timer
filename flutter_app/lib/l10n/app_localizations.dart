@@ -2168,6 +2168,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add items below'**
   String get prepEmptyItemsEdit;
+
+  /// No description provided for @careSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound & interruptions'**
+  String get careSection;
+
+  /// No description provided for @careQuietHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours'**
+  String get careQuietHours;
+
+  /// No description provided for @careQuietHoursDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'22:00–07:00 vibrate instead of sounds'**
+  String get careQuietHoursDesc;
+
+  /// No description provided for @carePreAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-alert'**
+  String get carePreAlarm;
+
+  /// No description provided for @carePreAlarmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'silent heads-up before a timer ends'**
+  String get carePreAlarmDesc;
+
+  /// No description provided for @carePreAlarmOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get carePreAlarmOff;
+
+  /// No description provided for @carePreAlarmMin.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} min'**
+  String carePreAlarmMin(int n);
+
+  /// No description provided for @careTone.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert wording'**
+  String get careTone;
+
+  /// No description provided for @careToneDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'tone used in completion messages'**
+  String get careToneDesc;
+
+  /// No description provided for @careToneWarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm'**
+  String get careToneWarm;
+
+  /// No description provided for @careToneNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral'**
+  String get careToneNeutral;
+
+  /// No description provided for @careToneBrief.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief'**
+  String get careToneBrief;
+
+  /// No description provided for @careTonePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get careTonePreview;
+
+  /// No description provided for @doneMsgWarm.
+  ///
+  /// In en, this message translates to:
+  /// **'\'{name}\' is done. Nice work ☺'**
+  String doneMsgWarm(String name);
+
+  /// No description provided for @doneMsgNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · 00:00'**
+  String doneMsgNeutral(String name);
+
+  /// No description provided for @doneMsgBrief.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} done'**
+  String doneMsgBrief(String name);
+
+  /// No description provided for @preAlarmBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'\'{name}\' — {n} min left'**
+  String preAlarmBanner(String name, int n);
+
+  /// No description provided for @preAlarmExtend.
+  ///
+  /// In en, this message translates to:
+  /// **'+5 min'**
+  String get preAlarmExtend;
+
+  /// No description provided for @catAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get catAll;
+
+  /// No description provided for @catCooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Cooking'**
+  String get catCooking;
+
+  /// No description provided for @catFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get catFocus;
+
+  /// No description provided for @catChore.
+  ///
+  /// In en, this message translates to:
+  /// **'Chores'**
+  String get catChore;
+
+  /// No description provided for @presetRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get presetRecent;
+
+  /// No description provided for @cookRamen.
+  ///
+  /// In en, this message translates to:
+  /// **'Ramen'**
+  String get cookRamen;
+
+  /// No description provided for @cookPasta.
+  ///
+  /// In en, this message translates to:
+  /// **'Boil pasta'**
+  String get cookPasta;
+
+  /// No description provided for @cookEgg.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft-boiled egg'**
+  String get cookEgg;
+
+  /// No description provided for @cookSauce.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce sauce'**
+  String get cookSauce;
+
+  /// No description provided for @cookRice.
+  ///
+  /// In en, this message translates to:
+  /// **'Soak rice'**
+  String get cookRice;
+
+  /// No description provided for @alarmDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer finished'**
+  String get alarmDoneTitle;
+
+  /// No description provided for @alarmMultiDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} finished'**
+  String alarmMultiDone(int n);
+
+  /// No description provided for @alarmOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{d} timer'**
+  String alarmOf(String d);
+
+  /// No description provided for @alarmAck.
+  ///
+  /// In en, this message translates to:
+  /// **'Done ✓'**
+  String get alarmAck;
+
+  /// No description provided for @alarmAckOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Acknowledge'**
+  String get alarmAckOnly;
+
+  /// No description provided for @alarmExtended.
+  ///
+  /// In en, this message translates to:
+  /// **'Extended {n}×'**
+  String alarmExtended(int n);
+
+  /// No description provided for @alarmRealarmNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Rings again every minute until you confirm'**
+  String get alarmRealarmNote;
+
+  /// No description provided for @alarmRinging.
+  ///
+  /// In en, this message translates to:
+  /// **'Done · ringing'**
+  String get alarmRinging;
+
+  /// No description provided for @alarmAgoMin.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} min ago · rang {r}×'**
+  String alarmAgoMin(int n, int r);
+
+  /// No description provided for @alarmStillRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Still running'**
+  String get alarmStillRunning;
+
+  /// No description provided for @alarmNextUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Next ↓'**
+  String get alarmNextUp;
+
+  /// No description provided for @ttsOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, {n} minutes over'**
+  String ttsOverdue(String name, int n);
+
+  /// No description provided for @careRealarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-ring until confirmed'**
+  String get careRealarm;
+
+  /// No description provided for @careRealarmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'finished timers ring every minute until acknowledged'**
+  String get careRealarmDesc;
 }
 
 class _AppLocalizationsDelegate

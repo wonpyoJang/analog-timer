@@ -1115,4 +1115,150 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get prepEmptyItemsEdit => '아래에서 항목을 추가하세요';
+
+  @override
+  String get careSection => '사운드 & 방해 관리';
+
+  @override
+  String get careQuietHours => '조용한 시간';
+
+  @override
+  String get careQuietHoursDesc => '22:00–07:00 자동으로 소리 대신 진동';
+
+  @override
+  String get carePreAlarm => '프리-알림';
+
+  @override
+  String get carePreAlarmDesc => '끝나기 전에 소리 없이 예고';
+
+  @override
+  String get carePreAlarmOff => '끄기';
+
+  @override
+  String carePreAlarmMin(int n) {
+    return '$n분';
+  }
+
+  @override
+  String get careTone => '알람 문구 톤';
+
+  @override
+  String get careToneDesc => '알림에 쓰는 말투';
+
+  @override
+  String get careToneWarm => '다정';
+
+  @override
+  String get careToneNeutral => '중립';
+
+  @override
+  String get careToneBrief => '간결';
+
+  @override
+  String get careTonePreview => '문구 미리보기';
+
+  @override
+  String doneMsgWarm(String name) {
+    return '\'$name\' 끝났어요. 수고했어요 ☺';
+  }
+
+  @override
+  String doneMsgNeutral(String name) {
+    return '$name · 00:00';
+  }
+
+  @override
+  String doneMsgBrief(String name) {
+    return '$name 완료';
+  }
+
+  @override
+  String preAlarmBanner(String name, int n) {
+    return '\'$name\' $n분 남았어요';
+  }
+
+  @override
+  String get preAlarmExtend => '+5분';
+
+  @override
+  String get catAll => '전체';
+
+  @override
+  String get catCooking => '요리';
+
+  @override
+  String get catFocus => '집중';
+
+  @override
+  String get catChore => '집안일';
+
+  @override
+  String get presetRecent => '최근';
+
+  @override
+  String get cookRamen => '라면';
+
+  @override
+  String get cookPasta => '파스타 삶기';
+
+  @override
+  String get cookEgg => '반숙 계란';
+
+  @override
+  String get cookSauce => '소스 졸이기';
+
+  @override
+  String get cookRice => '쌀 불리기';
+
+  @override
+  String get alarmDoneTitle => '타이머 완료';
+
+  @override
+  String alarmMultiDone(int n) {
+    return '$n개 완료';
+  }
+
+  @override
+  String alarmOf(String d) {
+    return '$d 타이머';
+  }
+
+  @override
+  String get alarmAck => '확인 ✓';
+
+  @override
+  String get alarmAckOnly => '확인만 하기';
+
+  @override
+  String alarmExtended(int n) {
+    return '연장 · $n회';
+  }
+
+  @override
+  String get alarmRealarmNote => '확인할 때까지 1분마다 다시 울려요';
+
+  @override
+  String get alarmRinging => '완료 · 울리는 중';
+
+  @override
+  String alarmAgoMin(int n, int r) {
+    return '$n분 전 완료 · $r회 울림';
+  }
+
+  @override
+  String get alarmStillRunning => '계속 진행 중';
+
+  @override
+  String get alarmNextUp => '다음 ↓';
+
+  @override
+  String ttsOverdue(String name, int n) {
+    return '$name, $n분 지났어요';
+  }
+
+  @override
+  String get careRealarm => '확인까지 재알림';
+
+  @override
+  String get careRealarmDesc => '완료된 타이머를 확인할 때까지 1분마다 다시 울림';
 }

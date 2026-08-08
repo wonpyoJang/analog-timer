@@ -16,6 +16,7 @@ import 'services/tts_service.dart';
 import 'services/text_scale_service.dart';
 import 'services/haptic_service.dart';
 import 'services/sound_service.dart';
+import 'services/care_service.dart';
 import 'services/colorblind_service.dart';
 import 'services/high_contrast_service.dart';
 import 'overlay/overlay_coordinator.dart';
@@ -368,6 +369,157 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+                ],
+              ),
+            ),
+            const _Divider(),
+
+            // ── 사운드 & 방해 관리 (페르소나 §3·§5) ──────────────
+            ValueListenableBuilder<bool>(
+              valueListenable: CareService.instance.quietHours,
+              builder: (ctx, qOn, _) => _SettingsTile(
+                icon: Icons.bedtime_outlined,
+                iconColor: AppColors.accent,
+                title: l.careQuietHours,
+                subtitle: l.careQuietHoursDesc,
+                trailing: Switch(
+                  value: qOn,
+                  onChanged: CareService.instance.setQuietHours,
+                  activeThumbColor: AppColors.accent,
+                  trackColor: WidgetStateProperty.resolveWith(
+                    (states) => states.contains(WidgetState.selected)
+                        ? AppColors.accent.withAlpha(0x55)
+                        : AppColors.surface,
+                  ),
+                ),
+                onTap: () => CareService.instance.setQuietHours(!qOn),
+              ),
+            ),
+            ValueListenableBuilder<int>(
+              valueListenable: CareService.instance.preAlarmMin,
+              builder: (ctx, pre, _) => Column(
+                children: [
+                  _SettingsTile(
+                    icon: Icons.notifications_paused_outlined,
+                    iconColor: AppColors.accent,
+                    title: l.carePreAlarm,
+                    subtitle: l.carePreAlarmDesc,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(56, 0, 16, 12),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 8,
+                        children: [
+                          for (final v in const [0, 1, 2, 5])
+                            ChoiceChip(
+                              label: Text(
+                                v == 0 ? l.carePreAlarmOff : l.carePreAlarmMin(v),
+                              ),
+                              selected: pre == v,
+                              onSelected: (_) =>
+                                  CareService.instance.setPreAlarmMin(v),
+                              selectedColor: AppColors.accent.withAlpha(0x33),
+                              backgroundColor: AppColors.surface,
+                              labelStyle: TextStyle(
+                                color: pre == v
+                                    ? AppColors.accent
+                                    : AppColors.muted,
+                                fontSize: 13,
+                              ),
+                              side: BorderSide(
+                                color: pre == v
+                                    ? AppColors.accent
+                                    : AppColors.border,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ValueListenableBuilder<bool>(
+              valueListenable: CareService.instance.realarm,
+              builder: (ctx, rOn, _) => _SettingsTile(
+                icon: Icons.notification_important_outlined,
+                iconColor: AppColors.accent,
+                title: l.careRealarm,
+                subtitle: l.careRealarmDesc,
+                trailing: Switch(
+                  value: rOn,
+                  onChanged: CareService.instance.setRealarm,
+                  activeThumbColor: AppColors.accent,
+                  trackColor: WidgetStateProperty.resolveWith(
+                    (states) => states.contains(WidgetState.selected)
+                        ? AppColors.accent.withAlpha(0x55)
+                        : AppColors.surface,
+                  ),
+                ),
+                onTap: () => CareService.instance.setRealarm(!rOn),
+              ),
+            ),
+            ValueListenableBuilder<String>(
+              valueListenable: CareService.instance.messageTone,
+              builder: (ctx, tone, _) => Column(
+                children: [
+                  _SettingsTile(
+                    icon: Icons.chat_bubble_outline,
+                    iconColor: AppColors.accent,
+                    title: l.careTone,
+                    subtitle: l.careToneDesc,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(56, 0, 16, 6),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 8,
+                        children: [
+                          for (final e in {
+                            'warm': l.careToneWarm,
+                            'neutral': l.careToneNeutral,
+                            'brief': l.careToneBrief,
+                          }.entries)
+                            ChoiceChip(
+                              label: Text(e.value),
+                              selected: tone == e.key,
+                              onSelected: (_) =>
+                                  CareService.instance.setMessageTone(e.key),
+                              selectedColor: AppColors.accent.withAlpha(0x33),
+                              backgroundColor: AppColors.surface,
+                              labelStyle: TextStyle(
+                                color: tone == e.key
+                                    ? AppColors.accent
+                                    : AppColors.muted,
+                                fontSize: 13,
+                              ),
+                              side: BorderSide(
+                                color: tone == e.key
+                                    ? AppColors.accent
+                                    : AppColors.border,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(56, 2, 16, 12),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        switch (tone) {
+                          'warm' => l.doneMsgWarm(l.multiTimerTitle),
+                          'brief' => l.doneMsgBrief(l.multiTimerTitle),
+                          _ => l.doneMsgNeutral(l.multiTimerTitle),
+                        },
+                        style: TextStyle(color: AppColors.faint, fontSize: 12),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

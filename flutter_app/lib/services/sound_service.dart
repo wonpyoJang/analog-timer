@@ -1,6 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'care_service.dart';
+import 'haptic_service.dart';
 
 /// 멀티 타이머 UI 효과음 — 디자인 "모션 & 사운드 스펙" 구현.
 ///
@@ -55,6 +57,11 @@ class SoundService {
   /// 이벤트: tap/add/start/pause/warn/done/snap/del
   void play(String event) {
     if (!enabled) return;
+    // 조용한 시간(22–07시) — 소리 대신 진동(페르소나 §3).
+    if (CareService.instance.inQuietWindow) {
+      HapticService.instance.light();
+      return;
+    }
     try {
       if (_pool.length < 3) {
         // 짧은 효과음이 음악 재생을 끊지 않도록 오디오 포커스를 잡지 않는다.

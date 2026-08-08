@@ -83,6 +83,7 @@ class MultiOverlayService : Service() {
                     intent.getBooleanExtra(EXTRA_DONE, false),
                     intent.getStringExtra(EXTRA_DONE_TEXT) ?: "",
                     intent.getLongExtra(EXTRA_DEADLINE_MS, 0L),
+                    intent.getLongExtra(EXTRA_PREALARM_MS, 0L),
                 )
             }
             CMD_CLOSE -> handleClose(intent.getStringExtra(EXTRA_ID))
@@ -104,14 +105,15 @@ class MultiOverlayService : Service() {
         done: Boolean,
         doneText: String,
         deadlineEpochMs: Long = 0L,
+        preAlarmMs: Long = 0L,
     ) {
         cancelPendingStop() // 다시 켜짐 — 예약된 정지 취소
         val existing = pills[id]
         if (existing != null) {
             // 드래그 중인 창도 상태(running/시간)는 반영하되 invalidate 는 refresh 결과에 맡긴다.
-            existing.view.setState(name, color, totalMs, remainMs, running, done, doneText, deadlineEpochMs)
+            existing.view.setState(name, color, totalMs, remainMs, running, done, doneText, deadlineEpochMs, preAlarmMs)
         } else {
-            addPill(id, name, color, totalMs, remainMs, running, done, doneText, deadlineEpochMs)
+            addPill(id, name, color, totalMs, remainMs, running, done, doneText, deadlineEpochMs, preAlarmMs)
         }
         ensureTicking()
     }
@@ -203,9 +205,10 @@ class MultiOverlayService : Service() {
         done: Boolean,
         doneText: String,
         deadlineEpochMs: Long = 0L,
+        preAlarmMs: Long = 0L,
     ) {
         val view = CircleTimerView(this)
-        view.setState(name, color, totalMs, remainMs, running, done, doneText, deadlineEpochMs)
+        view.setState(name, color, totalMs, remainMs, running, done, doneText, deadlineEpochMs, preAlarmMs)
 
         val size = dp(DIAMETER_DP)
         val params = WindowManager.LayoutParams(
@@ -331,7 +334,9 @@ class MultiOverlayService : Service() {
             isDone: Boolean,
             doneLabel: String,
             deadlineEpochMs: Long = 0L,
+            preAlarmMsArg: Long = 0L,
         ) {
+            preAlarmMs = preAlarmMsArg
             timerName = name
             color = colorArgb
             totalMs = totalMsArg
@@ -359,6 +364,8 @@ class MultiOverlayService : Service() {
             val remain = currentRemainMs()
             // 상태 문법(디자인): done=✓ / paused=⏸ 프리픽스 / 막판 1분=danger 강조.
             val newLast = running && !done && remain < 60_000
+            val newPre = running && !done && preAlarmMs > 0 &&
+                remain < preAlarmMs && remain >= 60_000
             val newText = when {
                 done -> "✓"
                 !running -> "⏸ ${fmt(remain)}"
@@ -368,15 +375,19 @@ class MultiOverlayService : Service() {
                 else if (totalMs <= 0) 0f
                 else (1f - remain.toFloat() / totalMs).coerceIn(0f, 1f)
             val changed =
-                newText != timeText || newFrac != frac || newLast != lastMinute
+                newText != timeText || newFrac != frac ||
+                    newLast != lastMinute || newPre != preAlarm
             timeText = newText
             frac = newFrac
             lastMinute = newLast
+            preAlarm = newPre
             syncGlow()
             return changed
         }
 
         private var lastMinute = false
+        private var preAlarmMs = 0L
+        private var preAlarm = false // 프리-알림 구간(잔여<=N분, >1분) — accent 전환
 
         // 막판 1분 글로우 펄스(스펙 5) — 0→26dp→0 왕복 1s 주기.
         private var glowAnimator: android.animation.ValueAnimator? = null
@@ -447,6 +458,7 @@ class MultiOverlayService : Service() {
                 done -> COLOR_GREEN
                 !running -> COLOR_PAUSED_RING
                 lastMinute -> COLOR_DANGER
+                preAlarm -> COLOR_ACCENT
                 else -> color
             }
             if (lastMinute && glowPulse > 0.02f) {
@@ -465,6 +477,7 @@ class MultiOverlayService : Service() {
             timePaint.color = when {
                 done -> COLOR_GREEN
                 lastMinute -> COLOR_DANGER
+                preAlarm -> COLOR_ACCENT
                 !running -> 0xFFAAAAAA.toInt()
                 else -> 0xFFFFFFFF.toInt()
             }
@@ -533,6 +546,9 @@ class MultiOverlayService : Service() {
                         frameScheduled = false
                         runCatching { windowManager.updateViewLayout(handle.view, handle.params) }
                         handle.view.invalidate()
+                    } else if (event.actionMasked == MotionEvent.ACTION_UP) {
+                        // 탭 — 프리-알림 +5분 연장 등 앱 쪽 처리(페르소나 §5).
+                        onPillTap?.invoke(id)
                     }
                     true
                 }
@@ -628,6 +644,11 @@ class MultiOverlayService : Service() {
         const val DEFAULT_ACCENT = 0xFFE07A52.toInt()
         const val DIAMETER_DP = 108
         const val COLOR_GREEN = 0xFF2EA84A.toInt()
+        const val COLOR_ACCENT = 0xFFF0C040.toInt()
+
+        /** pill 탭 콜백 — MainActivity 가 등록해 Dart 로 전달(프리-알림 +5분). */
+        @Volatile
+        var onPillTap: ((String) -> Unit)? = null
         const val COLOR_DANGER = 0xFFE05252.toInt()
         const val COLOR_PAUSED_RING = 0xFF5A5A5E.toInt()
 
@@ -641,6 +662,7 @@ class MultiOverlayService : Service() {
         const val EXTRA_DONE = "done"
         const val EXTRA_DONE_TEXT = "doneText"
         const val EXTRA_DEADLINE_MS = "deadlineMs"
+        const val EXTRA_PREALARM_MS = "preAlarmMs"
 
         const val CMD_SHOW = "show"
         const val CMD_UPDATE = "update"

@@ -1146,4 +1146,151 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get prepEmptyItemsEdit => 'Add items below';
+
+  @override
+  String get careSection => 'Sound & interruptions';
+
+  @override
+  String get careQuietHours => 'Quiet hours';
+
+  @override
+  String get careQuietHoursDesc => '22:00–07:00 vibrate instead of sounds';
+
+  @override
+  String get carePreAlarm => 'Pre-alert';
+
+  @override
+  String get carePreAlarmDesc => 'silent heads-up before a timer ends';
+
+  @override
+  String get carePreAlarmOff => 'Off';
+
+  @override
+  String carePreAlarmMin(int n) {
+    return '$n min';
+  }
+
+  @override
+  String get careTone => 'Alert wording';
+
+  @override
+  String get careToneDesc => 'tone used in completion messages';
+
+  @override
+  String get careToneWarm => 'Warm';
+
+  @override
+  String get careToneNeutral => 'Neutral';
+
+  @override
+  String get careToneBrief => 'Brief';
+
+  @override
+  String get careTonePreview => 'Preview';
+
+  @override
+  String doneMsgWarm(String name) {
+    return '\'$name\' is done. Nice work ☺';
+  }
+
+  @override
+  String doneMsgNeutral(String name) {
+    return '$name · 00:00';
+  }
+
+  @override
+  String doneMsgBrief(String name) {
+    return '$name done';
+  }
+
+  @override
+  String preAlarmBanner(String name, int n) {
+    return '\'$name\' — $n min left';
+  }
+
+  @override
+  String get preAlarmExtend => '+5 min';
+
+  @override
+  String get catAll => 'All';
+
+  @override
+  String get catCooking => 'Cooking';
+
+  @override
+  String get catFocus => 'Focus';
+
+  @override
+  String get catChore => 'Chores';
+
+  @override
+  String get presetRecent => 'Recent';
+
+  @override
+  String get cookRamen => 'Ramen';
+
+  @override
+  String get cookPasta => 'Boil pasta';
+
+  @override
+  String get cookEgg => 'Soft-boiled egg';
+
+  @override
+  String get cookSauce => 'Reduce sauce';
+
+  @override
+  String get cookRice => 'Soak rice';
+
+  @override
+  String get alarmDoneTitle => 'Timer finished';
+
+  @override
+  String alarmMultiDone(int n) {
+    return '$n finished';
+  }
+
+  @override
+  String alarmOf(String d) {
+    return '$d timer';
+  }
+
+  @override
+  String get alarmAck => 'Done ✓';
+
+  @override
+  String get alarmAckOnly => 'Acknowledge';
+
+  @override
+  String alarmExtended(int n) {
+    return 'Extended $n×';
+  }
+
+  @override
+  String get alarmRealarmNote => 'Rings again every minute until you confirm';
+
+  @override
+  String get alarmRinging => 'Done · ringing';
+
+  @override
+  String alarmAgoMin(int n, int r) {
+    return '$n min ago · rang $r×';
+  }
+
+  @override
+  String get alarmStillRunning => 'Still running';
+
+  @override
+  String get alarmNextUp => 'Next ↓';
+
+  @override
+  String ttsOverdue(String name, int n) {
+    return '$name, $n minutes over';
+  }
+
+  @override
+  String get careRealarm => 'Re-ring until confirmed';
+
+  @override
+  String get careRealarmDesc =>
+      'finished timers ring every minute until acknowledged';
 }

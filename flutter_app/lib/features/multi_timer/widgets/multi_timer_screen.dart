@@ -8,6 +8,7 @@ import '../../../theme/app_theme.dart';
 import '../../../services/persistence_service.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/sound_service.dart';
+import '../../../services/care_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
 import '../../../overlay/multi_overlay_service.dart';
@@ -16,6 +17,7 @@ import '../bloc/multi_timer_bloc.dart';
 import '../bloc/multi_timer_event.dart';
 import '../bloc/multi_timer_state.dart';
 import '../models/countdown_timer.dart';
+import 'alarm_screen.dart';
 
 String _fmt(int ms) {
   final total = (ms / 1000).ceil();
@@ -58,8 +60,14 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   final Set<String> _overlayIds = {};
   final Map<String, String> _lastPushed = {};
 
-  /// 원탭 등록용 프리셋 — {'name': String, 'durationMs': int}.
+  /// 원탭 등록용 프리셋 — {'name','durationMs','category'?,'lastUsedMs'?}.
   List<Map<String, dynamic>> _presets = [];
+
+  /// 추가 시트 카테고리 필터(요리 시안 §3): all/cooking/focus/chore.
+  String _presetCat = 'all';
+
+  bool _alarmOpen = false;
+  Timer? _realarmTimer;
 
   @override
   void initState() {
@@ -69,22 +77,77 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     OverlayCoordinator.instance.closeMultiOverlays = _closeAllOverlaysForMutex;
     // l10n 이 필요한 기본 시드는 첫 프레임 후에(initState 에선 inherited 조회 불가).
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadPresets());
+    // pill 탭 = 프리-알림 구간 +5분 연장(페르소나 §5).
+    MultiOverlayService.ensureTapListening();
+    MultiOverlayService.onPillTap = _onPillTap;
   }
 
-  /// 저장된 프리셋 로드 — 저장된 적이 없으면 기본 4종(공부/청소/휴식/양치질) 시드.
+  void _onPillTap(String id) {
+    if (!mounted) return;
+    final bloc = context.read<MultiTimerBloc>();
+    final t = bloc.state.timers.where((x) => x.id == id).firstOrNull;
+    if (t == null || !t.running) return;
+    final preMs = CareService.instance.preAlarmMin.value * 60000;
+    if (preMs <= 0 || t.remainMs > preMs) return; // 프리-알림 구간에서만 연장
+    HapticService.instance.light();
+    _extend(bloc, id);
+  }
+
+  /// +5분 연장 — pill 은 deadline 자체 틱이라 push key 를 무효화해 새 deadline 을
+  /// 강제 재전송한다(안 하면 리스트만 늘고 pill 은 옛 deadline 으로 계속 감).
+  void _extend(MultiTimerBloc bloc, String id) {
+    bloc.add(MtExtend(id, 5 * 60000));
+    _lastPushed.remove(id);
+  }
+
+  /// 저장된 프리셋 로드 — 없으면 기본 4종 시드. 요리 팩(§3)은 1회 병합 시드.
   Future<void> _loadPresets() async {
     var loaded = await PersistenceService.loadMultiTimerPresets();
-    if (loaded == null && mounted) {
-      final l = AppLocalizations.of(context);
-      loaded = [
-        {'name': l.multiTimerPresetStudy, 'durationMs': 25 * 60000},
-        {'name': l.multiTimerPresetDeskCleanup, 'durationMs': 10 * 60000},
-        {'name': l.multiTimerPresetRest, 'durationMs': 5 * 60000},
-        {'name': l.multiTimerPresetBrushTeeth, 'durationMs': 3 * 60000},
-      ];
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    loaded ??= [
+      {'name': l.multiTimerPresetStudy, 'durationMs': 25 * 60000, 'category': 'focus'},
+      {'name': l.multiTimerPresetDeskCleanup, 'durationMs': 10 * 60000, 'category': 'chore'},
+      {'name': l.multiTimerPresetRest, 'durationMs': 5 * 60000, 'category': 'focus'},
+      {'name': l.multiTimerPresetBrushTeeth, 'durationMs': 3 * 60000, 'category': 'chore'},
+    ];
+    // 요리 팩 — 기존 사용자에게도 1회만 추가(플래그 항목으로 마킹).
+    final seeded = loaded.any((p) => p['cookpack'] == true);
+    if (!seeded) {
+      loaded.addAll([
+        {'name': l.cookRamen, 'durationMs': 270000, 'category': 'cooking', 'cookpack': true},
+        {'name': l.cookPasta, 'durationMs': 480000, 'category': 'cooking', 'cookpack': true},
+        {'name': l.cookEgg, 'durationMs': 390000, 'category': 'cooking', 'cookpack': true},
+        {'name': l.cookSauce, 'durationMs': 720000, 'category': 'cooking', 'cookpack': true},
+        {'name': l.cookRice, 'durationMs': 1800000, 'category': 'cooking', 'cookpack': true},
+      ]);
       await PersistenceService.saveMultiTimerPresets(loaded);
     }
     if (mounted) setState(() => _presets = loaded ?? []);
+  }
+
+  /// 최근 사용이 항상 첫 칩(§3) — lastUsedMs 내림차순, 없는 항목은 원래 순서.
+  List<Map<String, dynamic>> _visiblePresets() {
+    final list = _presets.where((p) {
+      if (_presetCat == 'all') return true;
+      return (p['category'] as String?) == _presetCat;
+    }).toList();
+    list.sort((a, b) {
+      final la = (a['lastUsedMs'] as num?)?.toInt() ?? 0;
+      final lb = (b['lastUsedMs'] as num?)?.toInt() ?? 0;
+      return lb.compareTo(la);
+    });
+    return list;
+  }
+
+  void _markPresetUsed(String name) {
+    final idx = _presets.indexWhere((p) => p['name'] == name);
+    if (idx < 0) return;
+    _presets[idx] = {
+      ..._presets[idx],
+      'lastUsedMs': DateTime.now().millisecondsSinceEpoch,
+    };
+    PersistenceService.saveMultiTimerPresets(_presets);
   }
 
   /// 상호 배타 — 단일 오버레이 활성화 시 호출돼 멀티 오버레이를 전부 닫는다.
@@ -143,9 +206,14 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   /// 잔여 60s(햅틱)·30s/10s(경고음) 경계 하향 크로스 감지 — 스펙 카드 5.
   final Map<String, int> _prevRemain = {};
   void _onWarnThresholds(MultiTimerState s) {
+    final preMin = CareService.instance.preAlarmMin.value;
     for (final t in s.timers) {
       final prev = _prevRemain[t.id];
       if (t.running && prev != null) {
+        final preMs = preMin * 60000;
+        if (preMin > 0 && prev > preMs && t.remainMs <= preMs) {
+          _showPreAlarmBanner(t, preMin);
+        }
         if (prev > 60000 && t.remainMs <= 60000) {
           HapticService.instance.impact(); // mediumImpact ×1
         }
@@ -159,9 +227,75 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     _prevRemain.removeWhere((id, _) => !s.timers.any((t) => t.id == id));
   }
 
+  /// 프리-알림 배너 — 소리·진동 없음(몰입 유지). +5분 연장 액션 제공(페르소나 §5).
+  void _showPreAlarmBanner(CountdownTimer t, int preMin) {
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    final bloc = context.read<MultiTimerBloc>();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 6),
+        content: Text(l.preAlarmBanner(t.name, preMin)),
+        action: SnackBarAction(
+          label: l.preAlarmExtend,
+          textColor: AppColors.accent,
+          onPressed: () => _extend(bloc, t.id),
+        ),
+      ),
+    );
+  }
+
+  /// 미확인 완료가 있는 동안 1분마다 재알림(§5) — 확인/연장 시 자동 중단.
+  void _syncRealarm(MultiTimerState s) {
+    final hasRinging = s.timers.any((t) => t.done && !t.acked);
+    if (hasRinging &&
+        _realarmTimer == null &&
+        CareService.instance.realarm.value) {
+      _realarmTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+        if (!mounted) return;
+        final st = context.read<MultiTimerBloc>().state;
+        final ringing = st.timers.where((t) => t.done && !t.acked).toList();
+        if (ringing.isEmpty) {
+          _realarmTimer?.cancel();
+          _realarmTimer = null;
+          return;
+        }
+        SoundService.instance.play('done');
+        HapticService.instance.heavy();
+        final l = AppLocalizations.of(context);
+        final t = ringing.first;
+        final over =
+            ((DateTime.now().millisecondsSinceEpoch - t.doneAtMs) / 60000)
+                .round();
+        TtsService.instance.speak(
+          l.ttsOverdue(t.name, over),
+          localeTag: Localizations.localeOf(context).toLanguageTag(),
+        );
+      });
+    } else if (!hasRinging) {
+      _realarmTimer?.cancel();
+      _realarmTimer = null;
+    }
+  }
+
+  void _openAlarm() {
+    if (_alarmOpen || !mounted) return;
+    _alarmOpen = true;
+    final bloc = context.read<MultiTimerBloc>();
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => AlarmScreen(bloc: bloc),
+          ),
+        )
+        .whenComplete(() => _alarmOpen = false);
+  }
+
   void _onCompleted(BuildContext context, MultiTimerState s) {
     final ids = s.justCompleted;
     if (ids.isEmpty) return;
+    _openAlarm(); // 풀스크린 알람(요리 시안 §1)
     HapticService.instance.heavy(); // 스펙: 완료 = heavyImpact (동시 다건도 1회)
     SoundService.instance.play('done'); // C5-E5-G5 아르페지오(알람 본음과 별개)
     final l = AppLocalizations.of(context);
@@ -170,10 +304,15 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         (x) => x.id == ids.first,
         orElse: () => CountdownTimer(name: '', totalMs: 0),
       );
-      DesktopNotificationService.notify(l.multiTimerTitle, t.name);
+      final doneMsg = switch (CareService.instance.messageTone.value) {
+        'warm' => l.doneMsgWarm(t.name),
+        'brief' => l.doneMsgBrief(t.name),
+        _ => l.doneMsgNeutral(t.name),
+      };
+      DesktopNotificationService.notify(l.multiTimerTitle, doneMsg);
       if (t.name.isNotEmpty) {
         TtsService.instance.speak(
-          t.name,
+          doneMsg,
           localeTag: Localizations.localeOf(context).toLanguageTag(),
         );
       }
@@ -261,6 +400,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
 
   @override
   void dispose() {
+    _realarmTimer?.cancel();
     _saveTrailing?.cancel();
     if (identical(
       OverlayCoordinator.instance.closeMultiOverlays,
@@ -312,6 +452,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
           _persist(state);
           _onCompleted(context, state);
           _onWarnThresholds(state);
+          _syncRealarm(state);
           _syncOverlays(l, state);
         },
         builder: (context, state) {
@@ -418,12 +559,56 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                       ),
                   ],
                 ),
+                // 카테고리 필터(요리 시안 §3) — 데이터만 추가, 구조 변화 없음.
+                if (_presets.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, bottom: 10),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (final c in {
+                            'all': l.catAll,
+                            'cooking': l.catCooking,
+                            'focus': l.catFocus,
+                            'chore': l.catChore,
+                          }.entries)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(c.value),
+                                selected: _presetCat == c.key,
+                                onSelected: (_) {
+                                  setState(() => _presetCat = c.key);
+                                  setSheetState(() {});
+                                },
+                                selectedColor:
+                                    AppColors.accent.withAlpha(0x24),
+                                backgroundColor: const Color(0xFF232326),
+                                labelStyle: TextStyle(
+                                  color: _presetCat == c.key
+                                      ? AppColors.accent
+                                      : AppColors.muted,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                side: BorderSide(
+                                  color: _presetCat == c.key
+                                      ? AppColors.accent
+                                      : AppColors.border,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 // 프리셋 칩 2열 그리드 — 탭: 등록+시작 / 편집 모드: 입력란 복사·✕ 삭제.
                 if (_presets.isNotEmpty)
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 4, bottom: 16),
+                    padding: const EdgeInsets.only(top: 0, bottom: 16),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
@@ -431,11 +616,13 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
                         ),
-                    itemCount: _presets.length,
+                    itemCount: _visiblePresets().length,
                     itemBuilder: (_, i) {
-                      final p = _presets[i];
+                      final p = _visiblePresets()[i];
                       final name = p['name'] as String? ?? '';
                       final ms = (p['durationMs'] as num?)?.toInt() ?? 0;
+                      final recent =
+                          i == 0 && (p['lastUsedMs'] as num?) != null;
                       final ringColor =
                           AppColors.segColors[i % AppColors.segColors.length];
                       return Stack(
@@ -457,6 +644,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                                 }
                                 SoundService.instance.play('tap');
                                 HapticService.instance.light();
+                                _markPresetUsed(name);
                                 bloc.add(MtAdd(name, ms, autoStart: true));
                                 Navigator.pop(ctx);
                                 messenger.showSnackBar(
@@ -495,15 +683,51 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            name,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              color: AppColors.text,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                          Row(
+                                            children: [
+                                              Flexible(
+                                                child: Text(
+                                                  name,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    color: AppColors.text,
+                                                    fontSize: 14,
+                                                    fontWeight:
+                                                        FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                              if (recent) ...[
+                                                const SizedBox(width: 6),
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets
+                                                          .symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.accent
+                                                        .withAlpha(0x1F),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    l.presetRecent,
+                                                    style: const TextStyle(
+                                                      color: AppColors.accent,
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
@@ -773,7 +997,8 @@ class _TimerRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final bloc = context.read<MultiTimerBloc>();
-    // 상태 문법(디자인 시안): done > running > paused > idle(리셋 직후).
+    // 상태 문법: ringing(완료·미확인, 요리 시안 §4) > done > running > paused > idle.
+    final ringing = timer.done && !timer.acked;
     final paused =
         !timer.running && !timer.done && timer.remainMs < timer.totalMs;
     final idle = !timer.running && !timer.done && !paused;
@@ -781,30 +1006,42 @@ class _TimerRow extends StatelessWidget {
         ? 0.0
         : (1 - timer.remainMs / timer.totalMs).clamp(0.0, 1.0);
 
-    final tagLabel = timer.done
+    final tagLabel = ringing
+        ? l.alarmRinging
+        : timer.done
         ? l.multiTimerDone
         : paused
         ? l.multiTimerStatePaused
         : idle
         ? l.multiTimerStateIdle
         : null;
-    final tagColor = timer.done
+    final tagColor = ringing
+        ? AppColors.danger
+        : timer.done
         ? AppColors.swGreen
         : paused
         ? AppColors.accent
         : AppColors.faint;
-    final tagBg = timer.done
+    final tagBg = ringing
+        ? AppColors.danger.withAlpha(0x24)
+        : timer.done
         ? AppColors.swGreen.withAlpha(0x24)
         : paused
         ? AppColors.accent.withAlpha(0x1F)
         : AppColors.border.withAlpha(0x66);
 
-    final timeColor = timer.done
+    final timeColor = ringing
+        ? AppColors.danger
+        : timer.done
         ? AppColors.swGreen
         : timer.running
         ? AppColors.text
         : AppColors.muted;
-    final playColor = timer.done ? AppColors.swGreen : AppColors.accent;
+    final playColor = ringing
+        ? AppColors.danger
+        : timer.done
+        ? AppColors.swGreen
+        : AppColors.accent;
 
     // 등장 모션(스펙 2): translateY 18→0 + fade + scale .97→1, 380ms easeOutCubic.
     return TweenAnimationBuilder<double>(
@@ -824,7 +1061,11 @@ class _TimerRow extends StatelessWidget {
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
         child: Container(
-          color: timer.done ? AppColors.swGreen.withAlpha(0x0D) : null,
+          color: ringing
+            ? AppColors.danger.withAlpha(0x0F)
+            : timer.done
+            ? AppColors.swGreen.withAlpha(0x0D)
+            : null,
           child: Stack(
             children: [
               Padding(
