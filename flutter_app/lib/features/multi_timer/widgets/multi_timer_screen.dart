@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../../../services/persistence_service.dart';
 import '../../../services/haptic_service.dart';
+import '../../../services/sound_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
 import '../../../overlay/multi_overlay_service.dart';
@@ -139,10 +140,30 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     }
   }
 
+  /// 잔여 60s(햅틱)·30s/10s(경고음) 경계 하향 크로스 감지 — 스펙 카드 5.
+  final Map<String, int> _prevRemain = {};
+  void _onWarnThresholds(MultiTimerState s) {
+    for (final t in s.timers) {
+      final prev = _prevRemain[t.id];
+      if (t.running && prev != null) {
+        if (prev > 60000 && t.remainMs <= 60000) {
+          HapticService.instance.impact(); // mediumImpact ×1
+        }
+        if ((prev > 30000 && t.remainMs <= 30000) ||
+            (prev > 10000 && t.remainMs <= 10000)) {
+          SoundService.instance.play('warn');
+        }
+      }
+      _prevRemain[t.id] = t.remainMs;
+    }
+    _prevRemain.removeWhere((id, _) => !s.timers.any((t) => t.id == id));
+  }
+
   void _onCompleted(BuildContext context, MultiTimerState s) {
     final ids = s.justCompleted;
     if (ids.isEmpty) return;
-    HapticService.instance.impact(); // 여러 개 동시여도 1회
+    HapticService.instance.heavy(); // 스펙: 완료 = heavyImpact (동시 다건도 1회)
+    SoundService.instance.play('done'); // C5-E5-G5 아르페지오(알람 본음과 별개)
     final l = AppLocalizations.of(context);
     if (ids.length == 1) {
       final t = s.timers.firstWhere(
@@ -290,6 +311,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         listener: (context, state) {
           _persist(state);
           _onCompleted(context, state);
+          _onWarnThresholds(state);
           _syncOverlays(l, state);
         },
         builder: (context, state) {
@@ -433,6 +455,8 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                                   setSheetState(() => pickerKey++);
                                   return;
                                 }
+                                SoundService.instance.play('tap');
+                                HapticService.instance.light();
                                 bloc.add(MtAdd(name, ms, autoStart: true));
                                 Navigator.pop(ctx);
                                 messenger.showSnackBar(
@@ -641,6 +665,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                                   final name = nameCtrl.text.trim().isEmpty
                                       ? l.multiTimerTitle
                                       : nameCtrl.text.trim();
+                                  SoundService.instance.play('add');
                                   bloc.add(MtAdd(name, ms));
                                   Navigator.pop(ctx);
                                 },
@@ -661,6 +686,43 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// 남은시간 표시 — running 이면 콜론이 1초 주기로 점멸(스펙 3, 러닝 인지 보조).
+/// 자체 타이머 없이 bloc 250ms 틱 리빌드 시각으로 위상을 계산한다.
+class _TimeText extends StatelessWidget {
+  final String text;
+  final Color color;
+  final bool blink;
+  const _TimeText({
+    required this.text,
+    required this.color,
+    this.blink = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(
+      color: color,
+      fontSize: 26,
+      fontWeight: FontWeight.w700,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    if (!blink) return Text(text, style: style);
+    final dim = DateTime.now().millisecondsSinceEpoch % 1000 >= 500;
+    final colonColor = dim ? color.withAlpha(0x8C) : color;
+    return Text.rich(
+      TextSpan(
+        children: [
+          for (final ch in text.characters)
+            TextSpan(
+              text: ch,
+              style: ch == ':' ? style.copyWith(color: colonColor) : style,
+            ),
+        ],
       ),
     );
   }
@@ -744,179 +806,206 @@ class _TimerRow extends StatelessWidget {
         : AppColors.muted;
     final playColor = timer.done ? AppColors.swGreen : AppColors.accent;
 
-    return Opacity(
-      opacity: paused ? 0.85 : 1.0,
-      child: Container(
-        color: timer.done ? AppColors.swGreen.withAlpha(0x0D) : null,
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: timer.done ? AppColors.swGreen : color,
-                      shape: BoxShape.circle,
-                      boxShadow: timer.running
-                          ? [
-                              BoxShadow(
-                                color: color.withAlpha(0x40),
-                                spreadRadius: 4,
-                              ),
-                            ]
-                          : null,
+    // 등장 모션(스펙 2): translateY 18→0 + fade + scale .97→1, 380ms easeOutCubic.
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeOutCubic,
+      builder: (context, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, 18 * (1 - t)),
+          child: Transform.scale(scale: 0.97 + 0.03 * t, child: child),
+        ),
+      ),
+      // 일시정지 페이드(스펙 4): 밝기(투명도)로 상태 전환 — 색맹 안전.
+      child: AnimatedOpacity(
+        opacity: paused ? 0.55 : 1.0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        child: Container(
+          color: timer.done ? AppColors.swGreen.withAlpha(0x0D) : null,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: timer.done ? AppColors.swGreen : color,
+                        shape: BoxShape.circle,
+                        boxShadow: timer.running
+                            ? [
+                                BoxShadow(
+                                  color: color.withAlpha(0x40),
+                                  spreadRadius: 4,
+                                ),
+                              ]
+                            : null,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            if (timer.done) ...[
-                              const Icon(
-                                Icons.check,
-                                size: 16,
-                                color: AppColors.swGreen,
-                              ),
-                              const SizedBox(width: 4),
-                            ],
-                            Flexible(
-                              child: Text(
-                                timer.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: timer.running
-                                      ? AppColors.text
-                                      : AppColors.muted,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              if (timer.done) ...[
+                                const Icon(
+                                  Icons.check,
+                                  size: 16,
+                                  color: AppColors.swGreen,
                                 ),
-                              ),
-                            ),
-                            if (tagLabel != null) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: tagBg,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
+                                const SizedBox(width: 4),
+                              ],
+                              Flexible(
                                 child: Text(
-                                  tagLabel,
+                                  timer.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    color: tagColor,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
+                                    color: timer.running
+                                        ? AppColors.text
+                                        : AppColors.muted,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
+                              if (tagLabel != null) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: tagBg,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    tagLabel,
+                                    style: TextStyle(
+                                      color: tagColor,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          timer.done ? '00:00' : _fmt(timer.remainMs),
-                          style: TextStyle(
+                          ),
+                          const SizedBox(height: 2),
+                          _TimeText(
+                            text: timer.done ? '00:00' : _fmt(timer.remainMs),
                             color: timeColor,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                            fontFeatures: const [FontFeature.tabularFigures()],
+                            blink: timer.running,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // 주 액션(재생/일시정지/완료 후 리셋)만 원형 배경으로 강조.
+                    SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: Material(
+                        color: playColor.withAlpha(0x24),
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () {
+                            HapticService.instance.selection();
+                            if (timer.done) {
+                              bloc.add(MtReset(timer.id));
+                            } else if (timer.running) {
+                              SoundService.instance.play('pause');
+                              bloc.add(MtPause(timer.id));
+                            } else {
+                              SoundService.instance.play('start');
+                              bloc.add(MtStart(timer.id));
+                            }
+                          },
+                          child: Icon(
+                            timer.done
+                                ? Icons.replay
+                                : timer.running
+                                ? Icons.pause
+                                : Icons.play_arrow,
+                            color: playColor,
+                            semanticLabel: timer.done
+                                ? l.btnReset
+                                : timer.running
+                                ? l.btnPause
+                                : l.btnStart,
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  // 주 액션(재생/일시정지/완료 후 리셋)만 원형 배경으로 강조.
-                  SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Material(
-                      color: playColor.withAlpha(0x24),
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: () => timer.done
-                            ? bloc.add(MtReset(timer.id))
-                            : timer.running
-                            ? bloc.add(MtPause(timer.id))
-                            : bloc.add(MtStart(timer.id)),
-                        child: Icon(
-                          timer.done
-                              ? Icons.replay
-                              : timer.running
-                              ? Icons.pause
-                              : Icons.play_arrow,
-                          color: playColor,
-                          semanticLabel: timer.done
-                              ? l.btnReset
-                              : timer.running
-                              ? l.btnPause
-                              : l.btnStart,
+                    if (!timer.done)
+                      IconButton(
+                        icon: Icon(Icons.replay, color: AppColors.muted),
+                        tooltip: l.btnReset,
+                        onPressed: () => bloc.add(MtReset(timer.id)),
+                      ),
+                    if (onToggleOverlay != null)
+                      IconButton(
+                        icon: Icon(
+                          overlayOn
+                              ? Icons.picture_in_picture
+                              : Icons.picture_in_picture_outlined,
+                          color: overlayOn ? AppColors.accent : AppColors.muted,
                         ),
+                        tooltip: overlayOn
+                            ? l.multiTimerOverlayOff
+                            : l.multiTimerOverlayOn,
+                        onPressed: onToggleOverlay,
                       ),
-                    ),
-                  ),
-                  if (!timer.done)
                     IconButton(
-                      icon: Icon(Icons.replay, color: AppColors.muted),
-                      tooltip: l.btnReset,
-                      onPressed: () => bloc.add(MtReset(timer.id)),
+                      icon: Icon(Icons.close, color: AppColors.muted),
+                      tooltip: l.delete,
+                      onPressed: () {
+                        SoundService.instance.play('del');
+                        bloc.add(MtRemove(timer.id));
+                      },
                     ),
-                  if (onToggleOverlay != null)
-                    IconButton(
-                      icon: Icon(
-                        overlayOn
-                            ? Icons.picture_in_picture
-                            : Icons.picture_in_picture_outlined,
-                        color: overlayOn ? AppColors.accent : AppColors.muted,
-                      ),
-                      tooltip: overlayOn
-                          ? l.multiTimerOverlayOff
-                          : l.multiTimerOverlayOn,
-                      onPressed: onToggleOverlay,
-                    ),
-                  IconButton(
-                    icon: Icon(Icons.close, color: AppColors.muted),
-                    tooltip: l.delete,
-                    onPressed: () => bloc.add(MtRemove(timer.id)),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            // 하단 진행바 — running=타이머 색 / paused=회색 / done=녹색 풀바.
-            if (!idle)
-              Positioned(
-                left: 20,
-                right: 20,
-                bottom: 6,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
-                  child: SizedBox(
-                    height: 3,
-                    child: LinearProgressIndicator(
-                      value: timer.done ? 1.0 : frac,
-                      backgroundColor: AppColors.border.withAlpha(0x80),
-                      valueColor: AlwaysStoppedAnimation(
-                        timer.done
-                            ? AppColors.swGreen
-                            : timer.running
-                            ? color
-                            : const Color(0xFF4A4A4E),
+              // 하단 진행바(스펙 3) — 등장·갱신 600ms easeOutCubic 보간.
+              if (!idle)
+                Positioned(
+                  left: 20,
+                  right: 20,
+                  bottom: 6,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: SizedBox(
+                      height: 3,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: timer.done ? 1.0 : frac),
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, v, _) => LinearProgressIndicator(
+                          value: v,
+                          backgroundColor: AppColors.border.withAlpha(0x80),
+                          valueColor: AlwaysStoppedAnimation(
+                            timer.done
+                                ? AppColors.swGreen
+                                : timer.running
+                                ? color
+                                : const Color(0xFF4A4A4E),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

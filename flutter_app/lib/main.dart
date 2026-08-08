@@ -24,6 +24,7 @@ import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
 import 'services/text_scale_service.dart';
 import 'services/haptic_service.dart';
+import 'services/sound_service.dart';
 import 'services/colorblind_service.dart';
 import 'services/high_contrast_service.dart';
 import 'widgets/desktop_title_bar.dart';
@@ -55,6 +56,7 @@ Future<void> main(List<String> args) async {
   await TtsService.instance.init();
   await TextScaleService.instance.init();
   await HapticService.instance.init();
+  await SoundService.instance.init();
   await ColorblindService.instance.init();
   await HighContrastService.instance.init();
   await OverlayCoordinator.instance.init();

@@ -1532,6 +1532,456 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Started \'{name}\''**
   String multiTimerPresetStarted(String name);
+
+  /// No description provided for @settingsSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound effects'**
+  String get settingsSounds;
+
+  /// No description provided for @settingsSoundsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Chip taps, start/pause, completion melody'**
+  String get settingsSoundsDesc;
+
+  /// No description provided for @soundSetPop.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft pop'**
+  String get soundSetPop;
+
+  /// No description provided for @soundSetWood.
+  ///
+  /// In en, this message translates to:
+  /// **'Wood'**
+  String get soundSetWood;
+
+  /// No description provided for @soundSetGlass.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass'**
+  String get soundSetGlass;
+
+  /// No description provided for @soundSetRetro.
+  ///
+  /// In en, this message translates to:
+  /// **'Retro'**
+  String get soundSetRetro;
+
+  /// No description provided for @workoutTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout'**
+  String get workoutTab;
+
+  /// No description provided for @workoutMyRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'My routines'**
+  String get workoutMyRoutines;
+
+  /// No description provided for @workoutNewRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'+ New routine'**
+  String get workoutNewRoutine;
+
+  /// No description provided for @workoutRoutineN.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine {n}'**
+  String workoutRoutineN(int n);
+
+  /// No description provided for @workoutLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise library'**
+  String get workoutLibrary;
+
+  /// No description provided for @workoutLibraryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'tap to add · pace presets built in'**
+  String get workoutLibraryHint;
+
+  /// No description provided for @workoutEmptyRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Add exercises from the library below'**
+  String get workoutEmptyRoutine;
+
+  /// No description provided for @workoutRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest between sets'**
+  String get workoutRest;
+
+  /// No description provided for @workoutRestCommon.
+  ///
+  /// In en, this message translates to:
+  /// **'shared across the routine'**
+  String get workoutRestCommon;
+
+  /// No description provided for @workoutVoiceTone.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice tone'**
+  String get workoutVoiceTone;
+
+  /// No description provided for @workoutToneCoach.
+  ///
+  /// In en, this message translates to:
+  /// **'🔥 Coach'**
+  String get workoutToneCoach;
+
+  /// No description provided for @workoutToneCalm.
+  ///
+  /// In en, this message translates to:
+  /// **'🌙 Calm'**
+  String get workoutToneCalm;
+
+  /// No description provided for @workoutSpeakSection.
+  ///
+  /// In en, this message translates to:
+  /// **'What to announce'**
+  String get workoutSpeakSection;
+
+  /// No description provided for @workoutSpeakAllOff.
+  ///
+  /// In en, this message translates to:
+  /// **'each can be turned off'**
+  String get workoutSpeakAllOff;
+
+  /// No description provided for @workoutSayCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Rep count'**
+  String get workoutSayCount;
+
+  /// No description provided for @workoutSayCountSub.
+  ///
+  /// In en, this message translates to:
+  /// **'one, two, three…'**
+  String get workoutSayCountSub;
+
+  /// No description provided for @workoutSaySetAnn.
+  ///
+  /// In en, this message translates to:
+  /// **'Set start & end'**
+  String get workoutSaySetAnn;
+
+  /// No description provided for @workoutSayCallout.
+  ///
+  /// In en, this message translates to:
+  /// **'Time-left callouts'**
+  String get workoutSayCallout;
+
+  /// No description provided for @workoutSayCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest countdown 3·2·1'**
+  String get workoutSayCountdown;
+
+  /// No description provided for @workoutSayPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Next exercise preview'**
+  String get workoutSayPreview;
+
+  /// No description provided for @workoutSayCheer.
+  ///
+  /// In en, this message translates to:
+  /// **'Encouragement'**
+  String get workoutSayCheer;
+
+  /// No description provided for @workoutSayCheerSub.
+  ///
+  /// In en, this message translates to:
+  /// **'minimal in calm tone'**
+  String get workoutSayCheerSub;
+
+  /// No description provided for @workoutDucking.
+  ///
+  /// In en, this message translates to:
+  /// **'Music ducking'**
+  String get workoutDucking;
+
+  /// No description provided for @workoutDuckingSub.
+  ///
+  /// In en, this message translates to:
+  /// **'lowers music volume while speaking'**
+  String get workoutDuckingSub;
+
+  /// No description provided for @workoutSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets'**
+  String get workoutSets;
+
+  /// No description provided for @workoutReps.
+  ///
+  /// In en, this message translates to:
+  /// **'Reps'**
+  String get workoutReps;
+
+  /// No description provided for @workoutPace.
+  ///
+  /// In en, this message translates to:
+  /// **'Count pace'**
+  String get workoutPace;
+
+  /// No description provided for @workoutPaceFreeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'counts forever until you tap Next'**
+  String get workoutPaceFreeSub;
+
+  /// No description provided for @workoutHoldTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold time'**
+  String get workoutHoldTime;
+
+  /// No description provided for @workoutStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get workoutStart;
+
+  /// No description provided for @workoutTtsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'🔊 Spoken cues will play'**
+  String get workoutTtsNote;
+
+  /// No description provided for @workoutSetProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {cur} of {total}'**
+  String workoutSetProgress(int cur, int total);
+
+  /// No description provided for @workoutRepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'of {n} reps'**
+  String workoutRepOf(int n);
+
+  /// No description provided for @workoutFreeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Free count'**
+  String get workoutFreeCount;
+
+  /// No description provided for @workoutFreeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'tap Next to finish'**
+  String get workoutFreeHint;
+
+  /// No description provided for @workoutHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold'**
+  String get workoutHold;
+
+  /// No description provided for @workoutRestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest'**
+  String get workoutRestLabel;
+
+  /// No description provided for @workoutNextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {name}'**
+  String workoutNextLabel(String name);
+
+  /// No description provided for @workoutDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout complete!'**
+  String get workoutDoneTitle;
+
+  /// No description provided for @workoutDoneCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} exercises done'**
+  String workoutDoneCount(int n);
+
+  /// No description provided for @workoutStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get workoutStop;
+
+  /// No description provided for @workoutSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get workoutSkip;
+
+  /// No description provided for @workoutBackToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to start'**
+  String get workoutBackToStart;
+
+  /// No description provided for @exSquat.
+  ///
+  /// In en, this message translates to:
+  /// **'Squats'**
+  String get exSquat;
+
+  /// No description provided for @exPushup.
+  ///
+  /// In en, this message translates to:
+  /// **'Push-ups'**
+  String get exPushup;
+
+  /// No description provided for @exLunge.
+  ///
+  /// In en, this message translates to:
+  /// **'Lunges'**
+  String get exLunge;
+
+  /// No description provided for @exBurpee.
+  ///
+  /// In en, this message translates to:
+  /// **'Burpees'**
+  String get exBurpee;
+
+  /// No description provided for @exCrunch.
+  ///
+  /// In en, this message translates to:
+  /// **'Crunches'**
+  String get exCrunch;
+
+  /// No description provided for @exPlank.
+  ///
+  /// In en, this message translates to:
+  /// **'Plank'**
+  String get exPlank;
+
+  /// No description provided for @exWallsit.
+  ///
+  /// In en, this message translates to:
+  /// **'Wall sit'**
+  String get exWallsit;
+
+  /// No description provided for @exPullup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull-ups'**
+  String get exPullup;
+
+  /// No description provided for @wsSetStart.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, set {set}, {reps} reps. Go!'**
+  String wsSetStart(String name, int set, int reps);
+
+  /// No description provided for @wsSetStartAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {set}. Go!'**
+  String wsSetStartAgain(int set);
+
+  /// No description provided for @wsTimeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, {dur} seconds. Go!'**
+  String wsTimeStart(String name, int dur);
+
+  /// No description provided for @wsFreeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, free count. Go!'**
+  String wsFreeStart(String name);
+
+  /// No description provided for @wsLastSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Last set! Push through'**
+  String get wsLastSet;
+
+  /// No description provided for @wsHalfway.
+  ///
+  /// In en, this message translates to:
+  /// **'Halfway there'**
+  String get wsHalfway;
+
+  /// No description provided for @wsTenLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Ten seconds left'**
+  String get wsTenLeft;
+
+  /// No description provided for @wsSetDoneRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {set} done. Rest {rest} seconds'**
+  String wsSetDoneRest(int set, int rest);
+
+  /// No description provided for @wsExDoneRest.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} done. Rest {rest} seconds'**
+  String wsExDoneRest(String name, int rest);
+
+  /// No description provided for @wsNextEx.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {name}, {amount}'**
+  String wsNextEx(String name, String amount);
+
+  /// No description provided for @wsNextSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: set {set}'**
+  String wsNextSet(int set);
+
+  /// No description provided for @wsAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout complete! Great job'**
+  String get wsAllDone;
+
+  /// No description provided for @wsAmountTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{dur} seconds'**
+  String wsAmountTime(int dur);
+
+  /// No description provided for @wsAmountReps.
+  ///
+  /// In en, this message translates to:
+  /// **'{reps} reps'**
+  String wsAmountReps(int reps);
+
+  /// No description provided for @wsAmountFree.
+  ///
+  /// In en, this message translates to:
+  /// **'free count'**
+  String get wsAmountFree;
+
+  /// No description provided for @workoutSummaryReps.
+  ///
+  /// In en, this message translates to:
+  /// **'{sets} sets × {reps} reps · {pace}s'**
+  String workoutSummaryReps(int sets, int reps, String pace);
+
+  /// No description provided for @workoutSummaryTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{dur}s hold'**
+  String workoutSummaryTime(int dur);
+
+  /// No description provided for @workoutSummaryFree.
+  ///
+  /// In en, this message translates to:
+  /// **'free count · {pace}s'**
+  String workoutSummaryFree(String pace);
 }
 
 class _AppLocalizationsDelegate

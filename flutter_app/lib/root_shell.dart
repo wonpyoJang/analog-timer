@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'l10n/app_localizations.dart';
 import 'features/multi_timer/widgets/multi_timer_screen.dart';
+import 'features/workout/workout_screen.dart';
 import 'services/haptic_service.dart';
 import 'services/platform_info.dart';
 import 'settings_screen.dart';
@@ -38,6 +39,7 @@ class _RootShellState extends State<RootShell> {
           // 메인스레드를 포화시켜 오버레이 드래그/토글을 굶기는 것을 방지.
           HomeScreen(active: _index == 0),
           const MultiTimerScreen(embedded: true),
+          const WorkoutScreen(),
           const SettingsScreen(embedded: true),
         ],
       ),
@@ -51,6 +53,11 @@ class _RootShellState extends State<RootShell> {
         items: [
           _NavItem(Icons.timer_outlined, Icons.timer, l.navTimer),
           _NavItem(Icons.timelapse_outlined, Icons.timelapse, l.navMulti),
+          _NavItem(
+            Icons.fitness_center_outlined,
+            Icons.fitness_center,
+            l.workoutTab,
+          ),
           _NavItem(Icons.settings_outlined, Icons.settings, l.settings),
         ],
       ),

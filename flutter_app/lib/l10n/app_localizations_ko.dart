@@ -757,4 +757,265 @@ class AppLocalizationsKo extends AppLocalizations {
   String multiTimerPresetStarted(String name) {
     return '\'$name\' 타이머를 시작했어요';
   }
+
+  @override
+  String get settingsSounds => '효과음';
+
+  @override
+  String get settingsSoundsDesc => '칩 탭·시작·일시정지·완료 멜로디';
+
+  @override
+  String get soundSetPop => '소프트 팝';
+
+  @override
+  String get soundSetWood => '우드';
+
+  @override
+  String get soundSetGlass => '글라스';
+
+  @override
+  String get soundSetRetro => '레트로';
+
+  @override
+  String get workoutTab => '운동';
+
+  @override
+  String get workoutMyRoutines => '내 루틴';
+
+  @override
+  String get workoutNewRoutine => '＋ 새 루틴';
+
+  @override
+  String workoutRoutineN(int n) {
+    return '루틴 $n';
+  }
+
+  @override
+  String get workoutLibrary => '운동 라이브러리';
+
+  @override
+  String get workoutLibraryHint => '탭해서 추가 · 페이스 프리셋 내장';
+
+  @override
+  String get workoutEmptyRoutine => '아래 라이브러리에서 운동을 추가하세요';
+
+  @override
+  String get workoutRest => '세트 간 휴식';
+
+  @override
+  String get workoutRestCommon => '루틴 공통';
+
+  @override
+  String get workoutVoiceTone => '보이스 톤';
+
+  @override
+  String get workoutToneCoach => '🔥 코치';
+
+  @override
+  String get workoutToneCalm => '🌙 차분';
+
+  @override
+  String get workoutSpeakSection => '말해줄 것';
+
+  @override
+  String get workoutSpeakAllOff => '전부 개별 OFF 가능';
+
+  @override
+  String get workoutSayCount => '구령';
+
+  @override
+  String get workoutSayCountSub => '하나, 둘, 셋…';
+
+  @override
+  String get workoutSaySetAnn => '세트 시작/종료 안내';
+
+  @override
+  String get workoutSayCallout => '남은 시간 콜아웃';
+
+  @override
+  String get workoutSayCountdown => '휴식 카운트다운 3·2·1';
+
+  @override
+  String get workoutSayPreview => '다음 동작 예고';
+
+  @override
+  String get workoutSayCheer => '격려 멘트';
+
+  @override
+  String get workoutSayCheerSub => '차분 톤에선 최소화';
+
+  @override
+  String get workoutDucking => '음악 덕킹';
+
+  @override
+  String get workoutDuckingSub => '발화 중 음악 볼륨 낮춤';
+
+  @override
+  String get workoutSets => '세트';
+
+  @override
+  String get workoutReps => '횟수';
+
+  @override
+  String get workoutPace => '구령 페이스';
+
+  @override
+  String get workoutPaceFreeSub => '수동 종료(다음)까지 무한 카운트';
+
+  @override
+  String get workoutHoldTime => '유지 시간';
+
+  @override
+  String get workoutStart => '시작';
+
+  @override
+  String get workoutTtsNote => '🔊 TTS 구령이 재생됩니다';
+
+  @override
+  String workoutSetProgress(int cur, int total) {
+    return '$cur / $total 세트';
+  }
+
+  @override
+  String workoutRepOf(int n) {
+    return '$n회 중';
+  }
+
+  @override
+  String get workoutFreeCount => '자유 카운트';
+
+  @override
+  String get workoutFreeHint => '다음 ▶ 를 누르면 종료';
+
+  @override
+  String get workoutHold => '버티기';
+
+  @override
+  String get workoutRestLabel => '휴식';
+
+  @override
+  String workoutNextLabel(String name) {
+    return '다음: $name';
+  }
+
+  @override
+  String get workoutDoneTitle => '운동 완료!';
+
+  @override
+  String workoutDoneCount(int n) {
+    return '$n개 동작 완료';
+  }
+
+  @override
+  String get workoutStop => '종료';
+
+  @override
+  String get workoutSkip => '다음';
+
+  @override
+  String get workoutBackToStart => '처음으로';
+
+  @override
+  String get exSquat => '스쿼트';
+
+  @override
+  String get exPushup => '푸시업';
+
+  @override
+  String get exLunge => '런지';
+
+  @override
+  String get exBurpee => '버피';
+
+  @override
+  String get exCrunch => '크런치';
+
+  @override
+  String get exPlank => '플랭크';
+
+  @override
+  String get exWallsit => '월싯';
+
+  @override
+  String get exPullup => '턱걸이';
+
+  @override
+  String wsSetStart(String name, int set, int reps) {
+    return '$name, $set세트 $reps회. 시작!';
+  }
+
+  @override
+  String wsSetStartAgain(int set) {
+    return '$set세트 시작!';
+  }
+
+  @override
+  String wsTimeStart(String name, int dur) {
+    return '$name $dur초. 시작!';
+  }
+
+  @override
+  String wsFreeStart(String name) {
+    return '$name, 자유 카운트. 시작!';
+  }
+
+  @override
+  String get wsLastSet => '마지막 세트! 힘내요';
+
+  @override
+  String get wsHalfway => '절반 왔어요';
+
+  @override
+  String get wsTenLeft => '10초 남았어요';
+
+  @override
+  String wsSetDoneRest(int set, int rest) {
+    return '$set세트 완료. $rest초 휴식하세요';
+  }
+
+  @override
+  String wsExDoneRest(String name, int rest) {
+    return '$name 완료. $rest초 휴식하세요';
+  }
+
+  @override
+  String wsNextEx(String name, String amount) {
+    return '다음은 $name, $amount';
+  }
+
+  @override
+  String wsNextSet(int set) {
+    return '다음은 $set세트';
+  }
+
+  @override
+  String get wsAllDone => '운동 완료! 수고했어요';
+
+  @override
+  String wsAmountTime(int dur) {
+    return '$dur초';
+  }
+
+  @override
+  String wsAmountReps(int reps) {
+    return '$reps회';
+  }
+
+  @override
+  String get wsAmountFree => '자유 카운트';
+
+  @override
+  String workoutSummaryReps(int sets, int reps, String pace) {
+    return '$sets세트 × $reps회 · ${pace}s';
+  }
+
+  @override
+  String workoutSummaryTime(int dur) {
+    return '$dur초 버티기';
+  }
+
+  @override
+  String workoutSummaryFree(String pace) {
+    return '자유 카운트 · ${pace}s';
+  }
 }

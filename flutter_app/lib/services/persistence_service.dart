@@ -12,6 +12,44 @@ class PersistenceService {
   static const _kDpadOnLeft = 'dpad_on_left';
   static const _kMultiTimerData = 'multi_timer_data';
   static const _kMultiTimerPresets = 'multi_timer_presets';
+  static const _kWorkoutRoutines = 'workout_routines';
+  static const _kWorkoutConfig = 'workout_config';
+
+  static Future<List<Map<String, dynamic>>?> loadWorkoutRoutines() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString(_kWorkoutRoutines);
+    if (str == null) return null;
+    try {
+      return (jsonDecode(str) as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> saveWorkoutRoutines(
+    List<Map<String, dynamic>> routines,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kWorkoutRoutines, jsonEncode(routines));
+  }
+
+  static Future<Map<String, dynamic>?> loadWorkoutConfig() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString(_kWorkoutConfig);
+    if (str == null) return null;
+    try {
+      return jsonDecode(str) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> saveWorkoutConfig(Map<String, dynamic> cfg) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kWorkoutConfig, jsonEncode(cfg));
+  }
 
   /// 멀티 타이머 프리셋 목록. null = 아직 저장된 적 없음(기본 시드 대상).
   /// 각 항목: {'name': String, 'durationMs': int}

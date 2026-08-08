@@ -47,4 +47,20 @@ class HapticService {
       HapticFeedback.mediumImpact();
     } catch (_) {}
   }
+
+  /// 가벼운 확인 — 프리셋 칩 탭, pill 도킹.
+  void light() {
+    if (!enabled) return;
+    try {
+      HapticFeedback.lightImpact();
+    } catch (_) {}
+  }
+
+  /// 강한 이벤트 — 타이머 완료(디자인 스펙 heavyImpact).
+  void heavy() {
+    if (!enabled) return;
+    try {
+      HapticFeedback.heavyImpact();
+    } catch (_) {}
+  }
 }
