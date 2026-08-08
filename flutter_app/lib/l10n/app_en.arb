@@ -621,5 +621,33 @@
       }
     }
   },
-  "wsGetReady": "Get ready! Starting soon"
+  "wsGetReady": "Get ready! Starting soon",
+  "prepTab": "Checklist",
+  "prepTitle": "Packing",
+  "prepAutoReset": "resets every morning 🌅",
+  "prepAutoResetHint": "🌙 lists are not auto-reset",
+  "prepAllPacked": "All packed ✓",
+  "prepPackedCount": "{n}/{m} packed",
+  "@prepPackedCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "prepAllPackedGo": "All packed — go! ✓",
+  "prepCongrats": "🎉 All packed!",
+  "prepNewListHint": "New list (e.g. Travel)",
+  "prepEdit": "Edit",
+  "prepEditDone": "Done",
+  "prepAddItemHint": "Add item, then Enter",
+  "prepDailyReset": "Reset every morning",
+  "prepDailyResetHint": "off = manual reset (one-off lists like travel)",
+  "prepDeleteList": "Delete list",
+  "prepUncheckAll": "Uncheck all",
+  "prepEmptyItems": "No items — tap Edit to add",
+  "prepEmptyItemsEdit": "Add items below"
 }

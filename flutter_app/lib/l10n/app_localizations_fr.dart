@@ -1089,4 +1089,61 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get wsGetReady => 'Get ready! Starting soon';
+
+  @override
+  String get prepTab => 'Checklist';
+
+  @override
+  String get prepTitle => 'Packing';
+
+  @override
+  String get prepAutoReset => 'resets every morning 🌅';
+
+  @override
+  String get prepAutoResetHint => '🌙 lists are not auto-reset';
+
+  @override
+  String get prepAllPacked => 'All packed ✓';
+
+  @override
+  String prepPackedCount(int n, int m) {
+    return '$n/$m packed';
+  }
+
+  @override
+  String get prepAllPackedGo => 'All packed — go! ✓';
+
+  @override
+  String get prepCongrats => '🎉 All packed!';
+
+  @override
+  String get prepNewListHint => 'New list (e.g. Travel)';
+
+  @override
+  String get prepEdit => 'Edit';
+
+  @override
+  String get prepEditDone => 'Done';
+
+  @override
+  String get prepAddItemHint => 'Add item, then Enter';
+
+  @override
+  String get prepDailyReset => 'Reset every morning';
+
+  @override
+  String get prepDailyResetHint =>
+      'off = manual reset (one-off lists like travel)';
+
+  @override
+  String get prepDeleteList => 'Delete list';
+
+  @override
+  String get prepUncheckAll => 'Uncheck all';
+
+  @override
+  String get prepEmptyItems => 'No items — tap Edit to add';
+
+  @override
+  String get prepEmptyItemsEdit => 'Add items below';
 }

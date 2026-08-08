@@ -4,6 +4,7 @@ import 'home_screen.dart';
 import 'l10n/app_localizations.dart';
 import 'features/multi_timer/widgets/multi_timer_screen.dart';
 import 'features/workout/workout_screen.dart';
+import 'features/prep/prep_screen.dart';
 import 'services/haptic_service.dart';
 import 'services/platform_info.dart';
 import 'settings_screen.dart';
@@ -40,6 +41,7 @@ class _RootShellState extends State<RootShell> {
           HomeScreen(active: _index == 0),
           const MultiTimerScreen(embedded: true),
           const WorkoutScreen(),
+          const PrepScreen(),
           const SettingsScreen(embedded: true),
         ],
       ),
@@ -57,6 +59,11 @@ class _RootShellState extends State<RootShell> {
             Icons.fitness_center_outlined,
             Icons.fitness_center,
             l.workoutTab,
+          ),
+          _NavItem(
+            Icons.checklist_rtl_outlined,
+            Icons.checklist_rtl,
+            l.prepTab,
           ),
           _NavItem(Icons.settings_outlined, Icons.settings, l.settings),
         ],

@@ -15,6 +15,24 @@ class PersistenceService {
   static const _kWorkoutRoutines = 'workout_routines';
   static const _kWorkoutConfig = 'workout_config';
   static const _kWorkoutCustomLib = 'workout_custom_lib';
+  static const _kPrepData = 'prep_checklists';
+
+  /// 준비물 체크리스트 — {'date': 'yyyy-MM-dd', 'lists': [...]}.
+  static Future<Map<String, dynamic>?> loadPrepData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString(_kPrepData);
+    if (str == null) return null;
+    try {
+      return jsonDecode(str) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> savePrepData(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kPrepData, jsonEncode(data));
+  }
 
   static Future<List<Map<String, dynamic>>?> loadWorkoutCustomLib() async {
     final prefs = await SharedPreferences.getInstance();
