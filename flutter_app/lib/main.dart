@@ -13,6 +13,7 @@ import 'features/stopwatch/bloc/stopwatch_bloc.dart';
 import 'splash_screen.dart';
 import 'overlay/overlay_widget.dart';
 import 'overlay/desktop_overlay.dart';
+import 'overlay/overlay_coordinator.dart';
 import 'services/desktop_service.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
@@ -56,6 +57,7 @@ Future<void> main(List<String> args) async {
   await HapticService.instance.init();
   await ColorblindService.instance.init();
   await HighContrastService.instance.init();
+  await OverlayCoordinator.instance.init();
   await HotkeyService.instance.init();
   _installErrorHandlers();
   runApp(const AnalogTimerApp());

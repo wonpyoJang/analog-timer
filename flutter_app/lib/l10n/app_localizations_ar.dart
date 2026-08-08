@@ -733,4 +733,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String multiTimerAllDone(int count) {
     return 'انتهى $count مؤقتات';
   }
+
+  @override
+  String get settingsOverlayMutex => 'Show one overlay at a time';
+
+  @override
+  String get settingsOverlayMutexDesc =>
+      'Turning on the timer overlay or the multi-timer overlays turns off the other. Prevents lag from running both at once.';
 }

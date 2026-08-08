@@ -728,6 +728,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String multiTimerAllDone(int count) {
     return '$count 个计时器完成';
   }
+
+  @override
+  String get settingsOverlayMutex => 'Show one overlay at a time';
+
+  @override
+  String get settingsOverlayMutexDesc =>
+      'Turning on the timer overlay or the multi-timer overlays turns off the other. Prevents lag from running both at once.';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
