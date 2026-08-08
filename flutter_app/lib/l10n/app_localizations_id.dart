@@ -803,4 +803,247 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get soundSetRetro => 'Retro';
+
+  @override
+  String get workoutTab => 'Workout';
+
+  @override
+  String get workoutMyRoutines => 'My routines';
+
+  @override
+  String get workoutNewRoutine => '+ New routine';
+
+  @override
+  String workoutRoutineN(int n) {
+    return 'Routine $n';
+  }
+
+  @override
+  String get workoutLibrary => 'Exercise library';
+
+  @override
+  String get workoutLibraryHint => 'tap to add · pace presets built in';
+
+  @override
+  String get workoutEmptyRoutine => 'Add exercises from the library below';
+
+  @override
+  String get workoutRest => 'Rest between sets';
+
+  @override
+  String get workoutRestCommon => 'shared across the routine';
+
+  @override
+  String get workoutVoiceTone => 'Voice tone';
+
+  @override
+  String get workoutToneCoach => '🔥 Coach';
+
+  @override
+  String get workoutToneCalm => '🌙 Calm';
+
+  @override
+  String get workoutSpeakSection => 'What to announce';
+
+  @override
+  String get workoutSpeakAllOff => 'each can be turned off';
+
+  @override
+  String get workoutSayCount => 'Rep count';
+
+  @override
+  String get workoutSayCountSub => 'one, two, three…';
+
+  @override
+  String get workoutSaySetAnn => 'Set start & end';
+
+  @override
+  String get workoutSayCallout => 'Time-left callouts';
+
+  @override
+  String get workoutSayCountdown => 'Rest countdown 3·2·1';
+
+  @override
+  String get workoutSayPreview => 'Next exercise preview';
+
+  @override
+  String get workoutSayCheer => 'Encouragement';
+
+  @override
+  String get workoutSayCheerSub => 'minimal in calm tone';
+
+  @override
+  String get workoutDucking => 'Music ducking';
+
+  @override
+  String get workoutDuckingSub => 'lowers music volume while speaking';
+
+  @override
+  String get workoutSets => 'Sets';
+
+  @override
+  String get workoutReps => 'Reps';
+
+  @override
+  String get workoutPace => 'Count pace';
+
+  @override
+  String get workoutPaceFreeSub => 'counts forever until you tap Next';
+
+  @override
+  String get workoutHoldTime => 'Hold time';
+
+  @override
+  String get workoutStart => 'Start';
+
+  @override
+  String get workoutTtsNote => '🔊 Spoken cues will play';
+
+  @override
+  String workoutSetProgress(int cur, int total) {
+    return 'Set $cur of $total';
+  }
+
+  @override
+  String workoutRepOf(int n) {
+    return 'of $n reps';
+  }
+
+  @override
+  String get workoutFreeCount => 'Free count';
+
+  @override
+  String get workoutFreeHint => 'tap Next to finish';
+
+  @override
+  String get workoutHold => 'Hold';
+
+  @override
+  String get workoutRestLabel => 'Rest';
+
+  @override
+  String workoutNextLabel(String name) {
+    return 'Next: $name';
+  }
+
+  @override
+  String get workoutDoneTitle => 'Workout complete!';
+
+  @override
+  String workoutDoneCount(int n) {
+    return '$n exercises done';
+  }
+
+  @override
+  String get workoutStop => 'Stop';
+
+  @override
+  String get workoutSkip => 'Next';
+
+  @override
+  String get workoutBackToStart => 'Back to start';
+
+  @override
+  String get exSquat => 'Squats';
+
+  @override
+  String get exPushup => 'Push-ups';
+
+  @override
+  String get exLunge => 'Lunges';
+
+  @override
+  String get exBurpee => 'Burpees';
+
+  @override
+  String get exCrunch => 'Crunches';
+
+  @override
+  String get exPlank => 'Plank';
+
+  @override
+  String get exWallsit => 'Wall sit';
+
+  @override
+  String get exPullup => 'Pull-ups';
+
+  @override
+  String wsSetStart(String name, int set, int reps) {
+    return '$name, set $set, $reps reps. Go!';
+  }
+
+  @override
+  String wsSetStartAgain(int set) {
+    return 'Set $set. Go!';
+  }
+
+  @override
+  String wsTimeStart(String name, int dur) {
+    return '$name, $dur seconds. Go!';
+  }
+
+  @override
+  String wsFreeStart(String name) {
+    return '$name, free count. Go!';
+  }
+
+  @override
+  String get wsLastSet => 'Last set! Push through';
+
+  @override
+  String get wsHalfway => 'Halfway there';
+
+  @override
+  String get wsTenLeft => 'Ten seconds left';
+
+  @override
+  String wsSetDoneRest(int set, int rest) {
+    return 'Set $set done. Rest $rest seconds';
+  }
+
+  @override
+  String wsExDoneRest(String name, int rest) {
+    return '$name done. Rest $rest seconds';
+  }
+
+  @override
+  String wsNextEx(String name, String amount) {
+    return 'Next: $name, $amount';
+  }
+
+  @override
+  String wsNextSet(int set) {
+    return 'Next: set $set';
+  }
+
+  @override
+  String get wsAllDone => 'Workout complete! Great job';
+
+  @override
+  String wsAmountTime(int dur) {
+    return '$dur seconds';
+  }
+
+  @override
+  String wsAmountReps(int reps) {
+    return '$reps reps';
+  }
+
+  @override
+  String get wsAmountFree => 'free count';
+
+  @override
+  String workoutSummaryReps(int sets, int reps, String pace) {
+    return '$sets sets × $reps reps · ${pace}s';
+  }
+
+  @override
+  String workoutSummaryTime(int dur) {
+    return '${dur}s hold';
+  }
+
+  @override
+  String workoutSummaryFree(String pace) {
+    return 'free count · ${pace}s';
+  }
 }

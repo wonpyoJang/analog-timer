@@ -9,12 +9,14 @@ class MainActivity : FlutterActivity() {
     private val CHANNEL = "dev.analogtimer/widget"
     private val MULTI_OVERLAY_CHANNEL = "dev.analogtimer/multi_overlay"
     private val ANR_VITALS_CHANNEL = "dev.analogtimer/anr_vitals"
+    private val AUDIO_FOCUS_CHANNEL = "dev.analogtimer/audio_focus"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         TimerNotificationManager.createChannel(this)
         configureMultiOverlayChannel(flutterEngine)
         configureAnrVitalsChannel(flutterEngine)
+        configureAudioFocusChannel(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -101,6 +103,40 @@ class MainActivity : FlutterActivity() {
                     }
                     "capacity" -> {
                         result.success(MultiOverlayService.slotCapacity(applicationContext))
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+    }
+
+    /** 운동 TTS 음악 덕킹 — 발화 동안 TRANSIENT_MAY_DUCK 포커스를 잡아
+     *  시스템이 백그라운드 음악 볼륨을 낮추게 한다(스펙 §06 음악 덕킹). */
+    private var duckFocusRequest: android.media.AudioFocusRequest? = null
+
+    private fun configureAudioFocusChannel(flutterEngine: FlutterEngine) {
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, AUDIO_FOCUS_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                val am = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
+                when (call.method) {
+                    "duck" -> {
+                        if (duckFocusRequest == null) {
+                            val attrs = android.media.AudioAttributes.Builder()
+                                .setUsage(android.media.AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+                                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH)
+                                .build()
+                            val req = android.media.AudioFocusRequest
+                                .Builder(android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+                                .setAudioAttributes(attrs)
+                                .build()
+                            am.requestAudioFocus(req)
+                            duckFocusRequest = req
+                        }
+                        result.success(null)
+                    }
+                    "release" -> {
+                        duckFocusRequest?.let { am.abandonAudioFocusRequest(it) }
+                        duckFocusRequest = null
+                        result.success(null)
                     }
                     else -> result.notImplemented()
                 }

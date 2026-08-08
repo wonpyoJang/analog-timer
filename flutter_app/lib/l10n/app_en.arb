@@ -379,5 +379,227 @@
   "soundSetPop": "Soft pop",
   "soundSetWood": "Wood",
   "soundSetGlass": "Glass",
-  "soundSetRetro": "Retro"
+  "soundSetRetro": "Retro",
+  "workoutTab": "Workout",
+  "workoutMyRoutines": "My routines",
+  "workoutNewRoutine": "+ New routine",
+  "workoutRoutineN": "Routine {n}",
+  "@workoutRoutineN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutLibrary": "Exercise library",
+  "workoutLibraryHint": "tap to add · pace presets built in",
+  "workoutEmptyRoutine": "Add exercises from the library below",
+  "workoutRest": "Rest between sets",
+  "workoutRestCommon": "shared across the routine",
+  "workoutVoiceTone": "Voice tone",
+  "workoutToneCoach": "🔥 Coach",
+  "workoutToneCalm": "🌙 Calm",
+  "workoutSpeakSection": "What to announce",
+  "workoutSpeakAllOff": "each can be turned off",
+  "workoutSayCount": "Rep count",
+  "workoutSayCountSub": "one, two, three…",
+  "workoutSaySetAnn": "Set start & end",
+  "workoutSayCallout": "Time-left callouts",
+  "workoutSayCountdown": "Rest countdown 3·2·1",
+  "workoutSayPreview": "Next exercise preview",
+  "workoutSayCheer": "Encouragement",
+  "workoutSayCheerSub": "minimal in calm tone",
+  "workoutDucking": "Music ducking",
+  "workoutDuckingSub": "lowers music volume while speaking",
+  "workoutSets": "Sets",
+  "workoutReps": "Reps",
+  "workoutPace": "Count pace",
+  "workoutPaceFreeSub": "counts forever until you tap Next",
+  "workoutHoldTime": "Hold time",
+  "workoutStart": "Start",
+  "workoutTtsNote": "🔊 Spoken cues will play",
+  "workoutSetProgress": "Set {cur} of {total}",
+  "@workoutSetProgress": {
+    "placeholders": {
+      "cur": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutRepOf": "of {n} reps",
+  "@workoutRepOf": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutFreeCount": "Free count",
+  "workoutFreeHint": "tap Next to finish",
+  "workoutHold": "Hold",
+  "workoutRestLabel": "Rest",
+  "workoutNextLabel": "Next: {name}",
+  "@workoutNextLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutDoneTitle": "Workout complete!",
+  "workoutDoneCount": "{n} exercises done",
+  "@workoutDoneCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutStop": "Stop",
+  "workoutSkip": "Next",
+  "workoutBackToStart": "Back to start",
+  "exSquat": "Squats",
+  "exPushup": "Push-ups",
+  "exLunge": "Lunges",
+  "exBurpee": "Burpees",
+  "exCrunch": "Crunches",
+  "exPlank": "Plank",
+  "exWallsit": "Wall sit",
+  "exPullup": "Pull-ups",
+  "wsSetStart": "{name}, set {set}, {reps} reps. Go!",
+  "@wsSetStart": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "set": {
+        "type": "int"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "wsSetStartAgain": "Set {set}. Go!",
+  "@wsSetStartAgain": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      }
+    }
+  },
+  "wsTimeStart": "{name}, {dur} seconds. Go!",
+  "@wsTimeStart": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "dur": {
+        "type": "int"
+      }
+    }
+  },
+  "wsFreeStart": "{name}, free count. Go!",
+  "@wsFreeStart": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "wsLastSet": "Last set! Push through",
+  "wsHalfway": "Halfway there",
+  "wsTenLeft": "Ten seconds left",
+  "wsSetDoneRest": "Set {set} done. Rest {rest} seconds",
+  "@wsSetDoneRest": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      },
+      "rest": {
+        "type": "int"
+      }
+    }
+  },
+  "wsExDoneRest": "{name} done. Rest {rest} seconds",
+  "@wsExDoneRest": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "rest": {
+        "type": "int"
+      }
+    }
+  },
+  "wsNextEx": "Next: {name}, {amount}",
+  "@wsNextEx": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "wsNextSet": "Next: set {set}",
+  "@wsNextSet": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      }
+    }
+  },
+  "wsAllDone": "Workout complete! Great job",
+  "wsAmountTime": "{dur} seconds",
+  "@wsAmountTime": {
+    "placeholders": {
+      "dur": {
+        "type": "int"
+      }
+    }
+  },
+  "wsAmountReps": "{reps} reps",
+  "@wsAmountReps": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "wsAmountFree": "free count",
+  "workoutSummaryReps": "{sets} sets × {reps} reps · {pace}s",
+  "@workoutSummaryReps": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      },
+      "reps": {
+        "type": "int"
+      },
+      "pace": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutSummaryTime": "{dur}s hold",
+  "@workoutSummaryTime": {
+    "placeholders": {
+      "dur": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutSummaryFree": "free count · {pace}s",
+  "@workoutSummaryFree": {
+    "placeholders": {
+      "pace": {
+        "type": "String"
+      }
+    }
+  }
 }
