@@ -9,6 +9,7 @@ import 'widgets/key_caps.dart';
 import 'widgets/language_picker.dart';
 import 'widgets/feedback_page.dart';
 import 'services/platform_info.dart';
+import 'services/telemetry_service.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
@@ -398,7 +399,42 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ],
+
+          // ── 진단 데이터 전송 (Android — ANR-free 지표 동의) ────
+          if (isAndroid) ...[const _Divider(), const _TelemetryConsentTile()],
         ],
+      ),
+    );
+  }
+}
+
+/// Android 진단 동의 토글 — telemetry_consent(pref)를 읽고 쓴다. 켜면 ANR-free 지표가
+/// 다음 실행부터 전송된다(AnrVitalsService 가 같은 pref 로 게이팅).
+class _TelemetryConsentTile extends StatelessWidget {
+  const _TelemetryConsentTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    // consentEnabled notifier 를 구독 — 첫 실행 다이얼로그의 변경도 즉시 반영.
+    return ValueListenableBuilder<bool>(
+      valueListenable: TelemetryService.instance.consentEnabled,
+      builder: (ctx, on, _) => _SettingsTile(
+        icon: Icons.insights_outlined,
+        iconColor: AppColors.accent,
+        title: l.telemetryConsentTitle,
+        subtitle: l.settingsTelemetryDesc,
+        trailing: Switch(
+          value: on,
+          onChanged: (v) => TelemetryService.instance.setConsent(v),
+          activeThumbColor: AppColors.accent,
+          trackColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.accent.withAlpha(0x55)
+                : AppColors.surface,
+          ),
+        ),
+        onTap: () => TelemetryService.instance.setConsent(!on),
       ),
     );
   }

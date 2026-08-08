@@ -70,6 +70,15 @@ class TelemetryService {
   int _lastFrameMs = 0;
   Timer? _heartbeatTimer;
 
+  /// 동의 on/off 반응형 신호 — 설정 토글이 첫 실행 다이얼로그의 변경을 즉시 반영하도록.
+  final ValueNotifier<bool> consentEnabled = ValueNotifier<bool>(false);
+
+  /// 플랫폼 무관하게 pref 의 동의값을 notifier 에 로드(앱 시작 시 1회).
+  Future<void> loadConsentFlag() async {
+    final p = await SharedPreferences.getInstance();
+    consentEnabled.value = p.getBool(_kConsent) ?? false;
+  }
+
   /// 마지막으로 렌더 프레임이 그려진 시각(ms). 0 이면 아직 첫 프레임 전.
   /// 멈춤(freeze) 워치독이 이 값의 나이로 "렌더가 죽었는지"를 판정한다.
   int get lastFrameMs => _lastFrameMs;
@@ -255,20 +264,29 @@ class TelemetryService {
 
   bool get supported => !kIsWeb && (Platform.isWindows || Platform.isMacOS);
 
+  /// 동의가 의미 있는 플랫폼 — 데스크톱(크래시 텔레메트리) + Android(ANR-free 지표).
+  /// supported(데스크톱 전용 무거운 경로)와 달리 동의 read/write 게이트에만 쓴다.
+  bool get consentApplicable =>
+      !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isAndroid);
+
   /// 동의 상태 — true/false/null(아직 안 물음).
   Future<bool?> consent() async {
-    if (!supported) return false;
+    if (!consentApplicable) return false;
     final p = await SharedPreferences.getInstance();
     return p.containsKey(_kConsent) ? p.getBool(_kConsent) : null;
   }
 
   /// 동의 설정(첫 실행 다이얼로그 / 설정 토글). true 면 보류된 크래시도 전송.
+  /// 동의는 telemetry_consent pref 로 공유되어 Android 의 AnrVitalsService 도 함께 게이팅된다
+  /// (Android 의 보류 ANR 지표는 다음 콜드스타트 init 에서 전송).
   Future<void> setConsent(bool v) async {
-    if (!supported) return;
+    if (!consentApplicable) return;
     final p = await SharedPreferences.getInstance();
     await p.setBool(_kConsent, v);
     _enabled = v;
-    if (v) {
+    consentEnabled.value = v; // 반응형 반영(설정 토글 등)
+    // 데스크톱 텔레메트리 보류분 즉시 전송(Android 경로는 supported=false 라 no-op).
+    if (v && supported) {
       await _flushPending();
       await _flushEvents();
     }

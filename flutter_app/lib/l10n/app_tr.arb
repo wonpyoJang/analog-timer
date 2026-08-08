@@ -119,5 +119,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settingsTelemetryDesc": "Anonim tanılama ve ANR bilgisi gönder (kişisel veri yok)"
 }

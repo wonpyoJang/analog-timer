@@ -279,6 +279,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get telemetryConsentTitle => 'Help improve Analog Timer';
 
   @override
+  String get settingsTelemetryDesc => '匿名の診断・ANR情報を送信（個人情報なし）';
+
+  @override
   String get telemetryConsentBody =>
       'If the app closes unexpectedly, anonymous diagnostics (device environment and error logs) are sent to the developer to help find the cause. No personal information or timer content is included. You can turn this off anytime in settings.';
 
