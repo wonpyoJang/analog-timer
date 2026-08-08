@@ -1059,4 +1059,60 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get wsGetReady => '곧 시작! 준비하세요';
+
+  @override
+  String get prepTab => '체크리스트';
+
+  @override
+  String get prepTitle => '준비물';
+
+  @override
+  String get prepAutoReset => '매일 아침 자동 리셋 🌅';
+
+  @override
+  String get prepAutoResetHint => '🌙 표시 목록은 리셋되지 않아요';
+
+  @override
+  String get prepAllPacked => '전부 챙겼어요 ✓';
+
+  @override
+  String prepPackedCount(int n, int m) {
+    return '$n/$m 챙김';
+  }
+
+  @override
+  String get prepAllPackedGo => '전부 챙겼어요 — 출발! ✓';
+
+  @override
+  String get prepCongrats => '🎉 다 챙겼어요!';
+
+  @override
+  String get prepNewListHint => '새 목록 (예: 여행)';
+
+  @override
+  String get prepEdit => '편집';
+
+  @override
+  String get prepEditDone => '완료';
+
+  @override
+  String get prepAddItemHint => '항목 추가 후 Enter';
+
+  @override
+  String get prepDailyReset => '매일 아침 리셋';
+
+  @override
+  String get prepDailyResetHint => '끄면 수동 리셋 (여행 등 일회성 목록)';
+
+  @override
+  String get prepDeleteList => '목록 삭제';
+
+  @override
+  String get prepUncheckAll => '체크 모두 해제';
+
+  @override
+  String get prepEmptyItems => '항목이 없어요 — 편집을 눌러 추가';
+
+  @override
+  String get prepEmptyItemsEdit => '아래에서 항목을 추가하세요';
 }

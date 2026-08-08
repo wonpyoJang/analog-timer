@@ -2060,6 +2060,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Get ready! Starting soon'**
   String get wsGetReady;
+
+  /// No description provided for @prepTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get prepTab;
+
+  /// No description provided for @prepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Packing'**
+  String get prepTitle;
+
+  /// No description provided for @prepAutoReset.
+  ///
+  /// In en, this message translates to:
+  /// **'resets every morning 🌅'**
+  String get prepAutoReset;
+
+  /// No description provided for @prepAutoResetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'🌙 lists are not auto-reset'**
+  String get prepAutoResetHint;
+
+  /// No description provided for @prepAllPacked.
+  ///
+  /// In en, this message translates to:
+  /// **'All packed ✓'**
+  String get prepAllPacked;
+
+  /// No description provided for @prepPackedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}/{m} packed'**
+  String prepPackedCount(int n, int m);
+
+  /// No description provided for @prepAllPackedGo.
+  ///
+  /// In en, this message translates to:
+  /// **'All packed — go! ✓'**
+  String get prepAllPackedGo;
+
+  /// No description provided for @prepCongrats.
+  ///
+  /// In en, this message translates to:
+  /// **'🎉 All packed!'**
+  String get prepCongrats;
+
+  /// No description provided for @prepNewListHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New list (e.g. Travel)'**
+  String get prepNewListHint;
+
+  /// No description provided for @prepEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get prepEdit;
+
+  /// No description provided for @prepEditDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get prepEditDone;
+
+  /// No description provided for @prepAddItemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add item, then Enter'**
+  String get prepAddItemHint;
+
+  /// No description provided for @prepDailyReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset every morning'**
+  String get prepDailyReset;
+
+  /// No description provided for @prepDailyResetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'off = manual reset (one-off lists like travel)'**
+  String get prepDailyResetHint;
+
+  /// No description provided for @prepDeleteList.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete list'**
+  String get prepDeleteList;
+
+  /// No description provided for @prepUncheckAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncheck all'**
+  String get prepUncheckAll;
+
+  /// No description provided for @prepEmptyItems.
+  ///
+  /// In en, this message translates to:
+  /// **'No items — tap Edit to add'**
+  String get prepEmptyItems;
+
+  /// No description provided for @prepEmptyItemsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add items below'**
+  String get prepEmptyItemsEdit;
 }
 
 class _AppLocalizationsDelegate
