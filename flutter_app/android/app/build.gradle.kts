@@ -43,3 +43,8 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // 운동 TTS 워치 미러 — Data Layer 통신(폰→워치 상태, 워치→폰 명령)
+    implementation("com.google.android.gms:play-services-wearable:18.1.0")
+}

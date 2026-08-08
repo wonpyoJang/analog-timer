@@ -10,6 +10,7 @@ class MainActivity : FlutterActivity() {
     private val MULTI_OVERLAY_CHANNEL = "dev.analogtimer/multi_overlay"
     private val ANR_VITALS_CHANNEL = "dev.analogtimer/anr_vitals"
     private val AUDIO_FOCUS_CHANNEL = "dev.analogtimer/audio_focus"
+    private val WEAR_CHANNEL = "dev.analogtimer/wear"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -17,6 +18,7 @@ class MainActivity : FlutterActivity() {
         configureMultiOverlayChannel(flutterEngine)
         configureAnrVitalsChannel(flutterEngine)
         configureAudioFocusChannel(flutterEngine)
+        configureWearChannel(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -107,6 +109,61 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    /** 운동 TTS 워치 미러 — 폰→워치 상태 push(Data Layer), 워치→폰 명령(stop/skip) 수신. */
+    private var wearChannel: MethodChannel? = null
+    private val wearMessageListener =
+        com.google.android.gms.wearable.MessageClient.OnMessageReceivedListener { event ->
+            if (event.path == "/workout/cmd") {
+                val cmd = String(event.data)
+                runOnUiThread {
+                    wearChannel?.invokeMethod("command", cmd)
+                }
+            }
+        }
+
+    private fun configureWearChannel(flutterEngine: FlutterEngine) {
+        val channel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger, WEAR_CHANNEL,
+        )
+        wearChannel = channel
+        channel.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "pushState" -> {
+                    try {
+                        val req = com.google.android.gms.wearable.PutDataMapRequest
+                            .create("/workout/state")
+                        val m = req.dataMap
+                        m.putString("phase", call.argument<String>("phase") ?: "idle")
+                        m.putString("name", call.argument<String>("name") ?: "")
+                        m.putString("type", call.argument<String>("type") ?: "reps")
+                        m.putInt("set", call.argument<Int>("set") ?: 0)
+                        m.putInt("sets", call.argument<Int>("sets") ?: 0)
+                        m.putInt("rep", call.argument<Int>("rep") ?: 0)
+                        m.putInt("reps", call.argument<Int>("reps") ?: 0)
+                        m.putInt("t", call.argument<Int>("t") ?: 0)
+                        m.putLong("ts", System.currentTimeMillis()) // 동일값 dedup 방지
+                        com.google.android.gms.wearable.Wearable.getDataClient(this)
+                            .putDataItem(req.asPutDataRequest().setUrgent())
+                    } catch (_: Exception) {} // 워치 미페어링 등 — 조용히 무시
+                    result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
+        try {
+            com.google.android.gms.wearable.Wearable.getMessageClient(this)
+                .addListener(wearMessageListener)
+        } catch (_: Exception) {}
+    }
+
+    override fun onDestroy() {
+        try {
+            com.google.android.gms.wearable.Wearable.getMessageClient(this)
+                .removeListener(wearMessageListener)
+        } catch (_: Exception) {}
+        super.onDestroy()
     }
 
     /** 운동 TTS 음악 덕킹 — 발화 동안 TRANSIENT_MAY_DUCK 포커스를 잡아

@@ -9,6 +9,9 @@ class WorkoutExercise extends Equatable {
 
   /// 라이브러리 키 — 표시 이름은 l10n 으로 로케일을 따라간다.
   final String libKey;
+
+  /// 커스텀 운동 이름 — 있으면 libKey 대신 이 이름을 표시한다.
+  final String? customName;
   final WorkoutType type;
   final int sets;
   final int reps;
@@ -22,6 +25,7 @@ class WorkoutExercise extends Equatable {
   const WorkoutExercise({
     required this.id,
     required this.libKey,
+    this.customName,
     required this.type,
     this.sets = 3,
     this.reps = 10,
@@ -33,6 +37,7 @@ class WorkoutExercise extends Equatable {
       WorkoutExercise(
         id: id,
         libKey: libKey,
+        customName: customName,
         type: type,
         sets: sets ?? this.sets,
         reps: reps ?? this.reps,
@@ -43,6 +48,7 @@ class WorkoutExercise extends Equatable {
   Map<String, dynamic> toJson() => {
     'id': id,
     'libKey': libKey,
+    'customName': customName,
     'type': type.name,
     'sets': sets,
     'reps': reps,
@@ -53,6 +59,7 @@ class WorkoutExercise extends Equatable {
   static WorkoutExercise fromJson(Map<String, dynamic> j) => WorkoutExercise(
     id: j['id'] as String? ?? 'w${DateTime.now().microsecondsSinceEpoch}',
     libKey: j['libKey'] as String? ?? 'squat',
+    customName: j['customName'] as String?,
     type: WorkoutType.values.firstWhere(
       (t) => t.name == j['type'],
       orElse: () => WorkoutType.reps,
@@ -64,7 +71,7 @@ class WorkoutExercise extends Equatable {
   );
 
   @override
-  List<Object?> get props => [id, libKey, type, sets, reps, pace, dur];
+  List<Object?> get props => [id, libKey, customName, type, sets, reps, pace, dur];
 }
 
 class WorkoutRoutine extends Equatable {
@@ -155,6 +162,7 @@ class WorkoutConfig {
 /// 운동 라이브러리 프리셋(스펙 §04) — libKey 는 l10n 키와 매핑된다.
 class WorkoutLibEntry {
   final String libKey;
+  final String? customName;
   final WorkoutType type;
   final int sets;
   final int reps;
@@ -163,20 +171,46 @@ class WorkoutLibEntry {
   const WorkoutLibEntry(
     this.libKey,
     this.type, {
+    this.customName,
     this.sets = 3,
     this.reps = 10,
     this.pace = 2.0,
     this.dur = 30,
   });
 
+  bool get isCustom => customName != null;
+
   WorkoutExercise instantiate() => WorkoutExercise(
     id: 'w${DateTime.now().microsecondsSinceEpoch}',
     libKey: libKey,
+    customName: customName,
     type: type,
     sets: sets,
     reps: reps,
     pace: pace,
     dur: dur,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'customName': customName,
+    'type': type.name,
+    'sets': sets,
+    'reps': reps,
+    'pace': pace,
+    'dur': dur,
+  };
+
+  static WorkoutLibEntry fromJson(Map<String, dynamic> j) => WorkoutLibEntry(
+    'custom',
+    WorkoutType.values.firstWhere(
+      (t) => t.name == j['type'],
+      orElse: () => WorkoutType.reps,
+    ),
+    customName: j['customName'] as String?,
+    sets: (j['sets'] as num?)?.toInt() ?? 3,
+    reps: (j['reps'] as num?)?.toInt() ?? 10,
+    pace: (j['pace'] as num?)?.toDouble() ?? 2.0,
+    dur: (j['dur'] as num?)?.toInt() ?? 30,
   );
 }
 

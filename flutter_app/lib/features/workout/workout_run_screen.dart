@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import 'workout_models.dart';
-import 'workout_screen.dart' show exerciseDisplayName, exerciseSummary;
+import 'workout_screen.dart' show exerciseDisplayName, exerciseName, exerciseSummary;
 import 'workout_session.dart';
 import 'workout_voice.dart';
+import 'wear_bridge.dart';
 
 /// 운동 실행 화면(디자인 "운동 TTS 모드" 가운데 폰) — 4상태 + 캡션 + 컨트롤.
 class WorkoutRunScreen extends StatefulWidget {
@@ -55,7 +56,7 @@ class _WorkoutRunScreenState extends State<WorkoutRunScreen> {
           WorkoutSession(
             voice: _voice,
             config: widget.config,
-            exerciseName: (k) => exerciseDisplayName(l, k),
+            exerciseName: (e) => e.customName ?? exerciseDisplayName(l, e.libKey),
             script: WorkoutScript(
               setStart: (n, s, r) => l.wsSetStart(n, s, r),
               setStartAgain: (s) => l.wsSetStartAgain(s),
@@ -69,18 +70,46 @@ class _WorkoutRunScreenState extends State<WorkoutRunScreen> {
               nextExercise: (n, a) => l.wsNextEx(n, a),
               nextSet: (s) => l.wsNextSet(s),
               allDone: l.wsAllDone,
+              getReady: l.wsGetReady,
               amountTime: (d) => l.wsAmountTime(d),
               amountReps: (r) => l.wsAmountReps(r),
               amountFree: l.wsAmountFree,
             ),
           )..addListener(() {
             if (mounted) setState(() {});
+            _pushWearState();
           });
+      WearBridge.ensureListening();
+      WearBridge.onCommand = (cmd) {
+        final s = _session;
+        if (s == null) return;
+        if (cmd == 'stop') s.stop();
+        if (cmd == 'skip' && s.running) s.skip();
+      };
     }
+  }
+
+  /// 워치 미러 — 세션 상태를 Data Layer 로 push(미페어링이면 no-op).
+  void _pushWearState() {
+    final s = _session;
+    if (s == null) return;
+    final ex = s.current;
+    final l = AppLocalizations.of(context);
+    WearBridge.pushState(
+      phase: s.phase.name,
+      name: ex == null ? '' : (ex.customName ?? exerciseDisplayName(l, ex.libKey)),
+      type: ex?.type.name ?? 'reps',
+      set: s.set,
+      sets: ex?.sets ?? 0,
+      rep: s.rep,
+      reps: ex?.reps ?? 0,
+      t: s.t,
+    );
   }
 
   @override
   void dispose() {
+    WearBridge.onCommand = null;
     _captionClear?.cancel();
     _capSub?.cancel();
     _session?.stop();
@@ -113,7 +142,7 @@ class _WorkoutRunScreenState extends State<WorkoutRunScreen> {
               ? widget.routineName
               : s.phase == WorkoutPhase.done
               ? l.workoutDoneTitle
-              : '${s.exIdx + 1}/${widget.items.length} · ${ex == null ? '' : exerciseDisplayName(l, ex.libKey)}',
+              : '${s.exIdx + 1}/${widget.items.length} · ${ex == null ? '' : exerciseName(l, ex)}',
           style: TextStyle(
             color: AppColors.muted,
             fontSize: 15,
@@ -206,7 +235,7 @@ class _WorkoutRunScreenState extends State<WorkoutRunScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Text(
-                  '${i + 1}. ${exerciseDisplayName(l, widget.items[i].libKey)} — ${exerciseSummary(l, widget.items[i])}',
+                  '${i + 1}. ${exerciseName(l, widget.items[i])} — ${exerciseSummary(l, widget.items[i])}',
                   style: TextStyle(color: AppColors.muted, fontSize: 13.5),
                 ),
               ),
@@ -265,9 +294,23 @@ class _WorkoutRunScreenState extends State<WorkoutRunScreen> {
                     fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
-                Text(
-                  l.workoutRepOf(ex.reps),
-                  style: TextStyle(color: AppColors.faint, fontSize: 13),
+                Text.rich(
+                  TextSpan(
+                    text: '${l.workoutRepOf(ex.reps)} · ',
+                    style: TextStyle(color: AppColors.faint, fontSize: 13),
+                    children: [
+                      TextSpan(
+                        text: l.workoutSecsLeft(s.t),
+                        style: TextStyle(
+                          color: s.t <= 10
+                              ? AppColors.danger
+                              : const Color(0xFF52E08E),
+                          fontWeight: FontWeight.w700,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
@@ -330,9 +373,9 @@ class _WorkoutRunScreenState extends State<WorkoutRunScreen> {
         }
       case WorkoutPhase.rest:
         final nx = ex != null && ex.type == WorkoutType.reps && s.set < ex.sets
-            ? '${exerciseDisplayName(l, ex.libKey)} ${s.set + 1}'
+            ? '${exerciseName(l, ex)} ${s.set + 1}'
             : (s.exIdx + 1 < widget.items.length
-                  ? exerciseDisplayName(l, widget.items[s.exIdx + 1].libKey)
+                  ? exerciseName(l, widget.items[s.exIdx + 1])
                   : l.workoutDoneTitle);
         return Column(
           mainAxisSize: MainAxisSize.min,

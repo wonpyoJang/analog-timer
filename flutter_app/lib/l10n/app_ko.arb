@@ -323,5 +323,18 @@
   "wsAmountFree": "자유 카운트",
   "workoutSummaryReps": "{sets}세트 × {reps}회 · {pace}s",
   "workoutSummaryTime": "{dur}초 버티기",
-  "workoutSummaryFree": "자유 카운트 · {pace}s"
+  "workoutSummaryFree": "자유 카운트 · {pace}s",
+  "workoutCustomAdd": "＋ 커스텀 운동",
+  "workoutCustomTitle": "커스텀 운동 만들기",
+  "workoutCustomNameHint": "운동 이름 (예: 데드리프트)",
+  "workoutTypeReps": "세트×횟수",
+  "workoutTypeTime": "시간",
+  "workoutTypeFree": "자유",
+  "workoutCustomRepsDesc": "기본 3세트×10회 · 페이스 2.0s — 루틴에서 수정",
+  "workoutCustomTimeDesc": "기본 30초 버티기 — 루틴에서 수정",
+  "workoutCustomFreeDesc": "무한 구령, 수동 종료 · 페이스 2.0s",
+  "workoutCustomCancel": "취소",
+  "workoutCustomCreate": "만들고 추가",
+  "workoutSecsLeft": "{t}초 남음",
+  "wsGetReady": "곧 시작! 준비하세요"
 }

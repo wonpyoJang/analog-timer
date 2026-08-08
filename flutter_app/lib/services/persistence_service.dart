@@ -14,6 +14,27 @@ class PersistenceService {
   static const _kMultiTimerPresets = 'multi_timer_presets';
   static const _kWorkoutRoutines = 'workout_routines';
   static const _kWorkoutConfig = 'workout_config';
+  static const _kWorkoutCustomLib = 'workout_custom_lib';
+
+  static Future<List<Map<String, dynamic>>?> loadWorkoutCustomLib() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString(_kWorkoutCustomLib);
+    if (str == null) return null;
+    try {
+      return (jsonDecode(str) as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> saveWorkoutCustomLib(
+    List<Map<String, dynamic>> entries,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kWorkoutCustomLib, jsonEncode(entries));
+  }
 
   static Future<List<Map<String, dynamic>>?> loadWorkoutRoutines() async {
     final prefs = await SharedPreferences.getInstance();

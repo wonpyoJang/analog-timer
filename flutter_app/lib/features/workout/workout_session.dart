@@ -19,6 +19,7 @@ class WorkoutScript {
   final String Function(String name, String amount) nextExercise;
   final String Function(int set) nextSet;
   final String allDone;
+  final String getReady;
   final String Function(int dur) amountTime;
   final String Function(int reps) amountReps;
   final String amountFree;
@@ -36,6 +37,7 @@ class WorkoutScript {
     required this.nextExercise,
     required this.nextSet,
     required this.allDone,
+    required this.getReady,
     required this.amountTime,
     required this.amountReps,
     required this.amountFree,
@@ -56,8 +58,8 @@ class WorkoutSession extends ChangeNotifier {
   final WorkoutConfig config;
   final WorkoutScript script;
 
-  /// libKey → 로케일 표시 이름.
-  final String Function(String libKey) exerciseName;
+  /// 운동 → 표시 이름(커스텀 이름 우선, 아니면 libKey 의 l10n).
+  final String Function(WorkoutExercise ex) exerciseName;
 
   List<WorkoutExercise> _routine = const [];
   WorkoutPhase phase = WorkoutPhase.idle;
@@ -67,6 +69,7 @@ class WorkoutSession extends ChangeNotifier {
   int t = 0;
   int total = 0;
   Timer? _timer;
+  Timer? _timer2;
 
   WorkoutExercise? get current =>
       exIdx < _routine.length ? _routine[exIdx] : null;
@@ -110,6 +113,8 @@ class WorkoutSession extends ChangeNotifier {
   void _clear() {
     _timer?.cancel();
     _timer = null;
+    _timer2?.cancel();
+    _timer2 = null;
   }
 
   void _startWork(int idx, int newSet) {
@@ -118,7 +123,7 @@ class WorkoutSession extends ChangeNotifier {
       _allDone();
       return;
     }
-    final name = exerciseName(ex.libKey);
+    final name = exerciseName(ex);
     phase = WorkoutPhase.work;
     exIdx = idx;
     set = newSet;
@@ -142,8 +147,10 @@ class WorkoutSession extends ChangeNotifier {
             }
           });
         }
-        t = 0;
-        total = 0;
+        // 세트 총시간(reps×pace) 1초 카운트다운 — 화면 표시만(발화 없음).
+        final setDur = (ex.reps * ex.pace).round();
+        t = setDur;
+        total = setDur;
         _timer = Timer.periodic(
           Duration(milliseconds: (ex.pace * 1000).round()),
           (_) {
@@ -160,6 +167,16 @@ class WorkoutSession extends ChangeNotifier {
             notifyListeners();
           },
         );
+        _timer2 = Timer.periodic(const Duration(seconds: 1), (_) {
+          if (t > 0) {
+            t--;
+            notifyListeners();
+          }
+          if (t <= 0) {
+            _timer2?.cancel();
+            _timer2 = null;
+          }
+        });
       case WorkoutType.time:
         if (config.saySetAnnounce) {
           voice.say(script.timeStart(name, ex.dur), pri: 1);
@@ -200,7 +217,7 @@ class WorkoutSession extends ChangeNotifier {
 
   void _endSegment(int idx, int doneSet) {
     final ex = _routine[idx];
-    final name = exerciseName(ex.libKey);
+    final name = exerciseName(ex);
     final rest = config.restSec;
     final moreSets = ex.type == WorkoutType.reps && doneSet < ex.sets;
     final moreEx = idx < _routine.length - 1;
@@ -240,7 +257,7 @@ class WorkoutSession extends ChangeNotifier {
               WorkoutType.reps => script.amountReps(nx.reps),
             };
             voice.say(
-              script.nextExercise(exerciseName(nx.libKey), amount),
+              script.nextExercise(exerciseName(nx), amount),
               pri: 2,
             );
           }
@@ -248,7 +265,11 @@ class WorkoutSession extends ChangeNotifier {
           voice.say(script.nextSet(doneSet + 1), pri: 2);
         }
       }
-      if (t <= 3 && t > 0 && config.sayCountdown) voice.say('$t', pri: 1);
+      if (t == 5 && config.sayCountdown) {
+        voice.say(script.getReady, pri: 1);
+      } else if (t <= 3 && t > 0 && config.sayCountdown) {
+        voice.say('$t', pri: 1);
+      }
       if (t <= 0) {
         _clear();
         if (exerciseDone) {

@@ -1982,6 +1982,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'free count · {pace}s'**
   String workoutSummaryFree(String pace);
+
+  /// No description provided for @workoutCustomAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Custom exercise'**
+  String get workoutCustomAdd;
+
+  /// No description provided for @workoutCustomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create custom exercise'**
+  String get workoutCustomTitle;
+
+  /// No description provided for @workoutCustomNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise name (e.g. Deadlift)'**
+  String get workoutCustomNameHint;
+
+  /// No description provided for @workoutTypeReps.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets × reps'**
+  String get workoutTypeReps;
+
+  /// No description provided for @workoutTypeTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed'**
+  String get workoutTypeTime;
+
+  /// No description provided for @workoutTypeFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get workoutTypeFree;
+
+  /// No description provided for @workoutCustomRepsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Default 3 sets × 10 reps · pace 2.0s — edit in routine'**
+  String get workoutCustomRepsDesc;
+
+  /// No description provided for @workoutCustomTimeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Default 30s hold — edit in routine'**
+  String get workoutCustomTimeDesc;
+
+  /// No description provided for @workoutCustomFreeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Endless count, manual finish · pace 2.0s'**
+  String get workoutCustomFreeDesc;
+
+  /// No description provided for @workoutCustomCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get workoutCustomCancel;
+
+  /// No description provided for @workoutCustomCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create & add'**
+  String get workoutCustomCreate;
+
+  /// No description provided for @workoutSecsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{t}s left'**
+  String workoutSecsLeft(int t);
+
+  /// No description provided for @wsGetReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Get ready! Starting soon'**
+  String get wsGetReady;
 }
 
 class _AppLocalizationsDelegate

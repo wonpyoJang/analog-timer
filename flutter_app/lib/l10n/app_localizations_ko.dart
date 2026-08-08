@@ -1018,4 +1018,45 @@ class AppLocalizationsKo extends AppLocalizations {
   String workoutSummaryFree(String pace) {
     return '자유 카운트 · ${pace}s';
   }
+
+  @override
+  String get workoutCustomAdd => '＋ 커스텀 운동';
+
+  @override
+  String get workoutCustomTitle => '커스텀 운동 만들기';
+
+  @override
+  String get workoutCustomNameHint => '운동 이름 (예: 데드리프트)';
+
+  @override
+  String get workoutTypeReps => '세트×횟수';
+
+  @override
+  String get workoutTypeTime => '시간';
+
+  @override
+  String get workoutTypeFree => '자유';
+
+  @override
+  String get workoutCustomRepsDesc => '기본 3세트×10회 · 페이스 2.0s — 루틴에서 수정';
+
+  @override
+  String get workoutCustomTimeDesc => '기본 30초 버티기 — 루틴에서 수정';
+
+  @override
+  String get workoutCustomFreeDesc => '무한 구령, 수동 종료 · 페이스 2.0s';
+
+  @override
+  String get workoutCustomCancel => '취소';
+
+  @override
+  String get workoutCustomCreate => '만들고 추가';
+
+  @override
+  String workoutSecsLeft(int t) {
+    return '$t초 남음';
+  }
+
+  @override
+  String get wsGetReady => '곧 시작! 준비하세요';
 }
