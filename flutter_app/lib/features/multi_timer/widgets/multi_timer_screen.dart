@@ -57,12 +57,33 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   final Set<String> _overlayIds = {};
   final Map<String, String> _lastPushed = {};
 
+  /// 원탭 등록용 프리셋 — {'name': String, 'durationMs': int}.
+  List<Map<String, dynamic>> _presets = [];
+
   @override
   void initState() {
     super.initState();
     _restore();
     // 단일 오버레이가 켜지면 멀티 오버레이를 전부 닫도록 훅 등록(상호 배타).
     OverlayCoordinator.instance.closeMultiOverlays = _closeAllOverlaysForMutex;
+    // l10n 이 필요한 기본 시드는 첫 프레임 후에(initState 에선 inherited 조회 불가).
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadPresets());
+  }
+
+  /// 저장된 프리셋 로드 — 저장된 적이 없으면 기본 4종(공부/청소/휴식/양치질) 시드.
+  Future<void> _loadPresets() async {
+    var loaded = await PersistenceService.loadMultiTimerPresets();
+    if (loaded == null && mounted) {
+      final l = AppLocalizations.of(context);
+      loaded = [
+        {'name': l.multiTimerPresetStudy, 'durationMs': 25 * 60000},
+        {'name': l.multiTimerPresetDeskCleanup, 'durationMs': 10 * 60000},
+        {'name': l.multiTimerPresetRest, 'durationMs': 5 * 60000},
+        {'name': l.multiTimerPresetBrushTeeth, 'durationMs': 3 * 60000},
+      ];
+      await PersistenceService.saveMultiTimerPresets(loaded);
+    }
+    if (mounted) setState(() => _presets = loaded ?? []);
   }
 
   /// 상호 배타 — 단일 오버레이 활성화 시 호출돼 멀티 오버레이를 전부 닫는다.
@@ -307,6 +328,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   Future<void> _showAddSheet(BuildContext context) async {
     final l = AppLocalizations.of(context);
     final bloc = context.read<MultiTimerBloc>();
+    final messenger = ScaffoldMessenger.of(context);
     final nameCtrl = TextEditingController();
     Duration picked = const Duration(minutes: 3);
     await showModalBottomSheet<void>(
@@ -316,56 +338,134 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
       ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          left: 16,
-          right: 16,
-          top: 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              autofocus: true,
-              style: const TextStyle(color: AppColors.text),
-              decoration: InputDecoration(
-                hintText: l.multiTimerNameHint,
-                hintStyle: TextStyle(color: AppColors.muted),
-              ),
-            ),
-            SizedBox(
-              height: 180,
-              child: CupertinoTimerPicker(
-                mode: CupertinoTimerPickerMode.hms,
-                initialTimerDuration: picked,
-                onTimerDurationChanged: (d) => picked = d,
-              ),
-            ),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () {
-                  final ms = picked.inMilliseconds;
-                  if (ms <= 0) return;
-                  final name = nameCtrl.text.trim().isEmpty
-                      ? l.multiTimerTitle
-                      : nameCtrl.text.trim();
-                  bloc.add(MtAdd(name, ms));
-                  Navigator.pop(ctx);
-                },
-                child: Text(
-                  l.multiTimerAdd,
-                  style: const TextStyle(
-                    color: AppColors.accent,
-                    fontWeight: FontWeight.w600,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 프리셋 칩 — 탭 = 원탭 등록, 길게 = 삭제.
+              if (_presets.isNotEmpty)
+                SizedBox(
+                  height: 44,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _presets.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (_, i) {
+                      final p = _presets[i];
+                      final name = p['name'] as String? ?? '';
+                      final ms = (p['durationMs'] as num?)?.toInt() ?? 0;
+                      return GestureDetector(
+                        onLongPress: () async {
+                          _presets.removeAt(i);
+                          await PersistenceService.saveMultiTimerPresets(
+                            _presets,
+                          );
+                          setSheetState(() {});
+                          if (mounted) setState(() {});
+                          messenger.showSnackBar(
+                            SnackBar(content: Text(l.multiTimerPresetDeleted)),
+                          );
+                        },
+                        child: ActionChip(
+                          backgroundColor: AppColors.bg,
+                          side: BorderSide(
+                            color: AppColors.accent.withAlpha(0x55),
+                          ),
+                          label: Text(
+                            '$name ${_fmt(ms)}',
+                            style: const TextStyle(
+                              color: AppColors.text,
+                              fontSize: 13,
+                            ),
+                          ),
+                          onPressed: () {
+                            if (ms <= 0) return;
+                            bloc.add(MtAdd(name, ms));
+                            Navigator.pop(ctx);
+                          },
+                        ),
+                      );
+                    },
                   ),
                 ),
+              TextField(
+                controller: nameCtrl,
+                style: const TextStyle(color: AppColors.text),
+                decoration: InputDecoration(
+                  hintText: l.multiTimerNameHint,
+                  hintStyle: TextStyle(color: AppColors.muted),
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-          ],
+              SizedBox(
+                height: 180,
+                child: CupertinoTimerPicker(
+                  mode: CupertinoTimerPickerMode.hms,
+                  initialTimerDuration: picked,
+                  onTimerDurationChanged: (d) => picked = d,
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        final ms = picked.inMilliseconds;
+                        if (ms <= 0) return;
+                        final name = nameCtrl.text.trim().isEmpty
+                            ? l.multiTimerTitle
+                            : nameCtrl.text.trim();
+                        bloc.add(MtAdd(name, ms));
+                        Navigator.pop(ctx);
+                      },
+                      child: Text(
+                        l.multiTimerAdd,
+                        style: const TextStyle(
+                          color: AppColors.accent,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: l.multiTimerPresetSave,
+                    icon: Icon(
+                      Icons.bookmark_add_outlined,
+                      color: AppColors.muted,
+                    ),
+                    onPressed: () async {
+                      final ms = picked.inMilliseconds;
+                      if (ms <= 0) return;
+                      final name = nameCtrl.text.trim().isEmpty
+                          ? l.multiTimerTitle
+                          : nameCtrl.text.trim();
+                      // 같은 이름이 있으면 시간만 갱신(중복 칩 방지).
+                      final idx = _presets.indexWhere((p) => p['name'] == name);
+                      final entry = {'name': name, 'durationMs': ms};
+                      if (idx >= 0) {
+                        _presets[idx] = entry;
+                      } else {
+                        _presets.add(entry);
+                      }
+                      await PersistenceService.saveMultiTimerPresets(_presets);
+                      setSheetState(() {});
+                      if (mounted) setState(() {});
+                      messenger.showSnackBar(
+                        SnackBar(content: Text(l.multiTimerPresetSaved)),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );

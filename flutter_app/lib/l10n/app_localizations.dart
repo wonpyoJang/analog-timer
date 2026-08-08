@@ -1454,6 +1454,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turning on the timer overlay or the multi-timer overlays turns off the other. Prevents lag from running both at once.'**
   String get settingsOverlayMutexDesc;
+
+  /// No description provided for @multiTimerPresetStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Study focus'**
+  String get multiTimerPresetStudy;
+
+  /// No description provided for @multiTimerPresetDeskCleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Desk cleanup'**
+  String get multiTimerPresetDeskCleanup;
+
+  /// No description provided for @multiTimerPresetRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Break'**
+  String get multiTimerPresetRest;
+
+  /// No description provided for @multiTimerPresetBrushTeeth.
+  ///
+  /// In en, this message translates to:
+  /// **'Brush teeth'**
+  String get multiTimerPresetBrushTeeth;
+
+  /// No description provided for @multiTimerPresetSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as preset'**
+  String get multiTimerPresetSave;
+
+  /// No description provided for @multiTimerPresetSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset saved'**
+  String get multiTimerPresetSaved;
+
+  /// No description provided for @multiTimerPresetDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset deleted'**
+  String get multiTimerPresetDeleted;
 }
 
 class _AppLocalizationsDelegate

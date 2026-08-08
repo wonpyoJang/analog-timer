@@ -353,5 +353,12 @@
     }
   },
   "settingsOverlayMutex": "Show one overlay at a time",
-  "settingsOverlayMutexDesc": "Turning on the timer overlay or the multi-timer overlays turns off the other. Prevents lag from running both at once."
+  "settingsOverlayMutexDesc": "Turning on the timer overlay or the multi-timer overlays turns off the other. Prevents lag from running both at once.",
+  "multiTimerPresetStudy": "Study focus",
+  "multiTimerPresetDeskCleanup": "Desk cleanup",
+  "multiTimerPresetRest": "Break",
+  "multiTimerPresetBrushTeeth": "Brush teeth",
+  "multiTimerPresetSave": "Save as preset",
+  "multiTimerPresetSaved": "Preset saved",
+  "multiTimerPresetDeleted": "Preset deleted"
 }
