@@ -13,7 +13,9 @@ import android.graphics.PixelFormat
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
@@ -38,6 +40,8 @@ class MultiOverlayService : Service() {
     private lateinit var windowManager: WindowManager
     private val pills = HashMap<String, PillHandle>()
     private var foregroundStarted = false
+    private val handler = Handler(Looper.getMainLooper())
+    private var pendingStop: Runnable? = null
 
     private class PillHandle(
         val view: CircleTimerView,
@@ -78,7 +82,7 @@ class MultiOverlayService : Service() {
             CMD_CLOSE -> handleClose(intent.getStringExtra(EXTRA_ID))
             CMD_CLOSE_ALL -> closeAll()
         }
-        if (pills.isEmpty()) stopSelfSafely()
+        scheduleStopIfEmpty()
         return START_NOT_STICKY
     }
 
@@ -91,15 +95,35 @@ class MultiOverlayService : Service() {
         frac: Float,
         done: Boolean,
     ) {
+        cancelPendingStop() // 다시 켜짐 — 예약된 정지 취소
         val existing = pills[id]
         if (existing != null) existing.view.setState(name, time, color, frac, done)
         else addPill(id, name, time, color, frac, done)
     }
 
-    /** id 창을 닫고, 마지막이면 서비스 종료. */
+    /** id 창을 닫는다. 마지막이 닫히면 즉시 stop 하지 않고 디바운스 예약한다. */
     fun closeById(id: String) {
         handleClose(id)
-        if (pills.isEmpty()) stopSelfSafely()
+        scheduleStopIfEmpty()
+    }
+
+    // 개별 OFF 마다 즉시 stopSelf 하면, 곧이은 ON 의 startForegroundService 와 레이스가 나서
+    // "Bringing down service while still waiting for start foreground" ANR 이 난다.
+    // 비면 1.5s 뒤 정지를 예약하고, 그 사이 다시 켜지면 취소해 churn 을 없앤다.
+    private fun scheduleStopIfEmpty() {
+        if (pills.isNotEmpty()) return
+        cancelPendingStop()
+        val r = Runnable {
+            pendingStop = null
+            if (pills.isEmpty()) stopSelfSafely()
+        }
+        pendingStop = r
+        handler.postDelayed(r, 1500)
+    }
+
+    private fun cancelPendingStop() {
+        pendingStop?.let { handler.removeCallbacks(it) }
+        pendingStop = null
     }
 
     private fun handleClose(id: String?) {
@@ -109,6 +133,8 @@ class MultiOverlayService : Service() {
     }
 
     fun closeAll() {
+        // 화면 이탈(dispose) 등 전체 종료 — 디바운스 없이 즉시 정지.
+        cancelPendingStop()
         for (handle in pills.values) runCatching { windowManager.removeView(handle.view) }
         pills.clear()
         stopSelfSafely()
@@ -315,6 +341,7 @@ class MultiOverlayService : Service() {
     }
 
     override fun onDestroy() {
+        cancelPendingStop()
         for (handle in pills.values) runCatching { windowManager.removeView(handle.view) }
         pills.clear()
         if (instance === this) instance = null

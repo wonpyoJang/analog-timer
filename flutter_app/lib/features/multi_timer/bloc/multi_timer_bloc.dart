@@ -138,7 +138,10 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
 
   Timer _startTicker() {
     _lastTick = DateTime.now();
-    return Timer.periodic(const Duration(milliseconds: 16), (_) {
+    // 250ms 주기 — 표시는 mm:ss(초 단위)라 16ms(60fps) 재빌드는 낭비이고 리스트를
+    // 60fps 로 다시 그려 입력(오버레이 토글/드래그)을 굶겼다. 경과는 실제 ms 로
+    // 측정·드리프트 보정하므로 정확도 손실 없음.
+    return Timer.periodic(const Duration(milliseconds: 250), (_) {
       final now = DateTime.now();
       final diff = now.difference(_lastTick!);
       if (diff.isNegative) {

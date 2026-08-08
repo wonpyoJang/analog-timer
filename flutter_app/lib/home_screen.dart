@@ -53,7 +53,10 @@ import 'widgets/day_plan_view.dart';
 import 'main.dart' show AnalogTimerApp, parseLocaleTag;
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  /// 하단 탭에서 현재 보이는 탭인지 여부. false 면 60fps 시계 재빌드를 멈춰
+  /// 숨겨진 상태에서 메인스레드 부하를 없앤다(오버레이 조작 굶김 방지).
+  final bool active;
+  const HomeScreen({super.key, this.active = true});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -587,8 +590,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _clockTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       if (!mounted) return;
       final now = DateTime.now();
-      if (_inBackground) {
-        // 백그라운드: UI 리빌드 없이 시간만 갱신, 오버레이 동기화는 유지
+      if (_inBackground || !widget.active) {
+        // 백그라운드 또는 숨겨진 탭: UI 리빌드 없이 시간만 갱신(오버레이 동기화는 유지).
+        // 숨겨진 탭에서 시계를 60fps 재빌드하면 메인스레드가 포화돼 멀티 오버레이의
+        // 드래그/토글 입력이 굶는다(Input dispatching ANR).
         _now = now;
       } else {
         setState(() => _now = now);
