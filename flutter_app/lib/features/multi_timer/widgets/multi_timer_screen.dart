@@ -9,6 +9,7 @@ import '../../../services/persistence_service.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
+import '../../../overlay/multi_overlay_service.dart';
 import '../bloc/multi_timer_bloc.dart';
 import '../bloc/multi_timer_event.dart';
 import '../bloc/multi_timer_state.dart';
@@ -47,6 +48,10 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   Timer? _saveTrailing;
   DateTime _lastSave = DateTime.fromMillisecondsSinceEpoch(0);
   static const _saveInterval = Duration(milliseconds: 1500);
+
+  // 네이티브 멀티 오버레이 상태 — 사용자가 개별로 띄우기 선택한 타이머 id들.
+  final Set<String> _overlayIds = {};
+  final Map<String, String> _lastPushed = {};
 
   @override
   void initState() {
@@ -126,9 +131,81 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     }
   }
 
+  /// 개별 타이머의 오버레이 위젯 켜기/끄기. 켤 때만 권한 확인.
+  Future<void> _toggleOverlayFor(
+    BuildContext context,
+    CountdownTimer timer,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final bloc = context.read<MultiTimerBloc>();
+    if (_overlayIds.contains(timer.id)) {
+      MultiOverlayService.close(timer.id);
+      _lastPushed.remove(timer.id);
+      if (mounted) setState(() => _overlayIds.remove(timer.id));
+      return;
+    }
+    // 상한 초과 방지.
+    if (_overlayIds.length >= MultiOverlayService.maxWindows) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            l.multiTimerOverlayLimit(MultiOverlayService.maxWindows),
+          ),
+        ),
+      );
+      return;
+    }
+    if (!await MultiOverlayService.isPermissionGranted) {
+      await MultiOverlayService.requestPermission();
+      if (!await MultiOverlayService.isPermissionGranted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l.multiTimerOverlayPermission)),
+        );
+        return;
+      }
+    }
+    if (!mounted) return;
+    setState(() => _overlayIds.add(timer.id));
+    _syncOverlays(l, bloc.state);
+  }
+
+  /// 선택된 타이머(_overlayIds)만 네이티브 오버레이 창에 반영. 표시 문구가 바뀐
+  /// 창만 push(초 단위 throttle), 삭제됐거나 선택 해제된 타이머의 창은 닫는다.
+  void _syncOverlays(AppLocalizations l, MultiTimerState state) {
+    final byId = {for (final t in state.timers) t.id: t};
+    // 목록에서 사라진 선택 항목은 정리.
+    final gone = _overlayIds.where((id) => !byId.containsKey(id)).toList();
+    for (final id in gone) {
+      MultiOverlayService.close(id);
+      _overlayIds.remove(id);
+      _lastPushed.remove(id);
+    }
+    for (var i = 0; i < state.timers.length; i++) {
+      final t = state.timers[i];
+      if (!_overlayIds.contains(t.id)) continue;
+      final color = AppColors.segColors[i % AppColors.segColors.length]
+          .toARGB32();
+      final time = t.done ? l.multiTimerDone : _fmt(t.remainMs);
+      final key = '${t.name}|$time|${t.done}';
+      if (_lastPushed[t.id] == key) continue; // 표시 변화 없음 — 호출 절약
+      _lastPushed[t.id] = key;
+      MultiOverlayService.show(
+        id: t.id,
+        name: t.name,
+        time: time,
+        colorValue: color,
+        frac: t.frac,
+        done: t.done,
+      );
+    }
+  }
+
   @override
   void dispose() {
     _saveTrailing?.cancel();
+    // 화면을 떠나면 bloc(ticker)이 정지 → 멈춘 pill이 남지 않도록 정리.
+    if (_overlayIds.isNotEmpty) MultiOverlayService.closeAll();
     super.dispose();
   }
 
@@ -167,6 +244,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         listener: (context, state) {
           _persist(state);
           _onCompleted(context, state);
+          _syncOverlays(l, state);
         },
         builder: (context, state) {
           if (state.timers.isEmpty) {
@@ -190,6 +268,10 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
             itemBuilder: (context, i) => _TimerRow(
               timer: state.timers[i],
               color: AppColors.segColors[i % AppColors.segColors.length],
+              overlayOn: _overlayIds.contains(state.timers[i].id),
+              onToggleOverlay: MultiOverlayService.supported
+                  ? () => _toggleOverlayFor(context, state.timers[i])
+                  : null,
             ),
           );
         },
@@ -268,7 +350,14 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
 class _TimerRow extends StatelessWidget {
   final CountdownTimer timer;
   final Color color;
-  const _TimerRow({required this.timer, required this.color});
+  final bool overlayOn;
+  final VoidCallback? onToggleOverlay;
+  const _TimerRow({
+    required this.timer,
+    required this.color,
+    this.overlayOn = false,
+    this.onToggleOverlay,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -322,6 +411,19 @@ class _TimerRow extends StatelessWidget {
             tooltip: l.btnReset,
             onPressed: () => bloc.add(MtReset(timer.id)),
           ),
+          if (onToggleOverlay != null)
+            IconButton(
+              icon: Icon(
+                overlayOn
+                    ? Icons.picture_in_picture
+                    : Icons.picture_in_picture_outlined,
+                color: overlayOn ? AppColors.accent : AppColors.muted,
+              ),
+              tooltip: overlayOn
+                  ? l.multiTimerOverlayOff
+                  : l.multiTimerOverlayOn,
+              onPressed: onToggleOverlay,
+            ),
           IconButton(
             icon: Icon(Icons.close, color: AppColors.muted),
             tooltip: l.delete,

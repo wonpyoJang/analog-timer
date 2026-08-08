@@ -106,6 +106,10 @@
   "multiTimerNameHint": "Nome do temporizador",
   "multiTimerEmpty": "Nenhum temporizador. Toque em + para adicionar.",
   "multiTimerDone": "Concluído",
+  "multiTimerOverlayOn": "Mostrar sobreposições",
+  "multiTimerOverlayOff": "Ocultar sobreposições",
+  "multiTimerOverlayPermission": "Permita \"Sobrepor a outros apps\" para usar as sobreposições",
+  "multiTimerOverlayLimit": "Você pode exibir até {count} sobreposições",
   "multiTimerAllDone": "{count} temporizadores concluídos",
   "@multiTimerAllDone": {
     "placeholders": {

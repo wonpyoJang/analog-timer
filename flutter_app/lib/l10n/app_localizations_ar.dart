@@ -705,6 +705,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get multiTimerDone => 'تم';
 
   @override
+  String get multiTimerOverlayOn => 'إظهار النوافذ العائمة';
+
+  @override
+  String get multiTimerOverlayOff => 'إخفاء النوافذ العائمة';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'اسمح بـ \"العرض فوق التطبيقات الأخرى\" لاستخدام النوافذ العائمة';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'يمكنك عرض حتى $count نافذة عائمة';
+  }
+
+  @override
   String multiTimerAllDone(int count) {
     return 'انتهى $count مؤقتات';
   }

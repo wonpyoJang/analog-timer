@@ -702,6 +702,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get multiTimerDone => '完成';
 
   @override
+  String get multiTimerOverlayOn => '显示悬浮窗';
+
+  @override
+  String get multiTimerOverlayOff => '隐藏悬浮窗';
+
+  @override
+  String get multiTimerOverlayPermission => '请允许“显示在其他应用上层”以使用悬浮窗';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return '最多可显示 $count 个悬浮窗';
+  }
+
+  @override
   String multiTimerAllDone(int count) {
     return '$count 个计时器完成';
   }
@@ -1046,6 +1060,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get multiTimerDone => '完成';
+
+  @override
+  String get multiTimerOverlayOn => '顯示浮動視窗';
+
+  @override
+  String get multiTimerOverlayOff => '隱藏浮動視窗';
+
+  @override
+  String get multiTimerOverlayPermission => '請允許「顯示在其他應用程式上層」以使用浮動視窗';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return '最多可顯示 $count 個浮動視窗';
+  }
 
   @override
   String multiTimerAllDone(int count) {

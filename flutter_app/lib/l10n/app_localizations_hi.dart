@@ -707,6 +707,21 @@ class AppLocalizationsHi extends AppLocalizations {
   String get multiTimerDone => 'पूर्ण';
 
   @override
+  String get multiTimerOverlayOn => 'ओवरले दिखाएँ';
+
+  @override
+  String get multiTimerOverlayOff => 'ओवरले छिपाएँ';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'ओवरले उपयोग के लिए \"अन्य ऐप्स के ऊपर दिखाएँ\" अनुमति दें';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'आप अधिकतम $count ओवरले दिखा सकते हैं';
+  }
+
+  @override
   String multiTimerAllDone(int count) {
     return '$count टाइमर समाप्त';
   }

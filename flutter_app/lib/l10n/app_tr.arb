@@ -106,6 +106,10 @@
   "multiTimerNameHint": "Zamanlayıcı adı",
   "multiTimerEmpty": "Henüz zamanlayıcı yok. Eklemek için +'ya dokunun.",
   "multiTimerDone": "Bitti",
+  "multiTimerOverlayOn": "Yer paylaşımlarını göster",
+  "multiTimerOverlayOff": "Yer paylaşımlarını gizle",
+  "multiTimerOverlayPermission": "Yer paylaşımı için \"Diğer uygulamaların üzerinde göster\" iznini verin",
+  "multiTimerOverlayLimit": "En fazla {count} yer paylaşımı gösterebilirsin",
   "multiTimerAllDone": "{count} zamanlayıcı bitti",
   "@multiTimerAllDone": {
     "placeholders": {

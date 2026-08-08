@@ -106,6 +106,10 @@
   "multiTimerNameHint": "Название таймера",
   "multiTimerEmpty": "Пока нет таймеров. Нажмите +, чтобы добавить.",
   "multiTimerDone": "Готово",
+  "multiTimerOverlayOn": "Показать оверлеи",
+  "multiTimerOverlayOff": "Скрыть оверлеи",
+  "multiTimerOverlayPermission": "Разрешите «Поверх других приложений», чтобы использовать оверлеи",
+  "multiTimerOverlayLimit": "Можно показать до {count} оверлеев",
   "multiTimerAllDone": "Завершено таймеров: {count}",
   "@multiTimerAllDone": {
     "placeholders": {

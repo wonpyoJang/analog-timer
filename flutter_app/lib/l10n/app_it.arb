@@ -106,6 +106,10 @@
   "multiTimerNameHint": "Nome del timer",
   "multiTimerEmpty": "Nessun timer. Tocca + per aggiungerne uno.",
   "multiTimerDone": "Fatto",
+  "multiTimerOverlayOn": "Mostra overlay",
+  "multiTimerOverlayOff": "Nascondi overlay",
+  "multiTimerOverlayPermission": "Consenti \"Mostra sopra le altre app\" per usare gli overlay",
+  "multiTimerOverlayLimit": "Puoi mostrare fino a {count} overlay",
   "multiTimerAllDone": "{count} timer terminati",
   "@multiTimerAllDone": {
     "placeholders": {

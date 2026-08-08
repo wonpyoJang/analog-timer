@@ -708,6 +708,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get multiTimerDone => 'Готово';
 
   @override
+  String get multiTimerOverlayOn => 'Показать оверлеи';
+
+  @override
+  String get multiTimerOverlayOff => 'Скрыть оверлеи';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'Разрешите «Поверх других приложений», чтобы использовать оверлеи';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'Можно показать до $count оверлеев';
+  }
+
+  @override
   String multiTimerAllDone(int count) {
     return 'Завершено таймеров: $count';
   }

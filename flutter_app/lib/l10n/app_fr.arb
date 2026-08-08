@@ -106,6 +106,10 @@
   "multiTimerNameHint": "Nom du minuteur",
   "multiTimerEmpty": "Aucun minuteur. Touchez + pour en ajouter.",
   "multiTimerDone": "Terminé",
+  "multiTimerOverlayOn": "Afficher les superpositions",
+  "multiTimerOverlayOff": "Masquer les superpositions",
+  "multiTimerOverlayPermission": "Autorisez « Affichage par-dessus les autres applis » pour les superpositions",
+  "multiTimerOverlayLimit": "Vous pouvez afficher jusqu'à {count} superpositions",
   "multiTimerAllDone": "{count} minuteurs terminés",
   "@multiTimerAllDone": {
     "placeholders": {

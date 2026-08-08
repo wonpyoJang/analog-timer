@@ -1,15 +1,19 @@
 package dev.analogtimer.analog_timer
 
+import android.content.Intent
+import android.os.Build
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "dev.analogtimer/widget"
+    private val MULTI_OVERLAY_CHANNEL = "dev.analogtimer/multi_overlay"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         TimerNotificationManager.createChannel(this)
+        configureMultiOverlayChannel(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -38,6 +42,57 @@ class MainActivity : FlutterActivity() {
                     }
                     "cancelNotification" -> {
                         TimerNotificationManager.cancel(this)
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+    }
+
+    /** 엔진 없는 네이티브 멀티 오버레이 브리지 — [MultiOverlayService] 로 명령을 startService 전달. */
+    private fun configureMultiOverlayChannel(flutterEngine: FlutterEngine) {
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, MULTI_OVERLAY_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "show", "update" -> {
+                        val id = call.argument<String>("id")
+                        val name = call.argument<String>("name") ?: ""
+                        val time = call.argument<String>("time") ?: "--:--"
+                        val color = (call.argument<Any>("color") as? Number)?.toInt()
+                            ?: MultiOverlayService.DEFAULT_ACCENT
+                        val frac = (call.argument<Any>("frac") as? Number)?.toFloat() ?: 1f
+                        val done = call.argument<Boolean>("done") ?: false
+                        val svc = MultiOverlayService.instance
+                        if (svc != null && id != null) {
+                            // 서비스 기동 상태 — Intent 스로틀을 피해 직접 갱신(부드러운 초 단위).
+                            svc.showOrUpdate(id, name, time, color, frac, done)
+                        } else {
+                            // 콜드 스타트(첫 표시) — Intent 로 서비스 시작.
+                            val intent = Intent(this, MultiOverlayService::class.java).apply {
+                                putExtra(MultiOverlayService.EXTRA_CMD, MultiOverlayService.CMD_SHOW)
+                                putExtra(MultiOverlayService.EXTRA_ID, id)
+                                putExtra(MultiOverlayService.EXTRA_NAME, name)
+                                putExtra(MultiOverlayService.EXTRA_TIME, time)
+                                putExtra(MultiOverlayService.EXTRA_COLOR, color)
+                                putExtra(MultiOverlayService.EXTRA_FRAC, frac)
+                                putExtra(MultiOverlayService.EXTRA_DONE, done)
+                            }
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                startForegroundService(intent)
+                            } else {
+                                startService(intent)
+                            }
+                        }
+                        result.success(null)
+                    }
+                    "close" -> {
+                        call.argument<String>("id")?.let {
+                            MultiOverlayService.instance?.closeById(it)
+                        }
+                        result.success(null)
+                    }
+                    "closeAll" -> {
+                        MultiOverlayService.instance?.closeAll()
                         result.success(null)
                     }
                     else -> result.notImplemented()

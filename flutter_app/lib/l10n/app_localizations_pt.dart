@@ -708,6 +708,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get multiTimerDone => 'Concluído';
 
   @override
+  String get multiTimerOverlayOn => 'Mostrar sobreposições';
+
+  @override
+  String get multiTimerOverlayOff => 'Ocultar sobreposições';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'Permita \"Sobrepor a outros apps\" para usar as sobreposições';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'Você pode exibir até $count sobreposições';
+  }
+
+  @override
   String multiTimerAllDone(int count) {
     return '$count temporizadores concluídos';
   }

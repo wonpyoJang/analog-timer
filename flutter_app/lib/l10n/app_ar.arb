@@ -106,6 +106,10 @@
   "multiTimerNameHint": "اسم المؤقت",
   "multiTimerEmpty": "لا مؤقتات بعد. اضغط + للإضافة.",
   "multiTimerDone": "تم",
+  "multiTimerOverlayOn": "إظهار النوافذ العائمة",
+  "multiTimerOverlayOff": "إخفاء النوافذ العائمة",
+  "multiTimerOverlayPermission": "اسمح بـ \"العرض فوق التطبيقات الأخرى\" لاستخدام النوافذ العائمة",
+  "multiTimerOverlayLimit": "يمكنك عرض حتى {count} نافذة عائمة",
   "multiTimerAllDone": "انتهى {count} مؤقتات",
   "@multiTimerAllDone": {
     "placeholders": {

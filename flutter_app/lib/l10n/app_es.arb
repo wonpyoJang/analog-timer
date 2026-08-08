@@ -106,6 +106,10 @@
   "multiTimerNameHint": "Nombre del temporizador",
   "multiTimerEmpty": "Aún no hay temporizadores. Toca + para añadir.",
   "multiTimerDone": "Listo",
+  "multiTimerOverlayOn": "Mostrar superposiciones",
+  "multiTimerOverlayOff": "Ocultar superposiciones",
+  "multiTimerOverlayPermission": "Permite \"Mostrar sobre otras apps\" para usar las superposiciones",
+  "multiTimerOverlayLimit": "Puedes mostrar hasta {count} superposiciones",
   "multiTimerAllDone": "{count} temporizadores terminados",
   "@multiTimerAllDone": {
     "placeholders": {

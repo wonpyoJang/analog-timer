@@ -106,6 +106,10 @@
   "multiTimerNameHint": "Nama timer",
   "multiTimerEmpty": "Belum ada timer. Ketuk + untuk menambah.",
   "multiTimerDone": "Selesai",
+  "multiTimerOverlayOn": "Tampilkan overlay",
+  "multiTimerOverlayOff": "Sembunyikan overlay",
+  "multiTimerOverlayPermission": "Izinkan \"Tampil di atas aplikasi lain\" untuk memakai overlay",
+  "multiTimerOverlayLimit": "Kamu bisa menampilkan hingga {count} overlay",
   "multiTimerAllDone": "{count} timer selesai",
   "@multiTimerAllDone": {
     "placeholders": {

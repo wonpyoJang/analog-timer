@@ -708,6 +708,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get multiTimerDone => 'Fertig';
 
   @override
+  String get multiTimerOverlayOn => 'Overlays anzeigen';
+
+  @override
+  String get multiTimerOverlayOff => 'Overlays ausblenden';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'Erlaube „Über anderen Apps anzeigen“, um Overlays zu nutzen';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'Du kannst bis zu $count Overlays anzeigen';
+  }
+
+  @override
   String multiTimerAllDone(int count) {
     return '$count Timer beendet';
   }

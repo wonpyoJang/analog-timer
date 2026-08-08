@@ -106,6 +106,10 @@
   "multiTimerNameHint": "टाइमर नाम",
   "multiTimerEmpty": "अभी कोई टाइमर नहीं। जोड़ने के लिए + दबाएँ।",
   "multiTimerDone": "पूर्ण",
+  "multiTimerOverlayOn": "ओवरले दिखाएँ",
+  "multiTimerOverlayOff": "ओवरले छिपाएँ",
+  "multiTimerOverlayPermission": "ओवरले उपयोग के लिए \"अन्य ऐप्स के ऊपर दिखाएँ\" अनुमति दें",
+  "multiTimerOverlayLimit": "आप अधिकतम {count} ओवरले दिखा सकते हैं",
   "multiTimerAllDone": "{count} टाइमर समाप्त",
   "@multiTimerAllDone": {
     "placeholders": {

@@ -682,6 +682,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get multiTimerDone => '완료';
 
   @override
+  String get multiTimerOverlayOn => '오버레이 켜기';
+
+  @override
+  String get multiTimerOverlayOff => '오버레이 끄기';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      '오버레이를 사용하려면 \'다른 앱 위에 표시\' 권한이 필요해요';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return '오버레이는 최대 $count개까지 띄울 수 있어요';
+  }
+
+  @override
   String multiTimerAllDone(int count) {
     return '타이머 $count개 완료';
   }

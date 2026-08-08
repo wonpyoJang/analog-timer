@@ -219,6 +219,10 @@
   "multiTimerNameHint": "타이머 이름",
   "multiTimerEmpty": "아직 타이머가 없어요. +로 추가하세요.",
   "multiTimerDone": "완료",
+  "multiTimerOverlayOn": "오버레이 켜기",
+  "multiTimerOverlayOff": "오버레이 끄기",
+  "multiTimerOverlayPermission": "오버레이를 사용하려면 '다른 앱 위에 표시' 권한이 필요해요",
+  "multiTimerOverlayLimit": "오버레이는 최대 {count}개까지 띄울 수 있어요",
   "multiTimerAllDone": "타이머 {count}개 완료",
   "@multiTimerAllDone": {
     "placeholders": {

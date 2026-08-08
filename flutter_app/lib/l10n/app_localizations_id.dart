@@ -708,6 +708,21 @@ class AppLocalizationsId extends AppLocalizations {
   String get multiTimerDone => 'Selesai';
 
   @override
+  String get multiTimerOverlayOn => 'Tampilkan overlay';
+
+  @override
+  String get multiTimerOverlayOff => 'Sembunyikan overlay';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'Izinkan \"Tampil di atas aplikasi lain\" untuk memakai overlay';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'Kamu bisa menampilkan hingga $count overlay';
+  }
+
+  @override
   String multiTimerAllDone(int count) {
     return '$count timer selesai';
   }

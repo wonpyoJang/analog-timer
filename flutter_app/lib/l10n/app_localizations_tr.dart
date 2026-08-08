@@ -708,6 +708,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get multiTimerDone => 'Bitti';
 
   @override
+  String get multiTimerOverlayOn => 'Yer paylaşımlarını göster';
+
+  @override
+  String get multiTimerOverlayOff => 'Yer paylaşımlarını gizle';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'Yer paylaşımı için \"Diğer uygulamaların üzerinde göster\" iznini verin';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'En fazla $count yer paylaşımı gösterebilirsin';
+  }
+
+  @override
   String multiTimerAllDone(int count) {
     return '$count zamanlayıcı bitti';
   }

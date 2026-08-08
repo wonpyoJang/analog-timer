@@ -702,6 +702,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get multiTimerDone => '完了';
 
   @override
+  String get multiTimerOverlayOn => 'オーバーレイを表示';
+
+  @override
+  String get multiTimerOverlayOff => 'オーバーレイを非表示';
+
+  @override
+  String get multiTimerOverlayPermission => 'オーバーレイを使うには「他のアプリの上に表示」を許可してください';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'オーバーレイは最大 $count 個まで表示できます';
+  }
+
+  @override
   String multiTimerAllDone(int count) {
     return 'タイマー$count件完了';
   }
