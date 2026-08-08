@@ -54,6 +54,7 @@ dependencies:
   desktop_multi_window: ^0.3.0
   screen_retriever: ^0.2.0  # 오버레이 기본 위치(작업영역 우상단) 계산
   flutter_tts: ^4.2.5
+  audioplayers: ^6.1.0
   hotkey_manager: ^0.2.3
   ffi: ^2.1.0 # 키보드 레이아웃 감지(AltGr 여부 → 핫키 기본 조합 결정)
 
@@ -98,6 +99,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/sounds/
     - assets/icons/app_icon.ico
     - assets/icons/app_icon_small.png # 커스텀 타이틀바 로고(링 렌디션)
 

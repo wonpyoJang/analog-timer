@@ -248,5 +248,11 @@
   "multiTimerStateIdle": "대기",
   "multiTimerStatePaused": "일시정지",
   "multiTimerPresetEditHint": "칩을 탭하면 이름·시간이 입력란으로 복사돼요",
-  "multiTimerPresetStarted": "'{name}' 타이머를 시작했어요"
+  "multiTimerPresetStarted": "'{name}' 타이머를 시작했어요",
+  "settingsSounds": "효과음",
+  "settingsSoundsDesc": "칩 탭·시작·일시정지·완료 멜로디",
+  "soundSetPop": "소프트 팝",
+  "soundSetWood": "우드",
+  "soundSetGlass": "글라스",
+  "soundSetRetro": "레트로"
 }

@@ -335,8 +335,10 @@ class MultiOverlayService : Service() {
             timerName = name
             color = colorArgb
             totalMs = totalMsArg
+            val wasDone = done
             done = isDone
             doneText = doneLabel
+            if (isDone && !wasDone) playDonePop()
             running = isRunning && !isDone
             if (running) {
                 deadlineMs = if (deadlineEpochMs > 0) deadlineEpochMs
@@ -370,10 +372,52 @@ class MultiOverlayService : Service() {
             timeText = newText
             frac = newFrac
             lastMinute = newLast
+            syncGlow()
             return changed
         }
 
         private var lastMinute = false
+
+        // 막판 1분 글로우 펄스(스펙 5) — 0→26dp→0 왕복 1s 주기.
+        private var glowAnimator: android.animation.ValueAnimator? = null
+        private var glowPulse = 0f
+
+        private fun syncGlow() {
+            if (lastMinute && glowAnimator == null) {
+                glowAnimator = android.animation.ValueAnimator
+                    .ofFloat(0f, 1f, 0f)
+                    .apply {
+                        duration = 1000
+                        repeatCount = android.animation.ValueAnimator.INFINITE
+                        interpolator =
+                            android.view.animation.AccelerateDecelerateInterpolator()
+                        addUpdateListener {
+                            glowPulse = it.animatedValue as Float
+                            invalidate()
+                        }
+                        start()
+                    }
+            } else if (!lastMinute && glowAnimator != null) {
+                glowAnimator?.cancel()
+                glowAnimator = null
+                glowPulse = 0f
+            }
+        }
+
+        /** 완료 팝(스펙 6) — scale 1→1.06→1. 창 크기가 View 와 같아 1.12 는 클리핑됨. */
+        fun playDonePop() {
+            animate().scaleX(1.06f).scaleY(1.06f).setDuration(200).withEndAction {
+                animate().scaleX(1f).scaleY(1f).setDuration(300)
+                    .setInterpolator(android.view.animation.OvershootInterpolator())
+                    .start()
+            }.start()
+        }
+
+        override fun onDetachedFromWindow() {
+            glowAnimator?.cancel()
+            glowAnimator = null
+            super.onDetachedFromWindow()
+        }
 
         /** Dart _fmt 와 동일: ceil(remainMs/1000) 초를 h:mm:ss / mm:ss 로. */
         private fun fmt(remainMs: Long): String {
@@ -405,8 +449,10 @@ class MultiOverlayService : Service() {
                 lastMinute -> COLOR_DANGER
                 else -> color
             }
-            if (lastMinute) {
-                arcPaint.setShadowLayer(dp(8).toFloat(), 0f, 0f, COLOR_DANGER)
+            if (lastMinute && glowPulse > 0.02f) {
+                arcPaint.setShadowLayer(
+                    dp(26).toFloat() * glowPulse, 0f, 0f, COLOR_DANGER,
+                )
             } else {
                 arcPaint.clearShadowLayer()
             }

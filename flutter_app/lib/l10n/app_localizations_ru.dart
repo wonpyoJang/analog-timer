@@ -785,4 +785,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String multiTimerPresetStarted(String name) {
     return 'Started \'$name\'';
   }
+
+  @override
+  String get settingsSounds => 'Sound effects';
+
+  @override
+  String get settingsSoundsDesc => 'Chip taps, start/pause, completion melody';
+
+  @override
+  String get soundSetPop => 'Soft pop';
+
+  @override
+  String get soundSetWood => 'Wood';
+
+  @override
+  String get soundSetGlass => 'Glass';
+
+  @override
+  String get soundSetRetro => 'Retro';
 }

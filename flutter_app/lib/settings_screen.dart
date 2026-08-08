@@ -15,6 +15,7 @@ import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
 import 'services/text_scale_service.dart';
 import 'services/haptic_service.dart';
+import 'services/sound_service.dart';
 import 'services/colorblind_service.dart';
 import 'services/high_contrast_service.dart';
 import 'overlay/overlay_coordinator.dart';
@@ -299,6 +300,75 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
                 onTap: () => HapticService.instance.setEnabled(!hOn),
+              ),
+            ),
+            const _Divider(),
+
+            // ── 효과음 (멀티 타이머 — 칩 탭·시작·완료 멜로디) ─────
+            ValueListenableBuilder<bool>(
+              valueListenable: SoundService.instance.enabledListenable,
+              builder: (ctx, sOn, _) => Column(
+                children: [
+                  _SettingsTile(
+                    icon: Icons.music_note_outlined,
+                    iconColor: AppColors.accent,
+                    title: l.settingsSounds,
+                    subtitle: l.settingsSoundsDesc,
+                    trailing: Switch(
+                      value: sOn,
+                      onChanged: SoundService.instance.setEnabled,
+                      activeThumbColor: AppColors.accent,
+                      trackColor: WidgetStateProperty.resolveWith(
+                        (states) => states.contains(WidgetState.selected)
+                            ? AppColors.accent.withAlpha(0x55)
+                            : AppColors.surface,
+                      ),
+                    ),
+                    onTap: () => SoundService.instance.setEnabled(!sOn),
+                  ),
+                  if (sOn)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(56, 0, 16, 12),
+                      child: ValueListenableBuilder<String>(
+                        valueListenable: SoundService.instance.setListenable,
+                        builder: (ctx, cur, _) => Align(
+                          alignment: Alignment.centerLeft,
+                          child: Wrap(
+                            spacing: 8,
+                            children: [
+                              for (final entry in {
+                                'pop': l.soundSetPop,
+                                'wood': l.soundSetWood,
+                                'glass': l.soundSetGlass,
+                                'retro': l.soundSetRetro,
+                              }.entries)
+                                ChoiceChip(
+                                  label: Text(entry.value),
+                                  selected: cur == entry.key,
+                                  onSelected: (_) => SoundService.instance
+                                      .setSoundSet(entry.key),
+                                  selectedColor: AppColors.accent.withAlpha(
+                                    0x33,
+                                  ),
+                                  backgroundColor: AppColors.surface,
+                                  labelStyle: TextStyle(
+                                    color: cur == entry.key
+                                        ? AppColors.accent
+                                        : AppColors.muted,
+                                    fontSize: 13,
+                                  ),
+                                  side: BorderSide(
+                                    color: cur == entry.key
+                                        ? AppColors.accent
+                                        : AppColors.border,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             const _Divider(),

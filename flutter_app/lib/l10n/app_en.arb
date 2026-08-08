@@ -373,5 +373,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "settingsSounds": "Sound effects",
+  "settingsSoundsDesc": "Chip taps, start/pause, completion melody",
+  "soundSetPop": "Soft pop",
+  "soundSetWood": "Wood",
+  "soundSetGlass": "Glass",
+  "soundSetRetro": "Retro"
 }

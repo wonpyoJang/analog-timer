@@ -757,4 +757,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String multiTimerPresetStarted(String name) {
     return '\'$name\' 타이머를 시작했어요';
   }
+
+  @override
+  String get settingsSounds => '효과음';
+
+  @override
+  String get settingsSoundsDesc => '칩 탭·시작·일시정지·완료 멜로디';
+
+  @override
+  String get soundSetPop => '소프트 팝';
+
+  @override
+  String get soundSetWood => '우드';
+
+  @override
+  String get soundSetGlass => '글라스';
+
+  @override
+  String get soundSetRetro => '레트로';
 }

@@ -1532,6 +1532,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Started \'{name}\''**
   String multiTimerPresetStarted(String name);
+
+  /// No description provided for @settingsSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound effects'**
+  String get settingsSounds;
+
+  /// No description provided for @settingsSoundsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Chip taps, start/pause, completion melody'**
+  String get settingsSoundsDesc;
+
+  /// No description provided for @soundSetPop.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft pop'**
+  String get soundSetPop;
+
+  /// No description provided for @soundSetWood.
+  ///
+  /// In en, this message translates to:
+  /// **'Wood'**
+  String get soundSetWood;
+
+  /// No description provided for @soundSetGlass.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass'**
+  String get soundSetGlass;
+
+  /// No description provided for @soundSetRetro.
+  ///
+  /// In en, this message translates to:
+  /// **'Retro'**
+  String get soundSetRetro;
 }
 
 class _AppLocalizationsDelegate
