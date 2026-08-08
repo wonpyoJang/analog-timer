@@ -82,6 +82,7 @@ class MultiOverlayService : Service() {
                     intent.getBooleanExtra(EXTRA_RUNNING, false),
                     intent.getBooleanExtra(EXTRA_DONE, false),
                     intent.getStringExtra(EXTRA_DONE_TEXT) ?: "",
+                    intent.getLongExtra(EXTRA_DEADLINE_MS, 0L),
                 )
             }
             CMD_CLOSE -> handleClose(intent.getStringExtra(EXTRA_ID))
@@ -102,14 +103,15 @@ class MultiOverlayService : Service() {
         running: Boolean,
         done: Boolean,
         doneText: String,
+        deadlineEpochMs: Long = 0L,
     ) {
         cancelPendingStop() // 다시 켜짐 — 예약된 정지 취소
         val existing = pills[id]
         if (existing != null) {
             // 드래그 중인 창도 상태(running/시간)는 반영하되 invalidate 는 refresh 결과에 맡긴다.
-            existing.view.setState(name, color, totalMs, remainMs, running, done, doneText)
+            existing.view.setState(name, color, totalMs, remainMs, running, done, doneText, deadlineEpochMs)
         } else {
-            addPill(id, name, color, totalMs, remainMs, running, done, doneText)
+            addPill(id, name, color, totalMs, remainMs, running, done, doneText, deadlineEpochMs)
         }
         ensureTicking()
     }
@@ -126,15 +128,22 @@ class MultiOverlayService : Service() {
     private val tickRunnable = object : Runnable {
         override fun run() {
             var anyRunning = false
+            var minRemain = Long.MAX_VALUE
             for ((id, h) in pills) {
                 if (!h.view.running) continue
                 anyRunning = true
+                val r = h.view.currentRemainMs()
+                if (r < minRemain) minRemain = r
                 if (id == draggingId) continue // 드래그 중엔 invalidate 억제
                 val ch = h.view.refresh()
                 if (ch) h.view.invalidate()
             }
             if (anyRunning) {
-                handler.postDelayed(this, 500)
+                // 다음 초 경계 직후로 정렬 — 고정 주기(500ms)면 표시가 최대 그만큼 늦게
+                // 바뀌어 리스트와 1초 어긋나 보인다. 경계 +30ms 에 깨우면 지연이 수십 ms.
+                val next = if (minRemain == Long.MAX_VALUE) 500L
+                    else ((minRemain % 1000) + 30).coerceIn(50, 1000)
+                handler.postDelayed(this, next)
             } else {
                 tickScheduled = false
             }
@@ -193,9 +202,10 @@ class MultiOverlayService : Service() {
         running: Boolean,
         done: Boolean,
         doneText: String,
+        deadlineEpochMs: Long = 0L,
     ) {
         val view = CircleTimerView(this)
-        view.setState(name, color, totalMs, remainMs, running, done, doneText)
+        view.setState(name, color, totalMs, remainMs, running, done, doneText, deadlineEpochMs)
 
         val size = dp(DIAMETER_DP)
         val params = WindowManager.LayoutParams(
@@ -309,7 +319,9 @@ class MultiOverlayService : Service() {
         private val arcRect = RectF()
 
         /** 상태 변화 시에만 호출(start/pause/reset/complete/rename). running 이면 마감시각을 잡고,
-         *  이후엔 [refresh] 가 자체적으로 남은시간을 계산한다. */
+         *  이후엔 [refresh] 가 자체적으로 남은시간을 계산한다.
+         *  [deadlineEpochMs] 는 Dart 가 push 시점에 계산한 마감 절대시각 — 이걸 쓰면 채널
+         *  전달 지연이 표시 시간에 끼어들지 않는다(0 이면 도착시각 기준 폴백). */
         fun setState(
             name: String,
             colorArgb: Int,
@@ -318,6 +330,7 @@ class MultiOverlayService : Service() {
             isRunning: Boolean,
             isDone: Boolean,
             doneLabel: String,
+            deadlineEpochMs: Long = 0L,
         ) {
             timerName = name
             color = colorArgb
@@ -326,7 +339,8 @@ class MultiOverlayService : Service() {
             doneText = doneLabel
             running = isRunning && !isDone
             if (running) {
-                deadlineMs = System.currentTimeMillis() + remainMs.coerceAtLeast(0)
+                deadlineMs = if (deadlineEpochMs > 0) deadlineEpochMs
+                    else System.currentTimeMillis() + remainMs.coerceAtLeast(0)
             } else {
                 frozenRemainMs = remainMs.coerceAtLeast(0)
             }
@@ -334,7 +348,7 @@ class MultiOverlayService : Service() {
             invalidate()
         }
 
-        private fun currentRemainMs(): Long =
+        fun currentRemainMs(): Long =
             if (running) (deadlineMs - System.currentTimeMillis()).coerceAtLeast(0)
             else frozenRemainMs
 
@@ -551,6 +565,7 @@ class MultiOverlayService : Service() {
         const val EXTRA_RUNNING = "running"
         const val EXTRA_DONE = "done"
         const val EXTRA_DONE_TEXT = "doneText"
+        const val EXTRA_DEADLINE_MS = "deadlineMs"
 
         const val CMD_SHOW = "show"
         const val CMD_UPDATE = "update"
