@@ -17,6 +17,7 @@ import 'services/desktop_service.dart';
 import 'services/desktop_notification_service.dart';
 import 'services/desktop_overlay_service.dart';
 import 'services/telemetry_service.dart';
+import 'services/anr_vitals_service.dart';
 import 'services/sync_service.dart';
 import 'services/hotkey_service.dart';
 import 'services/tts_service.dart';
@@ -47,6 +48,7 @@ Future<void> main(List<String> args) async {
   await DesktopService.instance.init();
   await DesktopOverlayService.instance.init();
   await TelemetryService.instance.init();
+  unawaited(AnrVitalsService.instance.init()); // Android ANR-free 지표(백그라운드)
   await SyncService.instance.init();
   await TtsService.instance.init();
   await TextScaleService.instance.init();
