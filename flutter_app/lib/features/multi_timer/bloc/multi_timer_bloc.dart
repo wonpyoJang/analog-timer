@@ -30,8 +30,13 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
       .toList();
 
   void _onAdd(MtAdd e, Emitter<MultiTimerState> emit) {
-    final t = CountdownTimer(name: e.name, totalMs: e.totalMs);
+    final t = CountdownTimer(
+      name: e.name,
+      totalMs: e.totalMs,
+      running: e.autoStart,
+    );
     emit(state.copyWith(timers: [...state.timers, t]));
+    if (e.autoStart) _syncTicker();
   }
 
   void _onRemove(MtRemove e, Emitter<MultiTimerState> emit) {

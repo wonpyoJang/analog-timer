@@ -10,9 +10,12 @@ abstract class MultiTimerEvent extends Equatable {
 class MtAdd extends MultiTimerEvent {
   final String name;
   final int totalMs;
-  const MtAdd(this.name, this.totalMs);
+
+  /// true 면 추가 즉시 실행(프리셋 원탭 시작).
+  final bool autoStart;
+  const MtAdd(this.name, this.totalMs, {this.autoStart = false});
   @override
-  List<Object?> get props => [name, totalMs];
+  List<Object?> get props => [name, totalMs, autoStart];
 }
 
 class MtRemove extends MultiTimerEvent {

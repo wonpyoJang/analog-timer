@@ -761,4 +761,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get multiTimerPresetDeleted => 'Preset deleted';
+
+  @override
+  String get multiTimerPresetEdit => 'Edit presets';
+
+  @override
+  String get multiTimerEditDone => 'Done';
+
+  @override
+  String get multiTimerStateIdle => 'Ready';
+
+  @override
+  String get multiTimerStatePaused => 'Paused';
+
+  @override
+  String get multiTimerPresetEditHint =>
+      'Tap a preset to copy it into the fields';
+
+  @override
+  String multiTimerPresetStarted(String name) {
+    return 'Started \'$name\'';
+  }
 }
