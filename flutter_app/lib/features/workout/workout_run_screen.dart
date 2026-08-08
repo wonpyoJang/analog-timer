@@ -6,6 +6,7 @@ import 'workout_models.dart';
 import 'workout_screen.dart' show exerciseDisplayName, exerciseName, exerciseSummary;
 import 'workout_session.dart';
 import 'workout_voice.dart';
+import 'wear_bridge.dart';
 
 /// 운동 실행 화면(디자인 "운동 TTS 모드" 가운데 폰) — 4상태 + 캡션 + 컨트롤.
 class WorkoutRunScreen extends StatefulWidget {
@@ -76,12 +77,39 @@ class _WorkoutRunScreenState extends State<WorkoutRunScreen> {
             ),
           )..addListener(() {
             if (mounted) setState(() {});
+            _pushWearState();
           });
+      WearBridge.ensureListening();
+      WearBridge.onCommand = (cmd) {
+        final s = _session;
+        if (s == null) return;
+        if (cmd == 'stop') s.stop();
+        if (cmd == 'skip' && s.running) s.skip();
+      };
     }
+  }
+
+  /// 워치 미러 — 세션 상태를 Data Layer 로 push(미페어링이면 no-op).
+  void _pushWearState() {
+    final s = _session;
+    if (s == null) return;
+    final ex = s.current;
+    final l = AppLocalizations.of(context);
+    WearBridge.pushState(
+      phase: s.phase.name,
+      name: ex == null ? '' : (ex.customName ?? exerciseDisplayName(l, ex.libKey)),
+      type: ex?.type.name ?? 'reps',
+      set: s.set,
+      sets: ex?.sets ?? 0,
+      rep: s.rep,
+      reps: ex?.reps ?? 0,
+      t: s.t,
+    );
   }
 
   @override
   void dispose() {
+    WearBridge.onCommand = null;
     _captionClear?.cancel();
     _capSub?.cancel();
     _session?.stop();
