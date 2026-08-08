@@ -743,4 +743,25 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsOverlayMutexDesc =>
       'Turning on the timer overlay or the multi-timer overlays turns off the other. Prevents lag from running both at once.';
+
+  @override
+  String get multiTimerPresetStudy => 'Study focus';
+
+  @override
+  String get multiTimerPresetDeskCleanup => 'Desk cleanup';
+
+  @override
+  String get multiTimerPresetRest => 'Break';
+
+  @override
+  String get multiTimerPresetBrushTeeth => 'Brush teeth';
+
+  @override
+  String get multiTimerPresetSave => 'Save as preset';
+
+  @override
+  String get multiTimerPresetSaved => 'Preset saved';
+
+  @override
+  String get multiTimerPresetDeleted => 'Preset deleted';
 }

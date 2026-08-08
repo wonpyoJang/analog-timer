@@ -716,4 +716,25 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get settingsOverlayMutexDesc =>
       '타이머 오버레이와 멀티 타이머 오버레이 중 하나를 켜면 다른 하나가 꺼집니다. 둘을 동시에 켤 때 생기는 지연을 방지합니다.';
+
+  @override
+  String get multiTimerPresetStudy => '공부 집중';
+
+  @override
+  String get multiTimerPresetDeskCleanup => '책상청소';
+
+  @override
+  String get multiTimerPresetRest => '휴식';
+
+  @override
+  String get multiTimerPresetBrushTeeth => '양치질';
+
+  @override
+  String get multiTimerPresetSave => '프리셋으로 저장';
+
+  @override
+  String get multiTimerPresetSaved => '프리셋 저장됨';
+
+  @override
+  String get multiTimerPresetDeleted => '프리셋 삭제됨';
 }

@@ -11,6 +11,29 @@ class PersistenceService {
   static const _kOverlayHintCount = 'overlay_hint_count';
   static const _kDpadOnLeft = 'dpad_on_left';
   static const _kMultiTimerData = 'multi_timer_data';
+  static const _kMultiTimerPresets = 'multi_timer_presets';
+
+  /// 멀티 타이머 프리셋 목록. null = 아직 저장된 적 없음(기본 시드 대상).
+  /// 각 항목: {'name': String, 'durationMs': int}
+  static Future<List<Map<String, dynamic>>?> loadMultiTimerPresets() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString(_kMultiTimerPresets);
+    if (str == null) return null;
+    try {
+      return (jsonDecode(str) as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> saveMultiTimerPresets(
+    List<Map<String, dynamic>> presets,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kMultiTimerPresets, jsonEncode(presets));
+  }
 
   /// 멀티 타이머 목록 저장 — 상태 전이 시에만 호출(tick마다 금지).
   static Future<void> saveMultiTimerState(
