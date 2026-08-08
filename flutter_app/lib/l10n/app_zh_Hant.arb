@@ -68,6 +68,8 @@
   "batteryMon": "電量",
   "batteryMonOn": "電量 ON",
   "settings": "設定",
+  "navTimer": "計時器",
+  "navMulti": "多重",
   "settingsBattery": "電量監控",
   "settingsBatteryDesc": "電量低於20%時發出警告",
   "settingsLanguage": "語言",

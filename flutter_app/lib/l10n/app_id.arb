@@ -68,6 +68,8 @@
   "batteryMon": "Baterai",
   "batteryMonOn": "Baterai ON",
   "settings": "Pengaturan",
+  "navTimer": "Timer",
+  "navMulti": "Multi",
   "settingsBattery": "Pemantauan baterai",
   "settingsBatteryDesc": "Peringatkan jika baterai turun ke 20% atau lebih rendah",
   "settingsLanguage": "Bahasa",

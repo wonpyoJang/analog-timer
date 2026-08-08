@@ -68,6 +68,8 @@
   "batteryMon": "배터리",
   "batteryMonOn": "배터리 ON",
   "settings": "설정",
+  "navTimer": "타이머",
+  "navMulti": "멀티",
   "settingsBattery": "배터리 모니터링",
   "settingsBatteryDesc": "배터리가 20% 이하로 내려가면 경고",
   "settingsLanguage": "언어",

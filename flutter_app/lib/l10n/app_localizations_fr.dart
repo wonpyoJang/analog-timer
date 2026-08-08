@@ -232,6 +232,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings => 'Paramètres';
 
   @override
+  String get navTimer => 'Minuteur';
+
+  @override
+  String get navMulti => 'Multi';
+
+  @override
   String get settingsBattery => 'Surveillance batterie';
 
   @override

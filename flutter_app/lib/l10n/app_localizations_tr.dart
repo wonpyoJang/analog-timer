@@ -232,6 +232,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settings => 'Ayarlar';
 
   @override
+  String get navTimer => 'Zamanlayıcı';
+
+  @override
+  String get navMulti => 'Çoklu';
+
+  @override
   String get settingsBattery => 'Pil izleme';
 
   @override

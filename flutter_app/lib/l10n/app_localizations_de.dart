@@ -232,6 +232,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings => 'Einstellungen';
 
   @override
+  String get navTimer => 'Timer';
+
+  @override
+  String get navMulti => 'Multi';
+
+  @override
   String get settingsBattery => 'Akku-Überwachung';
 
   @override

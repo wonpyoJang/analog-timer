@@ -232,6 +232,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get settings => 'Pengaturan';
 
   @override
+  String get navTimer => 'Timer';
+
+  @override
+  String get navMulti => 'Multi';
+
+  @override
   String get settingsBattery => 'Pemantauan baterai';
 
   @override

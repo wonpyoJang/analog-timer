@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
-import 'home_screen.dart';
+import 'root_shell.dart';
 import 'widgets/clock_painter.dart';
 import 'features/timer/bloc/timer_state.dart';
 import 'features/stopwatch/bloc/stopwatch_state.dart';
@@ -52,8 +52,8 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: Duration(milliseconds: reduceMotion ? 0 : 500),
-        pageBuilder: (_, _, _) => const HomeScreen(),
-        transitionsBuilder: (_, anim, __, child) =>
+        pageBuilder: (_, _, _) => const RootShell(),
+        transitionsBuilder: (_, anim, _, child) =>
             reduceMotion ? child : FadeTransition(opacity: anim, child: child),
       ),
     );

@@ -18,7 +18,9 @@ import 'services/colorblind_service.dart';
 import 'services/high_contrast_service.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+  /// 하단 탭으로 임베드될 때 true — 뒤로가기 화살표를 숨긴다.
+  final bool embedded;
+  const SettingsScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
@@ -49,14 +51,17 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: AppColors.text,
-            size: 18,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
+        leading: embedded
+            ? null
+            : IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: AppColors.text,
+                  size: 18,
+                ),
+                onPressed: () => Navigator.pop(context),
+              ),
         title: Text(
           l.settings,
           style: const TextStyle(

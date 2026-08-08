@@ -232,6 +232,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get navTimer => 'Timer';
+
+  @override
+  String get navMulti => 'Multi';
+
+  @override
   String get settingsBattery => 'Battery monitoring';
 
   @override

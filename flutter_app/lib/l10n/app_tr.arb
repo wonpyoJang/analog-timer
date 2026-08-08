@@ -68,6 +68,8 @@
   "batteryMon": "Pil",
   "batteryMonOn": "Pil ON",
   "settings": "Ayarlar",
+  "navTimer": "Zamanlayıcı",
+  "navMulti": "Çoklu",
   "settingsBattery": "Pil izleme",
   "settingsBatteryDesc": "Pil %20 veya altına düştüğünde uyar",
   "settingsLanguage": "Dil",

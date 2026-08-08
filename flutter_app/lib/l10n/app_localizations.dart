@@ -531,6 +531,18 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @navTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer'**
+  String get navTimer;
+
+  /// No description provided for @navMulti.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi'**
+  String get navMulti;
+
   /// No description provided for @settingsBattery.
   ///
   /// In en, this message translates to:

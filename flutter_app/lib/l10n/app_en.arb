@@ -137,6 +137,8 @@
   "batteryMon": "Battery",
   "batteryMonOn": "Battery ON",
   "settings": "Settings",
+  "navTimer": "Timer",
+  "navMulti": "Multi",
   "settingsBattery": "Battery monitoring",
   "settingsBatteryDesc": "Warn when battery drops to 20% or below",
   "settingsLanguage": "Language",

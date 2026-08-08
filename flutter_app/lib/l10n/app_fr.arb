@@ -68,6 +68,8 @@
   "batteryMon": "Batterie",
   "batteryMonOn": "Batterie ON",
   "settings": "Paramètres",
+  "navTimer": "Minuteur",
+  "navMulti": "Multi",
   "settingsBattery": "Surveillance batterie",
   "settingsBatteryDesc": "Avertir quand la batterie descend à 20 % ou moins",
   "settingsLanguage": "Langue",

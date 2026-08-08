@@ -231,6 +231,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings => '설정';
 
   @override
+  String get navTimer => '타이머';
+
+  @override
+  String get navMulti => '멀티';
+
+  @override
   String get settingsBattery => '배터리 모니터링';
 
   @override

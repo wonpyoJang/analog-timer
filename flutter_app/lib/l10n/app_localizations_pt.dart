@@ -232,6 +232,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settings => 'Configurações';
 
   @override
+  String get navTimer => 'Timer';
+
+  @override
+  String get navMulti => 'Multi';
+
+  @override
   String get settingsBattery => 'Monitoramento de bateria';
 
   @override

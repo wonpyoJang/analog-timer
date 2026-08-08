@@ -26,20 +26,23 @@ String _fmt(int ms) {
 }
 
 class MultiTimerScreen extends StatelessWidget {
-  const MultiTimerScreen({super.key});
+  /// 하단 탭으로 임베드될 때 true — 뒤로가기 화살표를 숨긴다.
+  final bool embedded;
+  const MultiTimerScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     // 복원(async)은 _MultiTimerView.initState 에서 dispatch.
     return BlocProvider(
       create: (_) => MultiTimerBloc(),
-      child: const _MultiTimerView(),
+      child: _MultiTimerView(embedded: embedded),
     );
   }
 }
 
 class _MultiTimerView extends StatefulWidget {
-  const _MultiTimerView();
+  final bool embedded;
+  const _MultiTimerView({this.embedded = false});
   @override
   State<_MultiTimerView> createState() => _MultiTimerViewState();
 }
@@ -217,14 +220,17 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: AppColors.text,
-            size: 18,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
+        leading: widget.embedded
+            ? null
+            : IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: AppColors.text,
+                  size: 18,
+                ),
+                onPressed: () => Navigator.pop(context),
+              ),
         title: Text(
           l.multiTimerTitle,
           style: const TextStyle(

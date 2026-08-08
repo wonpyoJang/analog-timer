@@ -68,6 +68,8 @@
   "batteryMon": "Батарея",
   "batteryMonOn": "Батарея ON",
   "settings": "Настройки",
+  "navTimer": "Таймер",
+  "navMulti": "Мульти",
   "settingsBattery": "Мониторинг батареи",
   "settingsBatteryDesc": "Предупреждать при уровне заряда 20 % и ниже",
   "settingsLanguage": "Язык",

@@ -232,6 +232,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings => 'الإعدادات';
 
   @override
+  String get navTimer => 'مؤقت';
+
+  @override
+  String get navMulti => 'متعدد';
+
+  @override
   String get settingsBattery => 'مراقبة البطارية';
 
   @override

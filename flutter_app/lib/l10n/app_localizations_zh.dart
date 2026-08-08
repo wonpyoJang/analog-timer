@@ -231,6 +231,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings => '设置';
 
   @override
+  String get navTimer => '计时器';
+
+  @override
+  String get navMulti => '多个';
+
+  @override
   String get settingsBattery => '电量监控';
 
   @override
@@ -946,6 +952,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settings => '設定';
+
+  @override
+  String get navTimer => '計時器';
+
+  @override
+  String get navMulti => '多重';
 
   @override
   String get settingsBattery => '電量監控';

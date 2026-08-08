@@ -68,6 +68,8 @@
   "batteryMon": "بطارية",
   "batteryMonOn": "بطارية ON",
   "settings": "الإعدادات",
+  "navTimer": "مؤقت",
+  "navMulti": "متعدد",
   "settingsBattery": "مراقبة البطارية",
   "settingsBatteryDesc": "تحذير عند انخفاض البطارية إلى 20٪ أو أقل",
   "settingsLanguage": "اللغة",

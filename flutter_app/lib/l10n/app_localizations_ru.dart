@@ -232,6 +232,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings => 'Настройки';
 
   @override
+  String get navTimer => 'Таймер';
+
+  @override
+  String get navMulti => 'Мульти';
+
+  @override
   String get settingsBattery => 'Мониторинг батареи';
 
   @override

@@ -68,6 +68,8 @@
   "batteryMon": "बैटरी",
   "batteryMonOn": "बैटरी ON",
   "settings": "सेटिंग्स",
+  "navTimer": "टाइमर",
+  "navMulti": "मल्टी",
   "settingsBattery": "बैटरी निगरानी",
   "settingsBatteryDesc": "जब बैटरी 20% या कम हो तो चेतावनी दें",
   "settingsLanguage": "भाषा",

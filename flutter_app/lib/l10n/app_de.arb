@@ -68,6 +68,8 @@
   "batteryMon": "Akku",
   "batteryMonOn": "Akku AN",
   "settings": "Einstellungen",
+  "navTimer": "Timer",
+  "navMulti": "Multi",
   "settingsBattery": "Akku-Überwachung",
   "settingsBatteryDesc": "Warnen wenn Akku auf 20 % oder darunter fällt",
   "settingsLanguage": "Sprache",
