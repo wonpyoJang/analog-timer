@@ -9,6 +9,12 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  # 벤더링한 서드파티 플러그인의 예제 앱은 자체 패키지라 이 트리에서 해석 불가
+  # (uri_does_not_exist 등). 우리 코드가 아니므로 분석·CI 게이트에서 제외.
+  exclude:
+    - packages/**/example/**
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

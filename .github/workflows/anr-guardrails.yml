@@ -1,0 +1,34 @@
+name: ANR guardrails
+
+# ANR 회귀 방지 게이트. 빠르고 무플레이크한 정적/유닛 검사만 필수 게이트로 둔다.
+# (에뮬레이터 통합 테스트 = Phase 3 에서 별도 잡으로 추가; 느리고 확률적이라 라벨/야간 게이팅)
+
+on:
+  pull_request:
+    paths:
+      - "flutter_app/**"
+      - ".github/workflows/anr-guardrails.yml"
+  push:
+    branches: [main]
+    paths:
+      - "flutter_app/**"
+
+jobs:
+  fast-guards:
+    name: analyze + guard tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.0"
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # info(스타일)는 게이트하지 않고 warning/error 만 실패 처리(기존 info 17건은 무관).
+      - run: flutter analyze --no-fatal-infos
+      # ANR 가드(정적 + 행위) 포함 전체 유닛/위젯 테스트.
+      - run: flutter test
