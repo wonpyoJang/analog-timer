@@ -274,6 +274,10 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
               _showEditCoach = false;
             });
           }
+          // 숨김(1×1) 중에는 보이지 않는 창을 60fps로 재빌드하지 않는다 —
+          // 살아있는 2nd FlutterEngine이 플랫폼 스레드를 잠식해 멀티 오버레이 지연/ANR 유발.
+          _chaseCtrl.stop();
+          _clockTimer?.cancel();
           await FlutterOverlayWindow.resizeOverlay(1, 1, true);
           return;
         }
@@ -282,6 +286,13 @@ class _TimerOverlayWidgetState extends State<TimerOverlayWidget>
           final hint = map['hintLongPress'] as bool? ?? false;
           _editModeTimer?.cancel();
           _stopNudgeRepeat();
+          // 숨김 때 멈춰둔 티커 재개
+          if (!_reduceMotion && !_chaseCtrl.isAnimating) _chaseCtrl.repeat();
+          _clockTimer?.cancel();
+          _clockTimer = Timer.periodic(
+            const Duration(seconds: 1),
+            (_) => _updateClock(),
+          );
           setState(() {
             _screenWidthDp = w;
             _expanded = true;

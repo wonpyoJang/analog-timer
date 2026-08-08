@@ -76,10 +76,12 @@ class MultiOverlayService : Service() {
                 if (id != null) showOrUpdate(
                     id,
                     intent.getStringExtra(EXTRA_NAME) ?: "",
-                    intent.getStringExtra(EXTRA_TIME) ?: "--:--",
                     intent.getIntExtra(EXTRA_COLOR, DEFAULT_ACCENT),
-                    intent.getFloatExtra(EXTRA_FRAC, 1f),
+                    intent.getLongExtra(EXTRA_TOTAL_MS, 0L),
+                    intent.getLongExtra(EXTRA_REMAIN_MS, 0L),
+                    intent.getBooleanExtra(EXTRA_RUNNING, false),
                     intent.getBooleanExtra(EXTRA_DONE, false),
+                    intent.getStringExtra(EXTRA_DONE_TEXT) ?: "",
                 )
             }
             CMD_CLOSE -> handleClose(intent.getStringExtra(EXTRA_ID))
@@ -89,23 +91,53 @@ class MultiOverlayService : Service() {
         return START_NOT_STICKY
     }
 
-    /** id 창을 만들거나 갱신한다. 매 틱 갱신은 MainActivity 가 이 메서드를 직접 호출한다. */
+    /** id 창을 만들거나 갱신한다. 상태 변화 시에만 호출되고(매초 아님), 이후 표시는
+     *  네이티브 뷰가 [tickRunnable] 로 자체 갱신한다. */
     fun showOrUpdate(
         id: String,
         name: String,
-        time: String,
         color: Int,
-        frac: Float,
+        totalMs: Long,
+        remainMs: Long,
+        running: Boolean,
         done: Boolean,
+        doneText: String,
     ) {
         cancelPendingStop() // 다시 켜짐 — 예약된 정지 취소
         val existing = pills[id]
         if (existing != null) {
-            // 드래그 중인 창은 콘텐츠 invalidate 를 건너뛴다(이동과 경쟁 방지). 드래그 종료 시 갱신됨.
-            if (id == draggingId) return
-            existing.view.setState(name, time, color, frac, done)
+            // 드래그 중인 창도 상태(running/시간)는 반영하되 invalidate 는 refresh 결과에 맡긴다.
+            existing.view.setState(name, color, totalMs, remainMs, running, done, doneText)
         } else {
-            addPill(id, name, time, color, frac, done)
+            addPill(id, name, color, totalMs, remainMs, running, done, doneText)
+        }
+        ensureTicking()
+    }
+
+    private var tickScheduled = false
+
+    /** running 창이 하나라도 있으면 매초 자체 갱신을 돌린다(초 바뀔 때만 invalidate). */
+    private fun ensureTicking() {
+        if (tickScheduled) return
+        tickScheduled = true
+        handler.post(tickRunnable)
+    }
+
+    private val tickRunnable = object : Runnable {
+        override fun run() {
+            var anyRunning = false
+            for ((id, h) in pills) {
+                if (!h.view.running) continue
+                anyRunning = true
+                if (id == draggingId) continue // 드래그 중엔 invalidate 억제
+                val ch = h.view.refresh()
+                if (ch) h.view.invalidate()
+            }
+            if (anyRunning) {
+                handler.postDelayed(this, 500)
+            } else {
+                tickScheduled = false
+            }
         }
     }
 
@@ -155,13 +187,15 @@ class MultiOverlayService : Service() {
     private fun addPill(
         id: String,
         name: String,
-        time: String,
         color: Int,
-        frac: Float,
+        totalMs: Long,
+        remainMs: Long,
+        running: Boolean,
         done: Boolean,
+        doneText: String,
     ) {
         val view = CircleTimerView(this)
-        view.setState(name, time, color, frac, done)
+        view.setState(name, color, totalMs, remainMs, running, done, doneText)
 
         val size = dp(DIAMETER_DP)
         val params = WindowManager.LayoutParams(
@@ -220,15 +254,23 @@ class MultiOverlayService : Service() {
         return (startX + dp(16) * (n % 5)) to (startY + dp(16) * (n % 8))
     }
 
-    /** 원 둘레를 진행 링으로 그리고 중앙에 이름·남은시간을 표시하는 커스텀 View. */
+    /** 원 둘레를 진행 링으로 그리고 중앙에 이름·남은시간을 표시하는 커스텀 View.
+     *  마감시각(deadline)을 들고 자체적으로 매초 남은시간을 계산한다 — 매초 push 에 의존하지
+     *  않으므로 플랫폼 스레드가 바빠도(다른 오버레이 엔진 등) 표시 시간이 정확하다. */
     private inner class CircleTimerView(context: Context) : View(context) {
         var timerName: String = ""
             private set
         var timeText: String = ""
             private set
+        var running: Boolean = false
+            private set
         private var color: Int = DEFAULT_ACCENT
         private var frac: Float = 1f
         private var done: Boolean = false
+        private var doneText: String = ""
+        private var totalMs: Long = 0
+        private var deadlineMs: Long = 0 // running 일 때 마감 절대시각
+        private var frozenRemainMs: Long = 0 // paused/done 일 때 고정 남은시간
 
         private val ringStroke = dp(9).toFloat()
         private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
@@ -254,13 +296,57 @@ class MultiOverlayService : Service() {
         }
         private val arcRect = RectF()
 
-        fun setState(name: String, time: String, colorArgb: Int, f: Float, isDone: Boolean) {
+        /** 상태 변화 시에만 호출(start/pause/reset/complete/rename). running 이면 마감시각을 잡고,
+         *  이후엔 [refresh] 가 자체적으로 남은시간을 계산한다. */
+        fun setState(
+            name: String,
+            colorArgb: Int,
+            totalMsArg: Long,
+            remainMs: Long,
+            isRunning: Boolean,
+            isDone: Boolean,
+            doneLabel: String,
+        ) {
             timerName = name
-            timeText = time
             color = colorArgb
-            frac = f.coerceIn(0f, 1f)
+            totalMs = totalMsArg
             done = isDone
+            doneText = doneLabel
+            running = isRunning && !isDone
+            if (running) {
+                deadlineMs = System.currentTimeMillis() + remainMs.coerceAtLeast(0)
+            } else {
+                frozenRemainMs = remainMs.coerceAtLeast(0)
+            }
+            refresh()
             invalidate()
+        }
+
+        private fun currentRemainMs(): Long =
+            if (running) (deadlineMs - System.currentTimeMillis()).coerceAtLeast(0)
+            else frozenRemainMs
+
+        /** 표시(시간 문자열·진행률)를 현재 남은시간으로 재계산. 표시가 바뀌었으면 true. */
+        fun refresh(): Boolean {
+            val remain = currentRemainMs()
+            val newText = if (done) doneText else fmt(remain)
+            val newFrac = if (done) 1f
+                else if (totalMs <= 0) 0f
+                else (1f - remain.toFloat() / totalMs).coerceIn(0f, 1f)
+            val changed = newText != timeText || newFrac != frac
+            timeText = newText
+            frac = newFrac
+            return changed
+        }
+
+        /** Dart _fmt 와 동일: ceil(remainMs/1000) 초를 h:mm:ss / mm:ss 로. */
+        private fun fmt(remainMs: Long): String {
+            val totalSec = ((remainMs + 999) / 1000).toInt()
+            val h = totalSec / 3600
+            val m = (totalSec % 3600) / 60
+            val s = totalSec % 60
+            return if (h > 0) "%d:%02d:%02d".format(h, m, s)
+            else "%02d:%02d".format(m, s)
         }
 
         override fun onDraw(canvas: Canvas) {
@@ -447,10 +533,12 @@ class MultiOverlayService : Service() {
         const val EXTRA_CMD = "cmd"
         const val EXTRA_ID = "id"
         const val EXTRA_NAME = "name"
-        const val EXTRA_TIME = "time"
         const val EXTRA_COLOR = "color"
-        const val EXTRA_FRAC = "frac"
+        const val EXTRA_TOTAL_MS = "totalMs"
+        const val EXTRA_REMAIN_MS = "remainMs"
+        const val EXTRA_RUNNING = "running"
         const val EXTRA_DONE = "done"
+        const val EXTRA_DONE_TEXT = "doneText"
 
         const val CMD_SHOW = "show"
         const val CMD_UPDATE = "update"

@@ -1442,6 +1442,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} timers finished'**
   String multiTimerAllDone(int count);
+
+  /// No description provided for @settingsOverlayMutex.
+  ///
+  /// In en, this message translates to:
+  /// **'Show one overlay at a time'**
+  String get settingsOverlayMutex;
+
+  /// No description provided for @settingsOverlayMutexDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Turning on the timer overlay or the multi-timer overlays turns off the other. Prevents lag from running both at once.'**
+  String get settingsOverlayMutexDesc;
 }
 
 class _AppLocalizationsDelegate

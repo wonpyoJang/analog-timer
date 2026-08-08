@@ -709,4 +709,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String multiTimerAllDone(int count) {
     return '타이머 $count개 완료';
   }
+
+  @override
+  String get settingsOverlayMutex => '오버레이 하나만 표시';
+
+  @override
+  String get settingsOverlayMutexDesc =>
+      '타이머 오버레이와 멀티 타이머 오버레이 중 하나를 켜면 다른 하나가 꺼집니다. 둘을 동시에 켤 때 생기는 지연을 방지합니다.';
 }

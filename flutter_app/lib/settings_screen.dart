@@ -17,6 +17,7 @@ import 'services/text_scale_service.dart';
 import 'services/haptic_service.dart';
 import 'services/colorblind_service.dart';
 import 'services/high_contrast_service.dart';
+import 'overlay/overlay_coordinator.dart';
 
 class SettingsScreen extends StatelessWidget {
   /// 하단 탭으로 임베드될 때 true — 뒤로가기 화살표를 숨긴다.
@@ -375,6 +376,31 @@ class SettingsScreen extends StatelessWidget {
           ),
 
           const _Divider(),
+
+          // ── 오버레이 상호 배타 (Android 전용) ──────────────────
+          if (isAndroid) ...[
+            ValueListenableBuilder<bool>(
+              valueListenable: OverlayCoordinator.instance.enabledListenable,
+              builder: (ctx, mxOn, _) => _SettingsTile(
+                icon: Icons.layers_clear_outlined,
+                iconColor: AppColors.accent,
+                title: l.settingsOverlayMutex,
+                subtitle: l.settingsOverlayMutexDesc,
+                trailing: Switch(
+                  value: mxOn,
+                  onChanged: OverlayCoordinator.instance.setEnabled,
+                  activeThumbColor: AppColors.accent,
+                  trackColor: WidgetStateProperty.resolveWith(
+                    (states) => states.contains(WidgetState.selected)
+                        ? AppColors.accent.withAlpha(0x55)
+                        : AppColors.surface,
+                  ),
+                ),
+                onTap: () => OverlayCoordinator.instance.setEnabled(!mxOn),
+              ),
+            ),
+            const _Divider(),
+          ],
 
           // ── 배터리 모니터링 (모바일 전용) ─────────────────────
           if (isAndroid || isIOS) ...[

@@ -351,5 +351,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settingsOverlayMutex": "Show one overlay at a time",
+  "settingsOverlayMutexDesc": "Turning on the timer overlay or the multi-timer overlays turns off the other. Prevents lag from running both at once."
 }

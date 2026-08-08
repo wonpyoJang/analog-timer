@@ -58,29 +58,30 @@ class MainActivity : FlutterActivity() {
                     "show", "update" -> {
                         val id = call.argument<String>("id")
                         val name = call.argument<String>("name") ?: ""
-                        val time = call.argument<String>("time") ?: "--:--"
                         val color = (call.argument<Any>("color") as? Number)?.toInt()
                             ?: MultiOverlayService.DEFAULT_ACCENT
-                        val frac = (call.argument<Any>("frac") as? Number)?.toFloat() ?: 1f
+                        val totalMs = (call.argument<Any>("totalMs") as? Number)?.toLong() ?: 0L
+                        val remainMs = (call.argument<Any>("remainMs") as? Number)?.toLong() ?: 0L
+                        val running = call.argument<Boolean>("running") ?: false
                         val done = call.argument<Boolean>("done") ?: false
+                        val doneText = call.argument<String>("doneText") ?: ""
                         val svc = MultiOverlayService.instance
                         if (svc != null && id != null) {
-                            // 서비스 기동 상태 — Intent 스로틀을 피해 직접 갱신(부드러운 초 단위).
-                            svc.showOrUpdate(id, name, time, color, frac, done)
+                            // 서비스 기동 상태 — 직접 갱신(상태 변화 시에만; 매초 표시는 네이티브 자체 틱).
+                            svc.showOrUpdate(id, name, color, totalMs, remainMs, running, done, doneText)
                         } else {
-                            // 콜드 스타트(첫 표시) — Intent 로 서비스 시작.
-                            // startForegroundService 대신 startService 를 쓴다: 토글은 항상 앱이
-                            // 포그라운드일 때 일어나므로 startService 가 허용되고, 서비스는
-                            // onCreate 에서 startForeground 로 승격한다. 이러면 "5초 내 startForeground
-                            // 미호출" ANR(ForegroundServiceDidNotStartInTimeException) 자체가 없다.
+                            // 콜드 스타트(첫 표시) — startService 로 시작(포그라운드 상태라 허용,
+                            // onCreate 에서 startForeground 승격 → FGS 데드라인 ANR 없음).
                             val intent = Intent(this, MultiOverlayService::class.java).apply {
                                 putExtra(MultiOverlayService.EXTRA_CMD, MultiOverlayService.CMD_SHOW)
                                 putExtra(MultiOverlayService.EXTRA_ID, id)
                                 putExtra(MultiOverlayService.EXTRA_NAME, name)
-                                putExtra(MultiOverlayService.EXTRA_TIME, time)
                                 putExtra(MultiOverlayService.EXTRA_COLOR, color)
-                                putExtra(MultiOverlayService.EXTRA_FRAC, frac)
+                                putExtra(MultiOverlayService.EXTRA_TOTAL_MS, totalMs)
+                                putExtra(MultiOverlayService.EXTRA_REMAIN_MS, remainMs)
+                                putExtra(MultiOverlayService.EXTRA_RUNNING, running)
                                 putExtra(MultiOverlayService.EXTRA_DONE, done)
+                                putExtra(MultiOverlayService.EXTRA_DONE_TEXT, doneText)
                             }
                             startService(intent)
                         }
