@@ -62,7 +62,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get addSegment => '+ 세그먼트 추가';
 
   @override
-  String get loopToggle => '연속 반복';
+  String get loopToggle => '루프';
 
   @override
   String get minutesUnit => '분';
@@ -1261,4 +1261,58 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get careRealarmDesc => '완료된 타이머를 확인할 때까지 1분마다 다시 울림';
+
+  @override
+  String get loopToggleDesc => '여러 단계를 자동으로 반복해요';
+
+  @override
+  String get loopAddStep => '＋ 단계 추가 (최대 4)';
+
+  @override
+  String get loopRepeat => '반복 횟수';
+
+  @override
+  String get loopTotal => '총 소요 시간';
+
+  @override
+  String get loopSaveStart => '저장하고 시작';
+
+  @override
+  String loopStepTag(String step, int round, int total) {
+    return '$step $round/$total';
+  }
+
+  @override
+  String loopRoundStart(int n, String step) {
+    return '$n회차 — $step 시작';
+  }
+
+  @override
+  String loopStepStart(String step) {
+    return '$step 시작';
+  }
+
+  @override
+  String get loopSkipStep => '단계 건너뛰기';
+
+  @override
+  String get careIntervalCooking => '요리 간격';
+
+  @override
+  String get careIntervalChore => '집안일 간격';
+
+  @override
+  String get careIntervalOther => '그 외 간격';
+
+  @override
+  String get careTtsName => '이름 읽어주기 (TTS)';
+
+  @override
+  String get careTtsNameDesc => '\"파스타 삶기, 끝났어요\"';
+
+  @override
+  String get careKeepDone => '완료 흔적 유지';
+
+  @override
+  String get careKeepDoneDesc => '완료된 타이머를 리스트에 남겨둬요';
 }

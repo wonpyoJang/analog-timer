@@ -2420,6 +2420,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'finished timers ring every minute until acknowledged'**
   String get careRealarmDesc;
+
+  /// No description provided for @loopToggleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'auto-repeat multiple steps'**
+  String get loopToggleDesc;
+
+  /// No description provided for @loopAddStep.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add step (max 4)'**
+  String get loopAddStep;
+
+  /// No description provided for @loopRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get loopRepeat;
+
+  /// No description provided for @loopTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total time'**
+  String get loopTotal;
+
+  /// No description provided for @loopSaveStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & start'**
+  String get loopSaveStart;
+
+  /// No description provided for @loopStepTag.
+  ///
+  /// In en, this message translates to:
+  /// **'{step} {round}/{total}'**
+  String loopStepTag(String step, int round, int total);
+
+  /// No description provided for @loopRoundStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Round {n} — {step} started'**
+  String loopRoundStart(int n, String step);
+
+  /// No description provided for @loopStepStart.
+  ///
+  /// In en, this message translates to:
+  /// **'{step} started'**
+  String loopStepStart(String step);
+
+  /// No description provided for @loopSkipStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip step'**
+  String get loopSkipStep;
+
+  /// No description provided for @careIntervalCooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Cooking interval'**
+  String get careIntervalCooking;
+
+  /// No description provided for @careIntervalChore.
+  ///
+  /// In en, this message translates to:
+  /// **'Chores interval'**
+  String get careIntervalChore;
+
+  /// No description provided for @careIntervalOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other interval'**
+  String get careIntervalOther;
+
+  /// No description provided for @careTtsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Speak timer name'**
+  String get careTtsName;
+
+  /// No description provided for @careTtsNameDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'\"Boil pasta, finished\"'**
+  String get careTtsNameDesc;
+
+  /// No description provided for @careKeepDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep finished timers'**
+  String get careKeepDone;
+
+  /// No description provided for @careKeepDoneDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'leave completed timers in the list'**
+  String get careKeepDoneDesc;
 }
 
 class _AppLocalizationsDelegate

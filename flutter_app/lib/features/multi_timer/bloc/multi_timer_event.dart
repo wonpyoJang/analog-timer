@@ -13,9 +13,36 @@ class MtAdd extends MultiTimerEvent {
 
   /// true 면 추가 즉시 실행(프리셋 원탭 시작).
   final bool autoStart;
-  const MtAdd(this.name, this.totalMs, {this.autoStart = false});
+
+  /// 프리셋 카테고리 — 재알림 간격 결정(알람 시안 §1).
+  final String? category;
+  const MtAdd(this.name, this.totalMs, {this.autoStart = false, this.category});
   @override
-  List<Object?> get props => [name, totalMs, autoStart];
+  List<Object?> get props => [name, totalMs, autoStart, category];
+}
+
+/// 루프 프리셋 추가(루프 시안 §2) — 단계들을 자동 반복.
+class MtAddLoop extends MultiTimerEvent {
+  final String name;
+  final List<LoopStep> steps;
+  final int repeat;
+  final bool autoStart;
+  const MtAddLoop(
+    this.name,
+    this.steps,
+    this.repeat, {
+    this.autoStart = true,
+  });
+  @override
+  List<Object?> get props => [name, steps, repeat, autoStart];
+}
+
+/// 루프 현재 단계 건너뛰기(⏭, 루프 행 전용).
+class MtLoopSkip extends MultiTimerEvent {
+  final String id;
+  const MtLoopSkip(this.id);
+  @override
+  List<Object?> get props => [id];
 }
 
 /// 완료 확인(acknowledge) — 재알림 중단(요리 시안: 끄기 ≠ 확인).

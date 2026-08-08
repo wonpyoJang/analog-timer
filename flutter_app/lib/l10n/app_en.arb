@@ -770,5 +770,51 @@
     }
   },
   "careRealarm": "Re-ring until confirmed",
-  "careRealarmDesc": "finished timers ring every minute until acknowledged"
+  "careRealarmDesc": "finished timers ring every minute until acknowledged",
+  "loopToggleDesc": "auto-repeat multiple steps",
+  "loopAddStep": "+ Add step (max 4)",
+  "loopRepeat": "Repeat",
+  "loopTotal": "Total time",
+  "loopSaveStart": "Save & start",
+  "loopStepTag": "{step} {round}/{total}",
+  "@loopStepTag": {
+    "placeholders": {
+      "step": {
+        "type": "String"
+      },
+      "round": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "loopRoundStart": "Round {n} — {step} started",
+  "@loopRoundStart": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "loopStepStart": "{step} started",
+  "@loopStepStart": {
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "loopSkipStep": "Skip step",
+  "careIntervalCooking": "Cooking interval",
+  "careIntervalChore": "Chores interval",
+  "careIntervalOther": "Other interval",
+  "careTtsName": "Speak timer name",
+  "careTtsNameDesc": "\"Boil pasta, finished\"",
+  "careKeepDone": "Keep finished timers",
+  "careKeepDoneDesc": "leave completed timers in the list"
 }

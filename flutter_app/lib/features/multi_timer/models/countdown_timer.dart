@@ -1,5 +1,22 @@
 import 'package:equatable/equatable.dart';
 
+/// 루프 프리셋의 한 단계(루프 시안 §2) — 이름 + 지속시간.
+class LoopStep extends Equatable {
+  final String name;
+  final int ms;
+  const LoopStep(this.name, this.ms);
+
+  Map<String, dynamic> toJson() => {'name': name, 'ms': ms};
+
+  static LoopStep fromJson(Map<String, dynamic> j) => LoopStep(
+    j['name'] as String? ?? '',
+    (j['ms'] as num?)?.toInt() ?? 0,
+  );
+
+  @override
+  List<Object?> get props => [name, ms];
+}
+
 /// 멀티 타이머 모드의 독립 카운트다운 하나 — 이름 + 지속시간(밀리초, 초 단위 지원).
 /// 기존 Segment(분 전용, 순차 세그먼트)와 달리 서로 독립적으로 실행된다.
 class CountdownTimer extends Equatable {
@@ -22,6 +39,19 @@ class CountdownTimer extends Equatable {
   /// 완료 후 +연장 횟수 — 알람 화면 이력 표시("+1:00 연장 · 2회").
   final int extendCount;
 
+  /// 프리셋 카테고리(cooking/focus/chore/null) — 재알림 간격 결정(알람 시안 §1).
+  final String? category;
+
+  /// 루프 단계들(비면 일반 타이머). 루프면 현재 단계가 totalMs/remainMs 를 차지.
+  final List<LoopStep> loopSteps;
+  final int loopRepeat;
+
+  /// 현재 단계 인덱스(0-base)·회차(1-base).
+  final int loopStepIdx;
+  final int loopRound;
+
+  bool get isLoop => loopSteps.isNotEmpty;
+
   CountdownTimer({
     String? id,
     required this.name,
@@ -32,6 +62,11 @@ class CountdownTimer extends Equatable {
     this.acked = true,
     this.doneAtMs = 0,
     this.extendCount = 0,
+    this.category,
+    this.loopSteps = const [],
+    this.loopRepeat = 1,
+    this.loopStepIdx = 0,
+    this.loopRound = 1,
   }) : id = id ?? _nextId(),
        remainMs = remainMs ?? totalMs;
 
@@ -48,6 +83,8 @@ class CountdownTimer extends Equatable {
     bool? acked,
     int? doneAtMs,
     int? extendCount,
+    int? loopStepIdx,
+    int? loopRound,
   }) => CountdownTimer(
     id: id,
     name: name ?? this.name,
@@ -58,6 +95,11 @@ class CountdownTimer extends Equatable {
     acked: acked ?? this.acked,
     doneAtMs: doneAtMs ?? this.doneAtMs,
     extendCount: extendCount ?? this.extendCount,
+    category: category,
+    loopSteps: loopSteps,
+    loopRepeat: loopRepeat,
+    loopStepIdx: loopStepIdx ?? this.loopStepIdx,
+    loopRound: loopRound ?? this.loopRound,
   );
 
   double get frac =>
@@ -73,6 +115,11 @@ class CountdownTimer extends Equatable {
     'acked': acked,
     'doneAtMs': doneAtMs,
     'extendCount': extendCount,
+    'category': category,
+    'loopSteps': loopSteps.map((e) => e.toJson()).toList(),
+    'loopRepeat': loopRepeat,
+    'loopStepIdx': loopStepIdx,
+    'loopRound': loopRound,
   };
 
   static CountdownTimer fromJson(Map<String, dynamic> json) => CountdownTimer(
@@ -85,8 +132,15 @@ class CountdownTimer extends Equatable {
     acked: json['acked'] as bool? ?? true,
     doneAtMs: (json['doneAtMs'] as num?)?.toInt() ?? 0,
     extendCount: (json['extendCount'] as num?)?.toInt() ?? 0,
+    category: json['category'] as String?,
+    loopSteps: ((json['loopSteps'] as List?) ?? const [])
+        .map((e) => LoopStep.fromJson(Map<String, dynamic>.from(e)))
+        .toList(),
+    loopRepeat: (json['loopRepeat'] as num?)?.toInt() ?? 1,
+    loopStepIdx: (json['loopStepIdx'] as num?)?.toInt() ?? 0,
+    loopRound: (json['loopRound'] as num?)?.toInt() ?? 1,
   );
 
   @override
-  List<Object?> get props => [id, name, totalMs, remainMs, running, done, acked, doneAtMs, extendCount];
+  List<Object?> get props => [id, name, totalMs, remainMs, running, done, acked, doneAtMs, extendCount, category, loopSteps, loopRepeat, loopStepIdx, loopRound];
 }

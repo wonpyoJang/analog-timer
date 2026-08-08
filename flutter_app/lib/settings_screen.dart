@@ -461,6 +461,102 @@ class SettingsScreen extends StatelessWidget {
                 onTap: () => CareService.instance.setRealarm(!rOn),
               ),
             ),
+            // 카테고리별 재알림 간격(알람 시안 §1) — 요리/집안일/그 외.
+            for (final iv in const [
+              ('cooking', 'careIntervalCooking'),
+              ('chore', 'careIntervalChore'),
+              ('other', 'careIntervalOther'),
+            ])
+              ValueListenableBuilder<int>(
+                valueListenable: switch (iv.$1) {
+                  'cooking' => CareService.instance.intervalCookingMin,
+                  'chore' => CareService.instance.intervalChoreMin,
+                  _ => CareService.instance.intervalOtherMin,
+                },
+                builder: (ctx, cur, _) => Padding(
+                  padding: const EdgeInsets.fromLTRB(56, 0, 16, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          switch (iv.$1) {
+                            'cooking' => l.careIntervalCooking,
+                            'chore' => l.careIntervalChore,
+                            _ => l.careIntervalOther,
+                          },
+                          style: const TextStyle(
+                            color: AppColors.text,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      for (final v in const [1, 2, 5])
+                        Padding(
+                          padding: const EdgeInsets.only(left: 6),
+                          child: ChoiceChip(
+                            label: Text(l.carePreAlarmMin(v)),
+                            selected: cur == v,
+                            onSelected: (_) =>
+                                CareService.instance.setInterval(iv.$1, v),
+                            selectedColor: AppColors.accent.withAlpha(0x33),
+                            backgroundColor: AppColors.surface,
+                            labelStyle: TextStyle(
+                              color: cur == v
+                                  ? AppColors.accent
+                                  : AppColors.muted,
+                              fontSize: 12,
+                            ),
+                            side: BorderSide(
+                              color: cur == v
+                                  ? AppColors.accent
+                                  : AppColors.border,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ValueListenableBuilder<bool>(
+              valueListenable: CareService.instance.ttsName,
+              builder: (ctx, tOn, _) => _SettingsTile(
+                icon: Icons.record_voice_over_outlined,
+                iconColor: AppColors.accent,
+                title: l.careTtsName,
+                subtitle: l.careTtsNameDesc,
+                trailing: Switch(
+                  value: tOn,
+                  onChanged: CareService.instance.setTtsName,
+                  activeThumbColor: AppColors.accent,
+                  trackColor: WidgetStateProperty.resolveWith(
+                    (states) => states.contains(WidgetState.selected)
+                        ? AppColors.accent.withAlpha(0x55)
+                        : AppColors.surface,
+                  ),
+                ),
+                onTap: () => CareService.instance.setTtsName(!tOn),
+              ),
+            ),
+            ValueListenableBuilder<bool>(
+              valueListenable: CareService.instance.keepDone,
+              builder: (ctx, kOn, _) => _SettingsTile(
+                icon: Icons.history_outlined,
+                iconColor: AppColors.accent,
+                title: l.careKeepDone,
+                subtitle: l.careKeepDoneDesc,
+                trailing: Switch(
+                  value: kOn,
+                  onChanged: CareService.instance.setKeepDone,
+                  activeThumbColor: AppColors.accent,
+                  trackColor: WidgetStateProperty.resolveWith(
+                    (states) => states.contains(WidgetState.selected)
+                        ? AppColors.accent.withAlpha(0x55)
+                        : AppColors.surface,
+                  ),
+                ),
+                onTap: () => CareService.instance.setKeepDone(!kOn),
+              ),
+            ),
             ValueListenableBuilder<String>(
               valueListenable: CareService.instance.messageTone,
               builder: (ctx, tone, _) => Column(

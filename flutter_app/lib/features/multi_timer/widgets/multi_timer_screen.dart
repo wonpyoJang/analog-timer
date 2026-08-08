@@ -68,6 +68,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
 
   bool _alarmOpen = false;
   Timer? _realarmTimer;
+  final Map<String, int> _lastRingMs = {};
 
   @override
   void initState() {
@@ -245,36 +246,78 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     );
   }
 
-  /// 미확인 완료가 있는 동안 1분마다 재알림(§5) — 확인/연장 시 자동 중단.
+  /// 미확인 완료가 있는 동안 재알림(§5) — 간격은 카테고리별(알람 시안 §1:
+  /// 요리 1분 / 집안일 5분 / 그 외 2분). 확인/연장 시 자동 중단.
   void _syncRealarm(MultiTimerState s) {
     final hasRinging = s.timers.any((t) => t.done && !t.acked);
     if (hasRinging &&
         _realarmTimer == null &&
         CareService.instance.realarm.value) {
-      _realarmTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      _realarmTimer = Timer.periodic(const Duration(seconds: 30), (_) {
         if (!mounted) return;
         final st = context.read<MultiTimerBloc>().state;
         final ringing = st.timers.where((t) => t.done && !t.acked).toList();
         if (ringing.isEmpty) {
           _realarmTimer?.cancel();
           _realarmTimer = null;
+          _lastRingMs.clear();
           return;
         }
-        SoundService.instance.play('done');
-        HapticService.instance.heavy();
+        final now = DateTime.now().millisecondsSinceEpoch;
         final l = AppLocalizations.of(context);
-        final t = ringing.first;
-        final over =
-            ((DateTime.now().millisecondsSinceEpoch - t.doneAtMs) / 60000)
-                .round();
-        TtsService.instance.speak(
-          l.ttsOverdue(t.name, over),
-          localeTag: Localizations.localeOf(context).toLanguageTag(),
-        );
+        for (final t in ringing) {
+          final ivMs =
+              CareService.instance.realarmIntervalMin(t.category) * 60000;
+          final last = _lastRingMs[t.id] ?? t.doneAtMs;
+          if (now - last < ivMs) continue;
+          _lastRingMs[t.id] = now;
+          SoundService.instance.play('done');
+          HapticService.instance.heavy();
+          if (CareService.instance.ttsName.value) {
+            final over = ((now - t.doneAtMs) / 60000).round();
+            TtsService.instance.speak(
+              l.ttsOverdue(t.name, over),
+              localeTag: Localizations.localeOf(context).toLanguageTag(),
+            );
+          }
+        }
       });
     } else if (!hasRinging) {
       _realarmTimer?.cancel();
       _realarmTimer = null;
+      _lastRingMs.clear();
+    }
+  }
+
+  /// 루프 전환 통지(루프 시안 §4) — 회차 시작(첫 단계 진입)은 강하게,
+  /// 그 외 단계 전환은 가볍게. 전부 자동 진행이라 확인은 불필요.
+  void _onLooped(BuildContext context, MultiTimerState s) {
+    if (s.justLooped.isEmpty) return;
+    final l = AppLocalizations.of(context);
+    for (final id in s.justLooped) {
+      final t = s.timers.where((x) => x.id == id).firstOrNull;
+      if (t == null || !t.isLoop) continue;
+      final step = t.loopSteps[t.loopStepIdx];
+      final newRound = t.loopStepIdx == 0;
+      if (newRound) {
+        SoundService.instance.play('done');
+        HapticService.instance.heavy();
+      } else {
+        SoundService.instance.play('start');
+        HapticService.instance.light();
+      }
+      final msg = newRound
+          ? l.loopRoundStart(t.loopRound, step.name)
+          : l.loopStepStart(step.name);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(duration: const Duration(seconds: 3), content: Text(msg)),
+      );
+      if (CareService.instance.ttsName.value) {
+        TtsService.instance.speak(
+          msg,
+          localeTag: Localizations.localeOf(context).toLanguageTag(),
+        );
+      }
     }
   }
 
@@ -310,7 +353,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         _ => l.doneMsgNeutral(t.name),
       };
       DesktopNotificationService.notify(l.multiTimerTitle, doneMsg);
-      if (t.name.isNotEmpty) {
+      if (t.name.isNotEmpty && CareService.instance.ttsName.value) {
         TtsService.instance.speak(
           doneMsg,
           localeTag: Localizations.localeOf(context).toLanguageTag(),
@@ -451,6 +494,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         listener: (context, state) {
           _persist(state);
           _onCompleted(context, state);
+          _onLooped(context, state);
           _onWarnThresholds(state);
           _syncRealarm(state);
           _syncOverlays(l, state);
@@ -496,6 +540,9 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     Duration picked = const Duration(minutes: 3);
     var editMode = false;
     var pickerKey = 0; // 편집 모드에서 칩 탭 시 피커를 새 값으로 재생성
+    var loopMode = false; // 루프 프리셋 만들기(루프 시안 §2)
+    final loopSteps = <LoopStep>[];
+    var loopRepeat = 4;
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.surface,
@@ -519,7 +566,9 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
               right: 20,
               top: 10,
             ),
-            child: Column(
+            // 루프 모드 등으로 내용이 길어지면 스크롤(오버플로 방지).
+            child: SingleChildScrollView(
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
@@ -645,7 +694,31 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                                 SoundService.instance.play('tap');
                                 HapticService.instance.light();
                                 _markPresetUsed(name);
-                                bloc.add(MtAdd(name, ms, autoStart: true));
+                                final rawSteps = p['steps'] as List?;
+                                if (rawSteps != null && rawSteps.isNotEmpty) {
+                                  bloc.add(
+                                    MtAddLoop(
+                                      name,
+                                      rawSteps
+                                          .map(
+                                            (e) => LoopStep.fromJson(
+                                              Map<String, dynamic>.from(e),
+                                            ),
+                                          )
+                                          .toList(),
+                                      (p['repeat'] as num?)?.toInt() ?? 1,
+                                    ),
+                                  );
+                                } else {
+                                  bloc.add(
+                                    MtAdd(
+                                      name,
+                                      ms,
+                                      autoStart: true,
+                                      category: p['category'] as String?,
+                                    ),
+                                  );
+                                }
                                 Navigator.pop(ctx);
                                 messenger.showSnackBar(
                                   SnackBar(
@@ -794,6 +867,192 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                       style: TextStyle(color: AppColors.faint, fontSize: 13),
                     ),
                   ),
+                // 루프 모드(루프 시안 §2) — 단계 리스트 + 반복 횟수.
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l.loopToggle,
+                            style: const TextStyle(
+                              color: AppColors.text,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            l.loopToggleDesc,
+                            style: TextStyle(
+                              color: AppColors.faint,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: loopMode,
+                      activeThumbColor: AppColors.accent,
+                      onChanged: (v) => setSheetState(() => loopMode = v),
+                    ),
+                  ],
+                ),
+                if (loopMode) ...[
+                  for (var si = 0; si < loopSteps.length; si++)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF232326),
+                        border: Border.all(color: AppColors.border),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: AppColors.segColors[si %
+                                  AppColors.segColors.length],
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              loopSteps[si].name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppColors.text,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            _fmt(loopSteps[si].ms),
+                            style: const TextStyle(
+                              color: AppColors.text,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () =>
+                                setSheetState(() => loopSteps.removeAt(si)),
+                            child: Icon(
+                              Icons.close,
+                              size: 17,
+                              color: AppColors.danger,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (loopSteps.length < 4)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(46),
+                          side: const BorderSide(color: AppColors.border),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        onPressed: () {
+                          final ms = picked.inMilliseconds;
+                          if (ms <= 0) return;
+                          final nm = nameCtrl.text.trim().isEmpty
+                              ? l.multiTimerTitle
+                              : nameCtrl.text.trim();
+                          setSheetState(() {
+                            loopSteps.add(LoopStep(nm, ms));
+                            nameCtrl.clear();
+                          });
+                        },
+                        child: Text(
+                          l.loopAddStep,
+                          style: TextStyle(
+                            color: AppColors.faint,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        l.loopRepeat,
+                        style: const TextStyle(
+                          color: AppColors.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.remove, color: AppColors.muted),
+                            onPressed: () => setSheetState(
+                              () => loopRepeat =
+                                  (loopRepeat - 1).clamp(1, 12),
+                            ),
+                          ),
+                          Text(
+                            '× $loopRepeat',
+                            style: const TextStyle(
+                              color: AppColors.text,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.add, color: AppColors.muted),
+                            onPressed: () => setSheetState(
+                              () => loopRepeat =
+                                  (loopRepeat + 1).clamp(1, 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        l.loopTotal,
+                        style: TextStyle(color: AppColors.faint, fontSize: 13),
+                      ),
+                      Text(
+                        _fmt(
+                          loopSteps.fold<int>(0, (a, e) => a + e.ms) *
+                              loopRepeat,
+                        ),
+                        style: TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                ],
                 TextField(
                   controller: nameCtrl,
                   style: const TextStyle(color: AppColors.text),
@@ -884,6 +1143,38 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                           onPressed: editMode
                               ? null
                               : () {
+                                  if (loopMode) {
+                                    if (loopSteps.isEmpty) return;
+                                    final name = nameCtrl.text.trim().isEmpty
+                                        ? loopSteps.first.name
+                                        : nameCtrl.text.trim();
+                                    // 프리셋으로 저장(steps/repeat) + 즉시 시작.
+                                    _presets.add({
+                                      'name': name,
+                                      'durationMs': loopSteps.fold<int>(
+                                            0,
+                                            (a, e) => a + e.ms,
+                                          ) *
+                                          loopRepeat,
+                                      'steps': loopSteps
+                                          .map((e) => e.toJson())
+                                          .toList(),
+                                      'repeat': loopRepeat,
+                                    });
+                                    PersistenceService.saveMultiTimerPresets(
+                                      _presets,
+                                    );
+                                    SoundService.instance.play('add');
+                                    bloc.add(
+                                      MtAddLoop(
+                                        name,
+                                        List.of(loopSteps),
+                                        loopRepeat,
+                                      ),
+                                    );
+                                    Navigator.pop(ctx);
+                                    return;
+                                  }
                                   final ms = picked.inMilliseconds;
                                   if (ms <= 0) return;
                                   final name = nameCtrl.text.trim().isEmpty
@@ -894,7 +1185,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                                   Navigator.pop(ctx);
                                 },
                           child: Text(
-                            l.multiTimerAdd,
+                            loopMode ? l.loopSaveStart : l.multiTimerAdd,
                             style: const TextStyle(
                               color: Color(0xFF141416),
                               fontSize: 15,
@@ -907,6 +1198,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                   ),
                 ),
               ],
+              ),
             ),
           );
         },
@@ -1010,6 +1302,12 @@ class _TimerRow extends StatelessWidget {
         ? l.alarmRinging
         : timer.done
         ? l.multiTimerDone
+        : timer.isLoop && timer.running
+        ? l.loopStepTag(
+            timer.loopSteps[timer.loopStepIdx].name,
+            timer.loopRound,
+            timer.loopRepeat,
+          )
         : paused
         ? l.multiTimerStatePaused
         : idle
@@ -1019,6 +1317,8 @@ class _TimerRow extends StatelessWidget {
         ? AppColors.danger
         : timer.done
         ? AppColors.swGreen
+        : timer.isLoop && timer.running
+        ? AppColors.timerOrange
         : paused
         ? AppColors.accent
         : AppColors.faint;
@@ -1026,6 +1326,8 @@ class _TimerRow extends StatelessWidget {
         ? AppColors.danger.withAlpha(0x24)
         : timer.done
         ? AppColors.swGreen.withAlpha(0x24)
+        : timer.isLoop && timer.running
+        ? AppColors.timerOrange.withAlpha(0x24)
         : paused
         ? AppColors.accent.withAlpha(0x1F)
         : AppColors.border.withAlpha(0x66);
