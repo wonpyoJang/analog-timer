@@ -1046,4 +1046,47 @@ class AppLocalizationsEs extends AppLocalizations {
   String workoutSummaryFree(String pace) {
     return 'free count · ${pace}s';
   }
+
+  @override
+  String get workoutCustomAdd => '+ Custom exercise';
+
+  @override
+  String get workoutCustomTitle => 'Create custom exercise';
+
+  @override
+  String get workoutCustomNameHint => 'Exercise name (e.g. Deadlift)';
+
+  @override
+  String get workoutTypeReps => 'Sets × reps';
+
+  @override
+  String get workoutTypeTime => 'Timed';
+
+  @override
+  String get workoutTypeFree => 'Free';
+
+  @override
+  String get workoutCustomRepsDesc =>
+      'Default 3 sets × 10 reps · pace 2.0s — edit in routine';
+
+  @override
+  String get workoutCustomTimeDesc => 'Default 30s hold — edit in routine';
+
+  @override
+  String get workoutCustomFreeDesc =>
+      'Endless count, manual finish · pace 2.0s';
+
+  @override
+  String get workoutCustomCancel => 'Cancel';
+
+  @override
+  String get workoutCustomCreate => 'Create & add';
+
+  @override
+  String workoutSecsLeft(int t) {
+    return '${t}s left';
+  }
+
+  @override
+  String get wsGetReady => 'Get ready! Starting soon';
 }

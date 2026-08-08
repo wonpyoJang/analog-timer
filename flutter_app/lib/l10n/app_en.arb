@@ -601,5 +601,25 @@
         "type": "String"
       }
     }
-  }
+  },
+  "workoutCustomAdd": "+ Custom exercise",
+  "workoutCustomTitle": "Create custom exercise",
+  "workoutCustomNameHint": "Exercise name (e.g. Deadlift)",
+  "workoutTypeReps": "Sets × reps",
+  "workoutTypeTime": "Timed",
+  "workoutTypeFree": "Free",
+  "workoutCustomRepsDesc": "Default 3 sets × 10 reps · pace 2.0s — edit in routine",
+  "workoutCustomTimeDesc": "Default 30s hold — edit in routine",
+  "workoutCustomFreeDesc": "Endless count, manual finish · pace 2.0s",
+  "workoutCustomCancel": "Cancel",
+  "workoutCustomCreate": "Create & add",
+  "workoutSecsLeft": "{t}s left",
+  "@workoutSecsLeft": {
+    "placeholders": {
+      "t": {
+        "type": "int"
+      }
+    }
+  },
+  "wsGetReady": "Get ready! Starting soon"
 }

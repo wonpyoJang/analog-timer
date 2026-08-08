@@ -19,6 +19,10 @@ String exerciseDisplayName(AppLocalizations l, String libKey) =>
       _ => libKey,
     };
 
+/// 항목 표시 이름 — 커스텀 이름 우선.
+String exerciseName(AppLocalizations l, WorkoutExercise it) =>
+    it.customName ?? exerciseDisplayName(l, it.libKey);
+
 String exerciseSummary(AppLocalizations l, WorkoutExercise it) =>
     switch (it.type) {
       WorkoutType.time => l.workoutSummaryTime(it.dur),
@@ -39,6 +43,12 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   String? _activeId;
   String? _openItemId;
   WorkoutConfig _cfg = WorkoutConfig();
+  List<WorkoutLibEntry> _customLib = [];
+
+  /// 커스텀 운동 작성 폼 상태 — null 이면 닫힘.
+  String? _customName;
+  WorkoutType _customType = WorkoutType.reps;
+  bool _customOpen = false;
   bool _loaded = false;
 
   WorkoutRoutine? get _active =>
@@ -54,6 +64,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   Future<void> _load() async {
     final raw = await PersistenceService.loadWorkoutRoutines();
     final cfgRaw = await PersistenceService.loadWorkoutConfig();
+    final customRaw = await PersistenceService.loadWorkoutCustomLib();
     if (!mounted) return;
     setState(() {
       _loaded = true;
@@ -74,6 +85,9 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
         ];
       }
       _activeId = _routines.firstOrNull?.id;
+      if (customRaw != null) {
+        _customLib = customRaw.map(WorkoutLibEntry.fromJson).toList();
+      }
     });
   }
 
@@ -299,21 +313,62 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                   spacing: 7,
                   runSpacing: 7,
                   children: [
-                    for (final e in workoutLibrary)
+                    for (final e in [...workoutLibrary, ..._customLib])
                       _RoutineChip(
                         label:
-                            '＋ ${exerciseDisplayName(l, e.libKey)} ${e.type == WorkoutType.time
+                            '＋ ${e.customName ?? exerciseDisplayName(l, e.libKey)} ${e.type == WorkoutType.time
                                 ? '${e.dur}s'
                                 : e.type == WorkoutType.free
                                 ? '∞'
                                 : '${e.pace}s'}',
+                        custom: e.isCustom,
                         onTap: () => _patchActive(
                           (r) =>
                               r.copyWith(items: [...r.items, e.instantiate()]),
                         ),
                       ),
+                    _RoutineChip(
+                      label: l.workoutCustomAdd,
+                      dashed: true,
+                      onTap: () => setState(() {
+                        _customOpen = true;
+                        _customName = '';
+                        _customType = WorkoutType.reps;
+                      }),
+                    ),
                   ],
                 ),
+                if (_customOpen) ...[
+                  const SizedBox(height: 10),
+                  _CustomExerciseCard(
+                    name: _customName ?? '',
+                    type: _customType,
+                    onName: (v) => setState(() => _customName = v),
+                    onType: (t) => setState(() => _customType = t),
+                    onCancel: () => setState(() => _customOpen = false),
+                    onCreate: () {
+                      final nm = (_customName ?? '').trim();
+                      if (nm.isEmpty) return;
+                      final entry = WorkoutLibEntry(
+                        'custom',
+                        _customType,
+                        customName: nm,
+                      );
+                      setState(() {
+                        _customLib = [..._customLib, entry];
+                        _customOpen = false;
+                      });
+                      PersistenceService.saveWorkoutCustomLib(
+                        _customLib.map((e) => e.toJson()).toList(),
+                      );
+                      _patchActive(
+                        (r) => r.copyWith(
+                          items: [...r.items, entry.instantiate()],
+                        ),
+                      );
+                    },
+                  ),
+                ],
                 const SizedBox(height: 16),
                 // 휴식·톤·말해줄 것·덕킹
                 _Section(
@@ -519,7 +574,7 @@ class _ExerciseCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${index + 1}. ${exerciseDisplayName(l, item.libKey)}',
+                        '${index + 1}. ${exerciseName(l, item)}',
                         style: const TextStyle(
                           color: AppColors.text,
                           fontSize: 14,
@@ -636,18 +691,24 @@ class _RoutineChip extends StatelessWidget {
   final String label;
   final bool selected;
   final bool dashed;
+
+  /// 커스텀 운동 — 녹색 뉘앙스로 구분(시안).
+  final bool custom;
   final VoidCallback onTap;
   const _RoutineChip({
     required this.label,
     required this.onTap,
     this.selected = false,
     this.dashed = false,
+    this.custom = false,
   });
 
   @override
   Widget build(BuildContext context) => Material(
     color: selected
         ? AppColors.accent.withAlpha(0x1A)
+        : custom
+        ? const Color(0xFF52E08E).withAlpha(0x12)
         : dashed
         ? Colors.transparent
         : const Color(0xFF232326),
@@ -869,4 +930,135 @@ class _SegButtons extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// 커스텀 운동 작성 카드(시안) — 이름 + 유형 세그 + 안내 + 취소/만들고 추가.
+class _CustomExerciseCard extends StatelessWidget {
+  final String name;
+  final WorkoutType type;
+  final ValueChanged<String> onName;
+  final ValueChanged<WorkoutType> onType;
+  final VoidCallback onCancel;
+  final VoidCallback onCreate;
+  const _CustomExerciseCard({
+    required this.name,
+    required this.type,
+    required this.onName,
+    required this.onType,
+    required this.onCancel,
+    required this.onCreate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    const green = Color(0xFF52E08E);
+    final desc = switch (type) {
+      WorkoutType.reps => l.workoutCustomRepsDesc,
+      WorkoutType.time => l.workoutCustomTimeDesc,
+      WorkoutType.free => l.workoutCustomFreeDesc,
+    };
+    final canCreate = name.trim().isNotEmpty;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: green),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.workoutCustomTitle,
+            style: const TextStyle(
+              color: green,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextFormField(
+            autofocus: true,
+            initialValue: name,
+            onChanged: onName,
+            style: const TextStyle(
+              color: AppColors.text,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: l.workoutCustomNameHint,
+              hintStyle: TextStyle(color: AppColors.faint),
+              filled: true,
+              fillColor: const Color(0xFF232326),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          _SegButtons(
+            options: {
+              'reps': l.workoutTypeReps,
+              'time': l.workoutTypeTime,
+              'free': l.workoutTypeFree,
+            },
+            value: type.name,
+            onChanged: (v) => onType(
+              WorkoutType.values.firstWhere((t) => t.name == v),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              desc,
+              style: TextStyle(color: AppColors.faint, fontSize: 11),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: onCancel,
+                  child: Text(
+                    l.workoutCustomCancel,
+                    style: TextStyle(color: AppColors.muted, fontSize: 12.5),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: canCreate ? green : const Color(0xFF3A3A3E),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: canCreate ? onCreate : null,
+                  child: Text(
+                    l.workoutCustomCreate,
+                    style: const TextStyle(
+                      color: Color(0xFF111111),
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
