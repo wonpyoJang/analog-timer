@@ -8,11 +8,13 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "dev.analogtimer/widget"
     private val MULTI_OVERLAY_CHANNEL = "dev.analogtimer/multi_overlay"
+    private val ANR_VITALS_CHANNEL = "dev.analogtimer/anr_vitals"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         TimerNotificationManager.createChannel(this)
         configureMultiOverlayChannel(flutterEngine)
+        configureAnrVitalsChannel(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -93,6 +95,20 @@ class MainActivity : FlutterActivity() {
                     "closeAll" -> {
                         MultiOverlayService.instance?.closeAll()
                         result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+    }
+
+    /** 프로덕션 ANR-free 지표 — 직전 세션 ANR/크래시 종료 이력 조회. */
+    private fun configureAnrVitalsChannel(flutterEngine: FlutterEngine) {
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ANR_VITALS_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "collect" -> {
+                        val sinceMs = (call.argument<Any>("sinceMs") as? Number)?.toLong() ?: 0L
+                        result.success(AnrVitalsCollector.collect(applicationContext, sinceMs))
                     }
                     else -> result.notImplemented()
                 }
