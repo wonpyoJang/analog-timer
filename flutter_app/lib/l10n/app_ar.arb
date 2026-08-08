@@ -68,6 +68,8 @@
   "batteryMon": "بطارية",
   "batteryMonOn": "بطارية ON",
   "settings": "الإعدادات",
+  "navTimer": "مؤقت",
+  "navMulti": "متعدد",
   "settingsBattery": "مراقبة البطارية",
   "settingsBatteryDesc": "تحذير عند انخفاض البطارية إلى 20٪ أو أقل",
   "settingsLanguage": "اللغة",
@@ -106,6 +108,10 @@
   "multiTimerNameHint": "اسم المؤقت",
   "multiTimerEmpty": "لا مؤقتات بعد. اضغط + للإضافة.",
   "multiTimerDone": "تم",
+  "multiTimerOverlayOn": "إظهار النوافذ العائمة",
+  "multiTimerOverlayOff": "إخفاء النوافذ العائمة",
+  "multiTimerOverlayPermission": "اسمح بـ \"العرض فوق التطبيقات الأخرى\" لاستخدام النوافذ العائمة",
+  "multiTimerOverlayLimit": "يمكنك عرض حتى {count} نافذة عائمة",
   "multiTimerAllDone": "انتهى {count} مؤقتات",
   "@multiTimerAllDone": {
     "placeholders": {

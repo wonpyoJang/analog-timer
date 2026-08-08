@@ -93,19 +93,23 @@ class OverflowMenuButton extends StatelessWidget {
     );
 
     final items = <OverflowMenuItem>[
-      OverflowMenuItem(
-        icon: Icons.timer_outlined,
-        label: l.multiTimerTitle,
-        chevron: true,
-        onTap: onOpenMultiTimer,
-      ),
-      OverflowMenuItem(
-        icon: Icons.settings_outlined,
-        label: l.settings,
-        hint: l.menuSettingsHint,
-        chevron: true,
-        onTap: onOpenSettings,
-      ),
+      // 모바일은 멀티 타이머·설정을 하단 탭으로 제공하므로 메뉴에서 숨긴다.
+      // 데스크톱은 하단 탭이 없어 여기서 이동한다.
+      if (isDesktop) ...[
+        OverflowMenuItem(
+          icon: Icons.timer_outlined,
+          label: l.multiTimerTitle,
+          chevron: true,
+          onTap: onOpenMultiTimer,
+        ),
+        OverflowMenuItem(
+          icon: Icons.settings_outlined,
+          label: l.settings,
+          hint: l.menuSettingsHint,
+          chevron: true,
+          onTap: onOpenSettings,
+        ),
+      ],
       if (SyncService.instance.supported)
         OverflowMenuItem(
           icon: Icons.devices_outlined,

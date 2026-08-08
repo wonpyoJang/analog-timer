@@ -232,6 +232,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settings => 'Ajustes';
 
   @override
+  String get navTimer => 'Temporizador';
+
+  @override
+  String get navMulti => 'Multi';
+
+  @override
   String get settingsBattery => 'Supervisión de batería';
 
   @override
@@ -706,6 +712,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get multiTimerDone => 'Listo';
+
+  @override
+  String get multiTimerOverlayOn => 'Mostrar superposiciones';
+
+  @override
+  String get multiTimerOverlayOff => 'Ocultar superposiciones';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'Permite \"Mostrar sobre otras apps\" para usar las superposiciones';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'Puedes mostrar hasta $count superposiciones';
+  }
 
   @override
   String multiTimerAllDone(int count) {

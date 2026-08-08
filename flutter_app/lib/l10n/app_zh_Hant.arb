@@ -68,6 +68,8 @@
   "batteryMon": "電量",
   "batteryMonOn": "電量 ON",
   "settings": "設定",
+  "navTimer": "計時器",
+  "navMulti": "多重",
   "settingsBattery": "電量監控",
   "settingsBatteryDesc": "電量低於20%時發出警告",
   "settingsLanguage": "語言",
@@ -106,6 +108,10 @@
   "multiTimerNameHint": "計時器名稱",
   "multiTimerEmpty": "還沒有計時器，點 + 新增。",
   "multiTimerDone": "完成",
+  "multiTimerOverlayOn": "顯示浮動視窗",
+  "multiTimerOverlayOff": "隱藏浮動視窗",
+  "multiTimerOverlayPermission": "請允許「顯示在其他應用程式上層」以使用浮動視窗",
+  "multiTimerOverlayLimit": "最多可顯示 {count} 個浮動視窗",
   "multiTimerAllDone": "{count} 個計時器完成",
   "@multiTimerAllDone": {
     "placeholders": {

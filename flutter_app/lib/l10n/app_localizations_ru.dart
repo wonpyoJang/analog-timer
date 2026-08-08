@@ -232,6 +232,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings => 'Настройки';
 
   @override
+  String get navTimer => 'Таймер';
+
+  @override
+  String get navMulti => 'Мульти';
+
+  @override
   String get settingsBattery => 'Мониторинг батареи';
 
   @override
@@ -706,6 +712,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get multiTimerDone => 'Готово';
+
+  @override
+  String get multiTimerOverlayOn => 'Показать оверлеи';
+
+  @override
+  String get multiTimerOverlayOff => 'Скрыть оверлеи';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'Разрешите «Поверх других приложений», чтобы использовать оверлеи';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'Можно показать до $count оверлеев';
+  }
 
   @override
   String multiTimerAllDone(int count) {

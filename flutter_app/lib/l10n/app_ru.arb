@@ -68,6 +68,8 @@
   "batteryMon": "Батарея",
   "batteryMonOn": "Батарея ON",
   "settings": "Настройки",
+  "navTimer": "Таймер",
+  "navMulti": "Мульти",
   "settingsBattery": "Мониторинг батареи",
   "settingsBatteryDesc": "Предупреждать при уровне заряда 20 % и ниже",
   "settingsLanguage": "Язык",
@@ -106,6 +108,10 @@
   "multiTimerNameHint": "Название таймера",
   "multiTimerEmpty": "Пока нет таймеров. Нажмите +, чтобы добавить.",
   "multiTimerDone": "Готово",
+  "multiTimerOverlayOn": "Показать оверлеи",
+  "multiTimerOverlayOff": "Скрыть оверлеи",
+  "multiTimerOverlayPermission": "Разрешите «Поверх других приложений», чтобы использовать оверлеи",
+  "multiTimerOverlayLimit": "Можно показать до {count} оверлеев",
   "multiTimerAllDone": "Завершено таймеров: {count}",
   "@multiTimerAllDone": {
     "placeholders": {

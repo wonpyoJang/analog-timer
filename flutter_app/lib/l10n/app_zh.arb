@@ -68,6 +68,8 @@
   "batteryMon": "电量",
   "batteryMonOn": "电量 ON",
   "settings": "设置",
+  "navTimer": "计时器",
+  "navMulti": "多个",
   "settingsBattery": "电量监控",
   "settingsBatteryDesc": "电量低于20%时发出警告",
   "settingsLanguage": "语言",
@@ -106,6 +108,10 @@
   "multiTimerNameHint": "计时器名称",
   "multiTimerEmpty": "还没有计时器，点 + 添加。",
   "multiTimerDone": "完成",
+  "multiTimerOverlayOn": "显示悬浮窗",
+  "multiTimerOverlayOff": "隐藏悬浮窗",
+  "multiTimerOverlayPermission": "请允许“显示在其他应用上层”以使用悬浮窗",
+  "multiTimerOverlayLimit": "最多可显示 {count} 个悬浮窗",
   "multiTimerAllDone": "{count} 个计时器完成",
   "@multiTimerAllDone": {
     "placeholders": {

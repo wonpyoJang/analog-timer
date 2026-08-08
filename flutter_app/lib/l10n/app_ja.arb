@@ -68,6 +68,8 @@
   "batteryMon": "バッテリー",
   "batteryMonOn": "バッテリー ON",
   "settings": "設定",
+  "navTimer": "タイマー",
+  "navMulti": "マルチ",
   "settingsBattery": "バッテリー監視",
   "settingsBatteryDesc": "バッテリーが20%以下になったら警告",
   "settingsLanguage": "言語",
@@ -106,6 +108,10 @@
   "multiTimerNameHint": "タイマー名",
   "multiTimerEmpty": "タイマーがありません。＋で追加。",
   "multiTimerDone": "完了",
+  "multiTimerOverlayOn": "オーバーレイを表示",
+  "multiTimerOverlayOff": "オーバーレイを非表示",
+  "multiTimerOverlayPermission": "オーバーレイを使うには「他のアプリの上に表示」を許可してください",
+  "multiTimerOverlayLimit": "オーバーレイは最大 {count} 個まで表示できます",
   "multiTimerAllDone": "タイマー{count}件完了",
   "@multiTimerAllDone": {
     "placeholders": {

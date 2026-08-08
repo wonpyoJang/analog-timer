@@ -232,6 +232,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get navTimer => 'Timer';
+
+  @override
+  String get navMulti => 'Multi';
+
+  @override
   String get settingsBattery => 'Battery monitoring';
 
   @override
@@ -704,6 +710,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get multiTimerDone => 'Done';
+
+  @override
+  String get multiTimerOverlayOn => 'Show overlays';
+
+  @override
+  String get multiTimerOverlayOff => 'Hide overlays';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'Allow \"Display over other apps\" to use overlays';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'You can float up to $count overlays';
+  }
 
   @override
   String multiTimerAllDone(int count) {

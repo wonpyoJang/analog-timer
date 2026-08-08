@@ -137,6 +137,8 @@
   "batteryMon": "Battery",
   "batteryMonOn": "Battery ON",
   "settings": "Settings",
+  "navTimer": "Timer",
+  "navMulti": "Multi",
   "settingsBattery": "Battery monitoring",
   "settingsBatteryDesc": "Warn when battery drops to 20% or below",
   "settingsLanguage": "Language",
@@ -330,6 +332,17 @@
   "multiTimerNameHint": "Timer name",
   "multiTimerEmpty": "No timers yet. Tap + to add one.",
   "multiTimerDone": "Done",
+  "multiTimerOverlayOn": "Show overlays",
+  "multiTimerOverlayOff": "Hide overlays",
+  "multiTimerOverlayPermission": "Allow \"Display over other apps\" to use overlays",
+  "multiTimerOverlayLimit": "You can float up to {count} overlays",
+  "@multiTimerOverlayLimit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "multiTimerAllDone": "{count} timers finished",
   "@multiTimerAllDone": {
     "placeholders": {

@@ -232,6 +232,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settings => 'Ayarlar';
 
   @override
+  String get navTimer => 'Zamanlayıcı';
+
+  @override
+  String get navMulti => 'Çoklu';
+
+  @override
   String get settingsBattery => 'Pil izleme';
 
   @override
@@ -706,6 +712,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get multiTimerDone => 'Bitti';
+
+  @override
+  String get multiTimerOverlayOn => 'Yer paylaşımlarını göster';
+
+  @override
+  String get multiTimerOverlayOff => 'Yer paylaşımlarını gizle';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'Yer paylaşımı için \"Diğer uygulamaların üzerinde göster\" iznini verin';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'En fazla $count yer paylaşımı gösterebilirsin';
+  }
 
   @override
   String multiTimerAllDone(int count) {

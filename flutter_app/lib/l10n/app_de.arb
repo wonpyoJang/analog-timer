@@ -68,6 +68,8 @@
   "batteryMon": "Akku",
   "batteryMonOn": "Akku AN",
   "settings": "Einstellungen",
+  "navTimer": "Timer",
+  "navMulti": "Multi",
   "settingsBattery": "Akku-Überwachung",
   "settingsBatteryDesc": "Warnen wenn Akku auf 20 % oder darunter fällt",
   "settingsLanguage": "Sprache",
@@ -106,6 +108,10 @@
   "multiTimerNameHint": "Timer-Name",
   "multiTimerEmpty": "Noch keine Timer. Auf + tippen.",
   "multiTimerDone": "Fertig",
+  "multiTimerOverlayOn": "Overlays anzeigen",
+  "multiTimerOverlayOff": "Overlays ausblenden",
+  "multiTimerOverlayPermission": "Erlaube „Über anderen Apps anzeigen“, um Overlays zu nutzen",
+  "multiTimerOverlayLimit": "Du kannst bis zu {count} Overlays anzeigen",
   "multiTimerAllDone": "{count} Timer beendet",
   "@multiTimerAllDone": {
     "placeholders": {

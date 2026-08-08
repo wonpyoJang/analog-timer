@@ -68,6 +68,8 @@
   "batteryMon": "Pil",
   "batteryMonOn": "Pil ON",
   "settings": "Ayarlar",
+  "navTimer": "Zamanlayıcı",
+  "navMulti": "Çoklu",
   "settingsBattery": "Pil izleme",
   "settingsBatteryDesc": "Pil %20 veya altına düştüğünde uyar",
   "settingsLanguage": "Dil",
@@ -106,6 +108,10 @@
   "multiTimerNameHint": "Zamanlayıcı adı",
   "multiTimerEmpty": "Henüz zamanlayıcı yok. Eklemek için +'ya dokunun.",
   "multiTimerDone": "Bitti",
+  "multiTimerOverlayOn": "Yer paylaşımlarını göster",
+  "multiTimerOverlayOff": "Yer paylaşımlarını gizle",
+  "multiTimerOverlayPermission": "Yer paylaşımı için \"Diğer uygulamaların üzerinde göster\" iznini verin",
+  "multiTimerOverlayLimit": "En fazla {count} yer paylaşımı gösterebilirsin",
   "multiTimerAllDone": "{count} zamanlayıcı bitti",
   "@multiTimerAllDone": {
     "placeholders": {

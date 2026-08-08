@@ -232,6 +232,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settings => 'सेटिंग्स';
 
   @override
+  String get navTimer => 'टाइमर';
+
+  @override
+  String get navMulti => 'मल्टी';
+
+  @override
   String get settingsBattery => 'बैटरी निगरानी';
 
   @override
@@ -705,6 +711,21 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get multiTimerDone => 'पूर्ण';
+
+  @override
+  String get multiTimerOverlayOn => 'ओवरले दिखाएँ';
+
+  @override
+  String get multiTimerOverlayOff => 'ओवरले छिपाएँ';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'ओवरले उपयोग के लिए \"अन्य ऐप्स के ऊपर दिखाएँ\" अनुमति दें';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'आप अधिकतम $count ओवरले दिखा सकते हैं';
+  }
 
   @override
   String multiTimerAllDone(int count) {

@@ -231,6 +231,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings => '設定';
 
   @override
+  String get navTimer => 'タイマー';
+
+  @override
+  String get navMulti => 'マルチ';
+
+  @override
   String get settingsBattery => 'バッテリー監視';
 
   @override
@@ -700,6 +706,20 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get multiTimerDone => '完了';
+
+  @override
+  String get multiTimerOverlayOn => 'オーバーレイを表示';
+
+  @override
+  String get multiTimerOverlayOff => 'オーバーレイを非表示';
+
+  @override
+  String get multiTimerOverlayPermission => 'オーバーレイを使うには「他のアプリの上に表示」を許可してください';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'オーバーレイは最大 $count 個まで表示できます';
+  }
 
   @override
   String multiTimerAllDone(int count) {

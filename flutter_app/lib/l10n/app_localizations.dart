@@ -531,6 +531,18 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @navTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer'**
+  String get navTimer;
+
+  /// No description provided for @navMulti.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi'**
+  String get navMulti;
+
   /// No description provided for @settingsBattery.
   ///
   /// In en, this message translates to:
@@ -1394,6 +1406,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Done'**
   String get multiTimerDone;
+
+  /// No description provided for @multiTimerOverlayOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Show overlays'**
+  String get multiTimerOverlayOn;
+
+  /// No description provided for @multiTimerOverlayOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide overlays'**
+  String get multiTimerOverlayOff;
+
+  /// No description provided for @multiTimerOverlayPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow \"Display over other apps\" to use overlays'**
+  String get multiTimerOverlayPermission;
+
+  /// No description provided for @multiTimerOverlayLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can float up to {count} overlays'**
+  String multiTimerOverlayLimit(int count);
 
   /// No description provided for @multiTimerAllDone.
   ///

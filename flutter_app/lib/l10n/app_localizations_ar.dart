@@ -232,6 +232,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings => 'الإعدادات';
 
   @override
+  String get navTimer => 'مؤقت';
+
+  @override
+  String get navMulti => 'متعدد';
+
+  @override
   String get settingsBattery => 'مراقبة البطارية';
 
   @override
@@ -703,6 +709,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get multiTimerDone => 'تم';
+
+  @override
+  String get multiTimerOverlayOn => 'إظهار النوافذ العائمة';
+
+  @override
+  String get multiTimerOverlayOff => 'إخفاء النوافذ العائمة';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'اسمح بـ \"العرض فوق التطبيقات الأخرى\" لاستخدام النوافذ العائمة';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'يمكنك عرض حتى $count نافذة عائمة';
+  }
 
   @override
   String multiTimerAllDone(int count) {

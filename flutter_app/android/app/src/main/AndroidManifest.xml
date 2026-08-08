@@ -38,6 +38,11 @@
             android:name="flutter.overlay.window.flutter_overlay_window.OverlayService"
             android:exported="false"
             android:foregroundServiceType="specialUse" />
+        <!-- 엔진 없는 네이티브 멀티 타이머 오버레이 -->
+        <service
+            android:name=".MultiOverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
         <receiver
             android:name="flutter.overlay.window.flutter_overlay_window.OverlayReceiver"
             android:exported="false" />

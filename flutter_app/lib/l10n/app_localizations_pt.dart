@@ -232,6 +232,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settings => 'Configurações';
 
   @override
+  String get navTimer => 'Timer';
+
+  @override
+  String get navMulti => 'Multi';
+
+  @override
   String get settingsBattery => 'Monitoramento de bateria';
 
   @override
@@ -706,6 +712,21 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get multiTimerDone => 'Concluído';
+
+  @override
+  String get multiTimerOverlayOn => 'Mostrar sobreposições';
+
+  @override
+  String get multiTimerOverlayOff => 'Ocultar sobreposições';
+
+  @override
+  String get multiTimerOverlayPermission =>
+      'Permita \"Sobrepor a outros apps\" para usar as sobreposições';
+
+  @override
+  String multiTimerOverlayLimit(int count) {
+    return 'Você pode exibir até $count sobreposições';
+  }
 
   @override
   String multiTimerAllDone(int count) {

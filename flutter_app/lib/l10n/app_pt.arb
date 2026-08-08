@@ -68,6 +68,8 @@
   "batteryMon": "Bateria",
   "batteryMonOn": "Bateria ON",
   "settings": "Configurações",
+  "navTimer": "Timer",
+  "navMulti": "Multi",
   "settingsBattery": "Monitoramento de bateria",
   "settingsBatteryDesc": "Avisar quando a bateria cair para 20% ou menos",
   "settingsLanguage": "Idioma",
@@ -106,6 +108,10 @@
   "multiTimerNameHint": "Nome do temporizador",
   "multiTimerEmpty": "Nenhum temporizador. Toque em + para adicionar.",
   "multiTimerDone": "Concluído",
+  "multiTimerOverlayOn": "Mostrar sobreposições",
+  "multiTimerOverlayOff": "Ocultar sobreposições",
+  "multiTimerOverlayPermission": "Permita \"Sobrepor a outros apps\" para usar as sobreposições",
+  "multiTimerOverlayLimit": "Você pode exibir até {count} sobreposições",
   "multiTimerAllDone": "{count} temporizadores concluídos",
   "@multiTimerAllDone": {
     "placeholders": {
