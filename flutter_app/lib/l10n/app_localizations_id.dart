@@ -1293,4 +1293,58 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get careRealarmDesc =>
       'finished timers ring every minute until acknowledged';
+
+  @override
+  String get loopToggleDesc => 'auto-repeat multiple steps';
+
+  @override
+  String get loopAddStep => '+ Add step (max 4)';
+
+  @override
+  String get loopRepeat => 'Repeat';
+
+  @override
+  String get loopTotal => 'Total time';
+
+  @override
+  String get loopSaveStart => 'Save & start';
+
+  @override
+  String loopStepTag(String step, int round, int total) {
+    return '$step $round/$total';
+  }
+
+  @override
+  String loopRoundStart(int n, String step) {
+    return 'Round $n — $step started';
+  }
+
+  @override
+  String loopStepStart(String step) {
+    return '$step started';
+  }
+
+  @override
+  String get loopSkipStep => 'Skip step';
+
+  @override
+  String get careIntervalCooking => 'Cooking interval';
+
+  @override
+  String get careIntervalChore => 'Chores interval';
+
+  @override
+  String get careIntervalOther => 'Other interval';
+
+  @override
+  String get careTtsName => 'Speak timer name';
+
+  @override
+  String get careTtsNameDesc => '\"Boil pasta, finished\"';
+
+  @override
+  String get careKeepDone => 'Keep finished timers';
+
+  @override
+  String get careKeepDoneDesc => 'leave completed timers in the list';
 }

@@ -12,6 +12,8 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
 
   MultiTimerBloc() : super(const MultiTimerState()) {
     on<MtAdd>(_onAdd);
+    on<MtAddLoop>(_onAddLoop);
+    on<MtLoopSkip>(_onLoopSkip);
     on<MtRemove>(_onRemove);
     on<MtExtend>(_onExtend);
     on<MtAck>(_onAck);
@@ -36,9 +38,80 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
       name: e.name,
       totalMs: e.totalMs,
       running: e.autoStart,
+      category: e.category,
     );
     emit(state.copyWith(timers: [...state.timers, t]));
     if (e.autoStart) _syncTicker();
+  }
+
+  void _onAddLoop(MtAddLoop e, Emitter<MultiTimerState> emit) {
+    if (e.steps.isEmpty) return;
+    final t = CountdownTimer(
+      name: e.name,
+      totalMs: e.steps.first.ms,
+      remainMs: e.steps.first.ms,
+      running: e.autoStart,
+      loopSteps: e.steps,
+      loopRepeat: e.repeat,
+    );
+    emit(state.copyWith(timers: [...state.timers, t]));
+    if (e.autoStart) _syncTicker();
+  }
+
+  /// ⏭ 현재 단계 건너뛰기(루프 행 전용) — 즉시 다음 단계/회차로.
+  void _onLoopSkip(MtLoopSkip e, Emitter<MultiTimerState> emit) {
+    final justLooped = <String>[];
+    final justCompleted = <String>[];
+    final next = state.timers.map((t) {
+      if (t.id != e.id || !t.isLoop || t.done) return t;
+      return _advanceLoop(t, justLooped, justCompleted);
+    }).toList();
+    emit(
+      state.copyWith(
+        timers: next,
+        justCompleted: justCompleted,
+        justLooped: justLooped,
+      ),
+    );
+    _syncTicker();
+  }
+
+  /// 루프 다음 단계로 전진 — 마지막 단계·회차면 완료 처리.
+  CountdownTimer _advanceLoop(
+    CountdownTimer t,
+    List<String> justLooped,
+    List<String> justCompleted,
+  ) {
+    var stepIdx = t.loopStepIdx + 1;
+    var round = t.loopRound;
+    if (stepIdx >= t.loopSteps.length) {
+      stepIdx = 0;
+      round += 1;
+    }
+    if (round > t.loopRepeat) {
+      justCompleted.add(t.id);
+      return t.copyWith(
+        remainMs: 0,
+        running: false,
+        done: true,
+        acked: false,
+        doneAtMs: DateTime.now().millisecondsSinceEpoch,
+      );
+    }
+    justLooped.add(t.id);
+    final step = t.loopSteps[stepIdx];
+    return CountdownTimer(
+      id: t.id,
+      name: t.name,
+      totalMs: step.ms,
+      remainMs: step.ms,
+      running: true,
+      category: t.category,
+      loopSteps: t.loopSteps,
+      loopRepeat: t.loopRepeat,
+      loopStepIdx: stepIdx,
+      loopRound: round,
+    );
   }
 
   void _onExtend(MtExtend e, Emitter<MultiTimerState> emit) {
@@ -169,10 +242,13 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
   void _applyTick(int elapsedMs, Emitter<MultiTimerState> emit) {
     if (elapsedMs <= 0) return; // 역행 방어
     final justCompleted = <String>[];
+    final justLooped = <String>[];
     final next = state.timers.map((t) {
       if (!t.running || t.done) return t;
       final r = t.remainMs - elapsedMs;
       if (r <= 0) {
+        // 루프 — 다음 단계/회차 자동 시작(전환은 통지만, 루프 시안 §2).
+        if (t.isLoop) return _advanceLoop(t, justLooped, justCompleted);
         justCompleted.add(t.id);
         return t.copyWith(
           remainMs: 0,
@@ -184,7 +260,13 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
       }
       return t.copyWith(remainMs: r);
     }).toList();
-    emit(state.copyWith(timers: next, justCompleted: justCompleted));
+    emit(
+      state.copyWith(
+        timers: next,
+        justCompleted: justCompleted,
+        justLooped: justLooped,
+      ),
+    );
   }
 
   void _onRestore(MtRestore e, Emitter<MultiTimerState> emit) {
