@@ -571,5 +571,20 @@ class MultiOverlayService : Service() {
         const val CMD_UPDATE = "update"
         const val CMD_CLOSE = "close"
         const val CMD_CLOSE_ALL = "closeAll"
+
+        /** 겹침 없이 배치 가능한 pill 슬롯 수 — [findFreePosition] 과 동일한 격자 공식.
+         *  화면 크기에 따라 달라지므로 Dart 가 기기별 동시 표시 상한으로 사용한다.
+         *  (실측: pill 25개 동시에도 ANR·메모리 문제 없음 — 제약은 화면 공간뿐) */
+        fun slotCapacity(context: Context): Int {
+            val dm = context.resources.displayMetrics
+            fun dpv(v: Int): Int = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, v.toFloat(), dm,
+            ).toInt()
+            val size = dpv(DIAMETER_DP)
+            val step = size + dpv(10) // gap
+            val cols = (dm.widthPixels - size - dpv(12) - dpv(12)) / step + 1
+            val rows = (dm.heightPixels - size - dpv(72) - dpv(24)) / step + 1
+            return (cols * rows).coerceAtLeast(1)
+        }
     }
 }

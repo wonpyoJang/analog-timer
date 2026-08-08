@@ -99,6 +99,9 @@ class MainActivity : FlutterActivity() {
                         MultiOverlayService.instance?.closeAll()
                         result.success(null)
                     }
+                    "capacity" -> {
+                        result.success(MultiOverlayService.slotCapacity(applicationContext))
+                    }
                     else -> result.notImplemented()
                 }
             }
