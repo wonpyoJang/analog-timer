@@ -119,5 +119,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settingsTelemetryDesc": "发送匿名诊断和 ANR 信息（不含个人数据）"
 }

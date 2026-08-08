@@ -627,6 +627,12 @@ abstract class AppLocalizations {
   /// **'Help improve Analog Timer'**
   String get telemetryConsentTitle;
 
+  /// No description provided for @settingsTelemetryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Send anonymous diagnostics & ANR info (no personal data)'**
+  String get settingsTelemetryDesc;
+
   /// No description provided for @telemetryConsentBody.
   ///
   /// In en, this message translates to:

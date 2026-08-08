@@ -119,5 +119,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settingsTelemetryDesc": "匿名の診断・ANR情報を送信（個人情報なし）"
 }

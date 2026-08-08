@@ -119,5 +119,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settingsTelemetryDesc": "Envoyer des diagnostics anonymes et infos ANR (aucune donnée personnelle)"
 }

@@ -124,6 +124,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _initDesktop();
       _restoreState();
     }
+    _maybeAskConsentFirstRun(); // 데스크톱+Android 첫 실행 동의
     // 30초마다 자동 저장 — 앱 강제 종료 직전 저장 실패를 보완
     _persistTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) {
@@ -718,11 +719,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (mounted) _updateTray();
     });
     _updateTray();
-    // 첫 실행 1회 진단 동의 + 초기 상태 스냅샷(크래시 맥락용).
+    // 초기 상태 스냅샷(크래시 맥락용). 첫 실행 동의는 initState 공통 경로에서 처리.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _saveTelemetrySnapshot();
+    });
+  }
+
+  /// 첫 실행 1회 진단 동의 — 데스크톱(크래시 텔레메트리) + Android(ANR-free 지표).
+  /// consentApplicable 이 플랫폼을 게이팅하므로 모든 진입에서 안전하게 호출.
+  void _maybeAskConsentFirstRun() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      _saveTelemetrySnapshot();
-      if (TelemetryService.instance.supported &&
+      if (TelemetryService.instance.consentApplicable &&
           (await TelemetryService.instance.consent()) == null &&
           mounted) {
         await showTelemetryConsent(context);

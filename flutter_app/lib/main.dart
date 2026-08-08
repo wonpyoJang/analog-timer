@@ -48,6 +48,7 @@ Future<void> main(List<String> args) async {
   await DesktopService.instance.init();
   await DesktopOverlayService.instance.init();
   await TelemetryService.instance.init();
+  await TelemetryService.instance.loadConsentFlag(); // 동의 notifier 초기화(전 플랫폼)
   unawaited(AnrVitalsService.instance.init()); // Android ANR-free 지표(백그라운드)
   await SyncService.instance.init();
   await TtsService.instance.init();
