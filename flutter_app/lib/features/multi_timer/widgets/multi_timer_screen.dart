@@ -8,6 +8,7 @@ import '../../../theme/app_theme.dart';
 import '../../../services/persistence_service.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/sound_service.dart';
+import '../../../services/care_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
 import '../../../overlay/multi_overlay_service.dart';
@@ -69,6 +70,27 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     OverlayCoordinator.instance.closeMultiOverlays = _closeAllOverlaysForMutex;
     // l10n 이 필요한 기본 시드는 첫 프레임 후에(initState 에선 inherited 조회 불가).
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadPresets());
+    // pill 탭 = 프리-알림 구간 +5분 연장(페르소나 §5).
+    MultiOverlayService.ensureTapListening();
+    MultiOverlayService.onPillTap = _onPillTap;
+  }
+
+  void _onPillTap(String id) {
+    if (!mounted) return;
+    final bloc = context.read<MultiTimerBloc>();
+    final t = bloc.state.timers.where((x) => x.id == id).firstOrNull;
+    if (t == null || !t.running) return;
+    final preMs = CareService.instance.preAlarmMin.value * 60000;
+    if (preMs <= 0 || t.remainMs > preMs) return; // 프리-알림 구간에서만 연장
+    HapticService.instance.light();
+    _extend(bloc, id);
+  }
+
+  /// +5분 연장 — pill 은 deadline 자체 틱이라 push key 를 무효화해 새 deadline 을
+  /// 강제 재전송한다(안 하면 리스트만 늘고 pill 은 옛 deadline 으로 계속 감).
+  void _extend(MultiTimerBloc bloc, String id) {
+    bloc.add(MtExtend(id, 5 * 60000));
+    _lastPushed.remove(id);
   }
 
   /// 저장된 프리셋 로드 — 저장된 적이 없으면 기본 4종(공부/청소/휴식/양치질) 시드.
@@ -143,9 +165,14 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   /// 잔여 60s(햅틱)·30s/10s(경고음) 경계 하향 크로스 감지 — 스펙 카드 5.
   final Map<String, int> _prevRemain = {};
   void _onWarnThresholds(MultiTimerState s) {
+    final preMin = CareService.instance.preAlarmMin.value;
     for (final t in s.timers) {
       final prev = _prevRemain[t.id];
       if (t.running && prev != null) {
+        final preMs = preMin * 60000;
+        if (preMin > 0 && prev > preMs && t.remainMs <= preMs) {
+          _showPreAlarmBanner(t, preMin);
+        }
         if (prev > 60000 && t.remainMs <= 60000) {
           HapticService.instance.impact(); // mediumImpact ×1
         }
@@ -159,6 +186,24 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     _prevRemain.removeWhere((id, _) => !s.timers.any((t) => t.id == id));
   }
 
+  /// 프리-알림 배너 — 소리·진동 없음(몰입 유지). +5분 연장 액션 제공(페르소나 §5).
+  void _showPreAlarmBanner(CountdownTimer t, int preMin) {
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    final bloc = context.read<MultiTimerBloc>();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 6),
+        content: Text(l.preAlarmBanner(t.name, preMin)),
+        action: SnackBarAction(
+          label: l.preAlarmExtend,
+          textColor: AppColors.accent,
+          onPressed: () => _extend(bloc, t.id),
+        ),
+      ),
+    );
+  }
+
   void _onCompleted(BuildContext context, MultiTimerState s) {
     final ids = s.justCompleted;
     if (ids.isEmpty) return;
@@ -170,10 +215,15 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         (x) => x.id == ids.first,
         orElse: () => CountdownTimer(name: '', totalMs: 0),
       );
-      DesktopNotificationService.notify(l.multiTimerTitle, t.name);
+      final doneMsg = switch (CareService.instance.messageTone.value) {
+        'warm' => l.doneMsgWarm(t.name),
+        'brief' => l.doneMsgBrief(t.name),
+        _ => l.doneMsgNeutral(t.name),
+      };
+      DesktopNotificationService.notify(l.multiTimerTitle, doneMsg);
       if (t.name.isNotEmpty) {
         TtsService.instance.speak(
-          t.name,
+          doneMsg,
           localeTag: Localizations.localeOf(context).toLanguageTag(),
         );
       }

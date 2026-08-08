@@ -13,6 +13,7 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
   MultiTimerBloc() : super(const MultiTimerState()) {
     on<MtAdd>(_onAdd);
     on<MtRemove>(_onRemove);
+    on<MtExtend>(_onExtend);
     on<MtRename>(_onRename);
     on<MtSetDuration>(_onSetDuration);
     on<MtStart>(_onStart);
@@ -37,6 +38,17 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
     );
     emit(state.copyWith(timers: [...state.timers, t]));
     if (e.autoStart) _syncTicker();
+  }
+
+  void _onExtend(MtExtend e, Emitter<MultiTimerState> emit) {
+    emit(
+      state.copyWith(
+        timers: _map(
+          (t) => t.copyWith(remainMs: t.remainMs + e.addMs),
+          onlyId: e.id,
+        ),
+      ),
+    );
   }
 
   void _onRemove(MtRemove e, Emitter<MultiTimerState> emit) {

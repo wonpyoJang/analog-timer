@@ -56,7 +56,14 @@ class MainActivity : FlutterActivity() {
 
     /** 엔진 없는 네이티브 멀티 오버레이 브리지 — [MultiOverlayService] 로 명령을 startService 전달. */
     private fun configureMultiOverlayChannel(flutterEngine: FlutterEngine) {
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, MULTI_OVERLAY_CHANNEL)
+        val channel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger, MULTI_OVERLAY_CHANNEL,
+        )
+        // pill 탭 → Dart(프리-알림 +5분 연장, 페르소나 §5).
+        MultiOverlayService.onPillTap = { id ->
+            runOnUiThread { channel.invokeMethod("pillTap", id) }
+        }
+        channel
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "show", "update" -> {
@@ -70,10 +77,11 @@ class MainActivity : FlutterActivity() {
                         val done = call.argument<Boolean>("done") ?: false
                         val doneText = call.argument<String>("doneText") ?: ""
                         val deadlineMs = (call.argument<Any>("deadlineMs") as? Number)?.toLong() ?: 0L
+                        val preAlarmMs = (call.argument<Any>("preAlarmMs") as? Number)?.toLong() ?: 0L
                         val svc = MultiOverlayService.instance
                         if (svc != null && id != null) {
                             // 서비스 기동 상태 — 직접 갱신(상태 변화 시에만; 매초 표시는 네이티브 자체 틱).
-                            svc.showOrUpdate(id, name, color, totalMs, remainMs, running, done, doneText, deadlineMs)
+                            svc.showOrUpdate(id, name, color, totalMs, remainMs, running, done, doneText, deadlineMs, preAlarmMs)
                         } else {
                             // 콜드 스타트(첫 표시) — startService 로 시작(포그라운드 상태라 허용,
                             // onCreate 에서 startForeground 승격 → FGS 데드라인 ANR 없음).
@@ -88,6 +96,7 @@ class MainActivity : FlutterActivity() {
                                 putExtra(MultiOverlayService.EXTRA_DONE, done)
                                 putExtra(MultiOverlayService.EXTRA_DONE_TEXT, doneText)
                                 putExtra(MultiOverlayService.EXTRA_DEADLINE_MS, deadlineMs)
+                                putExtra(MultiOverlayService.EXTRA_PREALARM_MS, preAlarmMs)
                             }
                             startService(intent)
                         }

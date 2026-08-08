@@ -18,6 +18,15 @@ class MtAdd extends MultiTimerEvent {
   List<Object?> get props => [name, totalMs, autoStart];
 }
 
+/// 프리-알림 연장 — 잔여 시간에 [addMs] 를 더한다(+5분 등).
+class MtExtend extends MultiTimerEvent {
+  final String id;
+  final int addMs;
+  const MtExtend(this.id, this.addMs);
+  @override
+  List<Object?> get props => [id, addMs];
+}
+
 class MtRemove extends MultiTimerEvent {
   final String id;
   const MtRemove(this.id);

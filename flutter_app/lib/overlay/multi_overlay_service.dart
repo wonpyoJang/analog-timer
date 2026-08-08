@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import '../services/platform_info.dart';
+import '../services/care_service.dart';
 
 /// 엔진 없는 네이티브 멀티 오버레이 브리지.
 ///
@@ -10,6 +11,20 @@ import '../services/platform_info.dart';
 /// 것을 그대로 재사용한다.
 class MultiOverlayService {
   static const _channel = MethodChannel('dev.analogtimer/multi_overlay');
+
+  /// pill 탭 콜백(네이티브→Dart) — 프리-알림 +5분 연장(페르소나 §5).
+  static void Function(String id)? onPillTap;
+  static bool _tapListening = false;
+
+  static void ensureTapListening() {
+    if (_tapListening || !isAndroid) return;
+    _tapListening = true;
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'pillTap') {
+        onPillTap?.call(call.arguments as String? ?? '');
+      }
+    });
+  }
 
   /// 네이티브 조회 실패 시 동시 표시 상한 폴백.
   static const int fallbackMaxWindows = 5;
@@ -107,6 +122,8 @@ class MultiOverlayService {
       'done': done,
       'doneText': doneText,
       'deadlineMs': deadlineMs,
+      // 프리-알림 구간(잔여 N분)에 pill 링·시간이 accent 로 전환(페르소나 §5).
+      'preAlarmMs': CareService.instance.preAlarmMin.value * 60000,
     });
   }
 }

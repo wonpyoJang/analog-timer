@@ -649,5 +649,61 @@
   "prepDeleteList": "Delete list",
   "prepUncheckAll": "Uncheck all",
   "prepEmptyItems": "No items — tap Edit to add",
-  "prepEmptyItemsEdit": "Add items below"
+  "prepEmptyItemsEdit": "Add items below",
+  "careSection": "Sound & interruptions",
+  "careQuietHours": "Quiet hours",
+  "careQuietHoursDesc": "22:00–07:00 vibrate instead of sounds",
+  "carePreAlarm": "Pre-alert",
+  "carePreAlarmDesc": "silent heads-up before a timer ends",
+  "carePreAlarmOff": "Off",
+  "carePreAlarmMin": "{n} min",
+  "@carePreAlarmMin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "careTone": "Alert wording",
+  "careToneDesc": "tone used in completion messages",
+  "careToneWarm": "Warm",
+  "careToneNeutral": "Neutral",
+  "careToneBrief": "Brief",
+  "careTonePreview": "Preview",
+  "doneMsgWarm": "'{name}' is done. Nice work ☺",
+  "@doneMsgWarm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "doneMsgNeutral": "{name} · 00:00",
+  "@doneMsgNeutral": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "doneMsgBrief": "{name} done",
+  "@doneMsgBrief": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "preAlarmBanner": "'{name}' — {n} min left",
+  "@preAlarmBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "preAlarmExtend": "+5 min"
 }

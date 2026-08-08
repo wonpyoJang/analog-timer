@@ -1146,4 +1146,68 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get prepEmptyItemsEdit => 'Add items below';
+
+  @override
+  String get careSection => 'Sound & interruptions';
+
+  @override
+  String get careQuietHours => 'Quiet hours';
+
+  @override
+  String get careQuietHoursDesc => '22:00–07:00 vibrate instead of sounds';
+
+  @override
+  String get carePreAlarm => 'Pre-alert';
+
+  @override
+  String get carePreAlarmDesc => 'silent heads-up before a timer ends';
+
+  @override
+  String get carePreAlarmOff => 'Off';
+
+  @override
+  String carePreAlarmMin(int n) {
+    return '$n min';
+  }
+
+  @override
+  String get careTone => 'Alert wording';
+
+  @override
+  String get careToneDesc => 'tone used in completion messages';
+
+  @override
+  String get careToneWarm => 'Warm';
+
+  @override
+  String get careToneNeutral => 'Neutral';
+
+  @override
+  String get careToneBrief => 'Brief';
+
+  @override
+  String get careTonePreview => 'Preview';
+
+  @override
+  String doneMsgWarm(String name) {
+    return '\'$name\' is done. Nice work ☺';
+  }
+
+  @override
+  String doneMsgNeutral(String name) {
+    return '$name · 00:00';
+  }
+
+  @override
+  String doneMsgBrief(String name) {
+    return '$name done';
+  }
+
+  @override
+  String preAlarmBanner(String name, int n) {
+    return '\'$name\' — $n min left';
+  }
+
+  @override
+  String get preAlarmExtend => '+5 min';
 }

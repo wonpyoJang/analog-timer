@@ -2168,6 +2168,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add items below'**
   String get prepEmptyItemsEdit;
+
+  /// No description provided for @careSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound & interruptions'**
+  String get careSection;
+
+  /// No description provided for @careQuietHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours'**
+  String get careQuietHours;
+
+  /// No description provided for @careQuietHoursDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'22:00–07:00 vibrate instead of sounds'**
+  String get careQuietHoursDesc;
+
+  /// No description provided for @carePreAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-alert'**
+  String get carePreAlarm;
+
+  /// No description provided for @carePreAlarmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'silent heads-up before a timer ends'**
+  String get carePreAlarmDesc;
+
+  /// No description provided for @carePreAlarmOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get carePreAlarmOff;
+
+  /// No description provided for @carePreAlarmMin.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} min'**
+  String carePreAlarmMin(int n);
+
+  /// No description provided for @careTone.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert wording'**
+  String get careTone;
+
+  /// No description provided for @careToneDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'tone used in completion messages'**
+  String get careToneDesc;
+
+  /// No description provided for @careToneWarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm'**
+  String get careToneWarm;
+
+  /// No description provided for @careToneNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral'**
+  String get careToneNeutral;
+
+  /// No description provided for @careToneBrief.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief'**
+  String get careToneBrief;
+
+  /// No description provided for @careTonePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get careTonePreview;
+
+  /// No description provided for @doneMsgWarm.
+  ///
+  /// In en, this message translates to:
+  /// **'\'{name}\' is done. Nice work ☺'**
+  String doneMsgWarm(String name);
+
+  /// No description provided for @doneMsgNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · 00:00'**
+  String doneMsgNeutral(String name);
+
+  /// No description provided for @doneMsgBrief.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} done'**
+  String doneMsgBrief(String name);
+
+  /// No description provided for @preAlarmBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'\'{name}\' — {n} min left'**
+  String preAlarmBanner(String name, int n);
+
+  /// No description provided for @preAlarmExtend.
+  ///
+  /// In en, this message translates to:
+  /// **'+5 min'**
+  String get preAlarmExtend;
 }
 
 class _AppLocalizationsDelegate
