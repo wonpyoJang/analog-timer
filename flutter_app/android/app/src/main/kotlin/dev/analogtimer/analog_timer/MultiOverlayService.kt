@@ -222,7 +222,8 @@ class MultiOverlayService : Service() {
         pills[id] = handle
     }
 
-    /** 기존 오버레이와 겹치지 않는 스폰 위치. 좌→우 열, 각 열은 위→아래 슬롯을 훑는다. */
+    /** 기존 오버레이와 겹치지 않는 스폰 위치. 좌→우 열, 각 열은 위→아래 슬롯을 훑는다.
+     *  단일 오버레이(시계) 창이 떠 있으면(상호 배타 OFF 동시 사용) 그 rect 도 회피한다. */
     private fun findFreePosition(size: Int): Pair<Int, Int> {
         val gap = dp(10)
         val startX = dp(12)
@@ -231,13 +232,24 @@ class MultiOverlayService : Service() {
         val dm = resources.displayMetrics
         val maxY = dm.heightPixels - size - dp(24)
         val maxX = dm.widthPixels - size - dp(12)
+        val clockRect = runCatching {
+            flutter.overlay.window.flutter_overlay_window.OverlayService.getWindowRect()
+        }.getOrNull()
 
-        fun overlaps(x: Int, y: Int): Boolean = pills.values.any { h ->
-            val px = h.params.x
-            val py = h.params.y
-            // 슬롯 간 최소 간격(gap)만큼 떨어져 있지 않으면 겹침으로 간주.
-            x < px + size + gap && x + size + gap > px &&
-                y < py + size + gap && y + size + gap > py
+        fun overlaps(x: Int, y: Int): Boolean {
+            if (clockRect != null &&
+                x < clockRect.right + gap && x + size + gap > clockRect.left &&
+                y < clockRect.bottom + gap && y + size + gap > clockRect.top
+            ) {
+                return true
+            }
+            return pills.values.any { h ->
+                val px = h.params.x
+                val py = h.params.y
+                // 슬롯 간 최소 간격(gap)만큼 떨어져 있지 않으면 겹침으로 간주.
+                x < px + size + gap && x + size + gap > px &&
+                    y < py + size + gap && y + size + gap > py
+            }
         }
 
         var x = startX
