@@ -737,4 +737,24 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get multiTimerPresetDeleted => '프리셋 삭제됨';
+
+  @override
+  String get multiTimerPresetEdit => '프리셋 편집';
+
+  @override
+  String get multiTimerEditDone => '완료';
+
+  @override
+  String get multiTimerStateIdle => '대기';
+
+  @override
+  String get multiTimerStatePaused => '일시정지';
+
+  @override
+  String get multiTimerPresetEditHint => '칩을 탭하면 이름·시간이 입력란으로 복사돼요';
+
+  @override
+  String multiTimerPresetStarted(String name) {
+    return '\'$name\' 타이머를 시작했어요';
+  }
 }

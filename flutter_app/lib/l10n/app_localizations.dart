@@ -1496,6 +1496,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preset deleted'**
   String get multiTimerPresetDeleted;
+
+  /// No description provided for @multiTimerPresetEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit presets'**
+  String get multiTimerPresetEdit;
+
+  /// No description provided for @multiTimerEditDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get multiTimerEditDone;
+
+  /// No description provided for @multiTimerStateIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get multiTimerStateIdle;
+
+  /// No description provided for @multiTimerStatePaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get multiTimerStatePaused;
+
+  /// No description provided for @multiTimerPresetEditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a preset to copy it into the fields'**
+  String get multiTimerPresetEditHint;
+
+  /// No description provided for @multiTimerPresetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Started \'{name}\''**
+  String multiTimerPresetStarted(String name);
 }
 
 class _AppLocalizationsDelegate

@@ -360,5 +360,18 @@
   "multiTimerPresetBrushTeeth": "Brush teeth",
   "multiTimerPresetSave": "Save as preset",
   "multiTimerPresetSaved": "Preset saved",
-  "multiTimerPresetDeleted": "Preset deleted"
+  "multiTimerPresetDeleted": "Preset deleted",
+  "multiTimerPresetEdit": "Edit presets",
+  "multiTimerEditDone": "Done",
+  "multiTimerStateIdle": "Ready",
+  "multiTimerStatePaused": "Paused",
+  "multiTimerPresetEditHint": "Tap a preset to copy it into the fields",
+  "multiTimerPresetStarted": "Started '{name}'",
+  "@multiTimerPresetStarted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

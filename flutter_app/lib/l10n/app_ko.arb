@@ -242,5 +242,11 @@
   "multiTimerPresetBrushTeeth": "양치질",
   "multiTimerPresetSave": "프리셋으로 저장",
   "multiTimerPresetSaved": "프리셋 저장됨",
-  "multiTimerPresetDeleted": "프리셋 삭제됨"
+  "multiTimerPresetDeleted": "프리셋 삭제됨",
+  "multiTimerPresetEdit": "프리셋 편집",
+  "multiTimerEditDone": "완료",
+  "multiTimerStateIdle": "대기",
+  "multiTimerStatePaused": "일시정지",
+  "multiTimerPresetEditHint": "칩을 탭하면 이름·시간이 입력란으로 복사돼요",
+  "multiTimerPresetStarted": "'{name}' 타이머를 시작했어요"
 }

@@ -355,15 +355,25 @@ class MultiOverlayService : Service() {
         /** 표시(시간 문자열·진행률)를 현재 남은시간으로 재계산. 표시가 바뀌었으면 true. */
         fun refresh(): Boolean {
             val remain = currentRemainMs()
-            val newText = if (done) doneText else fmt(remain)
+            // 상태 문법(디자인): done=✓ / paused=⏸ 프리픽스 / 막판 1분=danger 강조.
+            val newLast = running && !done && remain < 60_000
+            val newText = when {
+                done -> "✓"
+                !running -> "⏸ ${fmt(remain)}"
+                else -> fmt(remain)
+            }
             val newFrac = if (done) 1f
                 else if (totalMs <= 0) 0f
                 else (1f - remain.toFloat() / totalMs).coerceIn(0f, 1f)
-            val changed = newText != timeText || newFrac != frac
+            val changed =
+                newText != timeText || newFrac != frac || newLast != lastMinute
             timeText = newText
             frac = newFrac
+            lastMinute = newLast
             return changed
         }
+
+        private var lastMinute = false
 
         /** Dart _fmt 와 동일: ceil(remainMs/1000) 초를 h:mm:ss / mm:ss 로. */
         private fun fmt(remainMs: Long): String {
@@ -386,16 +396,32 @@ class MultiOverlayService : Service() {
             canvas.drawCircle(cx, cy, r - ringStroke / 2f, bgPaint)
 
             // 둘레 트랙 + 진행 아크(12시 방향에서 시계방향)
+            // 상태별 링 색: done=green / paused=회색 / 막판 1분=danger 글로우 / running=타이머 색.
             arcRect.set(cx - r, cy - r, cx + r, cy + r)
             canvas.drawCircle(cx, cy, r, trackPaint)
-            arcPaint.color = color
+            arcPaint.color = when {
+                done -> COLOR_GREEN
+                !running -> COLOR_PAUSED_RING
+                lastMinute -> COLOR_DANGER
+                else -> color
+            }
+            if (lastMinute) {
+                arcPaint.setShadowLayer(dp(8).toFloat(), 0f, 0f, COLOR_DANGER)
+            } else {
+                arcPaint.clearShadowLayer()
+            }
             val sweep = (if (done) 1f else frac) * 360f
             if (sweep > 0f) canvas.drawArc(arcRect, -90f, sweep, false, arcPaint)
 
             // 중앙 텍스트 — 이름(위) · 남은시간(아래)
             val name = ellipsize(timerName, namePaint, r * 1.4f)
             canvas.drawText(name, cx, cy - dp(8), namePaint)
-            timePaint.color = if (done) color else 0xFFFFFFFF.toInt()
+            timePaint.color = when {
+                done -> COLOR_GREEN
+                lastMinute -> COLOR_DANGER
+                !running -> 0xFFAAAAAA.toInt()
+                else -> 0xFFFFFFFF.toInt()
+            }
             val fm = timePaint.fontMetrics
             canvas.drawText(timeText, cx, cy + dp(14) - fm.descent, timePaint)
         }
@@ -555,6 +581,9 @@ class MultiOverlayService : Service() {
         const val NOTIFICATION_ID = 4611
         const val DEFAULT_ACCENT = 0xFFE07A52.toInt()
         const val DIAMETER_DP = 108
+        const val COLOR_GREEN = 0xFF2EA84A.toInt()
+        const val COLOR_DANGER = 0xFFE05252.toInt()
+        const val COLOR_PAUSED_RING = 0xFF5A5A5E.toInt()
 
         const val EXTRA_CMD = "cmd"
         const val EXTRA_ID = "id"
