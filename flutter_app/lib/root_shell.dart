@@ -33,10 +33,12 @@ class _RootShellState extends State<RootShell> {
       backgroundColor: AppColors.bg,
       body: IndexedStack(
         index: _index,
-        children: const [
-          HomeScreen(),
-          MultiTimerScreen(embedded: true),
-          SettingsScreen(embedded: true),
+        children: [
+          // active=false 면 HomeScreen 이 60fps 시계 재빌드를 멈춘다 — 숨겨진 탭에서
+          // 메인스레드를 포화시켜 오버레이 드래그/토글을 굶기는 것을 방지.
+          HomeScreen(active: _index == 0),
+          const MultiTimerScreen(embedded: true),
+          const SettingsScreen(embedded: true),
         ],
       ),
       bottomNavigationBar: _BottomNav(

@@ -1,7 +1,6 @@
 package dev.analogtimer.analog_timer
 
 import android.content.Intent
-import android.os.Build
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -68,6 +67,10 @@ class MainActivity : FlutterActivity() {
                             svc.showOrUpdate(id, name, time, color, frac, done)
                         } else {
                             // 콜드 스타트(첫 표시) — Intent 로 서비스 시작.
+                            // startForegroundService 대신 startService 를 쓴다: 토글은 항상 앱이
+                            // 포그라운드일 때 일어나므로 startService 가 허용되고, 서비스는
+                            // onCreate 에서 startForeground 로 승격한다. 이러면 "5초 내 startForeground
+                            // 미호출" ANR(ForegroundServiceDidNotStartInTimeException) 자체가 없다.
                             val intent = Intent(this, MultiOverlayService::class.java).apply {
                                 putExtra(MultiOverlayService.EXTRA_CMD, MultiOverlayService.CMD_SHOW)
                                 putExtra(MultiOverlayService.EXTRA_ID, id)
@@ -77,11 +80,7 @@ class MainActivity : FlutterActivity() {
                                 putExtra(MultiOverlayService.EXTRA_FRAC, frac)
                                 putExtra(MultiOverlayService.EXTRA_DONE, done)
                             }
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                startForegroundService(intent)
-                            } else {
-                                startService(intent)
-                            }
+                            startService(intent)
                         }
                         result.success(null)
                     }
