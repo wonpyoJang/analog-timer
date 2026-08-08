@@ -76,6 +76,36 @@ public class OverlayService extends Service implements View.OnTouchListener {
     private Timer mTrayAnimationTimer;
     private TrayAnimationTimerTask mTrayTimerTask;
 
+    /** 현재 오버레이 창의 절대 화면 rect — 창이 없거나 숨김(1×1)이면 null.
+     *  gravity 기준 offset(params.x/y)을 절대 좌표로 변환한다. 같은 프로세스의
+     *  MultiOverlayService가 pill 스폰 위치를 잡을 때 이 창을 회피하는 데 쓴다. */
+    @Nullable
+    public static android.graphics.Rect getWindowRect() {
+        OverlayService svc = instance;
+        if (svc == null || svc.flutterView == null || svc.windowManager == null) return null;
+        android.view.ViewGroup.LayoutParams lp = svc.flutterView.getLayoutParams();
+        if (!(lp instanceof WindowManager.LayoutParams)) return null;
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) lp;
+        int w = svc.flutterView.getWidth();
+        int h = svc.flutterView.getHeight();
+        if (w <= 0 && p.width > 0) w = p.width;
+        if (h <= 0 && p.height > 0) h = p.height;
+        if (w <= 1 || h <= 1) return null;
+        Point sz = new Point();
+        svc.windowManager.getDefaultDisplay().getSize(sz);
+        int hg = p.gravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+        int vg = p.gravity & Gravity.VERTICAL_GRAVITY_MASK;
+        int left;
+        if (hg == Gravity.LEFT) left = p.x;
+        else if (hg == Gravity.RIGHT) left = sz.x - w - p.x;
+        else left = (sz.x - w) / 2 + p.x; // CENTER_HORIZONTAL 또는 미지정(=중앙)
+        int top;
+        if (vg == Gravity.TOP) top = p.y;
+        else if (vg == Gravity.BOTTOM) top = sz.y - h - p.y;
+        else top = (sz.y - h) / 2 + p.y;
+        return new android.graphics.Rect(left, top, left + w, top + h);
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
