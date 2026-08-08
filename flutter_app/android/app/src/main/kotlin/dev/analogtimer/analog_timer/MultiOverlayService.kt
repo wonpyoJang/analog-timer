@@ -175,9 +175,10 @@ class MultiOverlayService : Service() {
             PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            // 새 창이 앞 창과 겹치지 않도록 좌측에 세로로 쌓는다(간격 10dp).
-            x = dp(12)
-            y = dp(72) + (size + dp(10)) * pills.size
+            // 기존 오버레이(제거/드래그로 위치가 제각각)와 겹치지 않는 빈 자리를 찾아 스폰.
+            val pos = findFreePosition(size)
+            x = pos.first
+            y = pos.second
         }
 
         val handle = PillHandle(view, params)
@@ -185,6 +186,38 @@ class MultiOverlayService : Service() {
         runCatching { windowManager.addView(view, params) }
             .exceptionOrNull()?.let { Log.e(TAG, "addView failed id=$id", it) }
         pills[id] = handle
+    }
+
+    /** 기존 오버레이와 겹치지 않는 스폰 위치. 좌→우 열, 각 열은 위→아래 슬롯을 훑는다. */
+    private fun findFreePosition(size: Int): Pair<Int, Int> {
+        val gap = dp(10)
+        val startX = dp(12)
+        val startY = dp(72)
+        val step = size + gap
+        val dm = resources.displayMetrics
+        val maxY = dm.heightPixels - size - dp(24)
+        val maxX = dm.widthPixels - size - dp(12)
+
+        fun overlaps(x: Int, y: Int): Boolean = pills.values.any { h ->
+            val px = h.params.x
+            val py = h.params.y
+            // 슬롯 간 최소 간격(gap)만큼 떨어져 있지 않으면 겹침으로 간주.
+            x < px + size + gap && x + size + gap > px &&
+                y < py + size + gap && y + size + gap > py
+        }
+
+        var x = startX
+        while (x <= maxX) {
+            var y = startY
+            while (y <= maxY) {
+                if (!overlaps(x, y)) return x to y
+                y += step
+            }
+            x += step
+        }
+        // 화면이 꽉 참(상한 초과) — 마지막 수단으로 계단식 오프셋.
+        val n = pills.size
+        return (startX + dp(16) * (n % 5)) to (startY + dp(16) * (n % 8))
     }
 
     /** 원 둘레를 진행 링으로 그리고 중앙에 이름·남은시간을 표시하는 커스텀 View. */
