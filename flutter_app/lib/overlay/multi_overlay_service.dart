@@ -11,8 +11,24 @@ import '../services/platform_info.dart';
 class MultiOverlayService {
   static const _channel = MethodChannel('dev.analogtimer/multi_overlay');
 
-  /// 동시 표시 상한 — 화면 과밀 방지(메모리는 네이티브라 무부담).
-  static const int maxWindows = 5;
+  /// 네이티브 조회 실패 시 동시 표시 상한 폴백.
+  static const int fallbackMaxWindows = 5;
+
+  /// UX 상한 — 슬롯이 아무리 많아도 이 이상은 서로 구분이 어려워 의미 없음.
+  static const int maxWindowsCap = 16;
+
+  /// 기기별 동시 표시 상한 — 겹침 없이 배치 가능한 슬롯 수(네이티브 격자 공식).
+  /// 화면이 클수록 늘어난다. 실측상 메모리·ANR 제약은 없고 화면 공간만이 제약.
+  static Future<int> maxWindows() async {
+    if (!isAndroid) return fallbackMaxWindows;
+    try {
+      final v = await _channel.invokeMethod<int>('capacity');
+      if (v == null || v < 1) return fallbackMaxWindows;
+      return v.clamp(1, maxWindowsCap);
+    } catch (_) {
+      return fallbackMaxWindows;
+    }
+  }
 
   /// 네이티브 멀티 오버레이 지원 여부(Android 전용).
   static bool get supported => isAndroid;

@@ -159,14 +159,11 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       if (mounted) setState(() => _overlayIds.remove(timer.id));
       return;
     }
-    // 상한 초과 방지.
-    if (_overlayIds.length >= MultiOverlayService.maxWindows) {
+    // 상한 초과 방지 — 기기 화면의 겹침 없는 슬롯 수만큼 허용.
+    final maxWindows = await MultiOverlayService.maxWindows();
+    if (_overlayIds.length >= maxWindows) {
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            l.multiTimerOverlayLimit(MultiOverlayService.maxWindows),
-          ),
-        ),
+        SnackBar(content: Text(l.multiTimerOverlayLimit(maxWindows))),
       );
       return;
     }
