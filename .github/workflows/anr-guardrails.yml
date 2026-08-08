@@ -12,6 +12,9 @@ on:
     branches: [main]
     paths:
       - "flutter_app/**"
+  workflow_dispatch: # 에뮬레이터 통합 테스트 수동 트리거
+  schedule:
+    - cron: "0 17 * * *" # 야간(UTC) 에뮬레이터 통합 테스트
 
 jobs:
   fast-guards:
@@ -32,3 +35,31 @@ jobs:
       - run: flutter analyze --no-fatal-infos
       # ANR 가드(정적 + 행위) 포함 전체 유닛/위젯 테스트.
       - run: flutter test
+
+  # 에뮬레이터 통합 테스트(Phase 3) — 느리고 확률적이라 PR 게이트가 아니라
+  # 수동(workflow_dispatch)/야간(schedule)에만 실행. 오버레이 churn + logcat ANR 스캔.
+  emulator-anr:
+    name: emulator ANR integration
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.0"
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: flutter_app
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Run ANR integration (churn + logcat scan)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          disable-animations: true
+          script: bash flutter_app/tool/run_anr_integration.sh emulator-5554
