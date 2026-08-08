@@ -76,6 +76,11 @@ class MultiOverlayService {
     required String doneText,
   }) async {
     if (!isAndroid) return;
+    // 마감 절대시각을 push 시점에 계산해 보낸다 — 네이티브가 도착시각 기준으로 잡으면
+    // 채널 전달 지연만큼 pill 이 리스트보다 늦게 가는 것으로 보인다.
+    final deadlineMs = running
+        ? DateTime.now().millisecondsSinceEpoch + remainMs
+        : 0;
     await _channel.invokeMethod(method, {
       'id': id,
       'name': name,
@@ -85,6 +90,7 @@ class MultiOverlayService {
       'running': running,
       'done': done,
       'doneText': doneText,
+      'deadlineMs': deadlineMs,
     });
   }
 }

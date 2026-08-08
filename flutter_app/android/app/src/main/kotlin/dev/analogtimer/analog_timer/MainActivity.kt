@@ -65,10 +65,11 @@ class MainActivity : FlutterActivity() {
                         val running = call.argument<Boolean>("running") ?: false
                         val done = call.argument<Boolean>("done") ?: false
                         val doneText = call.argument<String>("doneText") ?: ""
+                        val deadlineMs = (call.argument<Any>("deadlineMs") as? Number)?.toLong() ?: 0L
                         val svc = MultiOverlayService.instance
                         if (svc != null && id != null) {
                             // 서비스 기동 상태 — 직접 갱신(상태 변화 시에만; 매초 표시는 네이티브 자체 틱).
-                            svc.showOrUpdate(id, name, color, totalMs, remainMs, running, done, doneText)
+                            svc.showOrUpdate(id, name, color, totalMs, remainMs, running, done, doneText, deadlineMs)
                         } else {
                             // 콜드 스타트(첫 표시) — startService 로 시작(포그라운드 상태라 허용,
                             // onCreate 에서 startForeground 승격 → FGS 데드라인 ANR 없음).
@@ -82,6 +83,7 @@ class MainActivity : FlutterActivity() {
                                 putExtra(MultiOverlayService.EXTRA_RUNNING, running)
                                 putExtra(MultiOverlayService.EXTRA_DONE, done)
                                 putExtra(MultiOverlayService.EXTRA_DONE_TEXT, doneText)
+                                putExtra(MultiOverlayService.EXTRA_DEADLINE_MS, deadlineMs)
                             }
                             startService(intent)
                         }

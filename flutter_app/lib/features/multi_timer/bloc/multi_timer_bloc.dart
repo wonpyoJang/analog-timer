@@ -86,12 +86,31 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
   }
 
   void _onPause(MtPause e, Emitter<MultiTimerState> emit) {
+    // 마지막 틱 이후 흐른 시간(0~250ms)을 먼저 차감 — 안 하면 일시정지할 때마다
+    // 그만큼 되돌려받아, 자주 멈추면 누적으로 실제보다 느리게 간다.
+    _flushElapsed(emit);
     emit(
       state.copyWith(
         timers: _map((t) => t.copyWith(running: false), onlyId: e.id),
       ),
     );
     _syncTicker();
+  }
+
+  /// 티커 기준점(_lastTick) 이후 흐른 시간을 즉시 반영하고 기준점을 전진시킨다.
+  void _flushElapsed(Emitter<MultiTimerState> emit) {
+    final last = _lastTick;
+    if (last == null) return;
+    final now = DateTime.now();
+    final diff = now.difference(last);
+    if (diff.isNegative) {
+      _lastTick = now;
+      return;
+    }
+    final ms = diff.inMilliseconds;
+    if (ms == 0) return;
+    _lastTick = last.add(Duration(milliseconds: ms));
+    _applyTick(ms, emit);
   }
 
   void _onReset(MtReset e, Emitter<MultiTimerState> emit) {
@@ -107,11 +126,16 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
   }
 
   void _onTick(MtTick e, Emitter<MultiTimerState> emit) {
-    if (e.elapsedMs <= 0) return; // 역행 방어
+    _applyTick(e.elapsedMs, emit);
+    _syncTicker();
+  }
+
+  void _applyTick(int elapsedMs, Emitter<MultiTimerState> emit) {
+    if (elapsedMs <= 0) return; // 역행 방어
     final justCompleted = <String>[];
     final next = state.timers.map((t) {
       if (!t.running || t.done) return t;
-      final r = t.remainMs - e.elapsedMs;
+      final r = t.remainMs - elapsedMs;
       if (r <= 0) {
         justCompleted.add(t.id);
         return t.copyWith(remainMs: 0, running: false, done: true);
@@ -119,7 +143,6 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
       return t.copyWith(remainMs: r);
     }).toList();
     emit(state.copyWith(timers: next, justCompleted: justCompleted));
-    _syncTicker();
   }
 
   void _onRestore(MtRestore e, Emitter<MultiTimerState> emit) {
