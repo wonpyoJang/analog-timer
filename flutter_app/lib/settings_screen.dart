@@ -22,6 +22,7 @@ import 'services/high_contrast_service.dart';
 import 'features/stats/stats_screen.dart';
 import 'features/onboarding/alarm_diagnostics_screen.dart';
 import 'services/alarm_readiness_service.dart';
+import 'services/list_display_service.dart';
 import 'overlay/overlay_coordinator.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -221,6 +222,20 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
               onTap: () => ColorblindService.instance.setEnabled(!cbOn),
+            ),
+          ),
+
+          const _Divider(),
+
+          // ── 리스트 표시 상세 페이지(디자인 §E) — 멀티 타이머 리스트 표시.
+          _SettingsTile(
+            icon: Icons.view_agenda_outlined,
+            iconColor: AppColors.accent,
+            title: l.settingsListSection,
+            subtitle: l.settingsListSectionDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const _ListSettingsPage()),
             ),
           ),
 
@@ -617,17 +632,6 @@ class _AlarmSettingsPage extends StatelessWidget {
             ],
           ),
         ),
-        ValueListenableBuilder<bool>(
-          valueListenable: care.keepDone,
-          builder: (ctx, kOn, _) => _SettingsTile(
-            icon: Icons.history_outlined,
-            iconColor: AppColors.accent,
-            title: l.careKeepDone,
-            subtitle: l.careKeepDoneDesc,
-            trailing: _detailSwitch(kOn, care.setKeepDone),
-            onTap: () => care.setKeepDone(!kOn),
-          ),
-        ),
       ],
     );
   }
@@ -818,6 +822,90 @@ class _VoiceSettingsPage extends StatelessWidget {
                     ),
                   ],
                 ),
+        ),
+      ],
+    );
+  }
+}
+
+/// E · 리스트 표시 (디자인 §E) — 멀티 타이머 리스트 표시 방식(view-only).
+class _ListSettingsPage extends StatelessWidget {
+  const _ListSettingsPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final lds = ListDisplayService.instance;
+    return _DetailScaffold(
+      title: l.settingsListSection,
+      sub: l.listPageSub,
+      children: [
+        _GroupHeader(l.grpListRing),
+        ValueListenableBuilder<bool>(
+          valueListenable: lds.showRing,
+          builder: (ctx, on, _) => _SettingsTile(
+            icon: Icons.donut_large,
+            iconColor: AppColors.accent,
+            title: l.listShowRing,
+            subtitle: l.listShowRingDesc,
+            trailing: _detailSwitch(on, lds.setShowRing),
+            onTap: () => lds.setShowRing(!on),
+          ),
+        ),
+        _GroupHeader(l.grpListSize),
+        ValueListenableBuilder<int>(
+          valueListenable: lds.density,
+          builder: (ctx, d, _) => _detailChips<int>(
+            const [0, 1, 2],
+            d,
+            lds.setDensity,
+            (v) => switch (v) {
+              0 => l.listDensityCompact,
+              2 => l.listDensityLarge,
+              _ => l.listDensityNormal,
+            },
+          ),
+        ),
+        _GroupHeader(l.grpListSort),
+        ValueListenableBuilder<String>(
+          valueListenable: lds.sortMode,
+          builder: (ctx, s, _) => _detailChips<String>(
+            const ['remain', 'created'],
+            s,
+            lds.setSortMode,
+            (v) => v == 'remain' ? l.listSortRemain : l.listSortCreated,
+          ),
+        ),
+        _GroupHeader(l.grpListDone),
+        ValueListenableBuilder<int>(
+          valueListenable: lds.keepDoneMin,
+          builder: (ctx, m, _) => Column(
+            children: [
+              _SettingsTile(
+                icon: Icons.history_outlined,
+                iconColor: AppColors.accent,
+                title: l.listKeepDone,
+                subtitle: l.careKeepDoneDesc,
+              ),
+              _detailChips<int>(
+                const [0, 10, 30, 60],
+                m,
+                lds.setKeepDoneMin,
+                (v) => v == 0 ? l.listKeepOff : l.carePreAlarmMin(v),
+              ),
+            ],
+          ),
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: lds.dimDone,
+          builder: (ctx, on, _) => _SettingsTile(
+            icon: Icons.opacity,
+            iconColor: AppColors.accent,
+            title: l.listDimDone,
+            subtitle: l.listDimDoneDesc,
+            trailing: _detailSwitch(on, lds.setDimDone),
+            onTap: () => lds.setDimDone(!on),
+          ),
         ),
       ],
     );

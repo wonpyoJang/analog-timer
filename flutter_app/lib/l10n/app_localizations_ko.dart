@@ -1585,4 +1585,58 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get grpAlarmDone => '완료 메시지';
+
+  @override
+  String get settingsListSection => '리스트 표시';
+
+  @override
+  String get settingsListSectionDesc => '메인 화면 타이머 표시 방식';
+
+  @override
+  String get listPageSub => '메인 화면에 타이머가 어떻게 보일지 정해요.';
+
+  @override
+  String get grpListRing => '진행 링';
+
+  @override
+  String get listShowRing => '진행 링 보기';
+
+  @override
+  String get listShowRingDesc => '남은 시간을 링으로 한눈에';
+
+  @override
+  String get grpListSize => '카드 크기';
+
+  @override
+  String get listDensityCompact => '촘촘하게';
+
+  @override
+  String get listDensityNormal => '보통';
+
+  @override
+  String get listDensityLarge => '크게';
+
+  @override
+  String get grpListSort => '정렬';
+
+  @override
+  String get listSortRemain => '남은 시간 짧은 순';
+
+  @override
+  String get listSortCreated => '추가한 순서';
+
+  @override
+  String get grpListDone => '끝난 타이머';
+
+  @override
+  String get listKeepDone => '남겨두는 시간';
+
+  @override
+  String get listKeepOff => '바로 숨김';
+
+  @override
+  String get listDimDone => '끝난 것 흐리게';
+
+  @override
+  String get listDimDoneDesc => '완료된 타이머를 흐리게';
 }

@@ -3026,6 +3026,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Completion message'**
   String get grpAlarmDone;
+
+  /// No description provided for @settingsListSection.
+  ///
+  /// In en, this message translates to:
+  /// **'List display'**
+  String get settingsListSection;
+
+  /// No description provided for @settingsListSectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'How timers look on the main screen'**
+  String get settingsListSectionDesc;
+
+  /// No description provided for @listPageSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Set how timers look on the main screen.'**
+  String get listPageSub;
+
+  /// No description provided for @grpListRing.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress ring'**
+  String get grpListRing;
+
+  /// No description provided for @listShowRing.
+  ///
+  /// In en, this message translates to:
+  /// **'Show progress ring'**
+  String get listShowRing;
+
+  /// No description provided for @listShowRingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A filling ring shows time left at a glance'**
+  String get listShowRingDesc;
+
+  /// No description provided for @grpListSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Card size'**
+  String get grpListSize;
+
+  /// No description provided for @listDensityCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get listDensityCompact;
+
+  /// No description provided for @listDensityNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get listDensityNormal;
+
+  /// No description provided for @listDensityLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get listDensityLarge;
+
+  /// No description provided for @grpListSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get grpListSort;
+
+  /// No description provided for @listSortRemain.
+  ///
+  /// In en, this message translates to:
+  /// **'Least time left'**
+  String get listSortRemain;
+
+  /// No description provided for @listSortCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Order added'**
+  String get listSortCreated;
+
+  /// No description provided for @grpListDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished timers'**
+  String get grpListDone;
+
+  /// No description provided for @listKeepDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep in list for'**
+  String get listKeepDone;
+
+  /// No description provided for @listKeepOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide right away'**
+  String get listKeepOff;
+
+  /// No description provided for @listDimDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Dim finished'**
+  String get listDimDone;
+
+  /// No description provided for @listDimDoneDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower opacity for completed timers'**
+  String get listDimDoneDesc;
 }
 
 class _AppLocalizationsDelegate
