@@ -431,5 +431,20 @@
   "statsHoursMin": "{h}시간 {m}분",
   "statsMinOnly": "{m}분",
   "settingsStats": "활동 통계",
-  "settingsStatsDesc": "집중 시간·세션·연속 기록"
+  "settingsStatsDesc": "집중 시간·세션·연속 기록",
+  "onboardTitle": "알람이 꼭 울리도록 준비할게요",
+  "onboardSub": "딱 두 가지면 돼요. 다른 설정은 건드릴 필요 없이 바로 쓸 수 있어요.",
+  "onboardNotifTitle": "알림 허용",
+  "onboardNotifDesc": "타이머가 끝나면 알려드려요",
+  "onboardBatteryTitle": "백그라운드에서 계속 실행",
+  "onboardBatteryDesc": "이걸 꺼두면 앱을 닫았을 때 알람이 조용히 멈출 수 있어요. \"제한 없음\"을 골라 주세요.",
+  "onboardGrant": "허용",
+  "onboardAllow": "허용하러 가기",
+  "onboardDone": "완료 ✓",
+  "onboardLater": "나중에 할게요",
+  "onboardStart": "시작하기",
+  "checkAlarmTitle": "알람이 멈출 수 있어요",
+  "checkAlarmDesc": "배터리 절약이 앱을 재우고 있어요. 1분이면 고쳐요.",
+  "checkAlarmNotifDesc": "알림이 꺼져 있어요 — 타이머가 알려줄 수 없어요.",
+  "checkFix": "점검"
 }

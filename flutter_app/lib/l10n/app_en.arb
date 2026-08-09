@@ -883,5 +883,20 @@
     }
   },
   "settingsStats": "Activity statistics",
-  "settingsStatsDesc": "focused time, sessions, streak"
+  "settingsStatsDesc": "focused time, sessions, streak",
+  "onboardTitle": "Let's make sure alarms ring",
+  "onboardSub": "Just two things. Everything else works out of the box.",
+  "onboardNotifTitle": "Allow notifications",
+  "onboardNotifDesc": "so we can tell you when a timer ends",
+  "onboardBatteryTitle": "Keep running in the background",
+  "onboardBatteryDesc": "If this stays off, alarms can silently stop after you close the app. Choose \"Unrestricted\".",
+  "onboardGrant": "Allow",
+  "onboardAllow": "Go allow",
+  "onboardDone": "Done ✓",
+  "onboardLater": "I'll do it later",
+  "onboardStart": "Start",
+  "checkAlarmTitle": "Alarms may stop",
+  "checkAlarmDesc": "Battery saver is putting the app to sleep. Takes a minute to fix.",
+  "checkAlarmNotifDesc": "Notifications are off — timers can't alert you.",
+  "checkFix": "Fix"
 }

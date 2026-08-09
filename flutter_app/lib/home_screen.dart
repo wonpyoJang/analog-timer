@@ -21,6 +21,8 @@ import 'settings_screen.dart';
 import 'features/multi_timer/widgets/multi_timer_screen.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'overlay/overlay_service.dart';
+import 'features/onboarding/alarm_ready_screen.dart';
+import 'services/alarm_readiness_service.dart';
 import 'overlay/overlay_coordinator.dart';
 import 'live_activity/live_activity_service.dart';
 import 'pip/pip_service.dart';
@@ -756,6 +758,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           mounted) {
         await showTelemetryConsent(context);
       }
+      // 첫 실행 "알람 준비" 온보딩(디자인 §1) — Android 1회, 미완료 시에만.
+      if (!isAndroid || !mounted) return;
+      final shown = await PersistenceService.loadAlarmOnboardingShown();
+      if (shown) return;
+      await AlarmReadinessService.instance.refresh();
+      await PersistenceService.saveAlarmOnboardingShown(true);
+      if (!mounted || AlarmReadinessService.instance.allReady) return;
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const AlarmReadyScreen()));
     });
   }
 

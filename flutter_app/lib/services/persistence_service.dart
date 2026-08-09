@@ -15,6 +15,17 @@ class PersistenceService {
   static const _kWorkoutRoutines = 'workout_routines';
   static const _kWorkoutConfig = 'workout_config';
   static const _kWorkoutCustomLib = 'workout_custom_lib';
+  static const _kAlarmOnboard = 'alarm_onboarding_shown';
+
+  static Future<bool> loadAlarmOnboardingShown() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAlarmOnboard) ?? false;
+  }
+
+  static Future<void> saveAlarmOnboardingShown(bool v) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kAlarmOnboard, v);
+  }
   static const _kPrepData = 'prep_checklists';
 
   /// 준비물 체크리스트 — {'date': 'yyyy-MM-dd', 'lists': [...]}.

@@ -2630,6 +2630,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'focused time, sessions, streak'**
   String get settingsStatsDesc;
+
+  /// No description provided for @onboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s make sure alarms ring'**
+  String get onboardTitle;
+
+  /// No description provided for @onboardSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Just two things. Everything else works out of the box.'**
+  String get onboardSub;
+
+  /// No description provided for @onboardNotifTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications'**
+  String get onboardNotifTitle;
+
+  /// No description provided for @onboardNotifDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'so we can tell you when a timer ends'**
+  String get onboardNotifDesc;
+
+  /// No description provided for @onboardBatteryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep running in the background'**
+  String get onboardBatteryTitle;
+
+  /// No description provided for @onboardBatteryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If this stays off, alarms can silently stop after you close the app. Choose \"Unrestricted\".'**
+  String get onboardBatteryDesc;
+
+  /// No description provided for @onboardGrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get onboardGrant;
+
+  /// No description provided for @onboardAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Go allow'**
+  String get onboardAllow;
+
+  /// No description provided for @onboardDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done ✓'**
+  String get onboardDone;
+
+  /// No description provided for @onboardLater.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ll do it later'**
+  String get onboardLater;
+
+  /// No description provided for @onboardStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get onboardStart;
+
+  /// No description provided for @checkAlarmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Alarms may stop'**
+  String get checkAlarmTitle;
+
+  /// No description provided for @checkAlarmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery saver is putting the app to sleep. Takes a minute to fix.'**
+  String get checkAlarmDesc;
+
+  /// No description provided for @checkAlarmNotifDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off — timers can\'t alert you.'**
+  String get checkAlarmNotifDesc;
+
+  /// No description provided for @checkFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix'**
+  String get checkFix;
 }
 
 class _AppLocalizationsDelegate
