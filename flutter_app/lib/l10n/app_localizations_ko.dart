@@ -1888,4 +1888,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ocrTitle => '봉지 찍기';
+
+  @override
+  String get seqParallel => '동시에 시작';
+
+  @override
+  String get seqSequential => '이어서 실행';
+
+  @override
+  String get seqNote => '한 단계가 끝나면 다음 단계가 이어서 시작돼요.';
 }

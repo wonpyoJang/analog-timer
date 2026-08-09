@@ -1076,5 +1076,8 @@
   "ocrAlbum": "Pick from album",
   "ocrReading": "Reading text…",
   "ocrNoTime": "No time found — set it by hand",
-  "ocrTitle": "Scan package"
+  "ocrTitle": "Scan package",
+  "seqParallel": "Start together",
+  "seqSequential": "One after another",
+  "seqNote": "Each step starts when the previous finishes."
 }

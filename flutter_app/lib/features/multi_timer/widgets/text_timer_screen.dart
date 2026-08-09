@@ -4,6 +4,7 @@ import '../../../theme/app_theme.dart';
 import '../../../services/haptic_service.dart';
 import '../bloc/multi_timer_bloc.dart';
 import '../bloc/multi_timer_event.dart';
+import '../models/countdown_timer.dart';
 import '../time_parser.dart';
 
 /// 말·글로 타이머 만들기(디자인 "온디바이스 기능 화면" §E·§F).
@@ -33,6 +34,7 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
   final _ctrl = TextEditingController();
   List<ParsedTimer>? _parsed; // null = 입력 단계
   final _selected = <int>{};
+  bool _sequential = false; // 이어서 실행(조리법 순서) vs 동시에 시작
 
   static const _examples = ['라면이랑 세탁', '십오분 집중', '계란 육분 반숙', '파스타 팔분, 소스 오분'];
 
@@ -73,19 +75,40 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
   void _start(AppLocalizations l) {
     final list = _parsed;
     if (list == null) return;
-    var count = 0;
-    for (final i in _selected) {
-      final t = list[i];
-      if (t.kind == ParsedKind.unparsed || t.totalMs <= 0) continue;
-      final name = t.name.isEmpty ? l.multiTimerTitle : t.name;
-      widget.bloc.add(MtAdd(name, t.totalMs, autoStart: true));
-      count++;
-    }
-    if (count == 0) {
+    // 선택된 유효 후보(시간 있음)만 순서 유지해 수집.
+    final picks = [
+      for (var i = 0; i < list.length; i++)
+        if (_selected.contains(i) &&
+            list[i].kind != ParsedKind.unparsed &&
+            list[i].totalMs > 0)
+          list[i],
+    ];
+    if (picks.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l.textTimerEmpty)));
       return;
+    }
+    if (_sequential && picks.length > 1) {
+      // 이어서 실행 = 한 단계가 끝나면 다음이 이어지는 루프 1회(조리법 순서).
+      final steps = [
+        for (final t in picks)
+          LoopStep(t.name.isEmpty ? l.multiTimerTitle : t.name, t.totalMs),
+      ];
+      final loopName = picks.first.name.isEmpty
+          ? l.multiTimerTitle
+          : picks.first.name;
+      widget.bloc.add(MtAddLoop(loopName, steps, 1, autoStart: true));
+    } else {
+      for (final t in picks) {
+        widget.bloc.add(
+          MtAdd(
+            t.name.isEmpty ? l.multiTimerTitle : t.name,
+            t.totalMs,
+            autoStart: true,
+          ),
+        );
+      }
     }
     HapticService.instance.selection();
     Navigator.pop(context);
@@ -251,6 +274,8 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
                   ),
                 ),
               for (var i = 0; i < list.length; i++) _card(l, list[i], i),
+              // 시작 방식(§C·§F) — 후보 2개 이상일 때만. 조리법=이어서.
+              if (startable > 1) _startModeSeg(l),
             ],
           ),
         ),
@@ -307,6 +332,66 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// 시작 방식 세그먼트(§C) — 동시에 시작 / 이어서 실행(조리법 순서).
+  Widget _startModeSeg(AppLocalizations l) {
+    Widget seg(String label, bool seqValue) {
+      final on = _sequential == seqValue;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => setState(() => _sequential = seqValue),
+          child: Container(
+            margin: const EdgeInsets.all(4),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: on ? const Color(0xFF232326) : Colors.transparent,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: on ? AppColors.text : AppColors.faint,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF141416),
+              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [seg(l.seqParallel, false), seg(l.seqSequential, true)],
+            ),
+          ),
+          if (_sequential)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 4),
+              child: Text(
+                l.seqNote,
+                style: TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 12,
+                  height: 1.5,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 

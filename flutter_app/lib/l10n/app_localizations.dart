@@ -3620,6 +3620,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scan package'**
   String get ocrTitle;
+
+  /// No description provided for @seqParallel.
+  ///
+  /// In en, this message translates to:
+  /// **'Start together'**
+  String get seqParallel;
+
+  /// No description provided for @seqSequential.
+  ///
+  /// In en, this message translates to:
+  /// **'One after another'**
+  String get seqSequential;
+
+  /// No description provided for @seqNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Each step starts when the previous finishes.'**
+  String get seqNote;
 }
 
 class _AppLocalizationsDelegate
