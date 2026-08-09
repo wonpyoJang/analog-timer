@@ -250,6 +250,36 @@ List<ParsedTimer> parseTimers(
   return out;
 }
 
+/// 순차 실행 시 ack 게이트(확인 후 다음) vs 자동 진행 자동 추천(디자인 §C 맥락).
+///
+/// 수동 대기 단계(뜸·식히기 등)가 있으면 한 과정의 연속 단계 → 자동 진행(false).
+/// 서로 다른 별개 작업(이름이 모두 다름)이면 단계 사이에 손을 쓰므로 → ack 게이트(true).
+bool recommendAckGate(List<String> stepNames) {
+  const passive = [
+    '뜸',
+    '식히',
+    '휴지',
+    '재우',
+    '불리',
+    '담그',
+    '우리',
+    '숙성',
+    '말리',
+    'rest',
+    'cool',
+    'steep',
+    'soak',
+    'chill',
+    'sit',
+  ];
+  final hasPassive = stepNames.any(
+    (n) => passive.any((k) => n.toLowerCase().contains(k)),
+  );
+  if (hasPassive) return false; // 연속 과정 → 자동 진행
+  final distinct = stepNames.map((n) => n.trim()).toSet();
+  return distinct.length == stepNames.length; // 전부 다른 작업 → 확인 후 진행
+}
+
 PresetRef? _matchPreset(String name, List<PresetRef> presets) {
   if (name.isEmpty) return null;
   final n = name.trim();

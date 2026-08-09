@@ -1897,4 +1897,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get seqNote => '한 단계가 끝나면 다음 단계가 이어서 시작돼요.';
+
+  @override
+  String get seqAckTitle => '확인 후 다음 시작';
+
+  @override
+  String get seqAckAuto => '자동 선택됨';
+
+  @override
+  String get seqAckOnNote => '한 단계 알람을 확인해야 다음이 시작돼요 (단계 사이 손 쓰는 조리).';
+
+  @override
+  String get seqAckOffNote => '한 단계가 끝나면 곧바로 다음이 시작돼요 (연속 과정).';
 }

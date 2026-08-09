@@ -3638,6 +3638,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Each step starts when the previous finishes.'**
   String get seqNote;
+
+  /// No description provided for @seqAckTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm before next'**
+  String get seqAckTitle;
+
+  /// No description provided for @seqAckAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-picked'**
+  String get seqAckAuto;
+
+  /// No description provided for @seqAckOnNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Next starts when you confirm each step — for hands-on recipes.'**
+  String get seqAckOnNote;
+
+  /// No description provided for @seqAckOffNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Next starts right after each step — for continuous steps.'**
+  String get seqAckOffNote;
 }
 
 class _AppLocalizationsDelegate

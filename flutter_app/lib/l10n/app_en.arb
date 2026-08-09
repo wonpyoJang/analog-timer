@@ -1079,5 +1079,9 @@
   "ocrTitle": "Scan package",
   "seqParallel": "Start together",
   "seqSequential": "One after another",
-  "seqNote": "Each step starts when the previous finishes."
+  "seqNote": "Each step starts when the previous finishes.",
+  "seqAckTitle": "Confirm before next",
+  "seqAckAuto": "Auto-picked",
+  "seqAckOnNote": "Next starts when you confirm each step — for hands-on recipes.",
+  "seqAckOffNote": "Next starts right after each step — for continuous steps."
 }

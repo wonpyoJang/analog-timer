@@ -8,10 +8,8 @@ class LoopStep extends Equatable {
 
   Map<String, dynamic> toJson() => {'name': name, 'ms': ms};
 
-  static LoopStep fromJson(Map<String, dynamic> j) => LoopStep(
-    j['name'] as String? ?? '',
-    (j['ms'] as num?)?.toInt() ?? 0,
-  );
+  static LoopStep fromJson(Map<String, dynamic> j) =>
+      LoopStep(j['name'] as String? ?? '', (j['ms'] as num?)?.toInt() ?? 0);
 
   @override
   List<Object?> get props => [name, ms];
@@ -50,6 +48,11 @@ class CountdownTimer extends Equatable {
   final int loopStepIdx;
   final int loopRound;
 
+  /// ack 게이트 순차 체인(조리법). 같은 chainId 를 공유하고, 한 단계를 확인(ack)하면
+  /// chainIndex+1 이 시작된다. null 이면 체인 아님(루프·병렬과 무관).
+  final String? chainId;
+  final int chainIndex;
+
   bool get isLoop => loopSteps.isNotEmpty;
 
   CountdownTimer({
@@ -67,6 +70,8 @@ class CountdownTimer extends Equatable {
     this.loopRepeat = 1,
     this.loopStepIdx = 0,
     this.loopRound = 1,
+    this.chainId,
+    this.chainIndex = 0,
   }) : id = id ?? _nextId(),
        remainMs = remainMs ?? totalMs;
 
@@ -100,6 +105,8 @@ class CountdownTimer extends Equatable {
     loopRepeat: loopRepeat,
     loopStepIdx: loopStepIdx ?? this.loopStepIdx,
     loopRound: loopRound ?? this.loopRound,
+    chainId: chainId,
+    chainIndex: chainIndex,
   );
 
   double get frac =>
@@ -120,6 +127,8 @@ class CountdownTimer extends Equatable {
     'loopRepeat': loopRepeat,
     'loopStepIdx': loopStepIdx,
     'loopRound': loopRound,
+    'chainId': chainId,
+    'chainIndex': chainIndex,
   };
 
   static CountdownTimer fromJson(Map<String, dynamic> json) => CountdownTimer(
@@ -139,8 +148,27 @@ class CountdownTimer extends Equatable {
     loopRepeat: (json['loopRepeat'] as num?)?.toInt() ?? 1,
     loopStepIdx: (json['loopStepIdx'] as num?)?.toInt() ?? 0,
     loopRound: (json['loopRound'] as num?)?.toInt() ?? 1,
+    chainId: json['chainId'] as String?,
+    chainIndex: (json['chainIndex'] as num?)?.toInt() ?? 0,
   );
 
   @override
-  List<Object?> get props => [id, name, totalMs, remainMs, running, done, acked, doneAtMs, extendCount, category, loopSteps, loopRepeat, loopStepIdx, loopRound];
+  List<Object?> get props => [
+    id,
+    name,
+    totalMs,
+    remainMs,
+    running,
+    done,
+    acked,
+    doneAtMs,
+    extendCount,
+    category,
+    loopSteps,
+    loopRepeat,
+    loopStepIdx,
+    loopRound,
+    chainId,
+    chainIndex,
+  ];
 }
