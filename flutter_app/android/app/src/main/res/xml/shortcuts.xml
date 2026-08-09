@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  App Actions — 어시스턴트(Google Assistant/Gemini)의 "타이머 맞춰줘" 음성을
+  앱의 기존 anytime:// 딥링크로 연결한다. 어시스턴트가 음성인식·의도해석을 하고
+  앱은 구조화된 파라미터(ISO-8601 duration, 이름)만 받는다 → AI는 앱 실행 경로 밖.
+  timer.duration(PT8M30S) 은 딥링크 파서(_isoDurationMinSec)가 분·초로 변환.
+
+  ⚠ 어시스턴트 실호출 검증은 Android Studio 의 App Actions Test Tool 로 해야 함
+  (adb 만으로는 e2e 불가). 빌드/등록 검증까지가 이 단계.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <capability android:name="actions.intent.CREATE_TIMER">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="dev.analogtimer.analog_timer"
+            android:targetClass="dev.analogtimer.analog_timer.MainActivity">
+            <url-template android:value="anytime://start{?dur,label}" />
+            <parameter
+                android:name="timer.duration"
+                android:key="dur"
+                android:required="true" />
+            <parameter
+                android:name="timer.name"
+                android:key="label"
+                android:required="false" />
+        </intent>
+    </capability>
+</shortcuts>

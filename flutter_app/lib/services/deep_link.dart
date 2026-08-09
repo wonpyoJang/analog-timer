@@ -73,11 +73,14 @@ DeepLinkAction parseDeepLink(String raw) {
 
   switch (host) {
     case 'start':
+      // App Actions CREATE_TIMER BII 는 시간을 ISO-8601 기간(PT8M30S)으로 넘긴다.
+      // min/sec 가 직접 오지 않았을 때 dur 을 분·초로 변환해 채운다.
+      final iso = _isoDurationMinSec(q['dur']);
       return DeepLinkAction(
         kind: DeepLinkKind.start,
         silent: silent,
-        min: intOf(q['min']),
-        sec: intOf(q['sec']),
+        min: intOf(q['min']) ?? iso?.$1,
+        sec: intOf(q['sec']) ?? iso?.$2,
         label: q['label'],
         color: intOf(q['color']),
       );
@@ -128,3 +131,20 @@ String? _firstSeg(Uri u) =>
     u.pathSegments.isNotEmpty ? u.pathSegments.first : null;
 String? _secondSeg(Uri u) =>
     u.pathSegments.length > 1 ? u.pathSegments[1] : null;
+
+/// ISO-8601 기간(PT8M·PT1H30M·PT90S·PT8M30S) → (분, 초). 시(H)는 분으로 합산.
+/// App Actions CREATE_TIMER BII 의 `timer.duration` 형식을 딥링크로 받기 위함.
+/// 형식 불일치·전부 0 이면 null.
+(int, int)? _isoDurationMinSec(String? s) {
+  if (s == null) return null;
+  final t = s.trim().toUpperCase();
+  final ti = t.indexOf('T'); // 기간의 시간부(T 이후)만 취함
+  final body = ti >= 0 ? t.substring(ti + 1) : t.replaceFirst('P', '');
+  final m = RegExp(r'^(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$').firstMatch(body);
+  if (m == null || body.isEmpty) return null;
+  final h = int.tryParse(m.group(1) ?? '') ?? 0;
+  final min = int.tryParse(m.group(2) ?? '') ?? 0;
+  final sec = int.tryParse(m.group(3) ?? '') ?? 0;
+  if (h == 0 && min == 0 && sec == 0) return null;
+  return (h * 60 + min, sec);
+}

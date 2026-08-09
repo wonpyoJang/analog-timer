@@ -41,6 +41,10 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="anytime"/>
             </intent-filter>
+            <!-- App Actions capability(shortcuts.xml) — 어시스턴트 "타이머" 음성 → anytime:// -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts"/>
         </activity>
         <!-- flutter_overlay_window -->
         <service
