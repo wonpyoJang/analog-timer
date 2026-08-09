@@ -15,6 +15,7 @@ import '../time_parser.dart';
 import 'text_timer_screen.dart';
 import '../../../services/deep_link.dart';
 import '../../../services/deep_link_router.dart';
+import '../../../services/shortcuts_service.dart';
 import '../../../features/stats/activity_stats_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
@@ -140,14 +141,86 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         } else if (running.length > 1) {
           _toast(l.voiceStopHint); // 추측하지 않는다(§6)
         }
+      case DeepLinkKind.extend:
+        _consumeLink();
+        // 울리는 알람 우선, 없으면 실행 중 — +N분(§3: 확인으로 간주).
+        final st = bloc.state.timers;
+        final ringing = st.where((t) => t.done && !t.acked).toList();
+        final target = ringing.isNotEmpty
+            ? ringing.first
+            : st.where((t) => t.running).firstOrNull;
+        if (target != null) {
+          bloc.add(MtExtend(target.id, (a.min ?? 5) * 60000));
+          _lastPushed.remove(target.id);
+        }
+      case DeepLinkKind.ack:
+        _consumeLink();
+        for (final t in bloc.state.timers.where((t) => t.done && !t.acked)) {
+          bloc.add(MtReset(t.id));
+        }
       case DeepLinkKind.status:
         _consumeLink(); // 탭 이동만
       default:
-        _consumeLink(); // loop/extend/ack/workout 후속
+        _consumeLink(); // loop/workout 후속
     }
   }
 
   void _consumeLink() => DeepLinkRouter.instance.pendingMulti.value = null;
+
+  /// 런처 단축어 동기화(§4) — 고정 4종 + 자주 쓰는 프리셋 상위 3.
+  /// 이름이 곧 발화 문구/롱프레스 항목. 1글자·숫자만은 오인식 우려로 제외.
+  void _syncShortcuts() {
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    final items = <Map<String, String>>[
+      {
+        'id': 'sc_focus',
+        'short': l.scFocus,
+        'long': l.scFocus,
+        'link':
+            'anytime://start?min=25&label=${Uri.encodeQueryComponent(l.scFocus)}',
+      },
+      {
+        'id': 'sc_rest',
+        'short': l.scRest,
+        'long': l.scRest,
+        'link':
+            'anytime://start?min=5&label=${Uri.encodeQueryComponent(l.scRest)}',
+      },
+      {
+        'id': 'sc_stop',
+        'short': l.scStop,
+        'long': l.scStop,
+        'link': 'anytime://stop',
+      },
+      {
+        'id': 'sc_status',
+        'short': l.scStatus,
+        'long': l.scStatus,
+        'link': 'anytime://status',
+      },
+    ];
+    final byUse = [..._presets]
+      ..sort(
+        (a, b) => ((b['lastUsedMs'] as num?)?.toInt() ?? 0).compareTo(
+          (a['lastUsedMs'] as num?)?.toInt() ?? 0,
+        ),
+      );
+    var added = 0;
+    for (final p in byUse) {
+      if (added >= 3) break;
+      final name = ((p['name'] as String?) ?? '').trim();
+      if (name.length < 2 || RegExp(r'^\d+$').hasMatch(name)) continue;
+      items.add({
+        'id': 'sc_preset_$added',
+        'short': name,
+        'long': name,
+        'link': 'anytime://preset/${Uri.encodeComponent(name)}',
+      });
+      added++;
+    }
+    ShortcutsService.setShortcuts(items);
+  }
 
   Map<String, dynamic>? _findPreset(String? id) {
     if (id == null || id.isEmpty) return null;
@@ -249,6 +322,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     if (mounted) setState(() => _presets = loaded ?? []);
     // 프리셋 로드 후 대기 중인 preset 딥링크 재시도(콜드 스타트).
     _onDeepLink();
+    _syncShortcuts();
   }
 
   /// 최근 사용이 항상 첫 칩(§3) — lastUsedMs 내림차순, 없는 항목은 원래 순서.
@@ -273,6 +347,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       'lastUsedMs': DateTime.now().millisecondsSinceEpoch,
     };
     PersistenceService.saveMultiTimerPresets(_presets);
+    _syncShortcuts(); // 사용 빈도 변화 → 동적 단축어 갱신
   }
 
   /// 상호 배타 — 단일 오버레이 활성화 시 호출돼 멀티 오버레이를 전부 닫는다.

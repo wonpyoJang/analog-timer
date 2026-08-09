@@ -12,6 +12,7 @@ class MainActivity : FlutterActivity() {
     private val AUDIO_FOCUS_CHANNEL = "dev.analogtimer/audio_focus"
     private val WEAR_CHANNEL = "dev.analogtimer/wear"
     private val DEEPLINK_CHANNEL = "dev.analogtimer/deeplink"
+    private val SHORTCUTS_CHANNEL = "dev.analogtimer/shortcuts"
 
     // 콜드 스타트로 들어온 딥링크를 Dart 준비 전까지 보관(§7 콜드 경로).
     private var pendingDeepLink: String? = null
@@ -25,6 +26,7 @@ class MainActivity : FlutterActivity() {
         configureAudioFocusChannel(flutterEngine)
         configureWearChannel(flutterEngine)
         configureDeeplinkChannel(flutterEngine)
+        configureShortcutsChannel(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -244,6 +246,50 @@ class MainActivity : FlutterActivity() {
             }
         }
         return false
+    }
+
+    /** 동적 앱 단축어(음성 연동 §4) — 런처 아이콘 롱프레스 목록. 각 단축어는
+     *  anytime:// 딥링크를 VIEW 인텐트로 실어 우리 액티비티를 연다. 최대 8개. */
+    private fun configureShortcutsChannel(flutterEngine: FlutterEngine) {
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHORTCUTS_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "setShortcuts" -> {
+                        try {
+                            @Suppress("UNCHECKED_CAST")
+                            val items = call.argument<List<Map<String, String>>>("items")
+                                ?: emptyList()
+                            val icon = androidx.core.graphics.drawable.IconCompat
+                                .createWithResource(this, R.mipmap.ic_launcher)
+                            val shortcuts = items.take(8).mapNotNull { m ->
+                                val id = m["id"] ?: return@mapNotNull null
+                                val link = m["link"] ?: return@mapNotNull null
+                                val short = m["short"] ?: id
+                                val long = m["long"] ?: short
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    android.net.Uri.parse(link),
+                                    this,
+                                    MainActivity::class.java,
+                                )
+                                androidx.core.content.pm.ShortcutInfoCompat
+                                    .Builder(this, id)
+                                    .setShortLabel(short)
+                                    .setLongLabel(long)
+                                    .setIcon(icon)
+                                    .setIntent(intent)
+                                    .build()
+                            }
+                            androidx.core.content.pm.ShortcutManagerCompat
+                                .setDynamicShortcuts(this, shortcuts)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.success(false)
+                        }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
     }
 
     override fun onNewIntent(intent: Intent) {

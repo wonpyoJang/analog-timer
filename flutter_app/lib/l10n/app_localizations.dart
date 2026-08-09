@@ -3554,6 +3554,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Several timers are running — open the app to choose.'**
   String get voiceStopHint;
+
+  /// No description provided for @scFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus 25 min'**
+  String get scFocus;
+
+  /// No description provided for @scRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Break 5 min'**
+  String get scRest;
+
+  /// No description provided for @scStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop timer'**
+  String get scStop;
+
+  /// No description provided for @scStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Time left'**
+  String get scStatus;
 }
 
 class _AppLocalizationsDelegate
