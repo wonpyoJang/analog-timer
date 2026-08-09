@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import 'app_dialog.dart';
 import '../services/daily_record_service.dart';
 import '../services/persistence_service.dart';
 import '../features/timer/models/preset.dart';
@@ -75,12 +76,10 @@ class _DayPlanViewState extends State<DayPlanView> {
     await DailyRecordService.savePlan(widget.date, segs);
     if (!mounted) return;
     context.read<TimerBloc>().add(TimerSegmentsReplaced(segs));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context).planLoadIntoTimer),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
+    showAppToast(
+      context,
+      AppLocalizations.of(context).planLoadIntoTimer,
+      accent: true,
     );
   }
 
@@ -268,24 +267,18 @@ class _PlanPresetBarState extends State<_PlanPresetBar> {
 
   void _apply(Preset p) {
     widget.onAppend(p.freshSegments());
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).presetApplied(p.name)),
-          duration: const Duration(seconds: 1),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    showAppToast(
+      context,
+      AppLocalizations.of(context).presetApplied(p.name),
+      accent: true,
+    );
   }
 
   Future<void> _saveCurrent() async {
     final l = AppLocalizations.of(context);
     final segs = widget.currentSegments;
     if (segs.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l.noSegmentsToSave)));
+      showAppToast(context, l.noSegmentsToSave);
       return;
     }
     final name = await _promptName();
@@ -302,54 +295,16 @@ class _PlanPresetBarState extends State<_PlanPresetBar> {
     await _persist();
   }
 
-  Future<String?> _promptName() {
+  Future<String?> _promptName() async {
     final l = AppLocalizations.of(context);
-    final ctrl = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: AppColors.border),
-        ),
-        title: Text(
-          l.savePresetTitle,
-          style: const TextStyle(color: AppColors.text, fontSize: 15),
-        ),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          style: const TextStyle(color: AppColors.text, fontSize: 13),
-          decoration: InputDecoration(
-            hintText: l.presetNameHint,
-            hintStyle: TextStyle(color: AppColors.muted, fontSize: 13),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.timerOrange),
-            ),
-          ),
-          onSubmitted: (v) => Navigator.pop(ctx, v),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, null),
-            child: Text(l.cancel, style: TextStyle(color: AppColors.muted)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text),
-            child: Text(
-              l.save,
-              style: const TextStyle(color: AppColors.timerOrange),
-            ),
-          ),
-        ],
-      ),
+    final r = await showAppInput(
+      context,
+      title: l.savePresetTitle,
+      hint: l.presetNameHint,
+      confirmLabel: l.save,
+      cancelLabel: l.cancel,
     );
+    return r?.text;
   }
 
   Future<void> _openManage() async {
