@@ -1136,5 +1136,14 @@
         "type": "String"
       }
     }
+  },
+  "undo": "Undo",
+  "presetDeletedToast": "Deleted {name}",
+  "@presetDeletedToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }
