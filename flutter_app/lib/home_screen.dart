@@ -1742,11 +1742,12 @@ class _CenterInfo extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // shadows(_kTextHalo) 는 스크롤 시 아이콘 헤일로가 별도 레이어로
+                // 뒤처져 흰 ⏱ 잔상을 남겨 제거. 아이콘은 중앙 흰 영역 위라 대비 충분.
                 const Icon(
                   Icons.timer_outlined,
                   size: 22,
                   color: AppColors.swGreen,
-                  shadows: _kTextHalo,
                 ),
                 const SizedBox(width: 5),
                 Text(
