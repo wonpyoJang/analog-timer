@@ -50,6 +50,15 @@ class MtAddLoop extends MultiTimerEvent {
   List<Object?> get props => [name, steps, repeat, autoStart];
 }
 
+/// 동시 완료(끝 맞추기) 추가 — 여러 타이머를 같은 시각에 끝나게 지연 배치.
+/// 가장 긴 것은 지금 실행, 짧은 것은 waiting(시작 시각에 시작 알람).
+class MtAddFinishTogether extends MultiTimerEvent {
+  final List<({String name, int totalMs})> items;
+  const MtAddFinishTogether(this.items);
+  @override
+  List<Object?> get props => [items];
+}
+
 /// 루프 현재 단계 건너뛰기(⏭, 루프 행 전용).
 class MtLoopSkip extends MultiTimerEvent {
   final String id;

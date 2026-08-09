@@ -30,12 +30,15 @@ class TextTimerScreen extends StatefulWidget {
   State<TextTimerScreen> createState() => _TextTimerScreenState();
 }
 
+/// 시작 방식(§C·동시완료) — 병렬 / 순차 / 동시 완료(끝 맞추기).
+enum _StartMode { parallel, sequential, finishTogether }
+
 class _TextTimerScreenState extends State<TextTimerScreen> {
   final _ctrl = TextEditingController();
   List<ParsedTimer>? _parsed; // null = 입력 단계
   final _selected = <int>{};
-  bool _sequential = false; // 이어서 실행(조리법 순서) vs 동시에 시작
-  bool? _ackGateOverride; // null = 맥락 자동 추천, 값 있으면 사용자 토글
+  _StartMode _mode = _StartMode.parallel;
+  bool? _ackGateOverride; // null = 맥락 자동 추천, 값 있으면 사용자 토글(순차 전용)
 
   static const _examples = ['라면이랑 세탁', '십오분 집중', '계란 육분 반숙', '파스타 팔분, 소스 오분'];
 
@@ -82,7 +85,15 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
       return;
     }
     String nameOf(ParsedTimer t) => t.name.isEmpty ? l.multiTimerTitle : t.name;
-    if (_sequential && picks.length > 1) {
+    final multi = picks.length > 1;
+    if (multi && _mode == _StartMode.finishTogether) {
+      // 동시 완료 = 가장 긴 것 지금, 짧은 것 지연해 모두 같은 시각에 끝냄.
+      widget.bloc.add(
+        MtAddFinishTogether([
+          for (final t in picks) (name: nameOf(t), totalMs: t.totalMs),
+        ]),
+      );
+    } else if (multi && _mode == _StartMode.sequential) {
       if (_effectiveAckGate(picks)) {
         // ack 게이트 = 한 단계 알람을 확인해야 다음이 시작(단계 사이 손 쓰는 조리법).
         final chainId = 'chain${DateTime.now().microsecondsSinceEpoch}';
@@ -351,16 +362,16 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
     );
   }
 
-  /// 시작 방식 세그먼트(§C) — 동시에 시작 / 이어서 실행(조리법 순서).
+  /// 시작 방식 세그먼트(§C·동시완료) — 동시에 / 이어서 / 동시 완료.
   Widget _startModeSeg(AppLocalizations l) {
-    Widget seg(String label, bool seqValue) {
-      final on = _sequential == seqValue;
+    Widget seg(String label, _StartMode m) {
+      final on = _mode == m;
       return Expanded(
         child: GestureDetector(
-          onTap: () => setState(() => _sequential = seqValue),
+          onTap: () => setState(() => _mode = m),
           child: Container(
             margin: const EdgeInsets.all(4),
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
             decoration: BoxDecoration(
               color: on ? const Color(0xFF232326) : Colors.transparent,
               borderRadius: BorderRadius.circular(9),
@@ -368,9 +379,11 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
             child: Text(
               label,
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: on ? AppColors.text : AppColors.faint,
-                fontSize: 13,
+                fontSize: 12.5,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -391,10 +404,48 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
-              children: [seg(l.seqParallel, false), seg(l.seqSequential, true)],
+              children: [
+                seg(l.seqParallel, _StartMode.parallel),
+                seg(l.seqSequential, _StartMode.sequential),
+                seg(l.seqFinishTogether, _StartMode.finishTogether),
+              ],
             ),
           ),
-          if (_sequential) _ackGateRow(l),
+          if (_mode == _StartMode.sequential) _ackGateRow(l),
+          if (_mode == _StartMode.finishTogether) _finishPreview(l),
+        ],
+      ),
+    );
+  }
+
+  /// 동시 완료 미리보기(§1·§2) — 계산된 공통 완료시각.
+  Widget _finishPreview(AppLocalizations l) {
+    final picks = _currentPicks();
+    var maxMs = 0;
+    for (final t in picks) {
+      if (t.totalMs > maxMs) maxMs = t.totalMs;
+    }
+    final finish = DateTime.now().add(Duration(milliseconds: maxMs));
+    final hh = finish.hour.toString().padLeft(2, '0');
+    final mm = finish.minute.toString().padLeft(2, '0');
+    return Padding(
+      padding: const EdgeInsets.only(top: 12, left: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.seqFinishAt('$hh:$mm'),
+            style: const TextStyle(
+              color: Color(0xFF52B0E0),
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l.seqFinishNote,
+            style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.5),
+          ),
         ],
       ),
     );

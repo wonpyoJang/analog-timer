@@ -1947,4 +1947,51 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get seqAckOffNote =>
       'Next starts right after each step — for continuous steps.';
+
+  @override
+  String get seqFinishTogether => 'Finish together';
+
+  @override
+  String get seqFinishNote =>
+      'Starts with the longest first so everything finishes at the same time.';
+
+  @override
+  String seqFinishAt(String time) {
+    return 'All done at $time';
+  }
+
+  @override
+  String get ftWaiting => 'Waiting';
+
+  @override
+  String get ftStartArmed => 'Time to start';
+
+  @override
+  String ftStartIn(String t) {
+    return 'starts in $t';
+  }
+
+  @override
+  String get ftStartNow => 'Start now';
+
+  @override
+  String ftDriftTitle(String name, int min) {
+    return '$name will finish $min min late';
+  }
+
+  @override
+  String get ftDriftDesc => 'Extend the running one to realign, or leave it.';
+
+  @override
+  String ftDriftExtend(String name, int min) {
+    return '$name +$min:00';
+  }
+
+  @override
+  String get ftDriftLeave => 'Leave it';
+
+  @override
+  String ftStartArmedMsg(String name) {
+    return 'Time to start $name — confirm to start';
+  }
 }

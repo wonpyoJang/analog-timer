@@ -3662,6 +3662,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next starts right after each step — for continuous steps.'**
   String get seqAckOffNote;
+
+  /// No description provided for @seqFinishTogether.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish together'**
+  String get seqFinishTogether;
+
+  /// No description provided for @seqFinishNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts with the longest first so everything finishes at the same time.'**
+  String get seqFinishNote;
+
+  /// No description provided for @seqFinishAt.
+  ///
+  /// In en, this message translates to:
+  /// **'All done at {time}'**
+  String seqFinishAt(String time);
+
+  /// No description provided for @ftWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get ftWaiting;
+
+  /// No description provided for @ftStartArmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to start'**
+  String get ftStartArmed;
+
+  /// No description provided for @ftStartIn.
+  ///
+  /// In en, this message translates to:
+  /// **'starts in {t}'**
+  String ftStartIn(String t);
+
+  /// No description provided for @ftStartNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start now'**
+  String get ftStartNow;
+
+  /// No description provided for @ftDriftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will finish {min} min late'**
+  String ftDriftTitle(String name, int min);
+
+  /// No description provided for @ftDriftDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Extend the running one to realign, or leave it.'**
+  String get ftDriftDesc;
+
+  /// No description provided for @ftDriftExtend.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} +{min}:00'**
+  String ftDriftExtend(String name, int min);
+
+  /// No description provided for @ftDriftLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave it'**
+  String get ftDriftLeave;
+
+  /// No description provided for @ftStartArmedMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to start {name} — confirm to start'**
+  String ftStartArmedMsg(String name);
 }
 
 class _AppLocalizationsDelegate

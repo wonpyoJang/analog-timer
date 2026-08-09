@@ -624,5 +624,58 @@
   "seqAckTitle": "확인 후 다음 시작",
   "seqAckAuto": "자동 선택됨",
   "seqAckOnNote": "한 단계 알람을 확인해야 다음이 시작돼요 (단계 사이 손 쓰는 조리).",
-  "seqAckOffNote": "한 단계가 끝나면 곧바로 다음이 시작돼요 (연속 과정)."
+  "seqAckOffNote": "한 단계가 끝나면 곧바로 다음이 시작돼요 (연속 과정).",
+  "seqFinishTogether": "동시 완료",
+  "seqFinishNote": "가장 긴 것부터 시작해 모두 같은 시각에 끝나요.",
+  "seqFinishAt": "모두 {time}에 완료",
+  "@seqFinishAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "ftWaiting": "대기",
+  "ftStartArmed": "시작할 시간",
+  "ftStartIn": "{t} 뒤 시작",
+  "ftStartNow": "지금 시작",
+  "ftDriftTitle": "{name}이(가) {min}분 늦게 끝나요",
+  "ftDriftDesc": "실행 중인 것을 늘려 다시 맞추거나, 그대로 둘 수 있어요.",
+  "ftDriftExtend": "{name} +{min}:00",
+  "ftDriftLeave": "그대로 두기",
+  "@ftStartIn": {
+    "placeholders": {
+      "t": {
+        "type": "String"
+      }
+    }
+  },
+  "@ftDriftTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "@ftDriftExtend": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "ftStartArmedMsg": "{name} 올리세요 — 확인하면 시작돼요",
+  "@ftStartArmedMsg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

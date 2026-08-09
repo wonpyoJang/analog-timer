@@ -1909,4 +1909,50 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get seqAckOffNote => '한 단계가 끝나면 곧바로 다음이 시작돼요 (연속 과정).';
+
+  @override
+  String get seqFinishTogether => '동시 완료';
+
+  @override
+  String get seqFinishNote => '가장 긴 것부터 시작해 모두 같은 시각에 끝나요.';
+
+  @override
+  String seqFinishAt(String time) {
+    return '모두 $time에 완료';
+  }
+
+  @override
+  String get ftWaiting => '대기';
+
+  @override
+  String get ftStartArmed => '시작할 시간';
+
+  @override
+  String ftStartIn(String t) {
+    return '$t 뒤 시작';
+  }
+
+  @override
+  String get ftStartNow => '지금 시작';
+
+  @override
+  String ftDriftTitle(String name, int min) {
+    return '$name이(가) $min분 늦게 끝나요';
+  }
+
+  @override
+  String get ftDriftDesc => '실행 중인 것을 늘려 다시 맞추거나, 그대로 둘 수 있어요.';
+
+  @override
+  String ftDriftExtend(String name, int min) {
+    return '$name +$min:00';
+  }
+
+  @override
+  String get ftDriftLeave => '그대로 두기';
+
+  @override
+  String ftStartArmedMsg(String name) {
+    return '$name 올리세요 — 확인하면 시작돼요';
+  }
 }

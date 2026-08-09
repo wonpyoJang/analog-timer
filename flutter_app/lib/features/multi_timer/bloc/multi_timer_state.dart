@@ -11,23 +11,32 @@ class MultiTimerState extends Equatable {
   /// 이 방출에서 루프 단계가 전환된 id 들 — 전환 통지(가벼움/회차 시작 강함) 트리거.
   final List<String> justLooped;
 
+  /// 이 방출에서 시작 시각이 도래해 "시작 알람"이 켜진 id 들(동시 완료 §4).
+  final List<String> justStartArmed;
+
   const MultiTimerState({
     this.timers = const [],
     this.justCompleted = const [],
     this.justLooped = const [],
+    this.justStartArmed = const [],
   });
 
   MultiTimerState copyWith({
     List<CountdownTimer>? timers,
     List<String> justCompleted = const [],
     List<String> justLooped = const [],
+    List<String> justStartArmed = const [],
   }) => MultiTimerState(
     timers: timers ?? this.timers,
     justCompleted: justCompleted,
     justLooped: justLooped,
+    justStartArmed: justStartArmed,
   );
 
   int get runningCount => timers.where((t) => t.running).length;
+
+  /// 아직 시작 안 한 동시 완료 대기 타이머 수 — 틱 유지 조건(도래 시 arming).
+  int get waitingCount => timers.where((t) => t.waiting).length;
 
   @override
   List<Object?> get props => [timers];
