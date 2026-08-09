@@ -5,6 +5,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../services/persistence_service.dart';
 import '../../../services/sync_service.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/app_dialog.dart';
 import '../models/preset.dart';
 import 'preset_edit_page.dart';
 
@@ -108,41 +109,31 @@ class _PresetManagePageState extends State<PresetManagePage> {
 
   Future<void> _delete(int i) async {
     final l = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: AppColors.border),
-        ),
-        title: Text(
-          l.deletePresetTitle,
-          style: const TextStyle(color: AppColors.text, fontSize: 15),
-        ),
-        content: Text(
-          l.deletePresetConfirm(_userPresets[i].name),
-          style: TextStyle(color: AppColors.muted, fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l.cancel, style: TextStyle(color: AppColors.muted)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              l.delete,
-              style: const TextStyle(color: AppColors.danger),
-            ),
-          ),
-        ],
-      ),
+    final removed = _userPresets[i];
+    final ok = await showAppDestructive(
+      context,
+      title: l.deletePresetTitle,
+      body: l.deletePresetConfirm(removed.name),
+      confirmLabel: l.delete,
+      cancelLabel: l.cancel,
     );
-    if (ok != true) return;
+    if (!ok) return;
     final n = [..._userPresets]..removeAt(i);
     setState(() => _userPresets = n);
     await _persist();
+    // 이미 일어난 삭제는 Toast + 되돌리기(같은 자리 복원) — 시안 규칙.
+    if (!mounted) return;
+    showAppToast(
+      context,
+      l.presetDeletedToast(removed.name),
+      undoLabel: l.undo,
+      onUndo: () async {
+        final restored = [..._userPresets]
+          ..insert(i.clamp(0, _userPresets.length), removed);
+        setState(() => _userPresets = restored);
+        await _persist();
+      },
+    );
   }
 
   @override

@@ -677,5 +677,14 @@
         "type": "String"
       }
     }
+  },
+  "undo": "되돌리기",
+  "presetDeletedToast": "{name}을(를) 지웠어요",
+  "@presetDeletedToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

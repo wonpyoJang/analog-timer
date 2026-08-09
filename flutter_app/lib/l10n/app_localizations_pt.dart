@@ -2002,4 +2002,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String ftStartArmedMsg(String name) {
     return 'Time to start $name — confirm to start';
   }
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String presetDeletedToast(String name) {
+    return 'Deleted $name';
+  }
 }

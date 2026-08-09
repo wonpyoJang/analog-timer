@@ -3734,6 +3734,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time to start {name} — confirm to start'**
   String ftStartArmedMsg(String name);
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @presetDeletedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {name}'**
+  String presetDeletedToast(String name);
 }
 
 class _AppLocalizationsDelegate

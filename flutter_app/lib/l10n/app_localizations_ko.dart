@@ -1955,4 +1955,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String ftStartArmedMsg(String name) {
     return '$name 올리세요 — 확인하면 시작돼요';
   }
+
+  @override
+  String get undo => '되돌리기';
+
+  @override
+  String presetDeletedToast(String name) {
+    return '$name을(를) 지웠어요';
+  }
 }
