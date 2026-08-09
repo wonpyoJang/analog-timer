@@ -10,8 +10,9 @@ class OcrService {
 
   /// 이미지 파일에서 인식한 전체 텍스트(줄바꿈 포함). 실패 시 빈 문자열.
   static Future<String> recognizeFile(String path) async {
-    final recognizer = TextRecognizer(script: TextRecognitionScript.korean);
+    TextRecognizer? recognizer;
     try {
+      recognizer = TextRecognizer(script: TextRecognitionScript.korean);
       final result = await recognizer.processImage(
         InputImage.fromFilePath(path),
       );
@@ -19,7 +20,7 @@ class OcrService {
     } catch (_) {
       return '';
     } finally {
-      await recognizer.close();
+      await recognizer?.close();
     }
   }
 }
