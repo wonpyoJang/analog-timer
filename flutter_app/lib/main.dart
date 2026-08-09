@@ -28,6 +28,8 @@ import 'services/sound_service.dart';
 import 'services/care_service.dart';
 import 'services/list_display_service.dart';
 import 'services/overlay_settings_service.dart';
+import 'services/deep_link_service.dart';
+import 'services/deep_link_router.dart';
 import 'services/colorblind_service.dart';
 import 'services/high_contrast_service.dart';
 import 'widgets/desktop_title_bar.dart';
@@ -67,6 +69,9 @@ Future<void> main(List<String> args) async {
   await HighContrastService.instance.init();
   await OverlayCoordinator.instance.init();
   await HotkeyService.instance.init();
+  // 음성 딥링크(§3·§7) — 라우터에 연결 후 콜드 스타트 초기 링크 흡수.
+  DeepLinkService.instance.onAction = DeepLinkRouter.instance.handle;
+  await DeepLinkService.instance.init();
   _installErrorHandlers();
   runApp(const AnalogTimerApp());
 }

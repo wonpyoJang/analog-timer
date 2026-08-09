@@ -3380,6 +3380,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No time found. Try “ramen 4 min”.'**
   String get textTimerNoTime;
+
+  /// No description provided for @settingsVoiceStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start by voice'**
+  String get settingsVoiceStart;
+
+  /// No description provided for @settingsVoiceStartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on timers by talking, hands-free'**
+  String get settingsVoiceStartDesc;
+
+  /// No description provided for @voiceStartSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on a timer by talking — no need to pick up your phone.'**
+  String get voiceStartSub;
+
+  /// No description provided for @voiceHeroHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Say this and a 25-min focus starts right away'**
+  String get voiceHeroHint;
+
+  /// No description provided for @voiceHeroQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'“Hey Google, start focus”'**
+  String get voiceHeroQuote;
+
+  /// No description provided for @voiceRoutineHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on automatically'**
+  String get voiceRoutineHead;
+
+  /// No description provided for @voiceRoutineSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to a Galaxy routine and it starts without you saying anything.'**
+  String get voiceRoutineSub;
+
+  /// No description provided for @voiceRecipeHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested recipes'**
+  String get voiceRecipeHead;
+
+  /// No description provided for @recipeDesk.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus when I sit at my desk'**
+  String get recipeDesk;
+
+  /// No description provided for @recipeDeskWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Home Wi-Fi + weekday afternoon'**
+  String get recipeDeskWhen;
+
+  /// No description provided for @recipeCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus when I put it on the charger'**
+  String get recipeCharge;
+
+  /// No description provided for @recipeChargeWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Charging starts · with Do Not Disturb'**
+  String get recipeChargeWhen;
+
+  /// No description provided for @recipeWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice mode when I open a workout app'**
+  String get recipeWorkout;
+
+  /// No description provided for @recipeWorkoutWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'A specific app launches'**
+  String get recipeWorkoutWhen;
+
+  /// No description provided for @recipeSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop everything at bedtime'**
+  String get recipeSleep;
+
+  /// No description provided for @recipeSleepWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime mode begins'**
+  String get recipeSleepWhen;
+
+  /// No description provided for @routineCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied the \'{name}\' link'**
+  String routineCopied(String name);
+
+  /// No description provided for @routineStepsHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Now do this'**
+  String get routineStepsHead;
+
+  /// No description provided for @routineStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the Routines app'**
+  String get routineStep1;
+
+  /// No description provided for @routineStep1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'The button below opens it'**
+  String get routineStep1Desc;
+
+  /// No description provided for @routineStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick ‘Open app’ as the action'**
+  String get routineStep2;
+
+  /// No description provided for @routineStep2Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press the address field and paste'**
+  String get routineStep2Desc;
+
+  /// No description provided for @routineStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a condition and save'**
+  String get routineStep3;
+
+  /// No description provided for @routineStep3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi · time · place — anything'**
+  String get routineStep3Desc;
+
+  /// No description provided for @routineOpenApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Routines app'**
+  String get routineOpenApp;
+
+  /// No description provided for @routineCantOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t open the Routines app. The link is copied — paste it there.'**
+  String get routineCantOpen;
+
+  /// No description provided for @voiceStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Started by voice'**
+  String get voiceStarted;
+
+  /// No description provided for @voiceStartedTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Started ‘{name}’'**
+  String voiceStartedTimer(String name);
+
+  /// No description provided for @voiceStopHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Several timers are running — open the app to choose.'**
+  String get voiceStopHint;
 }
 
 class _AppLocalizationsDelegate

@@ -6,6 +6,7 @@ import 'features/multi_timer/widgets/multi_timer_screen.dart';
 import 'features/workout/workout_screen.dart';
 import 'features/prep/prep_screen.dart';
 import 'services/haptic_service.dart';
+import 'services/deep_link_router.dart';
 import 'services/platform_info.dart';
 import 'settings_screen.dart';
 import 'theme/app_theme.dart';
@@ -24,6 +25,29 @@ class RootShell extends StatefulWidget {
 
 class _RootShellState extends State<RootShell> {
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // 딥링크가 요청한 탭으로 전환(§3). 콜드 스타트로 이미 설정된 값도 즉시 반영.
+    DeepLinkRouter.instance.requestedTab.addListener(_onTabRequest);
+    _onTabRequest();
+  }
+
+  void _onTabRequest() {
+    final t = DeepLinkRouter.instance.requestedTab.value;
+    if (t == null || isDesktop) return;
+    DeepLinkRouter.instance.requestedTab.value = null;
+    if (mounted && t != _index && t >= 0 && t < 5) {
+      setState(() => _index = t);
+    }
+  }
+
+  @override
+  void dispose() {
+    DeepLinkRouter.instance.requestedTab.removeListener(_onTabRequest);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -1764,4 +1764,95 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get textTimerNoTime => '시간을 찾지 못했어요. “라면 4분”처럼 적어보세요.';
+
+  @override
+  String get settingsVoiceStart => '음성으로 시작';
+
+  @override
+  String get settingsVoiceStartDesc => '폰을 꺼내지 않고 말로 타이머를 켜요';
+
+  @override
+  String get voiceStartSub => '폰을 꺼내지 않고 말로 타이머를 켜요.';
+
+  @override
+  String get voiceHeroHint => '이렇게 말하면 25분 집중이 바로 시작돼요';
+
+  @override
+  String get voiceHeroQuote => '“헤이 구글, 집중 시작”';
+
+  @override
+  String get voiceRoutineHead => '자동으로 켜지게';
+
+  @override
+  String get voiceRoutineSub => '갤럭시 루틴에 등록하면 말하지 않아도 시작돼요.';
+
+  @override
+  String get voiceRecipeHead => '추천 레시피';
+
+  @override
+  String get recipeDesk => '책상에 앉으면 집중';
+
+  @override
+  String get recipeDeskWhen => '집 Wi-Fi + 평일 오후';
+
+  @override
+  String get recipeCharge => '무선 충전에 올리면 집중';
+
+  @override
+  String get recipeChargeWhen => '충전 시작 · 방해금지 함께';
+
+  @override
+  String get recipeWorkout => '운동 앱을 열면 TTS 모드';
+
+  @override
+  String get recipeWorkoutWhen => '특정 앱 실행';
+
+  @override
+  String get recipeSleep => '잘 때 전체 정지';
+
+  @override
+  String get recipeSleepWhen => '취침 모드 진입';
+
+  @override
+  String routineCopied(String name) {
+    return '‘$name’ 링크를 복사했어요';
+  }
+
+  @override
+  String get routineStepsHead => '이제 이렇게 하면 돼요';
+
+  @override
+  String get routineStep1 => '루틴 앱 열기';
+
+  @override
+  String get routineStep1Desc => '아래 버튼을 누르면 바로 열려요';
+
+  @override
+  String get routineStep2 => '동작에서 ‘앱 열기’ 선택';
+
+  @override
+  String get routineStep2Desc => '주소 칸에 길게 눌러 붙여넣기';
+
+  @override
+  String get routineStep3 => '조건을 고르고 저장';
+
+  @override
+  String get routineStep3Desc => 'Wi-Fi · 시간 · 장소 무엇이든';
+
+  @override
+  String get routineOpenApp => '루틴 앱 열기';
+
+  @override
+  String get routineCantOpen => '루틴 앱을 열지 못했어요. 링크는 복사됐어요 — 붙여넣어 주세요.';
+
+  @override
+  String get voiceStarted => '말로 시작함';
+
+  @override
+  String voiceStartedTimer(String name) {
+    return '‘$name’ 시작했어요';
+  }
+
+  @override
+  String get voiceStopHint => '여러 개가 실행 중이라 앱에서 골라주세요.';
 }

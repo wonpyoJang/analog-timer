@@ -13,6 +13,8 @@ import '../../../services/list_display_service.dart';
 import '../../../services/overlay_settings_service.dart';
 import '../time_parser.dart';
 import 'text_timer_screen.dart';
+import '../../../services/deep_link.dart';
+import '../../../services/deep_link_router.dart';
 import '../../../features/stats/activity_stats_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
@@ -86,6 +88,80 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     // pill 탭 = 프리-알림 구간 +5분 연장(페르소나 §5).
     MultiOverlayService.ensureTapListening();
     MultiOverlayService.onPillTap = _onPillTap;
+    // 음성 딥링크(§3) — 라우터가 넘긴 대기 액션을 로컬 bloc 으로 소비.
+    DeepLinkRouter.instance.pendingMulti.addListener(_onDeepLink);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onDeepLink());
+  }
+
+  /// 딥링크 대기 액션을 처리한다. 프리셋은 로드 전이면 소비하지 않고
+  /// _loadPresets 완료 후 재시도한다(콜드 스타트 대비).
+  void _onDeepLink() {
+    final a = DeepLinkRouter.instance.pendingMulti.value;
+    if (a == null || !mounted) return;
+    final bloc = context.read<MultiTimerBloc>();
+    final l = AppLocalizations.of(context);
+    switch (a.kind) {
+      case DeepLinkKind.start:
+        final ms = a.totalMs;
+        if (ms != null && ms > 0) {
+          final name = (a.label != null && a.label!.isNotEmpty)
+              ? a.label!
+              : l.multiTimerTitle;
+          bloc.add(MtAdd(name, ms, autoStart: true));
+          _consumeLink();
+          _toast(l.voiceStartedTimer(name));
+        } else {
+          _consumeLink();
+        }
+      case DeepLinkKind.preset:
+        final p = _findPreset(a.id);
+        if (p != null) {
+          final name = p['name'] as String;
+          bloc.add(
+            MtAdd(name, (p['durationMs'] as num).toInt(), autoStart: true),
+          );
+          _markPresetUsed(name);
+          _consumeLink();
+          _toast(l.voiceStartedTimer(name));
+        } else if (_presets.isNotEmpty) {
+          _consumeLink(); // 로드됐는데 못 찾음 → 탭만 이동
+        }
+      case DeepLinkKind.stop:
+        _consumeLink();
+        final running = bloc.state.timers
+            .where((t) => t.running && !t.done)
+            .toList();
+        if (a.all) {
+          for (final t in running) {
+            bloc.add(MtPause(t.id));
+          }
+        } else if (running.length == 1) {
+          bloc.add(MtPause(running.first.id));
+        } else if (running.length > 1) {
+          _toast(l.voiceStopHint); // 추측하지 않는다(§6)
+        }
+      case DeepLinkKind.status:
+        _consumeLink(); // 탭 이동만
+      default:
+        _consumeLink(); // loop/extend/ack/workout 후속
+    }
+  }
+
+  void _consumeLink() => DeepLinkRouter.instance.pendingMulti.value = null;
+
+  Map<String, dynamic>? _findPreset(String? id) {
+    if (id == null || id.isEmpty) return null;
+    final dec = Uri.decodeComponent(id);
+    for (final p in _presets) {
+      final n = (p['name'] as String?) ?? '';
+      if (n == id || n == dec) return p;
+    }
+    return null;
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   void _onPillTap(String id) {
@@ -171,6 +247,8 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       await PersistenceService.saveMultiTimerPresets(loaded);
     }
     if (mounted) setState(() => _presets = loaded ?? []);
+    // 프리셋 로드 후 대기 중인 preset 딥링크 재시도(콜드 스타트).
+    _onDeepLink();
   }
 
   /// 최근 사용이 항상 첫 칩(§3) — lastUsedMs 내림차순, 없는 항목은 원래 순서.
@@ -507,6 +585,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   void dispose() {
     _realarmTimer?.cancel();
     _saveTrailing?.cancel();
+    DeepLinkRouter.instance.pendingMulti.removeListener(_onDeepLink);
     if (identical(
       OverlayCoordinator.instance.closeMultiOverlays,
       _closeAllOverlaysForMutex,

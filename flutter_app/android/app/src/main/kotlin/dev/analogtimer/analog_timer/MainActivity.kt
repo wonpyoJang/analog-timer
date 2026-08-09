@@ -11,6 +11,11 @@ class MainActivity : FlutterActivity() {
     private val ANR_VITALS_CHANNEL = "dev.analogtimer/anr_vitals"
     private val AUDIO_FOCUS_CHANNEL = "dev.analogtimer/audio_focus"
     private val WEAR_CHANNEL = "dev.analogtimer/wear"
+    private val DEEPLINK_CHANNEL = "dev.analogtimer/deeplink"
+
+    // 콜드 스타트로 들어온 딥링크를 Dart 준비 전까지 보관(§7 콜드 경로).
+    private var pendingDeepLink: String? = null
+    private var deeplinkChannel: MethodChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -19,6 +24,7 @@ class MainActivity : FlutterActivity() {
         configureAnrVitalsChannel(flutterEngine)
         configureAudioFocusChannel(flutterEngine)
         configureWearChannel(flutterEngine)
+        configureDeeplinkChannel(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -195,6 +201,63 @@ class MainActivity : FlutterActivity() {
                 .removeListener(wearMessageListener)
         } catch (_: Exception) {}
         super.onDestroy()
+    }
+
+    // 딥링크(음성 연동 기획 §3·§7) — anytime:// 스킴 수신.
+    // 콜드: onCreate 시 intent 를 보관 → Dart 가 getInitialLink 로 흡수.
+    // 웜: singleTop 이라 onNewIntent 로 들어옴 → 채널로 즉시 push.
+    private fun configureDeeplinkChannel(flutterEngine: FlutterEngine) {
+        deeplinkChannel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            DEEPLINK_CHANNEL,
+        )
+        // 콜드 스타트로 들어온 링크 보관.
+        (intent?.takeIf { it.action == Intent.ACTION_VIEW }?.data?.toString())
+            ?.let { pendingDeepLink = it }
+        deeplinkChannel!!.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getInitialLink" -> {
+                    result.success(pendingDeepLink)
+                    pendingDeepLink = null
+                }
+                "openRoutines" -> result.success(openRoutinesApp())
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    /** 갤럭시 "모드와 루틴" 앱 실행(음성 연동 §5). 없으면 false 로 폴백. */
+    private fun openRoutinesApp(): Boolean {
+        val pkgs = listOf(
+            "com.samsung.android.app.routines",
+            "com.samsung.android.bixby.agent",
+        )
+        for (p in pkgs) {
+            val i = packageManager.getLaunchIntentForPackage(p)
+            if (i != null) {
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                return try {
+                    startActivity(i); true
+                } catch (_: Exception) {
+                    false
+                }
+            }
+        }
+        return false
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.action == Intent.ACTION_VIEW) {
+            val uri = intent.data?.toString() ?: return
+            val ch = deeplinkChannel
+            if (ch != null) {
+                runOnUiThread { ch.invokeMethod("link", uri) }
+            } else {
+                pendingDeepLink = uri // 엔진 준비 전이면 보관
+            }
+        }
     }
 
     /** 운동 TTS 음악 덕킹 — 발화 동안 TRANSIENT_MAY_DUCK 포커스를 잡아
