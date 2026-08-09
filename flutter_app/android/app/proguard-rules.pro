@@ -7,3 +7,11 @@
 -dontwarn com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions
 -dontwarn com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions$Builder
 -dontwarn com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
+
+# ML Kit 런타임 보존 — R8 full-mode 가 ML Kit 내부(리플렉션으로 자기 클래스명을
+# 읽는 코드)를 난독화/제거하면 인식 시 NullPointerException(x3.ma.<init> getClass
+# on null) 으로 조용히 실패("No time found")한다. 관련 클래스를 통째로 보존한다.
+-keep class com.google.mlkit.** { *; }
+-keep interface com.google.mlkit.** { *; }
+-keep class com.google.android.gms.internal.mlkit_** { *; }
+-dontwarn com.google.mlkit.**
