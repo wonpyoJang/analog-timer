@@ -538,5 +538,30 @@
   "overlayAutoHideDesc": "확인하면 사라져요",
   "overlayGrantCta": "권한 주기",
   "overlayPreviewHint": "드래그해서 위치를 옮길 수 있어요",
-  "overlayPreviewLabel": "미리보기"
+  "overlayPreviewLabel": "미리보기",
+  "textTimerEntry": "말하거나 적기",
+  "textTimerEntryDesc": "“라면 사분반, 계란 육분”",
+  "textTimerTitle": "말하거나 적기",
+  "textTimerInputHint": "예: 라면 사분반, 계란 육분",
+  "textTimerHelper": "여러 개를 쉼표로 한 번에 적어도 돼요.",
+  "textTimerExamplesHead": "이렇게 적어보세요",
+  "textTimerOffline": "인터넷 없이 동작해요 · 아무것도 전송하지 않아요",
+  "textTimerParse": "해석하기",
+  "textTimerConfirmTitle": "이렇게 만들까요?",
+  "textTimerConfirmSub": "눌러서 빼거나 다시 적을 수 있어요.",
+  "textTimerRetype": "다시 적기",
+  "textTimerStartN": "{n}개 시작",
+  "textTimerSaveN": "프리셋으로 저장",
+  "textTimerUnparsed": "시간을 알 수 없어요 · 이 부분을 다시 적어주세요",
+  "textTimerFromPreset": "이미 있는 프리셋이라 색·알람을 가져왔어요",
+  "textTimerRangeShort": "짧은 쪽으로 잡았어요",
+  "textTimerEmpty": "아직 시작할 게 없어요",
+  "textTimerNoTime": "시간을 찾지 못했어요. “라면 4분”처럼 적어보세요.",
+  "@textTimerStartN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }

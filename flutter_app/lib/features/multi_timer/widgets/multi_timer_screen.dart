@@ -11,6 +11,8 @@ import '../../../services/sound_service.dart';
 import '../../../services/care_service.dart';
 import '../../../services/list_display_service.dart';
 import '../../../services/overlay_settings_service.dart';
+import '../time_parser.dart';
+import 'text_timer_screen.dart';
 import '../../../features/stats/activity_stats_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
@@ -972,6 +974,90 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                       child: Text(
                         l.multiTimerPresetEditHint,
                         style: TextStyle(color: AppColors.faint, fontSize: 13),
+                      ),
+                    ),
+                  // 말·글로 타이머 만들기(온디바이스 §4·§E) — 한 문장에서 여러 개.
+                  if (!editMode)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: Material(
+                        color: const Color(0xFF141416),
+                        borderRadius: BorderRadius.circular(14),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            final refs = [
+                              for (final p in _presets)
+                                if (((p['name'] as String?) ?? '').isNotEmpty)
+                                  PresetRef(
+                                    name: p['name'] as String,
+                                    totalMs:
+                                        (p['durationMs'] as num?)?.toInt() ?? 0,
+                                  ),
+                            ];
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    TextTimerScreen(presets: refs, bloc: bloc),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accent.withAlpha(0x24),
+                                    borderRadius: BorderRadius.circular(9),
+                                  ),
+                                  child: const Icon(
+                                    Icons.keyboard_voice_outlined,
+                                    size: 18,
+                                    color: AppColors.accent,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l.textTimerEntry,
+                                        style: const TextStyle(
+                                          color: AppColors.text,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        l.textTimerEntryDesc,
+                                        style: TextStyle(
+                                          color: AppColors.muted,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: AppColors.faint,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   // 루프 모드(루프 시안 §2) — 단계 리스트 + 반복 횟수.

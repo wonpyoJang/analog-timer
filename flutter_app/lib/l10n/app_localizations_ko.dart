@@ -1708,4 +1708,60 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get overlayPreviewLabel => '미리보기';
+
+  @override
+  String get textTimerEntry => '말하거나 적기';
+
+  @override
+  String get textTimerEntryDesc => '“라면 사분반, 계란 육분”';
+
+  @override
+  String get textTimerTitle => '말하거나 적기';
+
+  @override
+  String get textTimerInputHint => '예: 라면 사분반, 계란 육분';
+
+  @override
+  String get textTimerHelper => '여러 개를 쉼표로 한 번에 적어도 돼요.';
+
+  @override
+  String get textTimerExamplesHead => '이렇게 적어보세요';
+
+  @override
+  String get textTimerOffline => '인터넷 없이 동작해요 · 아무것도 전송하지 않아요';
+
+  @override
+  String get textTimerParse => '해석하기';
+
+  @override
+  String get textTimerConfirmTitle => '이렇게 만들까요?';
+
+  @override
+  String get textTimerConfirmSub => '눌러서 빼거나 다시 적을 수 있어요.';
+
+  @override
+  String get textTimerRetype => '다시 적기';
+
+  @override
+  String textTimerStartN(int n) {
+    return '$n개 시작';
+  }
+
+  @override
+  String get textTimerSaveN => '프리셋으로 저장';
+
+  @override
+  String get textTimerUnparsed => '시간을 알 수 없어요 · 이 부분을 다시 적어주세요';
+
+  @override
+  String get textTimerFromPreset => '이미 있는 프리셋이라 색·알람을 가져왔어요';
+
+  @override
+  String get textTimerRangeShort => '짧은 쪽으로 잡았어요';
+
+  @override
+  String get textTimerEmpty => '아직 시작할 게 없어요';
+
+  @override
+  String get textTimerNoTime => '시간을 찾지 못했어요. “라면 4분”처럼 적어보세요.';
 }

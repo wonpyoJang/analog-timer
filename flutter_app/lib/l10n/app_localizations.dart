@@ -3272,6 +3272,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview'**
   String get overlayPreviewLabel;
+
+  /// No description provided for @textTimerEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Say or type'**
+  String get textTimerEntry;
+
+  /// No description provided for @textTimerEntryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'“Ramen 4 and a half min, egg 6 min”'**
+  String get textTimerEntryDesc;
+
+  /// No description provided for @textTimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Say or type'**
+  String get textTimerTitle;
+
+  /// No description provided for @textTimerInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 라면 사분반, 계란 육분'**
+  String get textTimerInputHint;
+
+  /// No description provided for @textTimerHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Write several at once, separated by commas.'**
+  String get textTimerHelper;
+
+  /// No description provided for @textTimerExamplesHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Try writing like this'**
+  String get textTimerExamplesHead;
+
+  /// No description provided for @textTimerOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Works offline · nothing is uploaded'**
+  String get textTimerOffline;
+
+  /// No description provided for @textTimerParse.
+  ///
+  /// In en, this message translates to:
+  /// **'Read it'**
+  String get textTimerParse;
+
+  /// No description provided for @textTimerConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make these?'**
+  String get textTimerConfirmTitle;
+
+  /// No description provided for @textTimerConfirmSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a card to remove it, or rewrite.'**
+  String get textTimerConfirmSub;
+
+  /// No description provided for @textTimerRetype.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewrite'**
+  String get textTimerRetype;
+
+  /// No description provided for @textTimerStartN.
+  ///
+  /// In en, this message translates to:
+  /// **'Start {n}'**
+  String textTimerStartN(int n);
+
+  /// No description provided for @textTimerSaveN.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as presets'**
+  String get textTimerSaveN;
+
+  /// No description provided for @textTimerUnparsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t find a time · rewrite this part'**
+  String get textTimerUnparsed;
+
+  /// No description provided for @textTimerFromPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing preset · kept its color & alarm'**
+  String get textTimerFromPreset;
+
+  /// No description provided for @textTimerRangeShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Picked the shorter side'**
+  String get textTimerRangeShort;
+
+  /// No description provided for @textTimerEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to start yet'**
+  String get textTimerEmpty;
+
+  /// No description provided for @textTimerNoTime.
+  ///
+  /// In en, this message translates to:
+  /// **'No time found. Try “ramen 4 min”.'**
+  String get textTimerNoTime;
 }
 
 class _AppLocalizationsDelegate
