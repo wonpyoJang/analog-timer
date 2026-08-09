@@ -47,4 +47,7 @@ flutter {
 dependencies {
     // 운동 TTS 워치 미러 — Data Layer 통신(폰→워치 상태, 워치→폰 명령)
     implementation("com.google.android.gms:play-services-wearable:18.1.0")
+    // 봉지 OCR 한국어 인식기 — 플러그인이 compileOnly 로만 선언하므로(APK 미포함)
+    // 앱이 런타임 의존성을 직접 추가해야 KoreanTextRecognizerOptions 클래스가 번들된다.
+    implementation("com.google.mlkit:text-recognition-korean:16.0.1")
 }
