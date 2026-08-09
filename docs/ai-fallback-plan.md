@@ -125,3 +125,42 @@ parseTimers(text) → List<ParsedTimer>  (규칙, unparsed 포함)
 2. "말하거나 적기" 진입을 완성해 AI와 함께 다시 노출할지, 별도 진입(예: 회색 카드에 "AI로 해석"
    버튼)으로 붙일지.
 3. OCR 경로에도 AI 폴백을 넣을지(봉지 문구 커버리지).
+
+---
+
+## 10. 대안·병행 경로 — 어시스턴트 연동 (App Actions / Bixby)
+**Gemini Nano(§3~8, AICore 필요)와 다른 트랙.** 여기선 AI가 앱 안에서 돌지 않는다 — 어시스턴트
+(Google Gemini/Assistant, 또는 빅스비)가 **음성인식·의도해석을 하고, 앱은 기존 `anytime://`
+딥링크로 구조화된 인텐트만 받는다.** 즉 §1 철칙("AI는 실행 경로 밖")에 그대로 맞고, **AICore
+같은 특수 하드웨어가 필요 없어 지금 있는 S10에서도 검증 가능**하다. 그래서 AICore 실연동보다
+**착수 우선순위가 높을 수 있다.**
+
+### 10.1 옵션 비교
+| 경로 | 방식 | 장점 | 단점/상태 | 검증 |
+|---|---|---|---|---|
+| **Android App Actions** (추천) | `shortcuts.xml` capability(BII 또는 커스텀) → `anytime://` 딥링크 매핑 | 현대적·Google Assistant/Gemini와 동작·기존 딥링크 재사용·특수 HW 불필요 | 커스텀 인텐트 승인/스키마 학습 | S10+Assistant 실기기 |
+| **App Functions** (안드 15/16+) | 온디바이스 AI가 앱 기능 직접 호출 | 온디바이스·미래 표준 | 지원 버전 협소, 초기 API | 신형 기기 필요 |
+| **Bixby Capsule** | Bixby Developer Studio(.bxb) → 딥링크 | S10에 빅스비 존재 | **빅스비 사양세(삼성이 Gemini로 대체)** → 신규 투자 비추천 | S10 실기기 |
+| **Galaxy Routines** | 루틴이 `anytime://` 실행 | **이미 구현됨**(voice_ondevice) | 자동화 트리거 한정(음성 자유발화 아님) | 완료 |
+
+결론: **App Actions 를 1순위**로. 빅스비는 사양세라 보류, App Functions 는 신형 기기 확보 후.
+
+### 10.2 App Actions 구현 스케치 (착수 시)
+- `android/app/src/main/res/xml/shortcuts.xml` 에 `<capability>` 선언, `anytime://start?...`·
+  `preset/{id}`·`stop` 등 기존 딥링크에 매핑(파라미터: min/sec/label).
+- 매니페스트에 shortcuts 메타데이터 연결. 가능하면 **Built-in Intents(BII)** 우선(예 타이머 관련
+  `actions.intent.*`), 없으면 커스텀 capability.
+- 딥링크 수신은 **기존 `deep_link_service.dart`/`DeepLinkRouter` 그대로 재사용**(신규 승격 불필요).
+- 파라미터 파싱은 기존 `parseDeepLink` 재사용. 자유발화 시간표현("삼분 반")은 어시스턴트가
+  이미 숫자로 정규화해 넘기므로 규칙 파서로 충분(AI 파서 폴백과 독립).
+- 검증(실기기 S10): "Hey Google, [앱]에서 파스타 8분 타이머" → 앱이 딥링크로 8분 타이머 생성.
+  릴리스 빌드로 확인(딥링크/인텐트 필터 R8 회귀 없는지).
+
+### 10.3 리스크·주의
+- App Actions 커스텀 인텐트는 문서/승인 절차가 바뀔 수 있음 → 착수 전 최신 확인(지식 컷 2026-01).
+- 어시스턴트가 앱을 못 찾거나 딥링크 파라미터 스키마 불일치 → 조용한 실패. 로그·폴백(앱 열기만) 필요.
+- 빅스비는 별도 캡슐 심사·계정 필요 + 플랫폼 사양세 → 당장은 문서화만.
+
+### 10.4 미결 결정 (§9 에 추가)
+4. App Actions 를 AICore 실연동보다 먼저 착수할지(HW 불필요·검증 가능 → 권장).
+5. BII(빌트인 인텐트)로 커버되는 범위 vs 커스텀 capability 필요 범위.
