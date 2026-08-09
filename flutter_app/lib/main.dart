@@ -171,6 +171,11 @@ class OverlayAppState extends State<OverlayApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      // 오버레이 엔진 첫 프레임이 흰색으로 번쩍이지 않도록 앱/테마 배경을 투명하게.
+      // (home 의 TimerOverlayWidget 는 이미 투명 Material 이지만, MaterialApp 기본
+      //  배경/scaffold 가 흰색이라 초기 프레임에 흰 플래시가 보였다.)
+      color: Colors.transparent,
+      theme: ThemeData(scaffoldBackgroundColor: Colors.transparent),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: _locale,

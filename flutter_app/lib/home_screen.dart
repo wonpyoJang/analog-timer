@@ -457,9 +457,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           // 첫 heartbeat(~1s) 전에 즉시 상태 동기화 → "UI 무너짐" 방지
           _syncOverlay();
         }
-      } else {
-        _prewarmOverlay();
       }
+      // 오버레이 OFF 면 아무것도 하지 않는다 — 예전엔 warm-up 으로 1×1 창을
+      // 미리 띄웠으나, 권한만 있으면 안 켠 사용자에게도 유령 오버레이 창(첫 프레임
+      // 흰 플래시)이 생기고 FGS 가 상주하는 부작용이 있어 제거. 첫 토글 시 show()
+      // 가 엔진을 초기화하므로 기능엔 영향 없음(첫 표시만 ~800ms 지연).
     });
   }
 
@@ -560,23 +562,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         }
       } catch (_) {}
     });
-  }
-
-  // 앱 시작 시 오버레이 서비스를 1×1px으로 미리 켜둠 → 첫 "위젯 ON" 즉시 반응
-  Future<void> _prewarmOverlay() async {
-    if (!await OverlayService.isPermissionGranted) return;
-    if (await FlutterOverlayWindow.isActive()) return;
-    // focusPointer, enableDrag 는 showOverlay 시 WindowManager에 등록되며
-    // resizeOverlay로는 변경 불가 — show()와 동일하게 맞춰야 버튼 탭이 동작함
-    await FlutterOverlayWindow.showOverlay(
-      height: 1,
-      width: 1,
-      alignment: OverlayAlignment.topCenter,
-      positionGravity: PositionGravity.none,
-      enableDrag: true,
-      flag: OverlayFlag.focusPointer,
-      overlayTitle: 'Analog Timer',
-    );
   }
 
   // STT-08 헬퍼: 권한이 실제 허용된 경우에만 overlay 시작 (requestPermission 호출 없음)
