@@ -523,9 +523,10 @@ class MultiOverlayService : Service() {
             if (sweep > 0f) canvas.drawArc(arcRect, -90f, sweep, false, arcPaint)
 
             // 중앙 텍스트 — 이름(위) · 남은시간(아래). 이름 숨김(§D) 시 시간을 중앙 정렬.
+            // 이름은 위로, 숫자는 아래로 벌려 간격 확보. 제목 폭도 넓혀 더 많이 보이게.
             if (showName) {
-                val name = ellipsize(timerName, namePaint, r * 1.4f)
-                canvas.drawText(name, cx, cy - dp(8) * sizeScale, namePaint)
+                val name = ellipsize(timerName, namePaint, r * 1.7f)
+                canvas.drawText(name, cx, cy - dp(14) * sizeScale, namePaint)
             }
             timePaint.color = when {
                 done -> COLOR_GREEN
@@ -536,7 +537,7 @@ class MultiOverlayService : Service() {
             }
             val fm = timePaint.fontMetrics
             val timeY = if (showName) {
-                cy + dp(14) * sizeScale - fm.descent
+                cy + dp(22) * sizeScale - fm.descent
             } else {
                 cy - (fm.ascent + fm.descent) / 2f
             }
