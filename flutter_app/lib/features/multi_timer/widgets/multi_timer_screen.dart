@@ -23,6 +23,7 @@ import '../../../overlay/multi_overlay_service.dart';
 import '../../../overlay/overlay_coordinator.dart';
 import '../bloc/multi_timer_bloc.dart';
 import '../bloc/multi_timer_event.dart';
+import '../finish_together.dart';
 import '../bloc/multi_timer_state.dart';
 import '../models/countdown_timer.dart';
 import 'alarm_screen.dart';
@@ -70,6 +71,9 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   // 네이티브 멀티 오버레이 상태 — 사용자가 개별로 띄우기 선택한 타이머 id들.
   final Set<String> _overlayIds = {};
   final Map<String, String> _lastPushed = {};
+
+  /// 동시 완료 어긋남 배너를 "그대로 두기"로 닫은 그룹 id들 — 재표시 억제.
+  final Set<String> _driftDismissed = {};
 
   /// 원탭 등록용 프리셋 — {'name','durationMs','category'?,'lastUsedMs'?}.
   List<Map<String, dynamic>> _presets = [];
@@ -645,6 +649,40 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     }
   }
 
+  /// 시작 알람(동시 완료 §4) — 지연 타이머의 시작 시각 도래. 완료 알람과 같은 강도,
+  /// 반대 의미(확인=시작). 자동 시작 안 함(냄비 올리는 시간을 앱이 모름).
+  void _onStartArmed(BuildContext context, MultiTimerState s) {
+    if (s.justStartArmed.isEmpty) return;
+    final l = AppLocalizations.of(context);
+    SoundService.instance.play('done');
+    HapticService.instance.heavy();
+    for (final id in s.justStartArmed) {
+      final t = s.timers.where((x) => x.id == id).firstOrNull;
+      if (t == null) continue;
+      final msg = l.ftStartArmedMsg(t.name);
+      DesktopNotificationService.notify(l.multiTimerTitle, msg);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            duration: const Duration(seconds: 4),
+            content: Text(msg),
+            action: SnackBarAction(
+              label: l.ftStartNow,
+              onPressed: () =>
+                  context.read<MultiTimerBloc>().add(MtStart(t.id)),
+            ),
+          ),
+        );
+      }
+      if (CareService.instance.ttsName.value) {
+        TtsService.instance.speak(
+          msg,
+          localeTag: Localizations.localeOf(context).toLanguageTag(),
+        );
+      }
+    }
+  }
+
   void _openAlarm() {
     if (_alarmOpen || !mounted) return;
     _alarmOpen = true;
@@ -836,6 +874,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
           _persist(state);
           _onCompleted(context, state);
           _onLooped(context, state);
+          _onStartArmed(context, state);
           _onWarnThresholds(state);
           _syncRealarm(state);
           _syncOverlays(l, state);
@@ -890,7 +929,17 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                   ),
                 );
               }
-              return ListView.separated(
+              final drift = finishTogetherDrift(state.timers, now);
+              final driftGid = drift == null
+                  ? null
+                  : state.timers
+                        .where((t) => t.id == drift.lateId)
+                        .map((t) => t.groupId)
+                        .firstOrNull;
+              final showDrift =
+                  drift != null &&
+                  (driftGid == null || !_driftDismissed.contains(driftGid));
+              final list = ListView.separated(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: items.length,
                 separatorBuilder: (_, _) => const Divider(
@@ -910,6 +959,24 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                   showRing: lds.showRing.value,
                   dim: lds.dimDone.value && items[i].done,
                 ),
+              );
+              if (!showDrift) return list;
+              return Column(
+                children: [
+                  _DriftBanner(
+                    drift: drift,
+                    timers: state.timers,
+                    onExtend: () => context.read<MultiTimerBloc>().add(
+                      MtExtend(drift.anchorId, drift.gapMs),
+                    ),
+                    onLeave: () {
+                      if (driftGid != null) {
+                        setState(() => _driftDismissed.add(driftGid));
+                      }
+                    },
+                  ),
+                  Expanded(child: list),
+                ],
               );
             },
           );
@@ -1755,6 +1822,79 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
 
 /// 남은시간 표시 — running 이면 콜론이 1초 주기로 점멸(스펙 3, 러닝 인지 보조).
 /// 자체 타이머 없이 bloc 250ms 틱 리빌드 시각으로 위상을 계산한다.
+/// 동시 완료 어긋남 복구 배너(§5) — 늦게 시작해 정렬이 깨졌을 때, 늘릴 수 있는
+/// anchor 를 gap 만큼 연장해 다시 끝을 맞추도록 제안한다. "그대로 두기"로 무시 가능.
+class _DriftBanner extends StatelessWidget {
+  final FinishDrift drift;
+  final List<CountdownTimer> timers;
+  final VoidCallback onExtend;
+  final VoidCallback onLeave;
+  const _DriftBanner({
+    required this.drift,
+    required this.timers,
+    required this.onExtend,
+    required this.onLeave,
+  });
+
+  String _nameOf(String id) =>
+      timers.where((t) => t.id == id).map((t) => t.name).firstOrNull ?? '';
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final gapMin = (drift.gapMs / 60000).ceil();
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 2),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF232326),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF52B0E0).withAlpha(0x66)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.ftDriftTitle(_nameOf(drift.lateId), gapMin),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l.ftDriftDesc,
+            style: TextStyle(color: AppColors.muted, fontSize: 13),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton(
+                  onPressed: onExtend,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF52B0E0),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(l.ftDriftExtend(_nameOf(drift.anchorId), gapMin)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              TextButton(
+                onPressed: onLeave,
+                style: TextButton.styleFrom(foregroundColor: AppColors.muted),
+                child: Text(l.ftDriftLeave),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TimeText extends StatelessWidget {
   final String text;
   final Color color;
@@ -1845,9 +1985,15 @@ class _TimerRow extends StatelessWidget {
     final bloc = context.read<MultiTimerBloc>();
     // 상태 문법: ringing(완료·미확인, 요리 시안 §4) > done > running > paused > idle.
     final ringing = timer.done && !timer.acked;
+    // 동시 완료: startArmed=시작 알람 울리는 중, waiting=아직 시작 전(지연).
+    final startArmed = timer.startArmed;
+    final waiting = timer.waiting && !startArmed;
     final paused =
-        !timer.running && !timer.done && timer.remainMs < timer.totalMs;
-    final idle = !timer.running && !timer.done && !paused;
+        !timer.running &&
+        !timer.done &&
+        !timer.waiting &&
+        timer.remainMs < timer.totalMs;
+    final idle = !timer.running && !timer.done && !paused && !timer.waiting;
     final frac = timer.totalMs <= 0
         ? 0.0
         : (1 - timer.remainMs / timer.totalMs).clamp(0.0, 1.0);
@@ -1856,6 +2002,10 @@ class _TimerRow extends StatelessWidget {
         ? l.alarmRinging
         : timer.done
         ? l.multiTimerDone
+        : startArmed
+        ? l.ftStartArmed
+        : waiting
+        ? l.ftWaiting
         : timer.isLoop && timer.running
         ? l.loopStepTag(
             timer.loopSteps[timer.loopStepIdx].name,
@@ -1871,6 +2021,8 @@ class _TimerRow extends StatelessWidget {
         ? AppColors.danger
         : timer.done
         ? AppColors.swGreen
+        : startArmed
+        ? AppColors.swGreen
         : timer.isLoop && timer.running
         ? AppColors.timerOrange
         : paused
@@ -1879,6 +2031,8 @@ class _TimerRow extends StatelessWidget {
     final tagBg = ringing
         ? AppColors.danger.withAlpha(0x24)
         : timer.done
+        ? AppColors.swGreen.withAlpha(0x24)
+        : startArmed
         ? AppColors.swGreen.withAlpha(0x24)
         : timer.isLoop && timer.running
         ? AppColors.timerOrange.withAlpha(0x24)
@@ -2010,12 +2164,37 @@ class _TimerRow extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 2),
-                          _TimeText(
-                            text: timer.done ? '00:00' : _fmt(timer.remainMs),
-                            color: timeColor,
-                            blink: timer.running,
-                            scale: scale,
-                          ),
+                          if (waiting)
+                            Text(
+                              l.ftStartIn(
+                                _fmt(
+                                  (timer.startAtMs -
+                                          DateTime.now().millisecondsSinceEpoch)
+                                      .clamp(0, 1 << 40),
+                                ),
+                              ),
+                              style: TextStyle(
+                                color: AppColors.muted,
+                                fontSize: 17 * scale,
+                                fontWeight: FontWeight.w600,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            )
+                          else
+                            _TimeText(
+                              text: timer.done
+                                  ? '00:00'
+                                  : _fmt(
+                                      startArmed
+                                          ? timer.totalMs
+                                          : timer.remainMs,
+                                    ),
+                              color: startArmed ? AppColors.swGreen : timeColor,
+                              blink: timer.running,
+                              scale: scale,
+                            ),
                         ],
                       ),
                     ),

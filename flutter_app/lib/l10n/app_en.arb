@@ -1083,5 +1083,58 @@
   "seqAckTitle": "Confirm before next",
   "seqAckAuto": "Auto-picked",
   "seqAckOnNote": "Next starts when you confirm each step — for hands-on recipes.",
-  "seqAckOffNote": "Next starts right after each step — for continuous steps."
+  "seqAckOffNote": "Next starts right after each step — for continuous steps.",
+  "seqFinishTogether": "Finish together",
+  "seqFinishNote": "Starts with the longest first so everything finishes at the same time.",
+  "seqFinishAt": "All done at {time}",
+  "@seqFinishAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "ftWaiting": "Waiting",
+  "ftStartArmed": "Time to start",
+  "ftStartIn": "starts in {t}",
+  "ftStartNow": "Start now",
+  "ftDriftTitle": "{name} will finish {min} min late",
+  "ftDriftDesc": "Extend the running one to realign, or leave it.",
+  "ftDriftExtend": "{name} +{min}:00",
+  "ftDriftLeave": "Leave it",
+  "@ftStartIn": {
+    "placeholders": {
+      "t": {
+        "type": "String"
+      }
+    }
+  },
+  "@ftDriftTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "@ftDriftExtend": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "ftStartArmedMsg": "Time to start {name} — confirm to start",
+  "@ftStartArmedMsg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

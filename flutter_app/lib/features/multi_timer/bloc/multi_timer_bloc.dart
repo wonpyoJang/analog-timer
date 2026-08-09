@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/countdown_timer.dart';
+import '../finish_together.dart';
 import 'multi_timer_event.dart';
 import 'multi_timer_state.dart';
 
@@ -13,6 +14,7 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
   MultiTimerBloc() : super(const MultiTimerState()) {
     on<MtAdd>(_onAdd);
     on<MtAddLoop>(_onAddLoop);
+    on<MtAddFinishTogether>(_onAddFinishTogether);
     on<MtLoopSkip>(_onLoopSkip);
     on<MtRemove>(_onRemove);
     on<MtExtend>(_onExtend);
@@ -44,6 +46,36 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
     );
     emit(state.copyWith(timers: [...state.timers, t]));
     if (e.autoStart) _syncTicker();
+  }
+
+  /// 동시 완료 — 가장 긴 항목은 지금 실행, 짧은 항목은 지연 waiting 으로 추가.
+  void _onAddFinishTogether(
+    MtAddFinishTogether e,
+    Emitter<MultiTimerState> emit,
+  ) {
+    if (e.items.isEmpty) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final plan = computeFinishTogether([
+      for (final it in e.items) it.totalMs,
+    ], now);
+    final gid = 'grp$now';
+    final added = <CountdownTimer>[];
+    for (var i = 0; i < e.items.length; i++) {
+      final startAt = plan.startAtMs[i];
+      final startsNow = startAt <= now;
+      added.add(
+        CountdownTimer(
+          name: e.items[i].name,
+          totalMs: e.items[i].totalMs,
+          running: startsNow,
+          groupId: gid,
+          startAtMs: startsNow ? 0 : startAt,
+          targetFinishMs: plan.targetFinishMs,
+        ),
+      );
+    }
+    emit(state.copyWith(timers: [...state.timers, ...added]));
+    _syncTicker();
   }
 
   void _onAddLoop(MtAddLoop e, Emitter<MultiTimerState> emit) {
@@ -208,12 +240,14 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
       state.copyWith(
         timers: _map((t) {
           if (t.id != e.id) return t;
-          // 완료된 타이머 재시작 = 처음부터. 남은 시간 0이면 리셋.
-          final fresh = (t.done || t.remainMs <= 0);
+          // 완료·대기(동시 완료) 타이머 시작 = 처음부터. waiting/armed 해제.
+          final fresh = (t.done || t.waiting || t.remainMs <= 0);
           return t.copyWith(
             running: true,
             done: false,
             remainMs: fresh ? t.totalMs : t.remainMs,
+            startAtMs: 0, // 대기 해제 — 확인한 순간이 실제 시작 시각(§7)
+            startArmed: false,
           );
         }, onlyId: e.id),
       ),
@@ -270,7 +304,17 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
     if (elapsedMs <= 0) return; // 역행 방어
     final justCompleted = <String>[];
     final justLooped = <String>[];
+    final justStartArmed = <String>[];
+    final now = DateTime.now().millisecondsSinceEpoch;
     final next = state.timers.map((t) {
+      // 동시 완료 대기 — 시작 시각이 도래하면 "시작 알람" arming(§4).
+      if (t.waiting) {
+        if (!t.startArmed && now >= t.startAtMs) {
+          justStartArmed.add(t.id);
+          return t.copyWith(startArmed: true);
+        }
+        return t;
+      }
       if (!t.running || t.done) return t;
       final r = t.remainMs - elapsedMs;
       if (r <= 0) {
@@ -292,6 +336,7 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
         timers: next,
         justCompleted: justCompleted,
         justLooped: justLooped,
+        justStartArmed: justStartArmed,
       ),
     );
   }
@@ -303,7 +348,8 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
 
   /// running 타이머가 있으면 티커 유지, 없으면 중지.
   void _syncTicker() {
-    if (state.runningCount > 0) {
+    // 실행 중이거나, 시작 시각을 기다리는 waiting(동시 완료)이 있으면 틱 유지.
+    if (state.runningCount > 0 || state.waitingCount > 0) {
       _ticker ??= _startTicker();
     } else {
       _stopTicker();
