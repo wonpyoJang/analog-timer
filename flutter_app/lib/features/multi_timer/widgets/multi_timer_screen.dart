@@ -923,7 +923,8 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            mainAxisExtent: 68,
+                            // 큰 글꼴(시스템×앱 텍스트 스케일)에서도 안 넘치게 여유.
+                            mainAxisExtent: 76,
                             crossAxisSpacing: 10,
                             mainAxisSpacing: 10,
                           ),
@@ -995,7 +996,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 14,
-                                    vertical: 12,
+                                    vertical: 10,
                                   ),
                                   decoration: BoxDecoration(
                                     border: Border.all(color: AppColors.border),
