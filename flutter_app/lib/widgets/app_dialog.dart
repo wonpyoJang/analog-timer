@@ -295,6 +295,7 @@ Future<T?> _present<T>(
 // ── 헬퍼 ───────────────────────────────────────────────────────────────
 
 /// Confirm — 되돌리기 쉬운 2지선다. true = 주 동작 확인.
+/// [dismissible]=false 면 scrim 탭으로 안 닫힘(권한·동의 등 반드시 답해야 하는 경우).
 Future<bool> showAppConfirm(
   BuildContext context, {
   required String title,
@@ -302,6 +303,7 @@ Future<bool> showAppConfirm(
   required String confirmLabel,
   required String cancelLabel,
   AppMark mark = AppMark.none,
+  bool dismissible = true,
 }) async {
   final r = await _present<bool>(
     context,
@@ -314,9 +316,59 @@ Future<bool> showAppConfirm(
         AppAction(confirmLabel, variant: AppBtn.pri, value: true),
       ],
     ),
-    dismissible: true,
+    dismissible: dismissible,
   );
   return r == true;
+}
+
+/// 일반 N-액션 다이얼로그 — 3지선다 등. 탭한 액션의 value 를 반환(취소=null).
+/// 스택 자동 전환(3개↑ 또는 라벨 8자↑)은 AppDialog 규칙을 따른다.
+Future<T?> showAppActions<T>(
+  BuildContext context, {
+  required String title,
+  String? body,
+  AppMark mark = AppMark.none,
+  required List<AppAction<T>> actions,
+  bool dismissible = true,
+}) {
+  return _present<T>(
+    context,
+    AppDialog(mark: mark, title: title, body: body, actions: actions),
+    dismissible: dismissible,
+  );
+}
+
+/// Input — 값 하나 입력(+선택적 체크). 확인 시 (text, checked) 반환, 취소=null.
+/// 디자인 "Input" 변형: 필드 + optional check. 빈 값이면 확인 버튼 비활성.
+Future<({String text, bool checked})?> showAppInput(
+  BuildContext context, {
+  required String title,
+  String? body,
+  String? initial,
+  String? hint,
+  String? suffix,
+  String? checkLabel,
+  bool checkInitial = false,
+  bool requireNonEmpty = true,
+  required String confirmLabel,
+  required String cancelLabel,
+}) {
+  return _present<({String text, bool checked})>(
+    context,
+    _InputDialog(
+      title: title,
+      body: body,
+      initial: initial,
+      hint: hint,
+      suffix: suffix,
+      checkLabel: checkLabel,
+      checkInitial: checkInitial,
+      requireNonEmpty: requireNonEmpty,
+      confirmLabel: confirmLabel,
+      cancelLabel: cancelLabel,
+    ),
+    dismissible: true,
+  );
 }
 
 /// Destructive — 파괴적 결정. danger mark + danger 동작. scrim 탭으로 안 닫힘.
@@ -385,6 +437,240 @@ Future<T?> showAppChoice<T>(
     ),
     dismissible: true,
   );
+}
+
+class _InputDialog extends StatefulWidget {
+  final String title;
+  final String? body;
+  final String? initial;
+  final String? hint;
+  final String? suffix;
+  final String? checkLabel;
+  final bool checkInitial;
+  final bool requireNonEmpty;
+  final String confirmLabel;
+  final String cancelLabel;
+  const _InputDialog({
+    required this.title,
+    this.body,
+    this.initial,
+    this.hint,
+    this.suffix,
+    this.checkLabel,
+    required this.checkInitial,
+    required this.requireNonEmpty,
+    required this.confirmLabel,
+    required this.cancelLabel,
+  });
+  @override
+  State<_InputDialog> createState() => _InputDialogState();
+}
+
+class _InputDialogState extends State<_InputDialog> {
+  late final _ctl = TextEditingController(text: widget.initial ?? '');
+  late bool _checked = widget.checkInitial;
+  bool _focused = false;
+  final _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _ctl.addListener(() => setState(() {}));
+    _focusNode.addListener(
+      () => setState(() => _focused = _focusNode.hasFocus),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  bool get _valid => !widget.requireNonEmpty || _ctl.text.trim().isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    // TextField 는 Material 조상이 필요 — showGeneralDialog 는 안 감싸주므로 여기서.
+    return Material(
+      type: MaterialType.transparency,
+      child: Center(
+        child: Container(
+          width: _dialogW,
+          margin: const EdgeInsets.symmetric(horizontal: 36),
+          padding: const EdgeInsets.fromLTRB(22, 24, 22, 18),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0xB3000000),
+                blurRadius: 70,
+                offset: Offset(0, 28),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.title,
+                style: const TextStyle(
+                  color: AppColors.text,
+                  fontSize: 18,
+                  height: 1.35,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.22,
+                ),
+              ),
+              if (widget.body != null) ...[
+                const SizedBox(height: 9),
+                Text(
+                  widget.body!,
+                  style: TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 14,
+                    height: 1.7,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 18),
+              // field — 시안: R14, focus 시 accent 테두리 + 글로우.
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF141416),
+                  border: Border.all(
+                    color: _focused ? AppColors.accent : AppColors.border,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: _focused
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x1FF0C040),
+                            blurRadius: 0,
+                            spreadRadius: 3,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _ctl,
+                        focusNode: _focusNode,
+                        autofocus: true,
+                        style: const TextStyle(
+                          color: AppColors.text,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        cursorColor: AppColors.accent,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                          hintText: widget.hint,
+                          hintStyle: TextStyle(
+                            color: AppColors.faint,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        onSubmitted: (_) {
+                          if (_valid) {
+                            Navigator.of(
+                              context,
+                            ).pop((text: _ctl.text.trim(), checked: _checked));
+                          }
+                        },
+                      ),
+                    ),
+                    if (widget.suffix != null)
+                      Text(
+                        widget.suffix!,
+                        style: TextStyle(color: AppColors.faint, fontSize: 13),
+                      ),
+                  ],
+                ),
+              ),
+              if (widget.checkLabel != null) ...[
+                const SizedBox(height: 14),
+                GestureDetector(
+                  onTap: () => setState(() => _checked = !_checked),
+                  behavior: HitTestBehavior.opaque,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 19,
+                        height: 19,
+                        decoration: BoxDecoration(
+                          color: _checked
+                              ? AppColors.accent
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: _checked
+                                ? AppColors.accent
+                                : const Color(0xFF3D3D42),
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        alignment: Alignment.center,
+                        child: _checked
+                            ? const Text(
+                                '✓',
+                                style: TextStyle(
+                                  color: Color(0xFF141416),
+                                  fontSize: 11,
+                                ),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        widget.checkLabel!,
+                        style: TextStyle(color: AppColors.muted, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppDialogButton(
+                      label: widget.cancelLabel,
+                      variant: AppBtn.gho,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: AppDialogButton(
+                      label: widget.confirmLabel,
+                      variant: AppBtn.pri,
+                      onPressed: _valid
+                          ? () => Navigator.of(
+                              context,
+                            ).pop((text: _ctl.text.trim(), checked: _checked))
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _ChoiceDialog<T> extends StatefulWidget {

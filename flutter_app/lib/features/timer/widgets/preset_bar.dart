@@ -7,6 +7,7 @@ import '../../../services/persistence_service.dart';
 import '../../../services/sync_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/a11y.dart';
+import '../../../widgets/app_dialog.dart';
 import '../bloc/timer_bloc.dart';
 import '../bloc/timer_event.dart';
 import '../models/preset.dart';
@@ -74,15 +75,7 @@ class _PresetBarState extends State<PresetBar> {
     final l = AppLocalizations.of(context);
     // 교체가 아니라 현재 세그먼트 목록 끝에 덧붙인다.
     context.read<TimerBloc>().add(TimerSegmentsAppended(p.freshSegments()));
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(l.presetApplied(p.name)),
-          duration: const Duration(seconds: 1),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    showAppToast(context, l.presetApplied(p.name), accent: true);
   }
 
   Future<void> _openManage() async {
@@ -97,9 +90,8 @@ class _PresetBarState extends State<PresetBar> {
   Future<void> _saveCurrent() async {
     final l = AppLocalizations.of(context);
     final state = context.read<TimerBloc>().state;
-    final messenger = ScaffoldMessenger.of(context);
     if (state.segments.isEmpty) {
-      messenger.showSnackBar(SnackBar(content: Text(l.noSegmentsToSave)));
+      showAppToast(context, l.noSegmentsToSave);
       return;
     }
     final name = await _promptName();
@@ -116,54 +108,16 @@ class _PresetBarState extends State<PresetBar> {
     await _persist();
   }
 
-  Future<String?> _promptName() {
+  Future<String?> _promptName() async {
     final l = AppLocalizations.of(context);
-    final ctrl = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: AppColors.border),
-        ),
-        title: Text(
-          l.savePresetTitle,
-          style: const TextStyle(color: AppColors.text, fontSize: 15),
-        ),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          style: const TextStyle(color: AppColors.text, fontSize: 13),
-          decoration: InputDecoration(
-            hintText: l.presetNameHint,
-            hintStyle: TextStyle(color: AppColors.muted, fontSize: 13),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.timerOrange),
-            ),
-          ),
-          onSubmitted: (v) => Navigator.pop(ctx, v),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, null),
-            child: Text(l.cancel, style: TextStyle(color: AppColors.muted)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text),
-            child: Text(
-              l.save,
-              style: const TextStyle(color: AppColors.timerOrange),
-            ),
-          ),
-        ],
-      ),
+    final r = await showAppInput(
+      context,
+      title: l.savePresetTitle,
+      hint: l.presetNameHint,
+      confirmLabel: l.save,
+      cancelLabel: l.cancel,
     );
+    return r?.text;
   }
 
   @override

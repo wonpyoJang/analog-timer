@@ -121,6 +121,59 @@ void main() {
     expect(undone, true);
   });
 
+  testWidgets('Input — 빈 값이면 확인 비활성, 입력 후 (text, checked) 반환', (t) async {
+    ({String text, bool checked})? result;
+    await t.pumpWidget(
+      _host((c) async {
+        result = await showAppInput(
+          c,
+          title: '시간 직접 입력',
+          hint: '이름',
+          checkLabel: '프리셋으로 저장',
+          confirmLabel: '시작',
+          cancelLabel: '취소',
+        );
+      }),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    // 빈 값 → 확인(시작) 눌러도 안 닫힘.
+    await t.tap(find.text('시작'));
+    await t.pumpAndSettle();
+    expect(find.text('시간 직접 입력'), findsOneWidget);
+    expect(result, isNull);
+    // 입력 + 체크 → 확인.
+    await t.enterText(find.byType(TextField), '계란');
+    await t.pumpAndSettle();
+    await t.tap(find.text('프리셋으로 저장'));
+    await t.pumpAndSettle();
+    await _tapLabel(t, '시작');
+    expect(result?.text, '계란');
+    expect(result?.checked, true);
+  });
+
+  testWidgets('Actions — 3지선다에서 탭한 값 반환', (t) async {
+    String? picked;
+    await t.pumpWidget(
+      _host((c) async {
+        picked = await showAppActions<String>(
+          c,
+          title: '지금 루틴을 끝낼까요?',
+          body: '남은 단계 4개는 완료로 기록되지 않아요.',
+          actions: const [
+            AppAction('계속 진행하기', variant: AppBtn.pri, value: 'continue'),
+            AppAction('여기서 끝내기', variant: AppBtn.gho, value: 'stop'),
+            AppAction('닫기', variant: AppBtn.txt, value: 'close'),
+          ],
+        );
+      }),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    await _tapLabel(t, '여기서 끝내기');
+    expect(picked, 'stop');
+  });
+
   testWidgets('Stacked — 3개 이상이면 세로 배치(모두 렌더)', (t) async {
     await t.pumpWidget(
       _host((c) {
