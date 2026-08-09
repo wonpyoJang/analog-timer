@@ -17,6 +17,27 @@ void main() {
     test('no time → totalMs null', () {
       expect(parseDeepLink('anytime://start').totalMs, isNull);
     });
+    // App Actions CREATE_TIMER BII — ISO-8601 duration(dur) 지원.
+    test('dur PT8M30S → 8분 30초', () {
+      final a = parseDeepLink('anytime://start?dur=PT8M30S&label=파스타');
+      expect(a.min, 8);
+      expect(a.sec, 30);
+      expect(a.label, '파스타');
+      expect(a.totalMs, 510000);
+    });
+    test('dur PT1H30M → 90분', () {
+      expect(parseDeepLink('anytime://start?dur=PT1H30M').totalMs, 5400000);
+    });
+    test('dur PT45S → 45초', () {
+      expect(parseDeepLink('anytime://start?dur=PT45S').totalMs, 45000);
+    });
+    test('min/sec 가 dur 보다 우선', () {
+      final a = parseDeepLink('anytime://start?dur=PT8M&min=3');
+      expect(a.min, 3);
+    });
+    test('잘못된 dur → null', () {
+      expect(parseDeepLink('anytime://start?dur=8minutes').totalMs, isNull);
+    });
   });
 
   test('preset/{id}', () {
