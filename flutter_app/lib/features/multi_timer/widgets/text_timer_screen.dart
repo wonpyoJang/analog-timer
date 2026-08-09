@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_theme.dart';
 import '../../../services/haptic_service.dart';
+import '../ai/timer_ai_service.dart';
 import '../bloc/multi_timer_bloc.dart';
 import '../bloc/multi_timer_event.dart';
 import '../models/countdown_timer.dart';
@@ -61,10 +62,16 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
     super.dispose();
   }
 
-  void _parse() {
+  Future<void> _parse() async {
     final text = _ctrl.text.trim();
     if (text.isEmpty) return;
-    final result = parseTimers(text, presets: widget.presets);
+    // 규칙 파서가 1순위. AI 폴백은 플래그 OFF·미지원이면 결과를 그대로 돌려줌.
+    var result = parseTimers(text, presets: widget.presets);
+    result = await TimerAiService.instance.enhance(
+      result,
+      presets: widget.presets,
+    );
+    if (!mounted) return;
     setState(() {
       _parsed = result;
       _selected
