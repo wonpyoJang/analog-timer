@@ -14,13 +14,17 @@ class AlarmReadinessService {
   final ValueNotifier<bool> notificationsOk = ValueNotifier<bool>(true);
   final ValueNotifier<bool> batteryExemptOk = ValueNotifier<bool>(true);
 
-  /// 둘 다 정상이면 준비 완료 — 점검 카드 숨김.
+  /// 오버레이(다른 앱 위에 표시) 권한 — pill 표시에 필요. 점검 페이지 항목.
+  final ValueNotifier<bool> overlayOk = ValueNotifier<bool>(true);
+
+  /// 알림·배터리 둘 다 정상이면 준비 완료 — 점검 카드 숨김(오버레이는 선택 기능).
   bool get allReady => notificationsOk.value && batteryExemptOk.value;
 
   Future<void> refresh() async {
     if (!isAndroid) {
       notificationsOk.value = true;
       batteryExemptOk.value = true;
+      overlayOk.value = true;
       return;
     }
     try {
@@ -30,6 +34,20 @@ class AlarmReadinessService {
       batteryExemptOk.value =
           await Permission.ignoreBatteryOptimizations.isGranted;
     } catch (_) {}
+    try {
+      overlayOk.value = await Permission.systemAlertWindow.isGranted;
+    } catch (_) {}
+  }
+
+  Future<bool> requestOverlay() async {
+    if (!isAndroid) return true;
+    try {
+      final st = await Permission.systemAlertWindow.request();
+      overlayOk.value = st.isGranted;
+      return st.isGranted;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// 알림 권한 요청 → 상태 갱신.

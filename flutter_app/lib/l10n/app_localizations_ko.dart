@@ -1430,4 +1430,90 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get checkFix => '점검';
+
+  @override
+  String get diagTitle => '알람이 안 울릴 때';
+
+  @override
+  String get diagSub => '앱이 직접 확인했어요. 1분이면 고칠 수 있어요.';
+
+  @override
+  String diagWarnTitle(int n) {
+    return '$n가지를 고쳐야 해요';
+  }
+
+  @override
+  String get diagWarnDesc => '지금 상태로는 앱을 닫은 뒤 알람이 울리지 않을 수 있어요.';
+
+  @override
+  String get diagAllGood => '모두 정상이에요';
+
+  @override
+  String get diagAllGoodDesc => '앱을 닫아도 알람이 울려요.';
+
+  @override
+  String get diagResult => '점검 결과';
+
+  @override
+  String get diagNotifTitle => '알림 허용';
+
+  @override
+  String get diagNotifOk => '알림이 화면에 표시돼요';
+
+  @override
+  String get diagNotifBad => '알림이 꺼져 있어요 — 타이머가 알려줄 수 없어요.';
+
+  @override
+  String get diagBatteryTitle => '배터리 절약 예외';
+
+  @override
+  String get diagBatteryOk => '앱이 잠들지 않아요';
+
+  @override
+  String get diagBatteryBad => '배터리 절약이 앱을 재우고 있어요. 예약된 알람이 늦거나 사라져요.';
+
+  @override
+  String get diagOverlayTitle => '다른 앱 위에 표시';
+
+  @override
+  String get diagOverlayOk => '오버레이 pill이 표시될 수 있어요';
+
+  @override
+  String get diagOverlayBad => '오버레이 pill이 나타나지 않아요.';
+
+  @override
+  String get diagFix => '고치기';
+
+  @override
+  String get diagFixAll => '한 번에 고치기';
+
+  @override
+  String get diagTestAlarm => '지금 테스트 알람 보내기';
+
+  @override
+  String get diagTestNote => '보낸 뒤 앱을 완전히 닫고도 울리는지 확인해 보세요.';
+
+  @override
+  String get diagTestSent => '테스트 알람을 보냈어요 — 알림을 확인하세요';
+
+  @override
+  String get settingsDiag => '알람이 안 울릴 때';
+
+  @override
+  String get settingsDiagDesc => '자가 점검: 권한·배터리';
+
+  @override
+  String get settingsGroupNotify => '알림 방식';
+
+  @override
+  String get settingsGroupDisplay => '화면 표시';
+
+  @override
+  String get settingsGroupData => '내 데이터';
+
+  @override
+  String get settingsGroupControl => '조작';
+
+  @override
+  String get settingsGroupHelp => '도움';
 }
