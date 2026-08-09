@@ -1022,5 +1022,48 @@
         "type": "int"
       }
     }
+  },
+  "settingsVoiceStart": "Start by voice",
+  "settingsVoiceStartDesc": "Turn on timers by talking, hands-free",
+  "voiceStartSub": "Turn on a timer by talking — no need to pick up your phone.",
+  "voiceHeroHint": "Say this and a 25-min focus starts right away",
+  "voiceHeroQuote": "“Hey Google, start focus”",
+  "voiceRoutineHead": "Turn on automatically",
+  "voiceRoutineSub": "Add to a Galaxy routine and it starts without you saying anything.",
+  "voiceRecipeHead": "Suggested recipes",
+  "recipeDesk": "Focus when I sit at my desk",
+  "recipeDeskWhen": "Home Wi-Fi + weekday afternoon",
+  "recipeCharge": "Focus when I put it on the charger",
+  "recipeChargeWhen": "Charging starts · with Do Not Disturb",
+  "recipeWorkout": "Voice mode when I open a workout app",
+  "recipeWorkoutWhen": "A specific app launches",
+  "recipeSleep": "Stop everything at bedtime",
+  "recipeSleepWhen": "Bedtime mode begins",
+  "routineCopied": "Copied the '{name}' link",
+  "routineStepsHead": "Now do this",
+  "routineStep1": "Open the Routines app",
+  "routineStep1Desc": "The button below opens it",
+  "routineStep2": "Pick ‘Open app’ as the action",
+  "routineStep2Desc": "Long-press the address field and paste",
+  "routineStep3": "Choose a condition and save",
+  "routineStep3Desc": "Wi-Fi · time · place — anything",
+  "routineOpenApp": "Open Routines app",
+  "routineCantOpen": "Couldn’t open the Routines app. The link is copied — paste it there.",
+  "voiceStarted": "Started by voice",
+  "voiceStartedTimer": "Started ‘{name}’",
+  "voiceStopHint": "Several timers are running — open the app to choose.",
+  "@routineCopied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@voiceStartedTimer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

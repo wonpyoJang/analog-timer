@@ -1796,4 +1796,99 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get textTimerNoTime => 'No time found. Try “ramen 4 min”.';
+
+  @override
+  String get settingsVoiceStart => 'Start by voice';
+
+  @override
+  String get settingsVoiceStartDesc => 'Turn on timers by talking, hands-free';
+
+  @override
+  String get voiceStartSub =>
+      'Turn on a timer by talking — no need to pick up your phone.';
+
+  @override
+  String get voiceHeroHint => 'Say this and a 25-min focus starts right away';
+
+  @override
+  String get voiceHeroQuote => '“Hey Google, start focus”';
+
+  @override
+  String get voiceRoutineHead => 'Turn on automatically';
+
+  @override
+  String get voiceRoutineSub =>
+      'Add to a Galaxy routine and it starts without you saying anything.';
+
+  @override
+  String get voiceRecipeHead => 'Suggested recipes';
+
+  @override
+  String get recipeDesk => 'Focus when I sit at my desk';
+
+  @override
+  String get recipeDeskWhen => 'Home Wi-Fi + weekday afternoon';
+
+  @override
+  String get recipeCharge => 'Focus when I put it on the charger';
+
+  @override
+  String get recipeChargeWhen => 'Charging starts · with Do Not Disturb';
+
+  @override
+  String get recipeWorkout => 'Voice mode when I open a workout app';
+
+  @override
+  String get recipeWorkoutWhen => 'A specific app launches';
+
+  @override
+  String get recipeSleep => 'Stop everything at bedtime';
+
+  @override
+  String get recipeSleepWhen => 'Bedtime mode begins';
+
+  @override
+  String routineCopied(String name) {
+    return 'Copied the \'$name\' link';
+  }
+
+  @override
+  String get routineStepsHead => 'Now do this';
+
+  @override
+  String get routineStep1 => 'Open the Routines app';
+
+  @override
+  String get routineStep1Desc => 'The button below opens it';
+
+  @override
+  String get routineStep2 => 'Pick ‘Open app’ as the action';
+
+  @override
+  String get routineStep2Desc => 'Long-press the address field and paste';
+
+  @override
+  String get routineStep3 => 'Choose a condition and save';
+
+  @override
+  String get routineStep3Desc => 'Wi-Fi · time · place — anything';
+
+  @override
+  String get routineOpenApp => 'Open Routines app';
+
+  @override
+  String get routineCantOpen =>
+      'Couldn’t open the Routines app. The link is copied — paste it there.';
+
+  @override
+  String get voiceStarted => 'Started by voice';
+
+  @override
+  String voiceStartedTimer(String name) {
+    return 'Started ‘$name’';
+  }
+
+  @override
+  String get voiceStopHint =>
+      'Several timers are running — open the app to choose.';
 }

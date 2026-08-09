@@ -33,6 +33,14 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- 음성 딥링크(음성 연동 기획 §3) — anytime:// 공통 스킴.
+                 단축어·루틴·워치·핫키가 전부 이 스킴을 호출한다. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="anytime"/>
+            </intent-filter>
         </activity>
         <!-- flutter_overlay_window -->
         <service

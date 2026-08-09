@@ -24,6 +24,7 @@ import 'features/onboarding/alarm_diagnostics_screen.dart';
 import 'services/alarm_readiness_service.dart';
 import 'services/list_display_service.dart';
 import 'services/overlay_settings_service.dart';
+import 'features/settings/voice_start_screen.dart';
 import 'overlay/overlay_coordinator.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -285,6 +286,21 @@ class SettingsScreen extends StatelessWidget {
 
           // ══ 그룹 4: 조작 ═════════════════════════════════════
           if (isDesktop || isAndroid) _GroupHeader(l.settingsGroupControl),
+
+          // ── 음성으로 시작(디자인 §A·§F, Android 전용) — 딥링크·루틴 ──
+          if (isAndroid) ...[
+            _SettingsTile(
+              icon: Icons.mic_none,
+              iconColor: AppColors.accent,
+              title: l.settingsVoiceStart,
+              subtitle: l.settingsVoiceStartDesc,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const VoiceStartScreen()),
+              ),
+            ),
+            const _Divider(),
+          ],
 
           // ── 전역 단축키 (데스크톱) — 다른 앱에서도 타이머 조작 ─────
           if (isDesktop) ...[

@@ -563,5 +563,48 @@
         "type": "int"
       }
     }
+  },
+  "settingsVoiceStart": "음성으로 시작",
+  "settingsVoiceStartDesc": "폰을 꺼내지 않고 말로 타이머를 켜요",
+  "voiceStartSub": "폰을 꺼내지 않고 말로 타이머를 켜요.",
+  "voiceHeroHint": "이렇게 말하면 25분 집중이 바로 시작돼요",
+  "voiceHeroQuote": "“헤이 구글, 집중 시작”",
+  "voiceRoutineHead": "자동으로 켜지게",
+  "voiceRoutineSub": "갤럭시 루틴에 등록하면 말하지 않아도 시작돼요.",
+  "voiceRecipeHead": "추천 레시피",
+  "recipeDesk": "책상에 앉으면 집중",
+  "recipeDeskWhen": "집 Wi-Fi + 평일 오후",
+  "recipeCharge": "무선 충전에 올리면 집중",
+  "recipeChargeWhen": "충전 시작 · 방해금지 함께",
+  "recipeWorkout": "운동 앱을 열면 TTS 모드",
+  "recipeWorkoutWhen": "특정 앱 실행",
+  "recipeSleep": "잘 때 전체 정지",
+  "recipeSleepWhen": "취침 모드 진입",
+  "routineCopied": "‘{name}’ 링크를 복사했어요",
+  "routineStepsHead": "이제 이렇게 하면 돼요",
+  "routineStep1": "루틴 앱 열기",
+  "routineStep1Desc": "아래 버튼을 누르면 바로 열려요",
+  "routineStep2": "동작에서 ‘앱 열기’ 선택",
+  "routineStep2Desc": "주소 칸에 길게 눌러 붙여넣기",
+  "routineStep3": "조건을 고르고 저장",
+  "routineStep3Desc": "Wi-Fi · 시간 · 장소 무엇이든",
+  "routineOpenApp": "루틴 앱 열기",
+  "routineCantOpen": "루틴 앱을 열지 못했어요. 링크는 복사됐어요 — 붙여넣어 주세요.",
+  "voiceStarted": "말로 시작함",
+  "voiceStartedTimer": "‘{name}’ 시작했어요",
+  "voiceStopHint": "여러 개가 실행 중이라 앱에서 골라주세요.",
+  "@routineCopied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@voiceStartedTimer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }
