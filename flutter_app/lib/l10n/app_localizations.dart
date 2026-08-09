@@ -2888,6 +2888,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Help'**
   String get settingsGroupHelp;
+
+  /// No description provided for @settingsAlarmSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Alarms & re-ring'**
+  String get settingsAlarmSection;
+
+  /// No description provided for @settingsAlarmSectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ring again until you confirm'**
+  String get settingsAlarmSectionDesc;
+
+  /// No description provided for @settingsSoundSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get settingsSoundSection;
+
+  /// No description provided for @settingsSoundSectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound effects and vibration'**
+  String get settingsSoundSectionDesc;
+
+  /// No description provided for @settingsVoiceSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice guidance'**
+  String get settingsVoiceSection;
+
+  /// No description provided for @settingsVoiceSectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Spoken alerts when you can\'t look'**
+  String get settingsVoiceSectionDesc;
+
+  /// No description provided for @alarmPageSub.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll keep reminding you until you confirm.'**
+  String get alarmPageSub;
+
+  /// No description provided for @soundPageSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap any option to hear it.'**
+  String get soundPageSub;
+
+  /// No description provided for @voicePageSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaks out loud when you can\'t look at the screen.'**
+  String get voicePageSub;
+
+  /// No description provided for @settingsSpeechRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech rate'**
+  String get settingsSpeechRate;
+
+  /// No description provided for @speechRateSlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow'**
+  String get speechRateSlow;
+
+  /// No description provided for @speechRateNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get speechRateNormal;
+
+  /// No description provided for @speechRateFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get speechRateFast;
+
+  /// No description provided for @grpAlarmBasic.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic behavior'**
+  String get grpAlarmBasic;
+
+  /// No description provided for @grpAlarmInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-ring interval'**
+  String get grpAlarmInterval;
+
+  /// No description provided for @grpAlarmPrep.
+  ///
+  /// In en, this message translates to:
+  /// **'Before it ends'**
+  String get grpAlarmPrep;
+
+  /// No description provided for @grpSoundSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound set'**
+  String get grpSoundSet;
+
+  /// No description provided for @grpSoundFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback'**
+  String get grpSoundFeedback;
+
+  /// No description provided for @grpVoiceUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use'**
+  String get grpVoiceUse;
+
+  /// No description provided for @grpVoiceVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get grpVoiceVoice;
+
+  /// No description provided for @grpVoicePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get grpVoicePreview;
+
+  /// No description provided for @grpVoiceWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout'**
+  String get grpVoiceWorkout;
+
+  /// No description provided for @grpAlarmDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion message'**
+  String get grpAlarmDone;
 }
 
 class _AppLocalizationsDelegate

@@ -21,6 +21,7 @@ class TtsService {
   static const String _kVoiceName = 'tts_voice_name';
   static const String _kVoiceLocale = 'tts_voice_locale';
   static const String _kHourlyChime = 'tts_hourly_chime';
+  static const String _kSpeechRate = 'tts_speech_rate';
 
   /// 설정 화면 토글 바인딩용(BatteryService.monitoringEnabled 와 동일 패턴).
   final ValueNotifier<bool> enabledListenable = ValueNotifier<bool>(false);
@@ -31,6 +32,11 @@ class TtsService {
   /// 알려주는 장치. 밤 10시~아침 8시는 내장 무음(상시 실행 사용자 배려).
   final ValueNotifier<bool> hourlyChimeListenable = ValueNotifier<bool>(false);
   bool get hourlyChime => hourlyChimeListenable.value;
+
+  /// 말하기 속도 — flutter_tts setSpeechRate(0.0~1.0). 프리셋 3단계:
+  /// 느리게 0.35 · 보통 0.5 · 빠르게 0.65. speak() 마다 재적용한다.
+  final ValueNotifier<double> speechRateListenable = ValueNotifier<double>(0.5);
+  double get speechRate => speechRateListenable.value;
 
   int? _lastChimedHour; // "그 시각에 이미 발화했음" 가드(중복 방지)
 
@@ -48,12 +54,29 @@ class TtsService {
       final p = await SharedPreferences.getInstance();
       enabledListenable.value = p.getBool(_kEnabled) ?? false;
       hourlyChimeListenable.value = p.getBool(_kHourlyChime) ?? false;
+      speechRateListenable.value = p.getDouble(_kSpeechRate) ?? 0.5;
       final vn = p.getString(_kVoiceName);
       final vl = p.getString(_kVoiceLocale);
       if (vn != null && vl != null) {
         voiceListenable.value = {'name': vn, 'locale': vl};
       }
     } catch (_) {}
+  }
+
+  /// 말하기 속도 변경 — [sample] 이 있으면 즉시 미리듣기.
+  Future<void> setSpeechRate(
+    double rate, {
+    String? sample,
+    String? localeTag,
+  }) async {
+    speechRateListenable.value = rate;
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.setDouble(_kSpeechRate, rate);
+    } catch (_) {}
+    if (sample != null && enabled) {
+      await speak(sample, localeTag: localeTag);
+    }
   }
 
   /// 정각 시보 토글 — [sample] 이 있으면 켜는 즉시 미리듣기.
@@ -204,6 +227,9 @@ class TtsService {
     if (!enabled || text.trim().isEmpty) return;
     try {
       _tts ??= FlutterTts();
+      try {
+        await _tts!.setSpeechRate(speechRateListenable.value);
+      } catch (_) {}
       final voice = voiceListenable.value;
       if (voice != null) {
         // 사용자가 고른 음성 스타일 — setLanguage 보다 우선한다.

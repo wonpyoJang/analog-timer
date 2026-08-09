@@ -1516,4 +1516,73 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsGroupHelp => '도움';
+
+  @override
+  String get settingsAlarmSection => '알람 · 재알림';
+
+  @override
+  String get settingsAlarmSectionDesc => '확인하기 전까지 다시 알려요';
+
+  @override
+  String get settingsSoundSection => '사운드';
+
+  @override
+  String get settingsSoundSectionDesc => '효과음과 진동';
+
+  @override
+  String get settingsVoiceSection => '음성 안내';
+
+  @override
+  String get settingsVoiceSectionDesc => '화면을 볼 수 없을 때 말로 알려줘요';
+
+  @override
+  String get alarmPageSub => '알람을 확인하기 전까지 다시 알려요.';
+
+  @override
+  String get soundPageSub => '탭하면 바로 들어볼 수 있어요.';
+
+  @override
+  String get voicePageSub => '화면을 볼 수 없을 때 말로 알려줘요.';
+
+  @override
+  String get settingsSpeechRate => '말하기 속도';
+
+  @override
+  String get speechRateSlow => '느리게';
+
+  @override
+  String get speechRateNormal => '보통';
+
+  @override
+  String get speechRateFast => '빠르게';
+
+  @override
+  String get grpAlarmBasic => '기본 동작';
+
+  @override
+  String get grpAlarmInterval => '다시 알림 간격';
+
+  @override
+  String get grpAlarmPrep => '끝나기 전';
+
+  @override
+  String get grpSoundSet => '사운드 세트';
+
+  @override
+  String get grpSoundFeedback => '피드백';
+
+  @override
+  String get grpVoiceUse => '사용';
+
+  @override
+  String get grpVoiceVoice => '목소리';
+
+  @override
+  String get grpVoicePreview => '미리듣기';
+
+  @override
+  String get grpVoiceWorkout => '운동';
+
+  @override
+  String get grpAlarmDone => '완료 메시지';
 }
