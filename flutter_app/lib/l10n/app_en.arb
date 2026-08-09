@@ -1145,5 +1145,57 @@
         "type": "String"
       }
     }
-  }
+  },
+  "waterTitle": "Water reminder",
+  "waterToday": "Today",
+  "waterCups": "{n} / {goal} cups",
+  "waterWhenGroup": "When to remind",
+  "waterInterval": "Every interval",
+  "waterFixed": "Fixed times",
+  "waterActiveHours": "Active hours only",
+  "waterWithTimer": "With timer end",
+  "waterWithTimerSub": "Add a water nudge when you check another alarm",
+  "waterHowGroup": "How it alerts",
+  "waterIntensity": "Intensity",
+  "waterIntensitySub": "Rings once and steps back — no re-alarm",
+  "waterBannerMode": "Banner",
+  "waterOneSound": "One sound",
+  "waterGoal": "Daily goal",
+  "waterGoalCups": "{n} cups",
+  "waterEnable": "Use water reminder",
+  "waterNote": "Interval counts from when you tap \"Drank\". Merges with a fixed time if within 30 min.",
+  "waterBannerTitle": "A glass of water",
+  "waterBannerSub": "{n} today · next {time}",
+  "waterDrank": "Drank",
+  "waterLater30": "In 30 min",
+  "waterStopToday": "Done for today",
+  "waterBgNote": "Reminders fire while the app is open. Background delivery is coming.",
+  "@waterCups": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "@waterGoalCups": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@waterBannerSub": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "waterSettingsDesc": "Remind to drink at intervals or set times"
 }

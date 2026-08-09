@@ -686,5 +686,57 @@
         "type": "String"
       }
     }
-  }
+  },
+  "waterTitle": "물 마시기 알림",
+  "waterToday": "오늘",
+  "waterCups": "{n} / {goal}잔",
+  "waterWhenGroup": "언제 울릴까요",
+  "waterInterval": "일정 간격마다",
+  "waterFixed": "정해진 시각",
+  "waterActiveHours": "활동 시간대에만",
+  "waterWithTimer": "타이머 끝날 때 같이",
+  "waterWithTimerSub": "다른 알람을 확인할 때 물 알림을 얹어요",
+  "waterHowGroup": "알림 방식",
+  "waterIntensity": "강도",
+  "waterIntensitySub": "한 번만 울리고 물러나요 — 재알림 없음",
+  "waterBannerMode": "배너",
+  "waterOneSound": "한 번 소리",
+  "waterGoal": "하루 목표",
+  "waterGoalCups": "{n}잔",
+  "waterEnable": "물 알림 사용",
+  "waterNote": "간격 타이머는 \"마셨어요\"를 누른 시점부터 다시 셈 · 정해진 시각과 30분 내로 겹치면 하나만 울림",
+  "waterBannerTitle": "물 한 잔",
+  "waterBannerSub": "오늘 {n}잔 · 다음 {time}",
+  "waterDrank": "마셨어요",
+  "waterLater30": "30분 뒤",
+  "waterStopToday": "오늘은 그만",
+  "waterBgNote": "앱이 열려 있을 때 알림이 울려요. 백그라운드 전달은 준비 중입니다.",
+  "@waterCups": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "@waterGoalCups": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@waterBannerSub": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "waterSettingsDesc": "간격·정해진 시각으로 물 마시기 알림"
 }

@@ -2010,4 +2010,88 @@ class AppLocalizationsDe extends AppLocalizations {
   String presetDeletedToast(String name) {
     return 'Deleted $name';
   }
+
+  @override
+  String get waterTitle => 'Water reminder';
+
+  @override
+  String get waterToday => 'Today';
+
+  @override
+  String waterCups(int n, int goal) {
+    return '$n / $goal cups';
+  }
+
+  @override
+  String get waterWhenGroup => 'When to remind';
+
+  @override
+  String get waterInterval => 'Every interval';
+
+  @override
+  String get waterFixed => 'Fixed times';
+
+  @override
+  String get waterActiveHours => 'Active hours only';
+
+  @override
+  String get waterWithTimer => 'With timer end';
+
+  @override
+  String get waterWithTimerSub =>
+      'Add a water nudge when you check another alarm';
+
+  @override
+  String get waterHowGroup => 'How it alerts';
+
+  @override
+  String get waterIntensity => 'Intensity';
+
+  @override
+  String get waterIntensitySub => 'Rings once and steps back — no re-alarm';
+
+  @override
+  String get waterBannerMode => 'Banner';
+
+  @override
+  String get waterOneSound => 'One sound';
+
+  @override
+  String get waterGoal => 'Daily goal';
+
+  @override
+  String waterGoalCups(int n) {
+    return '$n cups';
+  }
+
+  @override
+  String get waterEnable => 'Use water reminder';
+
+  @override
+  String get waterNote =>
+      'Interval counts from when you tap \"Drank\". Merges with a fixed time if within 30 min.';
+
+  @override
+  String get waterBannerTitle => 'A glass of water';
+
+  @override
+  String waterBannerSub(int n, String time) {
+    return '$n today · next $time';
+  }
+
+  @override
+  String get waterDrank => 'Drank';
+
+  @override
+  String get waterLater30 => 'In 30 min';
+
+  @override
+  String get waterStopToday => 'Done for today';
+
+  @override
+  String get waterBgNote =>
+      'Reminders fire while the app is open. Background delivery is coming.';
+
+  @override
+  String get waterSettingsDesc => 'Remind to drink at intervals or set times';
 }

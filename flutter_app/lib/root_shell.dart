@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'home_screen.dart';
+import 'features/water/water_screen.dart';
+import 'services/water_reminder_service.dart';
 import 'l10n/app_localizations.dart';
 import 'features/multi_timer/widgets/multi_timer_screen.dart';
 import 'features/workout/workout_screen.dart';
@@ -25,6 +29,7 @@ class RootShell extends StatefulWidget {
 
 class _RootShellState extends State<RootShell> {
   int _index = 0;
+  Timer? _waterTimer;
 
   @override
   void initState() {
@@ -32,6 +37,21 @@ class _RootShellState extends State<RootShell> {
     // 딥링크가 요청한 탭으로 전환(§3). 콜드 스타트로 이미 설정된 값도 즉시 반영.
     DeepLinkRouter.instance.requestedTab.addListener(_onTabRequest);
     _onTabRequest();
+    // 물 마시기 알림(인앱) — 앱 실행 중 1분마다 예정 시각 도래 확인 → 배너.
+    if (isAndroid || isIOS) {
+      _waterTimer = Timer.periodic(
+        const Duration(seconds: 60),
+        (_) => _checkWater(),
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) => _checkWater());
+    }
+  }
+
+  Future<void> _checkWater() async {
+    if (!mounted) return;
+    if (await WaterReminderService.instance.isDueNow() && mounted) {
+      showWaterBanner(context);
+    }
   }
 
   void _onTabRequest() {
@@ -45,6 +65,7 @@ class _RootShellState extends State<RootShell> {
 
   @override
   void dispose() {
+    _waterTimer?.cancel();
     DeepLinkRouter.instance.requestedTab.removeListener(_onTabRequest);
     super.dispose();
   }

@@ -3746,6 +3746,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deleted {name}'**
   String presetDeletedToast(String name);
+
+  /// No description provided for @waterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Water reminder'**
+  String get waterTitle;
+
+  /// No description provided for @waterToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get waterToday;
+
+  /// No description provided for @waterCups.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} / {goal} cups'**
+  String waterCups(int n, int goal);
+
+  /// No description provided for @waterWhenGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'When to remind'**
+  String get waterWhenGroup;
+
+  /// No description provided for @waterInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Every interval'**
+  String get waterInterval;
+
+  /// No description provided for @waterFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed times'**
+  String get waterFixed;
+
+  /// No description provided for @waterActiveHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Active hours only'**
+  String get waterActiveHours;
+
+  /// No description provided for @waterWithTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'With timer end'**
+  String get waterWithTimer;
+
+  /// No description provided for @waterWithTimerSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a water nudge when you check another alarm'**
+  String get waterWithTimerSub;
+
+  /// No description provided for @waterHowGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'How it alerts'**
+  String get waterHowGroup;
+
+  /// No description provided for @waterIntensity.
+  ///
+  /// In en, this message translates to:
+  /// **'Intensity'**
+  String get waterIntensity;
+
+  /// No description provided for @waterIntensitySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Rings once and steps back — no re-alarm'**
+  String get waterIntensitySub;
+
+  /// No description provided for @waterBannerMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Banner'**
+  String get waterBannerMode;
+
+  /// No description provided for @waterOneSound.
+  ///
+  /// In en, this message translates to:
+  /// **'One sound'**
+  String get waterOneSound;
+
+  /// No description provided for @waterGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily goal'**
+  String get waterGoal;
+
+  /// No description provided for @waterGoalCups.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} cups'**
+  String waterGoalCups(int n);
+
+  /// No description provided for @waterEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Use water reminder'**
+  String get waterEnable;
+
+  /// No description provided for @waterNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Interval counts from when you tap \"Drank\". Merges with a fixed time if within 30 min.'**
+  String get waterNote;
+
+  /// No description provided for @waterBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A glass of water'**
+  String get waterBannerTitle;
+
+  /// No description provided for @waterBannerSub.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} today · next {time}'**
+  String waterBannerSub(int n, String time);
+
+  /// No description provided for @waterDrank.
+  ///
+  /// In en, this message translates to:
+  /// **'Drank'**
+  String get waterDrank;
+
+  /// No description provided for @waterLater30.
+  ///
+  /// In en, this message translates to:
+  /// **'In 30 min'**
+  String get waterLater30;
+
+  /// No description provided for @waterStopToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Done for today'**
+  String get waterStopToday;
+
+  /// No description provided for @waterBgNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders fire while the app is open. Background delivery is coming.'**
+  String get waterBgNote;
+
+  /// No description provided for @waterSettingsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind to drink at intervals or set times'**
+  String get waterSettingsDesc;
 }
 
 class _AppLocalizationsDelegate

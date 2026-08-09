@@ -1963,4 +1963,86 @@ class AppLocalizationsKo extends AppLocalizations {
   String presetDeletedToast(String name) {
     return '$name을(를) 지웠어요';
   }
+
+  @override
+  String get waterTitle => '물 마시기 알림';
+
+  @override
+  String get waterToday => '오늘';
+
+  @override
+  String waterCups(int n, int goal) {
+    return '$n / $goal잔';
+  }
+
+  @override
+  String get waterWhenGroup => '언제 울릴까요';
+
+  @override
+  String get waterInterval => '일정 간격마다';
+
+  @override
+  String get waterFixed => '정해진 시각';
+
+  @override
+  String get waterActiveHours => '활동 시간대에만';
+
+  @override
+  String get waterWithTimer => '타이머 끝날 때 같이';
+
+  @override
+  String get waterWithTimerSub => '다른 알람을 확인할 때 물 알림을 얹어요';
+
+  @override
+  String get waterHowGroup => '알림 방식';
+
+  @override
+  String get waterIntensity => '강도';
+
+  @override
+  String get waterIntensitySub => '한 번만 울리고 물러나요 — 재알림 없음';
+
+  @override
+  String get waterBannerMode => '배너';
+
+  @override
+  String get waterOneSound => '한 번 소리';
+
+  @override
+  String get waterGoal => '하루 목표';
+
+  @override
+  String waterGoalCups(int n) {
+    return '$n잔';
+  }
+
+  @override
+  String get waterEnable => '물 알림 사용';
+
+  @override
+  String get waterNote =>
+      '간격 타이머는 \"마셨어요\"를 누른 시점부터 다시 셈 · 정해진 시각과 30분 내로 겹치면 하나만 울림';
+
+  @override
+  String get waterBannerTitle => '물 한 잔';
+
+  @override
+  String waterBannerSub(int n, String time) {
+    return '오늘 $n잔 · 다음 $time';
+  }
+
+  @override
+  String get waterDrank => '마셨어요';
+
+  @override
+  String get waterLater30 => '30분 뒤';
+
+  @override
+  String get waterStopToday => '오늘은 그만';
+
+  @override
+  String get waterBgNote => '앱이 열려 있을 때 알림이 울려요. 백그라운드 전달은 준비 중입니다.';
+
+  @override
+  String get waterSettingsDesc => '간격·정해진 시각으로 물 마시기 알림';
 }
