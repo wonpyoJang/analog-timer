@@ -20,6 +20,7 @@ import 'services/care_service.dart';
 import 'services/colorblind_service.dart';
 import 'services/high_contrast_service.dart';
 import 'features/stats/stats_screen.dart';
+import 'features/water/water_screen.dart';
 import 'features/onboarding/alarm_diagnostics_screen.dart';
 import 'services/alarm_readiness_service.dart';
 import 'services/list_display_service.dart';
@@ -238,6 +239,20 @@ class SettingsScreen extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const _ListSettingsPage()),
+            ),
+          ),
+
+          const _Divider(),
+
+          // ── 물 마시기 알림(디자인 §1·§2) ─────────────────────
+          _SettingsTile(
+            icon: Icons.local_drink_outlined,
+            iconColor: const Color(0xFF52B0E0),
+            title: l.waterTitle,
+            subtitle: l.waterSettingsDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const WaterSettingsPage()),
             ),
           ),
 
