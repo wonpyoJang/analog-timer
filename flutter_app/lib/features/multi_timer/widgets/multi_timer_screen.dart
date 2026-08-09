@@ -26,6 +26,9 @@ import '../bloc/multi_timer_event.dart';
 import '../bloc/multi_timer_state.dart';
 import '../models/countdown_timer.dart';
 import 'alarm_screen.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../services/ocr_service.dart';
+import '../../../services/platform_info.dart';
 
 String _fmt(int ms) {
   final total = (ms / 1000).ceil();
@@ -235,6 +238,104 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   void _toast(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  List<PresetRef> _presetRefs() => [
+    for (final p in _presets)
+      if (((p['name'] as String?) ?? '').isNotEmpty)
+        PresetRef(
+          name: p['name'] as String,
+          totalMs: (p['durationMs'] as num?)?.toInt() ?? 0,
+        ),
+  ];
+
+  /// 봉지 OCR(온디바이스 §3) — 촬영/앨범 이미지 → 텍스트 인식 → 시간 파서 →
+  /// 시간 표현이 있는 후보만 확인 화면(§C). 못 찾으면 안내 후 휠 폴백(§D).
+  Future<void> _ocrFlow(ImageSource source) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final bloc = context.read<MultiTimerBloc>();
+    XFile? file;
+    try {
+      file = await ImagePicker().pickImage(source: source, imageQuality: 92);
+    } catch (_) {}
+    if (file == null || !mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l.ocrReading),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+    final text = await OcrService.recognizeFile(file.path);
+    if (!mounted) return;
+    // §3: 숫자가 아니라 시간 표현만 취한다 — unparsed(단위 없는 550ml 등)는 버림.
+    final found = parseTimers(
+      text,
+      presets: _presetRefs(),
+    ).where((t) => t.kind != ParsedKind.unparsed).toList();
+    if (found.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l.ocrNoTime)));
+      return;
+    }
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => TextTimerScreen(
+          presets: _presetRefs(),
+          bloc: bloc,
+          initial: found,
+          title: l.ocrTitle,
+        ),
+      ),
+    );
+  }
+
+  /// 촬영/앨범 선택 시트(§B "앨범" 버튼 겸용).
+  void _startOcr() {
+    final l = AppLocalizations.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(
+                Icons.photo_camera_outlined,
+                color: AppColors.accent,
+              ),
+              title: Text(
+                l.ocrCamera,
+                style: const TextStyle(color: AppColors.text),
+              ),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                _ocrFlow(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.photo_library_outlined,
+                color: AppColors.accent,
+              ),
+              title: Text(
+                l.ocrAlbum,
+                style: const TextStyle(color: AppColors.text),
+              ),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                _ocrFlow(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _onPillTap(String id) {
@@ -1129,6 +1230,75 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                       child: Text(
                         l.multiTimerPresetEditHint,
                         style: TextStyle(color: AppColors.faint, fontSize: 13),
+                      ),
+                    ),
+                  // 봉지·안내문 찍기(온디바이스 §3·§A) — OCR 로 조리시간 인식(Android).
+                  if (!editMode && isAndroid)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Material(
+                        color: const Color(0xFF141416),
+                        borderRadius: BorderRadius.circular(14),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _startOcr();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accent.withAlpha(0x24),
+                                    borderRadius: BorderRadius.circular(9),
+                                  ),
+                                  child: const Icon(
+                                    Icons.document_scanner_outlined,
+                                    size: 18,
+                                    color: AppColors.accent,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l.ocrEntry,
+                                        style: const TextStyle(
+                                          color: AppColors.text,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        l.ocrEntryDesc,
+                                        style: TextStyle(
+                                          color: AppColors.muted,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: AppColors.faint,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   // 말·글로 타이머 만들기(온디바이스 §4·§E) — 한 문장에서 여러 개.

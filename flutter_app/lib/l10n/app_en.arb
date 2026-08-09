@@ -1069,5 +1069,12 @@
   "scFocus": "Focus 25 min",
   "scRest": "Break 5 min",
   "scStop": "Stop timer",
-  "scStatus": "Time left"
+  "scStatus": "Time left",
+  "ocrEntry": "Scan a package",
+  "ocrEntryDesc": "Reads the cook time and makes it",
+  "ocrCamera": "Take a photo",
+  "ocrAlbum": "Pick from album",
+  "ocrReading": "Reading text…",
+  "ocrNoTime": "No time found — set it by hand",
+  "ocrTitle": "Scan package"
 }

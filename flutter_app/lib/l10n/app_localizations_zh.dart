@@ -1903,6 +1903,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get scStatus => 'Time left';
+
+  @override
+  String get ocrEntry => 'Scan a package';
+
+  @override
+  String get ocrEntryDesc => 'Reads the cook time and makes it';
+
+  @override
+  String get ocrCamera => 'Take a photo';
+
+  @override
+  String get ocrAlbum => 'Pick from album';
+
+  @override
+  String get ocrReading => 'Reading text…';
+
+  @override
+  String get ocrNoTime => 'No time found — set it by hand';
+
+  @override
+  String get ocrTitle => 'Scan package';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
