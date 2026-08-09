@@ -1737,16 +1737,30 @@ class _CenterInfo extends StatelessWidget {
             ),
           ],
           if (swState.running || swState.elapsedMs > 0)
-            Text(
-              '⏱ ${_fmtMs(swState.elapsedMs)}',
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: AppColors.swGreen,
-                fontFeatures: [FontFeature.tabularFigures()],
-                shadows: _kTextHalo,
-              ),
+            // ⏱ 컬러 이모지 + 흰 헤일로(_kTextHalo) 조합이 구형 이모지 렌더(Android 11)
+            // 에서 녹색 링 위에 흰 얼룩("구멍")으로 번지던 문제 → 벡터 아이콘으로 교체.
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.timer_outlined,
+                  size: 22,
+                  color: AppColors.swGreen,
+                  shadows: _kTextHalo,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  _fmtMs(swState.elapsedMs),
+                  style: const TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.swGreen,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                    shadows: _kTextHalo,
+                  ),
+                ),
+              ],
             ),
         ],
       ),
