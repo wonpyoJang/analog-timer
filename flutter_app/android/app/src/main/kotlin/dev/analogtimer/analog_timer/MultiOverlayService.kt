@@ -233,7 +233,10 @@ class MultiOverlayService : Service() {
         val view = CircleTimerView(this)
         view.setState(name, color, totalMs, remainMs, running, done, doneText, deadlineEpochMs, preAlarmMs)
 
-        val size = dp(prefSizeDp)
+        // 창 = 원 지름 + 좌우 글로우 여백. 원은 onDraw 가 중앙에 GLOW_MARGIN 만큼
+        // 안쪽으로 그려 시각 크기는 그대로. 창이 커지면 findFreePosition 간격도 이 크기
+        // 기준이라 이웃 pill 과 (투명 여백 포함) 겹치지 않아 드래그 터치 충돌도 없다.
+        val size = dp(prefSizeDp) + dp(GLOW_MARGIN_DP) * 2
         // 잠금화면 표시(§D) — 켜면 FLAG_SHOW_WHEN_LOCKED. TYPE_APPLICATION_OVERLAY 는
         // 기기/버전에 따라 잠금화면 위 표시가 제한될 수 있어 실기기 검증 필요.
         var flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
@@ -488,7 +491,9 @@ class MultiOverlayService : Service() {
         override fun onDraw(canvas: Canvas) {
             val cx = width / 2f
             val cy = height / 2f
-            val pad = ringStroke / 2f + dp(2)
+            // 창은 원 지름 + 양쪽 GLOW_MARGIN 이므로, 원은 그만큼 안쪽으로 그린다.
+            // (막판 글로우 블러가 이 여백 안에 담겨 사각 경계에 잘리지 않음)
+            val pad = ringStroke / 2f + dp(2) + dp(GLOW_MARGIN_DP)
             val r = minOf(width, height) / 2f - pad
 
             // 원 배경(어두운 반투명) — 링 안쪽을 채워 텍스트 가독성 확보
@@ -507,8 +512,9 @@ class MultiOverlayService : Service() {
                 else -> color
             }
             if (lastMinute && glowPulse > 0.02f) {
+                // 블러 반경은 창 여백(GLOW_MARGIN_DP) 안에 담기게 제한 — 넘치면 사각 클립.
                 arcPaint.setShadowLayer(
-                    dp(26).toFloat() * glowPulse, 0f, 0f, COLOR_DANGER,
+                    dp(18).toFloat() * glowPulse, 0f, 0f, COLOR_DANGER,
                 )
             } else {
                 arcPaint.clearShadowLayer()
@@ -696,6 +702,10 @@ class MultiOverlayService : Service() {
         const val DEFAULT_ACCENT = 0xFFE07A52.toInt()
         const val DIAMETER_DP = 108
 
+        /** 막판 1분 danger 글로우가 번질 여백 — 창을 원 지름보다 이만큼 크게 잡아
+         *  글로우가 창 사각 경계에 잘리지 않게 한다(원은 창 중앙에 같은 크기로 그림). */
+        const val GLOW_MARGIN_DP = 20
+
         // 표시 설정(디자인 §D) — Dart setDisplayPrefs 로 갱신, addPill/onDraw 가 읽는다.
         @Volatile var prefSizeDp: Int = DIAMETER_DP // 작게 88 · 보통 108 · 크게 132
         @Volatile var prefSideRight: Boolean = false // 붙는 위치: false=왼쪽, true=오른쪽
@@ -735,7 +745,7 @@ class MultiOverlayService : Service() {
             fun dpv(v: Int): Int = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, v.toFloat(), dm,
             ).toInt()
-            val size = dpv(DIAMETER_DP)
+            val size = dpv(DIAMETER_DP + GLOW_MARGIN_DP * 2)
             val step = size + dpv(10) // gap
             val cols = (dm.widthPixels - size - dpv(12) - dpv(12)) / step + 1
             val rows = (dm.heightPixels - size - dpv(72) - dpv(24)) / step + 1
