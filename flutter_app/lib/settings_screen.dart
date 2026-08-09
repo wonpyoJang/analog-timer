@@ -89,438 +89,43 @@ class SettingsScreen extends StatelessWidget {
           // ══ 그룹 1: 알림 방식 ═════════════════════════════════
           _GroupHeader(l.settingsGroupNotify),
 
-          // ── 음성 안내 (TTS) — 세그먼트 전환/완료를 소리로 ────────
-          ValueListenableBuilder<bool>(
-            valueListenable: TtsService.instance.enabledListenable,
-            builder: (ctx, ttsOn, _) => _SettingsTile(
-              icon: Icons.record_voice_over_outlined,
-              iconColor: AppColors.accent,
-              title: l.settingsTts,
-              subtitle: l.settingsTtsDesc,
-              trailing: Switch(
-                value: ttsOn,
-                onChanged: (v) => TtsService.instance.setEnabled(
-                  v,
-                  sample: l.settingsTtsSample,
-                  localeTag: Localizations.localeOf(context).toLanguageTag(),
-                ),
-                activeThumbColor: AppColors.accent,
-                trackColor: WidgetStateProperty.resolveWith(
-                  (states) => states.contains(WidgetState.selected)
-                      ? AppColors.accent.withAlpha(0x55)
-                      : AppColors.surface,
-                ),
-              ),
-              onTap: () => TtsService.instance.setEnabled(
-                !ttsOn,
-                sample: l.settingsTtsSample,
-                localeTag: Localizations.localeOf(context).toLanguageTag(),
-              ),
-            ),
-          ),
-
-          // ── 음성 스타일 (TTS 켜졌을 때만) — 선택 즉시 미리듣기 ────
-          ValueListenableBuilder<bool>(
-            valueListenable: TtsService.instance.enabledListenable,
-            builder: (ctx, ttsOn, _) => !ttsOn
-                ? const SizedBox.shrink()
-                : ValueListenableBuilder<Map<String, String>?>(
-                    valueListenable: TtsService.instance.voiceListenable,
-                    builder: (ctx2, voice, _) => _SettingsTile(
-                      icon: Icons.graphic_eq,
-                      iconColor: AppColors.accent,
-                      title: l.settingsTtsVoice,
-                      subtitle:
-                          _voiceDisplayName(voice) ?? l.settingsTtsVoiceDefault,
-                      onTap: () => _pickTtsVoice(context, l),
-                    ),
-                  ),
-          ),
-
-          // ── 정각 시보 (TTS 켜졌을 때만) — 매시 정각에 시간 낭독 ───
-          ValueListenableBuilder<bool>(
-            valueListenable: TtsService.instance.enabledListenable,
-            builder: (ctx, ttsOn, _) => !ttsOn
-                ? const SizedBox.shrink()
-                : ValueListenableBuilder<bool>(
-                    valueListenable: TtsService.instance.hourlyChimeListenable,
-                    builder: (ctx2, chimeOn, _) => _SettingsTile(
-                      icon: Icons.schedule,
-                      iconColor: AppColors.accent,
-                      title: l.settingsHourlyChime,
-                      subtitle: l.settingsHourlyChimeDesc,
-                      trailing: Switch(
-                        value: chimeOn,
-                        onChanged: (v) => TtsService.instance.setHourlyChime(
-                          v,
-                          sample: l.settingsTtsSample,
-                          localeTag: Localizations.localeOf(
-                            context,
-                          ).toLanguageTag(),
-                        ),
-                        activeThumbColor: AppColors.accent,
-                        trackColor: WidgetStateProperty.resolveWith(
-                          (states) => states.contains(WidgetState.selected)
-                              ? AppColors.accent.withAlpha(0x55)
-                              : AppColors.surface,
-                        ),
-                      ),
-                      onTap: () => TtsService.instance.setHourlyChime(
-                        !chimeOn,
-                        sample: l.settingsTtsSample,
-                        localeTag: Localizations.localeOf(
-                          context,
-                        ).toLanguageTag(),
-                      ),
-                    ),
-                  ),
-          ),
-
-          const _Divider(),
-
-          // ── 진동 피드백 (접근성, 모바일 전용 — 데스크톱엔 진동 모터가
-          //    없어 토글이 무의미하다) ───────────────────────────
+          // ── 상세 페이지 진입(디자인 §A·§B·§C) — 붐비던 알림 방식 그룹을
+          //    3개 상세 페이지로 분리해 메인을 간결하게.
           if (!isDesktop) ...[
-            ValueListenableBuilder<bool>(
-              valueListenable: HapticService.instance.enabledListenable,
-              builder: (ctx, hOn, _) => _SettingsTile(
-                icon: Icons.vibration,
-                iconColor: AppColors.accent,
-                title: l.settingsHaptics,
-                subtitle: l.settingsHapticsDesc,
-                trailing: Switch(
-                  value: hOn,
-                  onChanged: HapticService.instance.setEnabled,
-                  activeThumbColor: AppColors.accent,
-                  trackColor: WidgetStateProperty.resolveWith(
-                    (states) => states.contains(WidgetState.selected)
-                        ? AppColors.accent.withAlpha(0x55)
-                        : AppColors.surface,
-                  ),
-                ),
-                onTap: () => HapticService.instance.setEnabled(!hOn),
+            _SettingsTile(
+              icon: Icons.notifications_active_outlined,
+              iconColor: AppColors.accent,
+              title: l.settingsAlarmSection,
+              subtitle: l.settingsAlarmSectionDesc,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const _AlarmSettingsPage()),
               ),
             ),
             const _Divider(),
-
-            // ── 효과음 (멀티 타이머 — 칩 탭·시작·완료 멜로디) ─────
-            ValueListenableBuilder<bool>(
-              valueListenable: SoundService.instance.enabledListenable,
-              builder: (ctx, sOn, _) => Column(
-                children: [
-                  _SettingsTile(
-                    icon: Icons.music_note_outlined,
-                    iconColor: AppColors.accent,
-                    title: l.settingsSounds,
-                    subtitle: l.settingsSoundsDesc,
-                    trailing: Switch(
-                      value: sOn,
-                      onChanged: SoundService.instance.setEnabled,
-                      activeThumbColor: AppColors.accent,
-                      trackColor: WidgetStateProperty.resolveWith(
-                        (states) => states.contains(WidgetState.selected)
-                            ? AppColors.accent.withAlpha(0x55)
-                            : AppColors.surface,
-                      ),
-                    ),
-                    onTap: () => SoundService.instance.setEnabled(!sOn),
-                  ),
-                  if (sOn)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(56, 0, 16, 12),
-                      child: ValueListenableBuilder<String>(
-                        valueListenable: SoundService.instance.setListenable,
-                        builder: (ctx, cur, _) => Align(
-                          alignment: Alignment.centerLeft,
-                          child: Wrap(
-                            spacing: 8,
-                            children: [
-                              for (final entry in {
-                                'pop': l.soundSetPop,
-                                'wood': l.soundSetWood,
-                                'glass': l.soundSetGlass,
-                                'retro': l.soundSetRetro,
-                              }.entries)
-                                ChoiceChip(
-                                  label: Text(entry.value),
-                                  selected: cur == entry.key,
-                                  onSelected: (_) => SoundService.instance
-                                      .setSoundSet(entry.key),
-                                  selectedColor: AppColors.accent.withAlpha(
-                                    0x33,
-                                  ),
-                                  backgroundColor: AppColors.surface,
-                                  labelStyle: TextStyle(
-                                    color: cur == entry.key
-                                        ? AppColors.accent
-                                        : AppColors.muted,
-                                    fontSize: 13,
-                                  ),
-                                  side: BorderSide(
-                                    color: cur == entry.key
-                                        ? AppColors.accent
-                                        : AppColors.border,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const _Divider(),
-
-            // ── 사운드 & 방해 관리 (페르소나 §3·§5) ──────────────
-            ValueListenableBuilder<bool>(
-              valueListenable: CareService.instance.quietHours,
-              builder: (ctx, qOn, _) => _SettingsTile(
-                icon: Icons.bedtime_outlined,
-                iconColor: AppColors.accent,
-                title: l.careQuietHours,
-                subtitle: l.careQuietHoursDesc,
-                trailing: Switch(
-                  value: qOn,
-                  onChanged: CareService.instance.setQuietHours,
-                  activeThumbColor: AppColors.accent,
-                  trackColor: WidgetStateProperty.resolveWith(
-                    (states) => states.contains(WidgetState.selected)
-                        ? AppColors.accent.withAlpha(0x55)
-                        : AppColors.surface,
-                  ),
-                ),
-                onTap: () => CareService.instance.setQuietHours(!qOn),
-              ),
-            ),
-            ValueListenableBuilder<int>(
-              valueListenable: CareService.instance.preAlarmMin,
-              builder: (ctx, pre, _) => Column(
-                children: [
-                  _SettingsTile(
-                    icon: Icons.notifications_paused_outlined,
-                    iconColor: AppColors.accent,
-                    title: l.carePreAlarm,
-                    subtitle: l.carePreAlarmDesc,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(56, 0, 16, 12),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Wrap(
-                        spacing: 8,
-                        children: [
-                          for (final v in const [0, 1, 2, 5])
-                            ChoiceChip(
-                              label: Text(
-                                v == 0
-                                    ? l.carePreAlarmOff
-                                    : l.carePreAlarmMin(v),
-                              ),
-                              selected: pre == v,
-                              onSelected: (_) =>
-                                  CareService.instance.setPreAlarmMin(v),
-                              selectedColor: AppColors.accent.withAlpha(0x33),
-                              backgroundColor: AppColors.surface,
-                              labelStyle: TextStyle(
-                                color: pre == v
-                                    ? AppColors.accent
-                                    : AppColors.muted,
-                                fontSize: 13,
-                              ),
-                              side: BorderSide(
-                                color: pre == v
-                                    ? AppColors.accent
-                                    : AppColors.border,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ValueListenableBuilder<bool>(
-              valueListenable: CareService.instance.realarm,
-              builder: (ctx, rOn, _) => _SettingsTile(
-                icon: Icons.notification_important_outlined,
-                iconColor: AppColors.accent,
-                title: l.careRealarm,
-                subtitle: l.careRealarmDesc,
-                trailing: Switch(
-                  value: rOn,
-                  onChanged: CareService.instance.setRealarm,
-                  activeThumbColor: AppColors.accent,
-                  trackColor: WidgetStateProperty.resolveWith(
-                    (states) => states.contains(WidgetState.selected)
-                        ? AppColors.accent.withAlpha(0x55)
-                        : AppColors.surface,
-                  ),
-                ),
-                onTap: () => CareService.instance.setRealarm(!rOn),
-              ),
-            ),
-            // 카테고리별 재알림 간격(알람 시안 §1) — 요리/집안일/그 외.
-            for (final iv in const [
-              ('cooking', 'careIntervalCooking'),
-              ('chore', 'careIntervalChore'),
-              ('other', 'careIntervalOther'),
-            ])
-              ValueListenableBuilder<int>(
-                valueListenable: switch (iv.$1) {
-                  'cooking' => CareService.instance.intervalCookingMin,
-                  'chore' => CareService.instance.intervalChoreMin,
-                  _ => CareService.instance.intervalOtherMin,
-                },
-                builder: (ctx, cur, _) => Padding(
-                  padding: const EdgeInsets.fromLTRB(56, 0, 16, 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          switch (iv.$1) {
-                            'cooking' => l.careIntervalCooking,
-                            'chore' => l.careIntervalChore,
-                            _ => l.careIntervalOther,
-                          },
-                          style: const TextStyle(
-                            color: AppColors.text,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      for (final v in const [1, 2, 5])
-                        Padding(
-                          padding: const EdgeInsets.only(left: 6),
-                          child: ChoiceChip(
-                            label: Text(l.carePreAlarmMin(v)),
-                            selected: cur == v,
-                            onSelected: (_) =>
-                                CareService.instance.setInterval(iv.$1, v),
-                            selectedColor: AppColors.accent.withAlpha(0x33),
-                            backgroundColor: AppColors.surface,
-                            labelStyle: TextStyle(
-                              color: cur == v
-                                  ? AppColors.accent
-                                  : AppColors.muted,
-                              fontSize: 12,
-                            ),
-                            side: BorderSide(
-                              color: cur == v
-                                  ? AppColors.accent
-                                  : AppColors.border,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ValueListenableBuilder<bool>(
-              valueListenable: CareService.instance.ttsName,
-              builder: (ctx, tOn, _) => _SettingsTile(
-                icon: Icons.record_voice_over_outlined,
-                iconColor: AppColors.accent,
-                title: l.careTtsName,
-                subtitle: l.careTtsNameDesc,
-                trailing: Switch(
-                  value: tOn,
-                  onChanged: CareService.instance.setTtsName,
-                  activeThumbColor: AppColors.accent,
-                  trackColor: WidgetStateProperty.resolveWith(
-                    (states) => states.contains(WidgetState.selected)
-                        ? AppColors.accent.withAlpha(0x55)
-                        : AppColors.surface,
-                  ),
-                ),
-                onTap: () => CareService.instance.setTtsName(!tOn),
-              ),
-            ),
-            ValueListenableBuilder<bool>(
-              valueListenable: CareService.instance.keepDone,
-              builder: (ctx, kOn, _) => _SettingsTile(
-                icon: Icons.history_outlined,
-                iconColor: AppColors.accent,
-                title: l.careKeepDone,
-                subtitle: l.careKeepDoneDesc,
-                trailing: Switch(
-                  value: kOn,
-                  onChanged: CareService.instance.setKeepDone,
-                  activeThumbColor: AppColors.accent,
-                  trackColor: WidgetStateProperty.resolveWith(
-                    (states) => states.contains(WidgetState.selected)
-                        ? AppColors.accent.withAlpha(0x55)
-                        : AppColors.surface,
-                  ),
-                ),
-                onTap: () => CareService.instance.setKeepDone(!kOn),
-              ),
-            ),
-            ValueListenableBuilder<String>(
-              valueListenable: CareService.instance.messageTone,
-              builder: (ctx, tone, _) => Column(
-                children: [
-                  _SettingsTile(
-                    icon: Icons.chat_bubble_outline,
-                    iconColor: AppColors.accent,
-                    title: l.careTone,
-                    subtitle: l.careToneDesc,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(56, 0, 16, 6),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Wrap(
-                        spacing: 8,
-                        children: [
-                          for (final e in {
-                            'warm': l.careToneWarm,
-                            'neutral': l.careToneNeutral,
-                            'brief': l.careToneBrief,
-                          }.entries)
-                            ChoiceChip(
-                              label: Text(e.value),
-                              selected: tone == e.key,
-                              onSelected: (_) =>
-                                  CareService.instance.setMessageTone(e.key),
-                              selectedColor: AppColors.accent.withAlpha(0x33),
-                              backgroundColor: AppColors.surface,
-                              labelStyle: TextStyle(
-                                color: tone == e.key
-                                    ? AppColors.accent
-                                    : AppColors.muted,
-                                fontSize: 13,
-                              ),
-                              side: BorderSide(
-                                color: tone == e.key
-                                    ? AppColors.accent
-                                    : AppColors.border,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(56, 2, 16, 12),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        switch (tone) {
-                          'warm' => l.doneMsgWarm(l.multiTimerTitle),
-                          'brief' => l.doneMsgBrief(l.multiTimerTitle),
-                          _ => l.doneMsgNeutral(l.multiTimerTitle),
-                        },
-                        style: TextStyle(color: AppColors.faint, fontSize: 12),
-                      ),
-                    ),
-                  ),
-                ],
+            _SettingsTile(
+              icon: Icons.music_note_outlined,
+              iconColor: AppColors.accent,
+              title: l.settingsSoundSection,
+              subtitle: l.settingsSoundSectionDesc,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const _SoundSettingsPage()),
               ),
             ),
             const _Divider(),
           ],
+          _SettingsTile(
+            icon: Icons.record_voice_over_outlined,
+            iconColor: AppColors.accent,
+            title: l.settingsVoiceSection,
+            subtitle: l.settingsVoiceSectionDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const _VoiceSettingsPage()),
+            ),
+          ),
+          if (isDesktop) const _Divider(),
 
           // ── 알림 (데스크톱 — 구간 전환·완료 토스트) ───────────
           if (isDesktop) ...[
@@ -802,6 +407,423 @@ class SettingsScreen extends StatelessWidget {
 
 /// Android 진단 동의 토글 — telemetry_consent(pref)를 읽고 쓴다. 켜면 ANR-free 지표가
 /// 다음 실행부터 전송된다(AnrVitalsService 가 같은 pref 로 게이팅).
+// ══ 상세 설정 페이지(디자인 "설정 상세 페이지" §A·§B·§C) ═══════════════
+// 붐비던 알림 방식 그룹을 알람·재알림 / 사운드 / 음성 안내 3개로 분리.
+
+/// 상세 페이지 공통 껍데기 — 제목 + 한 줄 안내 + 설정 그룹들.
+class _DetailScaffold extends StatelessWidget {
+  final String title;
+  final String sub;
+  final List<Widget> children;
+  const _DetailScaffold({
+    required this.title,
+    required this.sub,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: AppColors.bg,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            size: 18,
+            color: AppColors.text,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.text,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 28),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
+            child: Text(
+              sub,
+              style: TextStyle(
+                color: AppColors.muted,
+                fontSize: 13,
+                height: 1.6,
+              ),
+            ),
+          ),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+/// 상세 페이지 공통 스위치 스타일.
+Switch _detailSwitch(bool on, ValueChanged<bool> onChanged) => Switch(
+  value: on,
+  onChanged: onChanged,
+  activeThumbColor: AppColors.accent,
+  trackColor: WidgetStateProperty.resolveWith(
+    (states) => states.contains(WidgetState.selected)
+        ? AppColors.accent.withAlpha(0x55)
+        : AppColors.surface,
+  ),
+);
+
+/// 선택 칩 행 — 현재값 강조(디자인 §G: 숫자 값은 행에 노출).
+Widget _detailChips<T>(
+  List<T> options,
+  T current,
+  ValueChanged<T> onSelect,
+  String Function(T) label,
+) => Padding(
+  padding: const EdgeInsets.fromLTRB(56, 0, 16, 12),
+  child: Align(
+    alignment: Alignment.centerLeft,
+    child: Wrap(
+      spacing: 8,
+      children: [
+        for (final v in options)
+          ChoiceChip(
+            label: Text(label(v)),
+            selected: current == v,
+            onSelected: (_) => onSelect(v),
+            selectedColor: AppColors.accent.withAlpha(0x33),
+            backgroundColor: AppColors.surface,
+            labelStyle: TextStyle(
+              color: current == v ? AppColors.accent : AppColors.muted,
+              fontSize: 13,
+            ),
+            side: BorderSide(
+              color: current == v ? AppColors.accent : AppColors.border,
+            ),
+          ),
+      ],
+    ),
+  ),
+);
+
+/// A · 알람 · 재알림 (디자인 §A) — 확인 전까지 반복 + 카테고리별 간격.
+class _AlarmSettingsPage extends StatelessWidget {
+  const _AlarmSettingsPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final care = CareService.instance;
+    return _DetailScaffold(
+      title: l.settingsAlarmSection,
+      sub: l.alarmPageSub,
+      children: [
+        _GroupHeader(l.grpAlarmBasic),
+        ValueListenableBuilder<bool>(
+          valueListenable: care.realarm,
+          builder: (ctx, rOn, _) => _SettingsTile(
+            icon: Icons.notification_important_outlined,
+            iconColor: AppColors.accent,
+            title: l.careRealarm,
+            subtitle: l.careRealarmDesc,
+            trailing: _detailSwitch(rOn, care.setRealarm),
+            onTap: () => care.setRealarm(!rOn),
+          ),
+        ),
+        ValueListenableBuilder<int>(
+          valueListenable: care.preAlarmMin,
+          builder: (ctx, pre, _) => Column(
+            children: [
+              _SettingsTile(
+                icon: Icons.notifications_paused_outlined,
+                iconColor: AppColors.accent,
+                title: l.carePreAlarm,
+                subtitle: l.carePreAlarmDesc,
+              ),
+              _detailChips<int>(
+                const [0, 1, 2, 5],
+                pre,
+                care.setPreAlarmMin,
+                (v) => v == 0 ? l.carePreAlarmOff : l.carePreAlarmMin(v),
+              ),
+            ],
+          ),
+        ),
+        _GroupHeader(l.grpAlarmInterval),
+        for (final iv in const ['cooking', 'chore', 'other'])
+          ValueListenableBuilder<int>(
+            valueListenable: switch (iv) {
+              'cooking' => care.intervalCookingMin,
+              'chore' => care.intervalChoreMin,
+              _ => care.intervalOtherMin,
+            },
+            builder: (ctx, cur, _) => Column(
+              children: [
+                _SettingsTile(
+                  icon: Icons.timer_outlined,
+                  iconColor: AppColors.accent,
+                  title: switch (iv) {
+                    'cooking' => l.careIntervalCooking,
+                    'chore' => l.careIntervalChore,
+                    _ => l.careIntervalOther,
+                  },
+                ),
+                _detailChips<int>(
+                  const [1, 2, 5],
+                  cur,
+                  (v) => care.setInterval(iv, v),
+                  (v) => l.carePreAlarmMin(v),
+                ),
+              ],
+            ),
+          ),
+        _GroupHeader(l.grpAlarmDone),
+        ValueListenableBuilder<String>(
+          valueListenable: care.messageTone,
+          builder: (ctx, tone, _) => Column(
+            children: [
+              _SettingsTile(
+                icon: Icons.chat_bubble_outline,
+                iconColor: AppColors.accent,
+                title: l.careTone,
+                subtitle: l.careToneDesc,
+              ),
+              _detailChips<String>(
+                const ['warm', 'neutral', 'brief'],
+                tone,
+                care.setMessageTone,
+                (v) => switch (v) {
+                  'warm' => l.careToneWarm,
+                  'brief' => l.careToneBrief,
+                  _ => l.careToneNeutral,
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(56, 0, 24, 12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(switch (tone) {
+                    'warm' => l.doneMsgWarm(l.multiTimerTitle),
+                    'brief' => l.doneMsgBrief(l.multiTimerTitle),
+                    _ => l.doneMsgNeutral(l.multiTimerTitle),
+                  }, style: TextStyle(color: AppColors.faint, fontSize: 12)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: care.keepDone,
+          builder: (ctx, kOn, _) => _SettingsTile(
+            icon: Icons.history_outlined,
+            iconColor: AppColors.accent,
+            title: l.careKeepDone,
+            subtitle: l.careKeepDoneDesc,
+            trailing: _detailSwitch(kOn, care.setKeepDone),
+            onTap: () => care.setKeepDone(!kOn),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// B · 사운드 (디자인 §B) — 세트 선택 + 진동/방해 금지.
+class _SoundSettingsPage extends StatelessWidget {
+  const _SoundSettingsPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return _DetailScaffold(
+      title: l.settingsSoundSection,
+      sub: l.soundPageSub,
+      children: [
+        _GroupHeader(l.grpSoundSet),
+        ValueListenableBuilder<bool>(
+          valueListenable: SoundService.instance.enabledListenable,
+          builder: (ctx, sOn, _) => Column(
+            children: [
+              _SettingsTile(
+                icon: Icons.music_note_outlined,
+                iconColor: AppColors.accent,
+                title: l.settingsSounds,
+                subtitle: l.settingsSoundsDesc,
+                trailing: _detailSwitch(sOn, SoundService.instance.setEnabled),
+                onTap: () => SoundService.instance.setEnabled(!sOn),
+              ),
+              if (sOn)
+                ValueListenableBuilder<String>(
+                  valueListenable: SoundService.instance.setListenable,
+                  builder: (ctx2, cur, _) => _detailChips<String>(
+                    const ['pop', 'wood', 'glass', 'retro'],
+                    cur,
+                    SoundService.instance.setSoundSet,
+                    (v) => switch (v) {
+                      'pop' => l.soundSetPop,
+                      'wood' => l.soundSetWood,
+                      'glass' => l.soundSetGlass,
+                      _ => l.soundSetRetro,
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+        _GroupHeader(l.grpSoundFeedback),
+        ValueListenableBuilder<bool>(
+          valueListenable: HapticService.instance.enabledListenable,
+          builder: (ctx, hOn, _) => _SettingsTile(
+            icon: Icons.vibration,
+            iconColor: AppColors.accent,
+            title: l.settingsHaptics,
+            subtitle: l.settingsHapticsDesc,
+            trailing: _detailSwitch(hOn, HapticService.instance.setEnabled),
+            onTap: () => HapticService.instance.setEnabled(!hOn),
+          ),
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: CareService.instance.quietHours,
+          builder: (ctx, qOn, _) => _SettingsTile(
+            icon: Icons.bedtime_outlined,
+            iconColor: AppColors.accent,
+            title: l.careQuietHours,
+            subtitle: l.careQuietHoursDesc,
+            trailing: _detailSwitch(qOn, CareService.instance.setQuietHours),
+            onTap: () => CareService.instance.setQuietHours(!qOn),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// C · 음성 안내 (디자인 §C) — TTS 켜기 + 목소리·속도·이름·시보.
+class _VoiceSettingsPage extends StatelessWidget {
+  const _VoiceSettingsPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final tts = TtsService.instance;
+    String localeTag() => Localizations.localeOf(context).toLanguageTag();
+    return _DetailScaffold(
+      title: l.settingsVoiceSection,
+      sub: l.voicePageSub,
+      children: [
+        _GroupHeader(l.grpVoiceUse),
+        ValueListenableBuilder<bool>(
+          valueListenable: tts.enabledListenable,
+          builder: (ctx, ttsOn, _) => _SettingsTile(
+            icon: Icons.record_voice_over_outlined,
+            iconColor: AppColors.accent,
+            title: l.settingsTts,
+            subtitle: l.settingsTtsDesc,
+            trailing: _detailSwitch(
+              ttsOn,
+              (v) => tts.setEnabled(
+                v,
+                sample: l.settingsTtsSample,
+                localeTag: localeTag(),
+              ),
+            ),
+            onTap: () => tts.setEnabled(
+              !ttsOn,
+              sample: l.settingsTtsSample,
+              localeTag: localeTag(),
+            ),
+          ),
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: tts.enabledListenable,
+          builder: (ctx, ttsOn, _) => !ttsOn
+              ? const SizedBox.shrink()
+              : Column(
+                  children: [
+                    _GroupHeader(l.grpVoiceVoice),
+                    ValueListenableBuilder<Map<String, String>?>(
+                      valueListenable: tts.voiceListenable,
+                      builder: (ctx2, voice, _) => _SettingsTile(
+                        icon: Icons.graphic_eq,
+                        iconColor: AppColors.accent,
+                        title: l.settingsTtsVoice,
+                        subtitle:
+                            _voiceDisplayName(voice) ??
+                            l.settingsTtsVoiceDefault,
+                        onTap: () => _pickTtsVoice(context, l),
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.speed,
+                      iconColor: AppColors.accent,
+                      title: l.settingsSpeechRate,
+                    ),
+                    ValueListenableBuilder<double>(
+                      valueListenable: tts.speechRateListenable,
+                      builder: (ctx2, rate, _) => _detailChips<double>(
+                        const [0.35, 0.5, 0.65],
+                        rate,
+                        (v) => tts.setSpeechRate(
+                          v,
+                          sample: l.settingsTtsSample,
+                          localeTag: localeTag(),
+                        ),
+                        (v) => v <= 0.35
+                            ? l.speechRateSlow
+                            : (v >= 0.65
+                                  ? l.speechRateFast
+                                  : l.speechRateNormal),
+                      ),
+                    ),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: CareService.instance.ttsName,
+                      builder: (ctx2, tOn, _) => _SettingsTile(
+                        icon: Icons.badge_outlined,
+                        iconColor: AppColors.accent,
+                        title: l.careTtsName,
+                        subtitle: l.careTtsNameDesc,
+                        trailing: _detailSwitch(
+                          tOn,
+                          CareService.instance.setTtsName,
+                        ),
+                        onTap: () => CareService.instance.setTtsName(!tOn),
+                      ),
+                    ),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: tts.hourlyChimeListenable,
+                      builder: (ctx2, chimeOn, _) => _SettingsTile(
+                        icon: Icons.schedule,
+                        iconColor: AppColors.accent,
+                        title: l.settingsHourlyChime,
+                        subtitle: l.settingsHourlyChimeDesc,
+                        trailing: _detailSwitch(
+                          chimeOn,
+                          (v) => tts.setHourlyChime(
+                            v,
+                            sample: l.settingsTtsSample,
+                            localeTag: localeTag(),
+                          ),
+                        ),
+                        onTap: () => tts.setHourlyChime(
+                          !chimeOn,
+                          sample: l.settingsTtsSample,
+                          localeTag: localeTag(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ],
+    );
+  }
+}
+
 class _TelemetryConsentTile extends StatelessWidget {
   const _TelemetryConsentTile();
 

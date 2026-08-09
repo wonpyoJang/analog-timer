@@ -1555,4 +1555,74 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsGroupHelp => 'Help';
+
+  @override
+  String get settingsAlarmSection => 'Alarms & re-ring';
+
+  @override
+  String get settingsAlarmSectionDesc => 'Ring again until you confirm';
+
+  @override
+  String get settingsSoundSection => 'Sound';
+
+  @override
+  String get settingsSoundSectionDesc => 'Sound effects and vibration';
+
+  @override
+  String get settingsVoiceSection => 'Voice guidance';
+
+  @override
+  String get settingsVoiceSectionDesc => 'Spoken alerts when you can\'t look';
+
+  @override
+  String get alarmPageSub => 'We\'ll keep reminding you until you confirm.';
+
+  @override
+  String get soundPageSub => 'Tap any option to hear it.';
+
+  @override
+  String get voicePageSub =>
+      'Speaks out loud when you can\'t look at the screen.';
+
+  @override
+  String get settingsSpeechRate => 'Speech rate';
+
+  @override
+  String get speechRateSlow => 'Slow';
+
+  @override
+  String get speechRateNormal => 'Normal';
+
+  @override
+  String get speechRateFast => 'Fast';
+
+  @override
+  String get grpAlarmBasic => 'Basic behavior';
+
+  @override
+  String get grpAlarmInterval => 'Re-ring interval';
+
+  @override
+  String get grpAlarmPrep => 'Before it ends';
+
+  @override
+  String get grpSoundSet => 'Sound set';
+
+  @override
+  String get grpSoundFeedback => 'Feedback';
+
+  @override
+  String get grpVoiceUse => 'Use';
+
+  @override
+  String get grpVoiceVoice => 'Voice';
+
+  @override
+  String get grpVoicePreview => 'Preview';
+
+  @override
+  String get grpVoiceWorkout => 'Workout';
+
+  @override
+  String get grpAlarmDone => 'Completion message';
 }
