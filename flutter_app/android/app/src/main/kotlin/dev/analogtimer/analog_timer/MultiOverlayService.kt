@@ -193,6 +193,29 @@ class MultiOverlayService : Service() {
         stopSelfSafely()
     }
 
+    /** 표시 설정(크기·붙는 위치·잠금화면) 변경 시 기존 pill 을 새 설정으로 재생성한다.
+     *  창 크기/플래그는 생성 시 확정되므로 살아있는 pill 은 removeView 후 다시 붙여야 반영된다. */
+    fun reapplyLayout() {
+        if (pills.isEmpty()) return
+        draggingId = null
+        val snapshot = pills.entries.toList()
+        pills.clear()
+        for ((id, h) in snapshot) {
+            val v = h.view
+            val name = v.timerName
+            val col = v.colorArgb
+            val total = v.totalMsVal
+            val remain = v.currentRemainMs()
+            val run = v.running
+            val dn = v.isDone
+            val dt = v.doneTextVal
+            val pa = v.preAlarmMsVal
+            runCatching { windowManager.removeView(v) }
+            addPill(id, name, col, total, remain, run, dn, dt, 0L, pa)
+        }
+        ensureTicking()
+    }
+
     // ----- 원형 View 창 -----
 
     private fun addPill(
@@ -210,20 +233,27 @@ class MultiOverlayService : Service() {
         val view = CircleTimerView(this)
         view.setState(name, color, totalMs, remainMs, running, done, doneText, deadlineEpochMs, preAlarmMs)
 
-        val size = dp(DIAMETER_DP)
+        val size = dp(prefSizeDp)
+        // 잠금화면 표시(§D) — 켜면 FLAG_SHOW_WHEN_LOCKED. TYPE_APPLICATION_OVERLAY 는
+        // 기기/버전에 따라 잠금화면 위 표시가 제한될 수 있어 실기기 검증 필요.
+        var flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+            WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+        if (prefShowOnLock) {
+            flags = flags or WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+        }
         val params = WindowManager.LayoutParams(
             size,
             size,
             overlayWindowType(),
             // Service context 로 addView 한 창은 HW 가속이 기본 OFF → 이동 시 Canvas(anti-alias
             // arc·text)를 CPU 로 매번 재래스터해 드래그가 끊긴다. HW_ACCELERATED 로 GPU 합성.
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+            flags,
             PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.START
             // 기존 오버레이(제거/드래그로 위치가 제각각)와 겹치지 않는 빈 자리를 찾아 스폰.
-            val pos = findFreePosition(size)
+            // 붙는 위치(§D)에 따라 좌/우 가장자리부터 채운다.
+            val pos = findFreePosition(size, prefSideRight)
             x = pos.first
             y = pos.second
         }
@@ -237,14 +267,18 @@ class MultiOverlayService : Service() {
 
     /** 기존 오버레이와 겹치지 않는 스폰 위치. 좌→우 열, 각 열은 위→아래 슬롯을 훑는다.
      *  단일 오버레이(시계) 창이 떠 있으면(상호 배타 OFF 동시 사용) 그 rect 도 회피한다. */
-    private fun findFreePosition(size: Int): Pair<Int, Int> {
+    private fun findFreePosition(size: Int, fromRight: Boolean = false): Pair<Int, Int> {
         val gap = dp(10)
-        val startX = dp(12)
         val startY = dp(72)
         val step = size + gap
         val dm = resources.displayMetrics
         val maxY = dm.heightPixels - size - dp(24)
-        val maxX = dm.widthPixels - size - dp(12)
+        val leftX = dp(12)
+        val rightX = dm.widthPixels - size - dp(12)
+        // 좌표계는 항상 좌상단 기준(gravity START) — 붙는 위치는 시작 열과 진행 방향만 바꾼다.
+        val startX = if (fromRight) rightX else leftX
+        val maxX = rightX
+        val minX = leftX
         val clockRect = runCatching {
             flutter.overlay.window.flutter_overlay_window.OverlayService.getWindowRect()
         }.getOrNull()
@@ -266,17 +300,17 @@ class MultiOverlayService : Service() {
         }
 
         var x = startX
-        while (x <= maxX) {
+        while (x in minX..maxX) {
             var y = startY
             while (y <= maxY) {
                 if (!overlaps(x, y)) return x to y
                 y += step
             }
-            x += step
+            x += if (fromRight) -step else step
         }
         // 화면이 꽉 참(상한 초과) — 마지막 수단으로 계단식 오프셋.
         val n = pills.size
-        return (startX + dp(16) * (n % 5)) to (startY + dp(16) * (n % 8))
+        return (leftX + dp(16) * (n % 5)) to (startY + dp(16) * (n % 8))
     }
 
     /** 원 둘레를 진행 링으로 그리고 중앙에 이름·남은시간을 표시하는 커스텀 View.
@@ -297,7 +331,11 @@ class MultiOverlayService : Service() {
         private var deadlineMs: Long = 0 // running 일 때 마감 절대시각
         private var frozenRemainMs: Long = 0 // paused/done 일 때 고정 남은시간
 
-        private val ringStroke = dp(9).toFloat()
+        // 크기 설정(§D) — 창 지름 배율만큼 링·텍스트도 함께 키운다(생성 시 고정).
+        private val sizeScale = prefSizeDp / DIAMETER_DP.toFloat()
+        private val showName = prefShowName
+
+        private val ringStroke = dp(9).toFloat() * sizeScale
         private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
         private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
@@ -311,12 +349,12 @@ class MultiOverlayService : Service() {
         }
         private val namePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             textAlign = Paint.Align.CENTER
-            textSize = sp(11f)
+            textSize = sp(11f * sizeScale)
             color = 0xFFB8B8BC.toInt()
         }
         private val timePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             textAlign = Paint.Align.CENTER
-            textSize = sp(19f)
+            textSize = sp(19f * sizeScale)
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
         }
         private val arcRect = RectF()
@@ -358,6 +396,13 @@ class MultiOverlayService : Service() {
         fun currentRemainMs(): Long =
             if (running) (deadlineMs - System.currentTimeMillis()).coerceAtLeast(0)
             else frozenRemainMs
+
+        // 표시 설정 변경 시 재생성(reapplyLayout)용 상태 읽기.
+        val colorArgb: Int get() = color
+        val totalMsVal: Long get() = totalMs
+        val isDone: Boolean get() = done
+        val doneTextVal: String get() = doneText
+        val preAlarmMsVal: Long get() = preAlarmMs
 
         /** 표시(시간 문자열·진행률)를 현재 남은시간으로 재계산. 표시가 바뀌었으면 true. */
         fun refresh(): Boolean {
@@ -471,9 +516,11 @@ class MultiOverlayService : Service() {
             val sweep = (if (done) 1f else frac) * 360f
             if (sweep > 0f) canvas.drawArc(arcRect, -90f, sweep, false, arcPaint)
 
-            // 중앙 텍스트 — 이름(위) · 남은시간(아래)
-            val name = ellipsize(timerName, namePaint, r * 1.4f)
-            canvas.drawText(name, cx, cy - dp(8), namePaint)
+            // 중앙 텍스트 — 이름(위) · 남은시간(아래). 이름 숨김(§D) 시 시간을 중앙 정렬.
+            if (showName) {
+                val name = ellipsize(timerName, namePaint, r * 1.4f)
+                canvas.drawText(name, cx, cy - dp(8) * sizeScale, namePaint)
+            }
             timePaint.color = when {
                 done -> COLOR_GREEN
                 lastMinute -> COLOR_DANGER
@@ -482,7 +529,12 @@ class MultiOverlayService : Service() {
                 else -> 0xFFFFFFFF.toInt()
             }
             val fm = timePaint.fontMetrics
-            canvas.drawText(timeText, cx, cy + dp(14) - fm.descent, timePaint)
+            val timeY = if (showName) {
+                cy + dp(14) * sizeScale - fm.descent
+            } else {
+                cy - (fm.ascent + fm.descent) / 2f
+            }
+            canvas.drawText(timeText, cx, timeY, timePaint)
         }
 
         private fun ellipsize(text: String, paint: Paint, maxWidth: Float): String {
@@ -643,6 +695,12 @@ class MultiOverlayService : Service() {
         const val NOTIFICATION_ID = 4611
         const val DEFAULT_ACCENT = 0xFFE07A52.toInt()
         const val DIAMETER_DP = 108
+
+        // 표시 설정(디자인 §D) — Dart setDisplayPrefs 로 갱신, addPill/onDraw 가 읽는다.
+        @Volatile var prefSizeDp: Int = DIAMETER_DP // 작게 88 · 보통 108 · 크게 132
+        @Volatile var prefSideRight: Boolean = false // 붙는 위치: false=왼쪽, true=오른쪽
+        @Volatile var prefShowName: Boolean = true // pill 에 타이머 이름 표시
+        @Volatile var prefShowOnLock: Boolean = false // 잠금화면 위에도 표시
         const val COLOR_GREEN = 0xFF2EA84A.toInt()
         const val COLOR_ACCENT = 0xFFF0C040.toInt()
 

@@ -23,6 +23,7 @@ import 'features/stats/stats_screen.dart';
 import 'features/onboarding/alarm_diagnostics_screen.dart';
 import 'services/alarm_readiness_service.dart';
 import 'services/list_display_service.dart';
+import 'services/overlay_settings_service.dart';
 import 'overlay/overlay_coordinator.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -354,6 +355,21 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                 ],
+              ),
+            ),
+            const _Divider(),
+          ],
+
+          // ── 오버레이 pill 상세 페이지(디자인 §D, Android 전용) ─────
+          if (isAndroid) ...[
+            _SettingsTile(
+              icon: Icons.picture_in_picture_alt_outlined,
+              iconColor: AppColors.accent,
+              title: l.settingsOverlaySection,
+              subtitle: l.settingsOverlaySectionDesc,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const _OverlaySettingsPage()),
               ),
             ),
             const _Divider(),
@@ -908,6 +924,231 @@ class _ListSettingsPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// D · 오버레이 pill (디자인 §D) — 미리보기가 설정보다 위. 크기·위치·표시 내용.
+class _OverlaySettingsPage extends StatefulWidget {
+  const _OverlaySettingsPage();
+
+  @override
+  State<_OverlaySettingsPage> createState() => _OverlaySettingsPageState();
+}
+
+class _OverlaySettingsPageState extends State<_OverlaySettingsPage>
+    with WidgetsBindingObserver {
+  final _ready = AlarmReadinessService.instance;
+  final _ov = OverlaySettingsService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _ready.refresh();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _ready.refresh();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: AppColors.bg,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            size: 18,
+            color: AppColors.text,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          l.settingsOverlaySection,
+          style: const TextStyle(
+            color: AppColors.text,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 28),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
+            child: Text(
+              l.overlayPageSub,
+              style: TextStyle(
+                color: AppColors.muted,
+                fontSize: 13,
+                height: 1.6,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          AnimatedBuilder(
+            animation: Listenable.merge([_ov.sizeDp, _ov.showName]),
+            builder: (ctx, _) => _preview(l),
+          ),
+          _GroupHeader(l.grpOverlayUse),
+          ValueListenableBuilder<bool>(
+            valueListenable: _ready.overlayOk,
+            builder: (ctx, ok, _) => _SettingsTile(
+              icon: Icons.open_in_new,
+              iconColor: AppColors.accent,
+              title: l.overlayShowOver,
+              subtitle: l.overlayShowOverDesc,
+              trailing: ok
+                  ? const Icon(
+                      Icons.check_circle,
+                      color: AppColors.swGreen,
+                      size: 22,
+                    )
+                  : TextButton(
+                      onPressed: () => _ready.requestOverlay(),
+                      child: Text(
+                        l.overlayGrantCta,
+                        style: const TextStyle(
+                          color: AppColors.accent,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+              onTap: ok ? null : () => _ready.requestOverlay(),
+            ),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _ov.showOnLock,
+            builder: (ctx, on, _) => _SettingsTile(
+              icon: Icons.lock_outline,
+              iconColor: AppColors.accent,
+              title: l.overlayShowLock,
+              subtitle: l.overlayShowLockDesc,
+              trailing: _detailSwitch(on, _ov.setShowOnLock),
+              onTap: () => _ov.setShowOnLock(!on),
+            ),
+          ),
+          _GroupHeader(l.grpOverlaySize),
+          ValueListenableBuilder<int>(
+            valueListenable: _ov.sizeDp,
+            builder: (ctx, s, _) => _detailChips<int>(
+              const [88, 108, 132],
+              s,
+              _ov.setSizeDp,
+              (v) => v == 88
+                  ? l.overlaySizeSmall
+                  : (v == 132 ? l.overlaySizeLarge : l.overlaySizeNormal),
+            ),
+          ),
+          _GroupHeader(l.grpOverlaySide),
+          ValueListenableBuilder<bool>(
+            valueListenable: _ov.sideRight,
+            builder: (ctx, right, _) => _detailChips<bool>(
+              const [false, true],
+              right,
+              _ov.setSideRight,
+              (v) => v ? l.overlaySideRight : l.overlaySideLeft,
+            ),
+          ),
+          _GroupHeader(l.grpOverlayContent),
+          ValueListenableBuilder<bool>(
+            valueListenable: _ov.showName,
+            builder: (ctx, on, _) => _SettingsTile(
+              icon: Icons.label_outline,
+              iconColor: AppColors.accent,
+              title: l.overlayShowName,
+              subtitle: l.overlayShowNameDesc,
+              trailing: _detailSwitch(on, _ov.setShowName),
+              onTap: () => _ov.setShowName(!on),
+            ),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _ov.autoHideDone,
+            builder: (ctx, on, _) => _SettingsTile(
+              icon: Icons.visibility_off_outlined,
+              iconColor: AppColors.accent,
+              title: l.overlayAutoHide,
+              subtitle: l.overlayAutoHideDesc,
+              trailing: _detailSwitch(on, _ov.setAutoHideDone),
+              onTap: () => _ov.setAutoHideDone(!on),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// pill 미리보기 — 크기·이름 표시를 실시간 반영(디자인 §D).
+  Widget _preview(AppLocalizations l) {
+    final dia = _ov.sizeDp.value.toDouble();
+    final scale = dia / 108.0;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 22),
+      decoration: BoxDecoration(
+        color: const Color(0xFF141416),
+        border: Border.all(color: const Color(0xFF3A3A3E)),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          Text(
+            l.overlayPreviewLabel,
+            style: TextStyle(color: AppColors.faint, fontSize: 11),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: dia,
+            height: dia,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF1D1D20),
+              border: Border.all(color: AppColors.accent, width: 3 * scale),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_ov.showName.value)
+                    Text(
+                      'Boil pasta',
+                      style: TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 11 * scale,
+                      ),
+                    ),
+                  Text(
+                    '12:04',
+                    style: TextStyle(
+                      color: AppColors.text,
+                      fontSize: 19 * scale,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            l.overlayPreviewHint,
+            style: TextStyle(color: AppColors.faint, fontSize: 11),
+          ),
+        ],
+      ),
     );
   }
 }

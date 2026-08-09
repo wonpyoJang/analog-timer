@@ -123,6 +123,20 @@ class MainActivity : FlutterActivity() {
                     "capacity" -> {
                         result.success(MultiOverlayService.slotCapacity(applicationContext))
                     }
+                    "setDisplayPrefs" -> {
+                        // 표시 설정(§D) — companion 에 저장하고 살아있는 pill 은 재생성해 반영.
+                        MultiOverlayService.prefSizeDp =
+                            (call.argument<Any>("sizeDp") as? Number)?.toInt()
+                                ?: MultiOverlayService.DIAMETER_DP
+                        MultiOverlayService.prefSideRight =
+                            call.argument<Boolean>("sideRight") ?: false
+                        MultiOverlayService.prefShowName =
+                            call.argument<Boolean>("showName") ?: true
+                        MultiOverlayService.prefShowOnLock =
+                            call.argument<Boolean>("showOnLock") ?: false
+                        MultiOverlayService.instance?.reapplyLayout()
+                        result.success(null)
+                    }
                     else -> result.notImplemented()
                 }
             }

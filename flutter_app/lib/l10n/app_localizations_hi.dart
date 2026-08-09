@@ -1678,4 +1678,73 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get listDimDoneDesc => 'Lower opacity for completed timers';
+
+  @override
+  String get settingsOverlaySection => 'Overlay pill';
+
+  @override
+  String get settingsOverlaySectionDesc => 'Floating timer over other apps';
+
+  @override
+  String get overlayPageSub => 'See time left while using other apps.';
+
+  @override
+  String get grpOverlayUse => 'Use';
+
+  @override
+  String get overlayShowOver => 'Show over other apps';
+
+  @override
+  String get overlayShowOverDesc => 'Needs the display-over-apps permission';
+
+  @override
+  String get overlayShowLock => 'Show on lock screen';
+
+  @override
+  String get overlayShowLockDesc => 'May be limited by your device';
+
+  @override
+  String get grpOverlaySize => 'Size';
+
+  @override
+  String get overlaySizeSmall => 'Small';
+
+  @override
+  String get overlaySizeNormal => 'Normal';
+
+  @override
+  String get overlaySizeLarge => 'Large';
+
+  @override
+  String get grpOverlaySide => 'Edge';
+
+  @override
+  String get overlaySideLeft => 'Left edge';
+
+  @override
+  String get overlaySideRight => 'Right edge';
+
+  @override
+  String get grpOverlayContent => 'Content';
+
+  @override
+  String get overlayShowName => 'Timer name';
+
+  @override
+  String get overlayShowNameDesc => 'Off shows time only';
+
+  @override
+  String get overlayAutoHide => 'Auto-hide when finished';
+
+  @override
+  String get overlayAutoHideDesc => 'Disappears once acknowledged';
+
+  @override
+  String get overlayGrantCta => 'Grant';
+
+  @override
+  String get overlayPreviewHint => 'Drag to move it';
+
+  @override
+  String get overlayPreviewLabel => 'Preview';
 }

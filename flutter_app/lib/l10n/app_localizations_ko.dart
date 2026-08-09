@@ -1639,4 +1639,73 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get listDimDoneDesc => '완료된 타이머를 흐리게';
+
+  @override
+  String get settingsOverlaySection => '오버레이 pill';
+
+  @override
+  String get settingsOverlaySectionDesc => '다른 앱 위에 뜨는 타이머';
+
+  @override
+  String get overlayPageSub => '다른 앱을 쓰는 중에도 남은 시간이 보여요.';
+
+  @override
+  String get grpOverlayUse => '사용';
+
+  @override
+  String get overlayShowOver => '다른 앱 위에 표시';
+
+  @override
+  String get overlayShowOverDesc => '다른 앱 위에 표시 권한이 필요해요';
+
+  @override
+  String get overlayShowLock => '잠금화면에도 표시';
+
+  @override
+  String get overlayShowLockDesc => '기기에 따라 제한될 수 있어요';
+
+  @override
+  String get grpOverlaySize => '크기';
+
+  @override
+  String get overlaySizeSmall => '작게';
+
+  @override
+  String get overlaySizeNormal => '보통';
+
+  @override
+  String get overlaySizeLarge => '크게';
+
+  @override
+  String get grpOverlaySide => '붙는 위치';
+
+  @override
+  String get overlaySideLeft => '왼쪽 가장자리';
+
+  @override
+  String get overlaySideRight => '오른쪽 가장자리';
+
+  @override
+  String get grpOverlayContent => '표시 내용';
+
+  @override
+  String get overlayShowName => '타이머 이름';
+
+  @override
+  String get overlayShowNameDesc => '끄면 시간만 보여요';
+
+  @override
+  String get overlayAutoHide => '끝나면 자동으로 숨기기';
+
+  @override
+  String get overlayAutoHideDesc => '확인하면 사라져요';
+
+  @override
+  String get overlayGrantCta => '권한 주기';
+
+  @override
+  String get overlayPreviewHint => '드래그해서 위치를 옮길 수 있어요';
+
+  @override
+  String get overlayPreviewLabel => '미리보기';
 }
