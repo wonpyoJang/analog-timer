@@ -20,6 +20,7 @@ import 'services/care_service.dart';
 import 'services/colorblind_service.dart';
 import 'services/high_contrast_service.dart';
 import 'features/stats/stats_screen.dart';
+import 'services/alarm_readiness_service.dart';
 import 'overlay/overlay_coordinator.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -81,6 +82,9 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
+          // ── 알람 점검 카드(디자인 §3) — 배터리 예외/알림이 깨졌을 때만 노출.
+          if (isAndroid) const _AlarmCheckCard(),
+
           // ── 활동 통계 (완료 로그 자동 집계) ────────────────────
           _SettingsTile(
             icon: Icons.bar_chart,
@@ -1420,6 +1424,119 @@ class _Divider extends StatelessWidget {
       indent: 68,
       endIndent: 0,
       color: AppColors.border,
+    );
+  }
+}
+
+/// 알람 점검 카드(디자인 "설정 구조 & 초기 설정" §3) — 배터리 예외/알림 권한이
+/// 깨졌을 때만 설정 상단에 등장. 탭하면 시스템 권한을 요청해 바로 고친다.
+class _AlarmCheckCard extends StatefulWidget {
+  const _AlarmCheckCard();
+
+  @override
+  State<_AlarmCheckCard> createState() => _AlarmCheckCardState();
+}
+
+class _AlarmCheckCardState extends State<_AlarmCheckCard>
+    with WidgetsBindingObserver {
+  final _svc = AlarmReadinessService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _svc.refresh();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _svc.refresh();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return ValueListenableBuilder<bool>(
+      valueListenable: _svc.notificationsOk,
+      builder: (_, notifOk, _) => ValueListenableBuilder<bool>(
+        valueListenable: _svc.batteryExemptOk,
+        builder: (_, batOk, _) {
+          if (notifOk && batOk) return const SizedBox.shrink();
+          // 배터리 예외가 더 치명적(조용한 실패) — 우선 노출.
+          final battery = !batOk;
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Material(
+              color: AppColors.accent.withAlpha(0x14),
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () async {
+                  if (battery) {
+                    await _svc.requestBatteryExempt();
+                  } else {
+                    await _svc.requestNotifications();
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.accent.withAlpha(0x4C)),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('⚠️ ', style: TextStyle(fontSize: 16)),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l.checkAlarmTitle,
+                              style: const TextStyle(
+                                color: AppColors.text,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              battery ? l.checkAlarmDesc : l.checkAlarmNotifDesc,
+                              style: TextStyle(
+                                color: AppColors.muted,
+                                fontSize: 12.5,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${l.checkFix} ›',
+                        style: const TextStyle(
+                          color: AppColors.accent,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

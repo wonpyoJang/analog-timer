@@ -1415,4 +1415,53 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settingsStatsDesc => 'focused time, sessions, streak';
+
+  @override
+  String get onboardTitle => 'Let\'s make sure alarms ring';
+
+  @override
+  String get onboardSub =>
+      'Just two things. Everything else works out of the box.';
+
+  @override
+  String get onboardNotifTitle => 'Allow notifications';
+
+  @override
+  String get onboardNotifDesc => 'so we can tell you when a timer ends';
+
+  @override
+  String get onboardBatteryTitle => 'Keep running in the background';
+
+  @override
+  String get onboardBatteryDesc =>
+      'If this stays off, alarms can silently stop after you close the app. Choose \"Unrestricted\".';
+
+  @override
+  String get onboardGrant => 'Allow';
+
+  @override
+  String get onboardAllow => 'Go allow';
+
+  @override
+  String get onboardDone => 'Done ✓';
+
+  @override
+  String get onboardLater => 'I\'ll do it later';
+
+  @override
+  String get onboardStart => 'Start';
+
+  @override
+  String get checkAlarmTitle => 'Alarms may stop';
+
+  @override
+  String get checkAlarmDesc =>
+      'Battery saver is putting the app to sleep. Takes a minute to fix.';
+
+  @override
+  String get checkAlarmNotifDesc =>
+      'Notifications are off — timers can\'t alert you.';
+
+  @override
+  String get checkFix => 'Fix';
 }

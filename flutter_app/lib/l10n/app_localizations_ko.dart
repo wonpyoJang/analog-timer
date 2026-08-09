@@ -1384,4 +1384,50 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsStatsDesc => '집중 시간·세션·연속 기록';
+
+  @override
+  String get onboardTitle => '알람이 꼭 울리도록 준비할게요';
+
+  @override
+  String get onboardSub => '딱 두 가지면 돼요. 다른 설정은 건드릴 필요 없이 바로 쓸 수 있어요.';
+
+  @override
+  String get onboardNotifTitle => '알림 허용';
+
+  @override
+  String get onboardNotifDesc => '타이머가 끝나면 알려드려요';
+
+  @override
+  String get onboardBatteryTitle => '백그라운드에서 계속 실행';
+
+  @override
+  String get onboardBatteryDesc =>
+      '이걸 꺼두면 앱을 닫았을 때 알람이 조용히 멈출 수 있어요. \"제한 없음\"을 골라 주세요.';
+
+  @override
+  String get onboardGrant => '허용';
+
+  @override
+  String get onboardAllow => '허용하러 가기';
+
+  @override
+  String get onboardDone => '완료 ✓';
+
+  @override
+  String get onboardLater => '나중에 할게요';
+
+  @override
+  String get onboardStart => '시작하기';
+
+  @override
+  String get checkAlarmTitle => '알람이 멈출 수 있어요';
+
+  @override
+  String get checkAlarmDesc => '배터리 절약이 앱을 재우고 있어요. 1분이면 고쳐요.';
+
+  @override
+  String get checkAlarmNotifDesc => '알림이 꺼져 있어요 — 타이머가 알려줄 수 없어요.';
+
+  @override
+  String get checkFix => '점검';
 }
