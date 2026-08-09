@@ -1625,4 +1625,58 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get grpAlarmDone => 'Completion message';
+
+  @override
+  String get settingsListSection => 'List display';
+
+  @override
+  String get settingsListSectionDesc => 'How timers look on the main screen';
+
+  @override
+  String get listPageSub => 'Set how timers look on the main screen.';
+
+  @override
+  String get grpListRing => 'Progress ring';
+
+  @override
+  String get listShowRing => 'Show progress ring';
+
+  @override
+  String get listShowRingDesc => 'A filling ring shows time left at a glance';
+
+  @override
+  String get grpListSize => 'Card size';
+
+  @override
+  String get listDensityCompact => 'Compact';
+
+  @override
+  String get listDensityNormal => 'Normal';
+
+  @override
+  String get listDensityLarge => 'Large';
+
+  @override
+  String get grpListSort => 'Sort';
+
+  @override
+  String get listSortRemain => 'Least time left';
+
+  @override
+  String get listSortCreated => 'Order added';
+
+  @override
+  String get grpListDone => 'Finished timers';
+
+  @override
+  String get listKeepDone => 'Keep in list for';
+
+  @override
+  String get listKeepOff => 'Hide right away';
+
+  @override
+  String get listDimDone => 'Dim finished';
+
+  @override
+  String get listDimDoneDesc => 'Lower opacity for completed timers';
 }

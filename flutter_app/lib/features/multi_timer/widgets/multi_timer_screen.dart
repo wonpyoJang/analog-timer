@@ -9,6 +9,7 @@ import '../../../services/persistence_service.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/sound_service.dart';
 import '../../../services/care_service.dart';
+import '../../../services/list_display_service.dart';
 import '../../../features/stats/activity_stats_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
@@ -108,20 +109,61 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     if (!mounted) return;
     final l = AppLocalizations.of(context);
     loaded ??= [
-      {'name': l.multiTimerPresetStudy, 'durationMs': 25 * 60000, 'category': 'focus'},
-      {'name': l.multiTimerPresetDeskCleanup, 'durationMs': 10 * 60000, 'category': 'chore'},
-      {'name': l.multiTimerPresetRest, 'durationMs': 5 * 60000, 'category': 'focus'},
-      {'name': l.multiTimerPresetBrushTeeth, 'durationMs': 3 * 60000, 'category': 'chore'},
+      {
+        'name': l.multiTimerPresetStudy,
+        'durationMs': 25 * 60000,
+        'category': 'focus',
+      },
+      {
+        'name': l.multiTimerPresetDeskCleanup,
+        'durationMs': 10 * 60000,
+        'category': 'chore',
+      },
+      {
+        'name': l.multiTimerPresetRest,
+        'durationMs': 5 * 60000,
+        'category': 'focus',
+      },
+      {
+        'name': l.multiTimerPresetBrushTeeth,
+        'durationMs': 3 * 60000,
+        'category': 'chore',
+      },
     ];
     // 요리 팩 — 기존 사용자에게도 1회만 추가(플래그 항목으로 마킹).
     final seeded = loaded.any((p) => p['cookpack'] == true);
     if (!seeded) {
       loaded.addAll([
-        {'name': l.cookRamen, 'durationMs': 270000, 'category': 'cooking', 'cookpack': true},
-        {'name': l.cookPasta, 'durationMs': 480000, 'category': 'cooking', 'cookpack': true},
-        {'name': l.cookEgg, 'durationMs': 390000, 'category': 'cooking', 'cookpack': true},
-        {'name': l.cookSauce, 'durationMs': 720000, 'category': 'cooking', 'cookpack': true},
-        {'name': l.cookRice, 'durationMs': 1800000, 'category': 'cooking', 'cookpack': true},
+        {
+          'name': l.cookRamen,
+          'durationMs': 270000,
+          'category': 'cooking',
+          'cookpack': true,
+        },
+        {
+          'name': l.cookPasta,
+          'durationMs': 480000,
+          'category': 'cooking',
+          'cookpack': true,
+        },
+        {
+          'name': l.cookEgg,
+          'durationMs': 390000,
+          'category': 'cooking',
+          'cookpack': true,
+        },
+        {
+          'name': l.cookSauce,
+          'durationMs': 720000,
+          'category': 'cooking',
+          'cookpack': true,
+        },
+        {
+          'name': l.cookRice,
+          'durationMs': 1800000,
+          'category': 'cooking',
+          'cookpack': true,
+        },
       ]);
       await PersistenceService.saveMultiTimerPresets(loaded);
     }
@@ -517,23 +559,68 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
               ),
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: state.timers.length,
-            separatorBuilder: (_, _) => const Divider(
-              height: 1,
-              indent: 16,
-              endIndent: 16,
-              color: AppColors.border,
-            ),
-            itemBuilder: (context, i) => _TimerRow(
-              timer: state.timers[i],
-              color: AppColors.segColors[i % AppColors.segColors.length],
-              overlayOn: _overlayIds.contains(state.timers[i].id),
-              onToggleOverlay: MultiOverlayService.supported
-                  ? () => _toggleOverlayFor(context, state.timers[i])
-                  : null,
-            ),
+          final lds = ListDisplayService.instance;
+          // 색상은 원래(추가) 순서에 고정 — 정렬해도 타이머별 색이 유지되게.
+          final colorById = <String, Color>{
+            for (var i = 0; i < state.timers.length; i++)
+              state.timers[i].id:
+                  AppColors.segColors[i % AppColors.segColors.length],
+          };
+          return AnimatedBuilder(
+            animation: Listenable.merge([
+              lds.showRing,
+              lds.density,
+              lds.sortMode,
+              lds.keepDoneMin,
+              lds.dimDone,
+            ]),
+            builder: (context, _) {
+              // 완료 유지 시간(§E) — 지난 완료 타이머는 리스트에서 숨김(상태 유지).
+              final now = DateTime.now().millisecondsSinceEpoch;
+              final keepMs = lds.keepDoneMin.value * 60000;
+              final items = state.timers.where((t) {
+                if (!t.done) return true;
+                if (lds.keepDoneMin.value == 0) return false;
+                if (t.doneAtMs <= 0) return true;
+                return now - t.doneAtMs < keepMs;
+              }).toList();
+              if (lds.sortMode.value == 'remain') {
+                items.sort((a, b) {
+                  if (a.done != b.done) return a.done ? 1 : -1;
+                  return a.remainMs.compareTo(b.remainMs);
+                });
+              }
+              if (items.isEmpty) {
+                return Center(
+                  child: Text(
+                    l.multiTimerEmpty,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.muted, fontSize: 14),
+                  ),
+                );
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: items.length,
+                separatorBuilder: (_, _) => const Divider(
+                  height: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: AppColors.border,
+                ),
+                itemBuilder: (context, i) => _TimerRow(
+                  timer: items[i],
+                  color: colorById[items[i].id] ?? AppColors.segColors[0],
+                  overlayOn: _overlayIds.contains(items[i].id),
+                  onToggleOverlay: MultiOverlayService.supported
+                      ? () => _toggleOverlayFor(context, items[i])
+                      : null,
+                  scale: lds.scale,
+                  showRing: lds.showRing.value,
+                  dim: lds.dimDone.value && items[i].done,
+                ),
+              );
+            },
           );
         },
       ),
@@ -577,635 +664,641 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
             // 루프 모드 등으로 내용이 길어지면 스크롤(오버플로 방지).
             child: SingleChildScrollView(
               child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 44,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3A3A3E),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      editMode ? l.multiTimerPresetEdit : l.multiTimerAdd,
-                      style: const TextStyle(
-                        color: AppColors.text,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3A3A3E),
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    if (_presets.isNotEmpty || editMode)
-                      TextButton(
-                        onPressed: () =>
-                            setSheetState(() => editMode = !editMode),
-                        child: Text(
-                          editMode
-                              ? l.multiTimerEditDone
-                              : l.multiTimerPresetEdit,
-                          style: const TextStyle(
-                            color: AppColors.accent,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        editMode ? l.multiTimerPresetEdit : l.multiTimerAdd,
+                        style: const TextStyle(
+                          color: AppColors.text,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (_presets.isNotEmpty || editMode)
+                        TextButton(
+                          onPressed: () =>
+                              setSheetState(() => editMode = !editMode),
+                          child: Text(
+                            editMode
+                                ? l.multiTimerEditDone
+                                : l.multiTimerPresetEdit,
+                            style: const TextStyle(
+                              color: AppColors.accent,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-                // 카테고리 필터(요리 시안 §3) — 데이터만 추가, 구조 변화 없음.
-                if (_presets.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 10),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          for (final c in {
-                            'all': l.catAll,
-                            'cooking': l.catCooking,
-                            'focus': l.catFocus,
-                            'chore': l.catChore,
-                          }.entries)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: ChoiceChip(
-                                label: Text(c.value),
-                                selected: _presetCat == c.key,
-                                onSelected: (_) {
-                                  setState(() => _presetCat = c.key);
-                                  setSheetState(() {});
-                                },
-                                selectedColor:
-                                    AppColors.accent.withAlpha(0x24),
-                                backgroundColor: const Color(0xFF232326),
-                                labelStyle: TextStyle(
-                                  color: _presetCat == c.key
-                                      ? AppColors.accent
-                                      : AppColors.muted,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                side: BorderSide(
-                                  color: _presetCat == c.key
-                                      ? AppColors.accent
-                                      : AppColors.border,
+                    ],
+                  ),
+                  // 카테고리 필터(요리 시안 §3) — 데이터만 추가, 구조 변화 없음.
+                  if (_presets.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 10),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            for (final c in {
+                              'all': l.catAll,
+                              'cooking': l.catCooking,
+                              'focus': l.catFocus,
+                              'chore': l.catChore,
+                            }.entries)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ChoiceChip(
+                                  label: Text(c.value),
+                                  selected: _presetCat == c.key,
+                                  onSelected: (_) {
+                                    setState(() => _presetCat = c.key);
+                                    setSheetState(() {});
+                                  },
+                                  selectedColor: AppColors.accent.withAlpha(
+                                    0x24,
+                                  ),
+                                  backgroundColor: const Color(0xFF232326),
+                                  labelStyle: TextStyle(
+                                    color: _presetCat == c.key
+                                        ? AppColors.accent
+                                        : AppColors.muted,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  side: BorderSide(
+                                    color: _presetCat == c.key
+                                        ? AppColors.accent
+                                        : AppColors.border,
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                // 프리셋 칩 2열 그리드 — 탭: 등록+시작 / 편집 모드: 입력란 복사·✕ 삭제.
-                if (_presets.isNotEmpty)
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 0, bottom: 16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisExtent: 68,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
-                    itemCount: _visiblePresets().length,
-                    itemBuilder: (_, i) {
-                      final p = _visiblePresets()[i];
-                      final name = p['name'] as String? ?? '';
-                      final ms = (p['durationMs'] as num?)?.toInt() ?? 0;
-                      final recent =
-                          i == 0 && (p['lastUsedMs'] as num?) != null;
-                      final ringColor =
-                          AppColors.segColors[i % AppColors.segColors.length];
-                      return Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Material(
-                            color: const Color(0xFF232326),
-                            borderRadius: BorderRadius.circular(16),
-                            child: InkWell(
+                  // 프리셋 칩 2열 그리드 — 탭: 등록+시작 / 편집 모드: 입력란 복사·✕ 삭제.
+                  if (_presets.isNotEmpty)
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(top: 0, bottom: 16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisExtent: 68,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
+                      itemCount: _visiblePresets().length,
+                      itemBuilder: (_, i) {
+                        final p = _visiblePresets()[i];
+                        final name = p['name'] as String? ?? '';
+                        final ms = (p['durationMs'] as num?)?.toInt() ?? 0;
+                        final recent =
+                            i == 0 && (p['lastUsedMs'] as num?) != null;
+                        final ringColor =
+                            AppColors.segColors[i % AppColors.segColors.length];
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Material(
+                              color: const Color(0xFF232326),
                               borderRadius: BorderRadius.circular(16),
-                              onTap: () {
-                                if (ms <= 0) return;
-                                if (editMode) {
-                                  // 편집 모드: 이름·시간을 입력란으로 복사.
-                                  nameCtrl.text = name;
-                                  picked = Duration(milliseconds: ms);
-                                  setSheetState(() => pickerKey++);
-                                  return;
-                                }
-                                SoundService.instance.play('tap');
-                                HapticService.instance.light();
-                                _markPresetUsed(name);
-                                final rawSteps = p['steps'] as List?;
-                                if (rawSteps != null && rawSteps.isNotEmpty) {
-                                  bloc.add(
-                                    MtAddLoop(
-                                      name,
-                                      rawSteps
-                                          .map(
-                                            (e) => LoopStep.fromJson(
-                                              Map<String, dynamic>.from(e),
-                                            ),
-                                          )
-                                          .toList(),
-                                      (p['repeat'] as num?)?.toInt() ?? 1,
-                                    ),
-                                  );
-                                } else {
-                                  bloc.add(
-                                    MtAdd(
-                                      name,
-                                      ms,
-                                      autoStart: true,
-                                      category: p['category'] as String?,
-                                    ),
-                                  );
-                                }
-                                Navigator.pop(ctx);
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      l.multiTimerPresetStarted(
-                                        '$name ${_fmt(ms)}',
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: AppColors.border),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Row(
-                                  children: [
-                                    CustomPaint(
-                                      size: const Size(34, 34),
-                                      painter: _PresetRingPainter(
-                                        color: ringColor,
-                                        frac: (ms / maxMs).clamp(0.05, 1.0),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Flexible(
-                                                child: Text(
-                                                  name,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    color: AppColors.text,
-                                                    fontSize: 14,
-                                                    fontWeight:
-                                                        FontWeight.w600,
-                                                  ),
-                                                ),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () {
+                                  if (ms <= 0) return;
+                                  if (editMode) {
+                                    // 편집 모드: 이름·시간을 입력란으로 복사.
+                                    nameCtrl.text = name;
+                                    picked = Duration(milliseconds: ms);
+                                    setSheetState(() => pickerKey++);
+                                    return;
+                                  }
+                                  SoundService.instance.play('tap');
+                                  HapticService.instance.light();
+                                  _markPresetUsed(name);
+                                  final rawSteps = p['steps'] as List?;
+                                  if (rawSteps != null && rawSteps.isNotEmpty) {
+                                    bloc.add(
+                                      MtAddLoop(
+                                        name,
+                                        rawSteps
+                                            .map(
+                                              (e) => LoopStep.fromJson(
+                                                Map<String, dynamic>.from(e),
                                               ),
-                                              if (recent) ...[
-                                                const SizedBox(width: 6),
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets
-                                                          .symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 2,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: AppColors.accent
-                                                        .withAlpha(0x1F),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          6,
-                                                        ),
-                                                  ),
+                                            )
+                                            .toList(),
+                                        (p['repeat'] as num?)?.toInt() ?? 1,
+                                      ),
+                                    );
+                                  } else {
+                                    bloc.add(
+                                      MtAdd(
+                                        name,
+                                        ms,
+                                        autoStart: true,
+                                        category: p['category'] as String?,
+                                      ),
+                                    );
+                                  }
+                                  Navigator.pop(ctx);
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        l.multiTimerPresetStarted(
+                                          '$name ${_fmt(ms)}',
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: AppColors.border),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      CustomPaint(
+                                        size: const Size(34, 34),
+                                        painter: _PresetRingPainter(
+                                          color: ringColor,
+                                          frac: (ms / maxMs).clamp(0.05, 1.0),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Flexible(
                                                   child: Text(
-                                                    l.presetRecent,
+                                                    name,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                     style: const TextStyle(
-                                                      color: AppColors.accent,
-                                                      fontSize: 10,
+                                                      color: AppColors.text,
+                                                      fontSize: 14,
                                                       fontWeight:
                                                           FontWeight.w600,
                                                     ),
                                                   ),
                                                 ),
-                                              ],
-                                            ],
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            _fmt(ms),
-                                            style: TextStyle(
-                                              color: AppColors.muted,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              fontFeatures: const [
-                                                FontFeature.tabularFigures(),
+                                                if (recent) ...[
+                                                  const SizedBox(width: 6),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 6,
+                                                          vertical: 2,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors.accent
+                                                          .withAlpha(0x1F),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            6,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      l.presetRecent,
+                                                      style: const TextStyle(
+                                                        color: AppColors.accent,
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ],
                                             ),
-                                          ),
-                                        ],
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              _fmt(ms),
+                                              style: TextStyle(
+                                                color: AppColors.muted,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                fontFeatures: const [
+                                                  FontFeature.tabularFigures(),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (editMode)
-                            Positioned(
-                              top: -7,
-                              right: -7,
-                              child: GestureDetector(
-                                onTap: () async {
-                                  _presets.removeAt(i);
-                                  await PersistenceService.saveMultiTimerPresets(
-                                    _presets,
-                                  );
-                                  setSheetState(() {});
-                                  if (mounted) setState(() {});
-                                  messenger.showSnackBar(
-                                    SnackBar(
-                                      content: Text(l.multiTimerPresetDeleted),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  width: 22,
-                                  height: 22,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.danger,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    size: 14,
-                                    color: Colors.white,
+                                    ],
                                   ),
                                 ),
                               ),
                             ),
-                        ],
-                      );
-                    },
-                  ),
-                if (editMode)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      l.multiTimerPresetEditHint,
-                      style: TextStyle(color: AppColors.faint, fontSize: 13),
+                            if (editMode)
+                              Positioned(
+                                top: -7,
+                                right: -7,
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    _presets.removeAt(i);
+                                    await PersistenceService.saveMultiTimerPresets(
+                                      _presets,
+                                    );
+                                    setSheetState(() {});
+                                    if (mounted) setState(() {});
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          l.multiTimerPresetDeleted,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 22,
+                                    height: 22,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.danger,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
                     ),
-                  ),
-                // 루프 모드(루프 시안 §2) — 단계 리스트 + 반복 횟수.
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l.loopToggle,
-                            style: const TextStyle(
-                              color: AppColors.text,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            l.loopToggleDesc,
-                            style: TextStyle(
-                              color: AppColors.faint,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
+                  if (editMode)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        l.multiTimerPresetEditHint,
+                        style: TextStyle(color: AppColors.faint, fontSize: 13),
                       ),
                     ),
-                    Switch(
-                      value: loopMode,
-                      activeThumbColor: AppColors.accent,
-                      onChanged: (v) => setSheetState(() => loopMode = v),
-                    ),
-                  ],
-                ),
-                if (loopMode) ...[
-                  for (var si = 0; si < loopSteps.length; si++)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF232326),
-                        border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: AppColors.segColors[si %
-                                  AppColors.segColors.length],
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              loopSteps[si].name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                  // 루프 모드(루프 시안 §2) — 단계 리스트 + 반복 횟수.
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l.loopToggle,
                               style: const TextStyle(
                                 color: AppColors.text,
-                                fontSize: 15,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
-                          Text(
-                            _fmt(loopSteps[si].ms),
-                            style: const TextStyle(
-                              color: AppColors.text,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              fontFeatures: [FontFeature.tabularFigures()],
+                            Text(
+                              l.loopToggleDesc,
+                              style: TextStyle(
+                                color: AppColors.faint,
+                                fontSize: 11,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          InkWell(
-                            onTap: () =>
-                                setSheetState(() => loopSteps.removeAt(si)),
-                            child: Icon(
-                              Icons.close,
-                              size: 17,
-                              color: AppColors.danger,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (loopSteps.length < 4)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(46),
-                          side: const BorderSide(color: AppColors.border),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        onPressed: () {
-                          final ms = picked.inMilliseconds;
-                          if (ms <= 0) return;
-                          final nm = nameCtrl.text.trim().isEmpty
-                              ? l.multiTimerTitle
-                              : nameCtrl.text.trim();
-                          setSheetState(() {
-                            loopSteps.add(LoopStep(nm, ms));
-                            nameCtrl.clear();
-                          });
-                        },
-                        child: Text(
-                          l.loopAddStep,
-                          style: TextStyle(
-                            color: AppColors.faint,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          ],
                         ),
                       ),
-                    ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        l.loopRepeat,
-                        style: const TextStyle(
-                          color: AppColors.text,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.remove, color: AppColors.muted),
-                            onPressed: () => setSheetState(
-                              () => loopRepeat =
-                                  (loopRepeat - 1).clamp(1, 12),
-                            ),
-                          ),
-                          Text(
-                            '× $loopRepeat',
-                            style: const TextStyle(
-                              color: AppColors.text,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              fontFeatures: [FontFeature.tabularFigures()],
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.add, color: AppColors.muted),
-                            onPressed: () => setSheetState(
-                              () => loopRepeat =
-                                  (loopRepeat + 1).clamp(1, 12),
-                            ),
-                          ),
-                        ],
+                      Switch(
+                        value: loopMode,
+                        activeThumbColor: AppColors.accent,
+                        onChanged: (v) => setSheetState(() => loopMode = v),
                       ),
                     ],
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        l.loopTotal,
-                        style: TextStyle(color: AppColors.faint, fontSize: 13),
-                      ),
-                      Text(
-                        _fmt(
-                          loopSteps.fold<int>(0, (a, e) => a + e.ms) *
-                              loopRepeat,
+                  if (loopMode) ...[
+                    for (var si = 0; si < loopSteps.length; si++)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
                         ),
-                        style: TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF232326),
+                          border: Border.all(color: AppColors.border),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: AppColors
+                                    .segColors[si % AppColors.segColors.length],
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                loopSteps[si].name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.text,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              _fmt(loopSteps[si].ms),
+                              style: const TextStyle(
+                                color: AppColors.text,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            InkWell(
+                              onTap: () =>
+                                  setSheetState(() => loopSteps.removeAt(si)),
+                              child: Icon(
+                                Icons.close,
+                                size: 17,
+                                color: AppColors.danger,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                ],
-                TextField(
-                  controller: nameCtrl,
-                  style: const TextStyle(color: AppColors.text),
-                  decoration: InputDecoration(
-                    hintText: l.multiTimerNameHint,
-                    hintStyle: TextStyle(color: AppColors.muted),
-                  ),
-                ),
-                SizedBox(
-                  height: 180,
-                  child: CupertinoTimerPicker(
-                    key: ValueKey(pickerKey),
-                    mode: CupertinoTimerPickerMode.hms,
-                    initialTimerDuration: picked,
-                    onTimerDurationChanged: (d) => picked = d,
-                  ),
-                ),
-                Opacity(
-                  opacity: editMode ? 0.4 : 1.0,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
+                    if (loopSteps.length < 4)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            minimumSize: const Size.fromHeight(46),
                             side: const BorderSide(color: AppColors.border),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          icon: Icon(
-                            Icons.star_border,
-                            size: 18,
-                            color: AppColors.muted,
-                          ),
-                          label: Text(
-                            l.multiTimerPresetSave,
-                            style: const TextStyle(
-                              color: AppColors.text,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
+                          onPressed: () {
+                            final ms = picked.inMilliseconds;
+                            if (ms <= 0) return;
+                            final nm = nameCtrl.text.trim().isEmpty
+                                ? l.multiTimerTitle
+                                : nameCtrl.text.trim();
+                            setSheetState(() {
+                              loopSteps.add(LoopStep(nm, ms));
+                              nameCtrl.clear();
+                            });
+                          },
+                          child: Text(
+                            l.loopAddStep,
+                            style: TextStyle(
+                              color: AppColors.faint,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          onPressed: editMode
-                              ? null
-                              : () async {
-                                  final ms = picked.inMilliseconds;
-                                  if (ms <= 0) return;
-                                  final name = nameCtrl.text.trim().isEmpty
-                                      ? l.multiTimerTitle
-                                      : nameCtrl.text.trim();
-                                  // 같은 이름이 있으면 시간만 갱신(중복 칩 방지).
-                                  final idx = _presets.indexWhere(
-                                    (p) => p['name'] == name,
-                                  );
-                                  final entry = {
-                                    'name': name,
-                                    'durationMs': ms,
-                                  };
-                                  if (idx >= 0) {
-                                    _presets[idx] = entry;
-                                  } else {
-                                    _presets.add(entry);
-                                  }
-                                  await PersistenceService.saveMultiTimerPresets(
-                                    _presets,
-                                  );
-                                  setSheetState(() {});
-                                  if (mounted) setState(() {});
-                                  messenger.showSnackBar(
-                                    SnackBar(
-                                      content: Text(l.multiTimerPresetSaved),
-                                    ),
-                                  );
-                                },
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.accent,
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l.loopRepeat,
+                          style: const TextStyle(
+                            color: AppColors.text,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
-                          onPressed: editMode
-                              ? null
-                              : () {
-                                  if (loopMode) {
-                                    if (loopSteps.isEmpty) return;
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.remove, color: AppColors.muted),
+                              onPressed: () => setSheetState(
+                                () =>
+                                    loopRepeat = (loopRepeat - 1).clamp(1, 12),
+                              ),
+                            ),
+                            Text(
+                              '× $loopRepeat',
+                              style: const TextStyle(
+                                color: AppColors.text,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.add, color: AppColors.muted),
+                              onPressed: () => setSheetState(
+                                () =>
+                                    loopRepeat = (loopRepeat + 1).clamp(1, 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l.loopTotal,
+                          style: TextStyle(
+                            color: AppColors.faint,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          _fmt(
+                            loopSteps.fold<int>(0, (a, e) => a + e.ms) *
+                                loopRepeat,
+                          ),
+                          style: TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                  ],
+                  TextField(
+                    controller: nameCtrl,
+                    style: const TextStyle(color: AppColors.text),
+                    decoration: InputDecoration(
+                      hintText: l.multiTimerNameHint,
+                      hintStyle: TextStyle(color: AppColors.muted),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 180,
+                    child: CupertinoTimerPicker(
+                      key: ValueKey(pickerKey),
+                      mode: CupertinoTimerPickerMode.hms,
+                      initialTimerDuration: picked,
+                      onTimerDurationChanged: (d) => picked = d,
+                    ),
+                  ),
+                  Opacity(
+                    opacity: editMode ? 0.4 : 1.0,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              side: const BorderSide(color: AppColors.border),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            icon: Icon(
+                              Icons.star_border,
+                              size: 18,
+                              color: AppColors.muted,
+                            ),
+                            label: Text(
+                              l.multiTimerPresetSave,
+                              style: const TextStyle(
+                                color: AppColors.text,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            onPressed: editMode
+                                ? null
+                                : () async {
+                                    final ms = picked.inMilliseconds;
+                                    if (ms <= 0) return;
                                     final name = nameCtrl.text.trim().isEmpty
-                                        ? loopSteps.first.name
+                                        ? l.multiTimerTitle
                                         : nameCtrl.text.trim();
-                                    // 프리셋으로 저장(steps/repeat) + 즉시 시작.
-                                    _presets.add({
+                                    // 같은 이름이 있으면 시간만 갱신(중복 칩 방지).
+                                    final idx = _presets.indexWhere(
+                                      (p) => p['name'] == name,
+                                    );
+                                    final entry = {
                                       'name': name,
-                                      'durationMs': loopSteps.fold<int>(
-                                            0,
-                                            (a, e) => a + e.ms,
-                                          ) *
-                                          loopRepeat,
-                                      'steps': loopSteps
-                                          .map((e) => e.toJson())
-                                          .toList(),
-                                      'repeat': loopRepeat,
-                                    });
-                                    PersistenceService.saveMultiTimerPresets(
+                                      'durationMs': ms,
+                                    };
+                                    if (idx >= 0) {
+                                      _presets[idx] = entry;
+                                    } else {
+                                      _presets.add(entry);
+                                    }
+                                    await PersistenceService.saveMultiTimerPresets(
                                       _presets,
                                     );
-                                    SoundService.instance.play('add');
-                                    bloc.add(
-                                      MtAddLoop(
-                                        name,
-                                        List.of(loopSteps),
-                                        loopRepeat,
+                                    setSheetState(() {});
+                                    if (mounted) setState(() {});
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(l.multiTimerPresetSaved),
                                       ),
                                     );
+                                  },
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.accent,
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            onPressed: editMode
+                                ? null
+                                : () {
+                                    if (loopMode) {
+                                      if (loopSteps.isEmpty) return;
+                                      final name = nameCtrl.text.trim().isEmpty
+                                          ? loopSteps.first.name
+                                          : nameCtrl.text.trim();
+                                      // 프리셋으로 저장(steps/repeat) + 즉시 시작.
+                                      _presets.add({
+                                        'name': name,
+                                        'durationMs':
+                                            loopSteps.fold<int>(
+                                              0,
+                                              (a, e) => a + e.ms,
+                                            ) *
+                                            loopRepeat,
+                                        'steps': loopSteps
+                                            .map((e) => e.toJson())
+                                            .toList(),
+                                        'repeat': loopRepeat,
+                                      });
+                                      PersistenceService.saveMultiTimerPresets(
+                                        _presets,
+                                      );
+                                      SoundService.instance.play('add');
+                                      bloc.add(
+                                        MtAddLoop(
+                                          name,
+                                          List.of(loopSteps),
+                                          loopRepeat,
+                                        ),
+                                      );
+                                      Navigator.pop(ctx);
+                                      return;
+                                    }
+                                    final ms = picked.inMilliseconds;
+                                    if (ms <= 0) return;
+                                    final name = nameCtrl.text.trim().isEmpty
+                                        ? l.multiTimerTitle
+                                        : nameCtrl.text.trim();
+                                    SoundService.instance.play('add');
+                                    bloc.add(MtAdd(name, ms));
                                     Navigator.pop(ctx);
-                                    return;
-                                  }
-                                  final ms = picked.inMilliseconds;
-                                  if (ms <= 0) return;
-                                  final name = nameCtrl.text.trim().isEmpty
-                                      ? l.multiTimerTitle
-                                      : nameCtrl.text.trim();
-                                  SoundService.instance.play('add');
-                                  bloc.add(MtAdd(name, ms));
-                                  Navigator.pop(ctx);
-                                },
-                          child: Text(
-                            loopMode ? l.loopSaveStart : l.multiTimerAdd,
-                            style: const TextStyle(
-                              color: Color(0xFF141416),
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
+                                  },
+                            child: Text(
+                              loopMode ? l.loopSaveStart : l.multiTimerAdd,
+                              style: const TextStyle(
+                                color: Color(0xFF141416),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
               ),
             ),
           );
@@ -1221,17 +1314,19 @@ class _TimeText extends StatelessWidget {
   final String text;
   final Color color;
   final bool blink;
+  final double scale;
   const _TimeText({
     required this.text,
     required this.color,
     this.blink = false,
+    this.scale = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
     final style = TextStyle(
       color: color,
-      fontSize: 26,
+      fontSize: 26 * scale,
       fontWeight: FontWeight.w700,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
@@ -1286,11 +1381,17 @@ class _TimerRow extends StatelessWidget {
   final Color color;
   final bool overlayOn;
   final VoidCallback? onToggleOverlay;
+  final double scale;
+  final bool showRing;
+  final bool dim;
   const _TimerRow({
     required this.timer,
     required this.color,
     this.overlayOn = false,
     this.onToggleOverlay,
+    this.scale = 1.0,
+    this.showRing = false,
+    this.dim = false,
   });
 
   @override
@@ -1367,37 +1468,50 @@ class _TimerRow extends StatelessWidget {
       ),
       // 일시정지 페이드(스펙 4): 밝기(투명도)로 상태 전환 — 색맹 안전.
       child: AnimatedOpacity(
-        opacity: paused ? 0.55 : 1.0,
+        opacity: (paused ? 0.55 : 1.0) * (dim ? 0.5 : 1.0),
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
         child: Container(
           color: ringing
-            ? AppColors.danger.withAlpha(0x0F)
-            : timer.done
-            ? AppColors.swGreen.withAlpha(0x0D)
-            : null,
+              ? AppColors.danger.withAlpha(0x0F)
+              : timer.done
+              ? AppColors.swGreen.withAlpha(0x0D)
+              : null,
           child: Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                padding: EdgeInsets.fromLTRB(16, 12 * scale, 16, 16 * scale),
                 child: Row(
                   children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: timer.done ? AppColors.swGreen : color,
-                        shape: BoxShape.circle,
-                        boxShadow: timer.running
-                            ? [
-                                BoxShadow(
-                                  color: color.withAlpha(0x40),
-                                  spreadRadius: 4,
-                                ),
-                              ]
-                            : null,
+                    // 진행 링(§E) — 켜면 남은 비율을 링으로, 끄면 상태 점.
+                    if (showRing)
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CustomPaint(
+                          painter: _PresetRingPainter(
+                            color: timer.done ? AppColors.swGreen : color,
+                            frac: timer.done ? 1.0 : frac,
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: timer.done ? AppColors.swGreen : color,
+                          shape: BoxShape.circle,
+                          boxShadow: timer.running
+                              ? [
+                                  BoxShadow(
+                                    color: color.withAlpha(0x40),
+                                    spreadRadius: 4,
+                                  ),
+                                ]
+                              : null,
+                        ),
                       ),
-                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -1455,6 +1569,7 @@ class _TimerRow extends StatelessWidget {
                             text: timer.done ? '00:00' : _fmt(timer.remainMs),
                             color: timeColor,
                             blink: timer.running,
+                            scale: scale,
                           ),
                         ],
                       ),
