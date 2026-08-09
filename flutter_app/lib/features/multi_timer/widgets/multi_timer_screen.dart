@@ -94,7 +94,10 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     MultiOverlayService.onPillTap = _onPillTap;
     // 음성 딥링크(§3) — 라우터가 넘긴 대기 액션을 로컬 bloc 으로 소비.
     DeepLinkRouter.instance.pendingMulti.addListener(_onDeepLink);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onDeepLink());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _onDeepLink();
+      _recoverLostImage(); // 카메라 중 프로세스 종료로 유실된 사진 복구(§3)
+    });
   }
 
   /// 딥링크 대기 액션을 처리한다. 프리셋은 로드 전이면 소비하지 않고
@@ -252,22 +255,43 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   /// 봉지 OCR(온디바이스 §3) — 촬영/앨범 이미지 → 텍스트 인식 → 시간 파서 →
   /// 시간 표현이 있는 후보만 확인 화면(§C). 못 찾으면 안내 후 휠 폴백(§D).
   Future<void> _ocrFlow(ImageSource source) async {
-    final l = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-    final bloc = context.read<MultiTimerBloc>();
     XFile? file;
     try {
       file = await ImagePicker().pickImage(source: source, imageQuality: 92);
     } catch (_) {}
-    if (file == null || !mounted) return;
+    if (file == null) return;
+    await _ocrFromPath(file.path);
+  }
+
+  /// 카메라로 앱이 백그라운드에서 종료되면 image_picker 결과가 유실된다
+  /// (무거운 포그라운드 앱에서 흔함). 복귀 시 retrieveLostData 로 사진을 되찾아
+  /// OCR 을 이어간다. 안드로이드 전용. 앱 시작/재개 시 1회 확인.
+  Future<void> _recoverLostImage() async {
+    if (!isAndroid) return;
+    try {
+      final lost = await ImagePicker().retrieveLostData();
+      final f = lost.file;
+      if (lost.isEmpty || f == null) return;
+      // 멀티 탭으로 전환 후 복구한 사진으로 OCR 진행.
+      DeepLinkRouter.instance.requestedTab.value = DeepLinkRouter.tabMulti;
+      await _ocrFromPath(f.path);
+    } catch (_) {}
+  }
+
+  /// 이미지 경로 → OCR → 파싱 → 확인 화면(촬영/앨범/유실복구 공통).
+  Future<void> _ocrFromPath(String path) async {
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final bloc = context.read<MultiTimerBloc>();
     messenger.showSnackBar(
       SnackBar(
         content: Text(l.ocrReading),
         duration: const Duration(seconds: 1),
       ),
     );
-    final text = await OcrService.recognizeFile(file.path);
+    final text = await OcrService.recognizeFile(path);
     if (!mounted) return;
     // §3: 숫자가 아니라 시간 표현만 취한다 — unparsed(단위 없는 550ml 등)는 버림.
     final found = parseTimers(
