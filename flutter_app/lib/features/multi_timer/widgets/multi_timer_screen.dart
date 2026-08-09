@@ -10,6 +10,7 @@ import '../../../services/haptic_service.dart';
 import '../../../services/sound_service.dart';
 import '../../../services/care_service.dart';
 import '../../../services/list_display_service.dart';
+import '../../../services/overlay_settings_service.dart';
 import '../../../features/stats/activity_stats_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
@@ -471,6 +472,15 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     for (var i = 0; i < state.timers.length; i++) {
       final t = state.timers[i];
       if (!_overlayIds.contains(t.id)) continue;
+      // 끝나면 자동 숨기기(§D) — 완료·확인된 pill 은 닫는다.
+      if (OverlaySettingsService.instance.autoHideDone.value &&
+          t.done &&
+          t.acked) {
+        MultiOverlayService.close(t.id);
+        _overlayIds.remove(t.id);
+        _lastPushed.remove(t.id);
+        continue;
+      }
       final color = AppColors.segColors[i % AppColors.segColors.length]
           .toARGB32();
       // 상태 전이(시작/정지/리셋/완료/이름·지속시간 변경) 시에만 push. 매초 남은시간은

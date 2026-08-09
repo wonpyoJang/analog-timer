@@ -3134,6 +3134,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lower opacity for completed timers'**
   String get listDimDoneDesc;
+
+  /// No description provided for @settingsOverlaySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Overlay pill'**
+  String get settingsOverlaySection;
+
+  /// No description provided for @settingsOverlaySectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Floating timer over other apps'**
+  String get settingsOverlaySectionDesc;
+
+  /// No description provided for @overlayPageSub.
+  ///
+  /// In en, this message translates to:
+  /// **'See time left while using other apps.'**
+  String get overlayPageSub;
+
+  /// No description provided for @grpOverlayUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use'**
+  String get grpOverlayUse;
+
+  /// No description provided for @overlayShowOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Show over other apps'**
+  String get overlayShowOver;
+
+  /// No description provided for @overlayShowOverDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs the display-over-apps permission'**
+  String get overlayShowOverDesc;
+
+  /// No description provided for @overlayShowLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on lock screen'**
+  String get overlayShowLock;
+
+  /// No description provided for @overlayShowLockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'May be limited by your device'**
+  String get overlayShowLockDesc;
+
+  /// No description provided for @grpOverlaySize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get grpOverlaySize;
+
+  /// No description provided for @overlaySizeSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get overlaySizeSmall;
+
+  /// No description provided for @overlaySizeNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get overlaySizeNormal;
+
+  /// No description provided for @overlaySizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get overlaySizeLarge;
+
+  /// No description provided for @grpOverlaySide.
+  ///
+  /// In en, this message translates to:
+  /// **'Edge'**
+  String get grpOverlaySide;
+
+  /// No description provided for @overlaySideLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Left edge'**
+  String get overlaySideLeft;
+
+  /// No description provided for @overlaySideRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Right edge'**
+  String get overlaySideRight;
+
+  /// No description provided for @grpOverlayContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get grpOverlayContent;
+
+  /// No description provided for @overlayShowName.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer name'**
+  String get overlayShowName;
+
+  /// No description provided for @overlayShowNameDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Off shows time only'**
+  String get overlayShowNameDesc;
+
+  /// No description provided for @overlayAutoHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-hide when finished'**
+  String get overlayAutoHide;
+
+  /// No description provided for @overlayAutoHideDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Disappears once acknowledged'**
+  String get overlayAutoHideDesc;
+
+  /// No description provided for @overlayGrantCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant'**
+  String get overlayGrantCta;
+
+  /// No description provided for @overlayPreviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to move it'**
+  String get overlayPreviewHint;
+
+  /// No description provided for @overlayPreviewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get overlayPreviewLabel;
 }
 
 class _AppLocalizationsDelegate

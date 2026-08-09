@@ -95,6 +95,25 @@ class MultiOverlayService {
     await _channel.invokeMethod('closeAll');
   }
 
+  /// 오버레이 pill 표시 설정(디자인 §D) — 네이티브 companion 에 반영하고 살아있는
+  /// pill 을 재생성한다. OverlaySettingsService 가 앱 시작·변경 시 호출.
+  static Future<void> setDisplayPrefs({
+    required int sizeDp,
+    required bool sideRight,
+    required bool showName,
+    required bool showOnLock,
+  }) async {
+    if (!isAndroid) return;
+    try {
+      await _channel.invokeMethod('setDisplayPrefs', {
+        'sizeDp': sizeDp,
+        'sideRight': sideRight,
+        'showName': showName,
+        'showOnLock': showOnLock,
+      });
+    } catch (_) {}
+  }
+
   static Future<void> _send(
     String method,
     String id, {
