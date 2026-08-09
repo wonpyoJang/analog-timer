@@ -23,6 +23,14 @@ class NativeWidgetService {
     } catch (_) {}
   }
 
+  /// 알람 점검용 테스트 알람 발송(고중요도 알림).
+  static Future<void> testAlarm(String title, String body) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _ch.invokeMethod('testAlarm', {'title': title, 'body': body});
+    } catch (_) {}
+  }
+
   static Future<void> cancelNotification() async {
     if (!Platform.isAndroid) return;
     try {

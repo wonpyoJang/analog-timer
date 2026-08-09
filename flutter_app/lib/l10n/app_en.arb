@@ -898,5 +898,40 @@
   "checkAlarmTitle": "Alarms may stop",
   "checkAlarmDesc": "Battery saver is putting the app to sleep. Takes a minute to fix.",
   "checkAlarmNotifDesc": "Notifications are off — timers can't alert you.",
-  "checkFix": "Fix"
+  "checkFix": "Fix",
+  "diagTitle": "When alarms don't ring",
+  "diagSub": "We checked for you. Takes a minute to fix.",
+  "diagWarnTitle": "{n} things need fixing",
+  "@diagWarnTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "diagWarnDesc": "As is, alarms may not ring after you close the app.",
+  "diagAllGood": "Everything looks good",
+  "diagAllGoodDesc": "Alarms will ring even after you close the app.",
+  "diagResult": "Check results",
+  "diagNotifTitle": "Notifications allowed",
+  "diagNotifOk": "Alerts can show on screen",
+  "diagNotifBad": "Notifications are off — timers can't alert you.",
+  "diagBatteryTitle": "Battery saver exception",
+  "diagBatteryOk": "The app won't be put to sleep",
+  "diagBatteryBad": "Battery saver is sleeping the app. Scheduled alarms get delayed or dropped.",
+  "diagOverlayTitle": "Display over other apps",
+  "diagOverlayOk": "The overlay pill can show",
+  "diagOverlayBad": "The overlay pill won't appear.",
+  "diagFix": "Fix",
+  "diagFixAll": "Fix all",
+  "diagTestAlarm": "Send a test alarm now",
+  "diagTestNote": "Try closing the app after sending, to confirm it still rings.",
+  "diagTestSent": "Test alarm sent — check your notifications",
+  "settingsDiag": "When alarms don't ring",
+  "settingsDiagDesc": "self-check: permissions & battery",
+  "settingsGroupNotify": "Notifications",
+  "settingsGroupDisplay": "Display",
+  "settingsGroupData": "My data",
+  "settingsGroupControl": "Controls",
+  "settingsGroupHelp": "Help"
 }

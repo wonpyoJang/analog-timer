@@ -55,6 +55,32 @@ object TimerNotificationManager {
 
     fun cancel(context: Context) = nm(context).cancel(NOTIFICATION_ID)
 
+    private const val ALARM_CHANNEL_ID = "analog_timer_alarm"
+    private const val TEST_NOTIFICATION_ID = 1002
+
+    /** 알람 점검용 테스트 알람 — 고중요도 채널(소리·진동·헤드업)로 즉시 발송.
+     *  사용자가 "알람이 실제로 울리는지" 확인하는 장치(디자인 §F). */
+    fun testAlarm(context: Context, title: String, body: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val ch = NotificationChannel(
+                ALARM_CHANNEL_ID, "타이머 알람", NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                enableVibration(true)
+                description = "타이머 완료 알람"
+            }
+            nm(context).createNotificationChannel(ch)
+        }
+        val n = NotificationCompat.Builder(context, ALARM_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setAutoCancel(true)
+            .build()
+        nm(context).notify(TEST_NOTIFICATION_ID, n)
+    }
+
     private fun nm(ctx: Context) =
         ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 }

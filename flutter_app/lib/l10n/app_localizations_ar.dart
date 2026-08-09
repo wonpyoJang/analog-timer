@@ -1462,4 +1462,94 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get checkFix => 'Fix';
+
+  @override
+  String get diagTitle => 'When alarms don\'t ring';
+
+  @override
+  String get diagSub => 'We checked for you. Takes a minute to fix.';
+
+  @override
+  String diagWarnTitle(int n) {
+    return '$n things need fixing';
+  }
+
+  @override
+  String get diagWarnDesc =>
+      'As is, alarms may not ring after you close the app.';
+
+  @override
+  String get diagAllGood => 'Everything looks good';
+
+  @override
+  String get diagAllGoodDesc =>
+      'Alarms will ring even after you close the app.';
+
+  @override
+  String get diagResult => 'Check results';
+
+  @override
+  String get diagNotifTitle => 'Notifications allowed';
+
+  @override
+  String get diagNotifOk => 'Alerts can show on screen';
+
+  @override
+  String get diagNotifBad => 'Notifications are off — timers can\'t alert you.';
+
+  @override
+  String get diagBatteryTitle => 'Battery saver exception';
+
+  @override
+  String get diagBatteryOk => 'The app won\'t be put to sleep';
+
+  @override
+  String get diagBatteryBad =>
+      'Battery saver is sleeping the app. Scheduled alarms get delayed or dropped.';
+
+  @override
+  String get diagOverlayTitle => 'Display over other apps';
+
+  @override
+  String get diagOverlayOk => 'The overlay pill can show';
+
+  @override
+  String get diagOverlayBad => 'The overlay pill won\'t appear.';
+
+  @override
+  String get diagFix => 'Fix';
+
+  @override
+  String get diagFixAll => 'Fix all';
+
+  @override
+  String get diagTestAlarm => 'Send a test alarm now';
+
+  @override
+  String get diagTestNote =>
+      'Try closing the app after sending, to confirm it still rings.';
+
+  @override
+  String get diagTestSent => 'Test alarm sent — check your notifications';
+
+  @override
+  String get settingsDiag => 'When alarms don\'t ring';
+
+  @override
+  String get settingsDiagDesc => 'self-check: permissions & battery';
+
+  @override
+  String get settingsGroupNotify => 'Notifications';
+
+  @override
+  String get settingsGroupDisplay => 'Display';
+
+  @override
+  String get settingsGroupData => 'My data';
+
+  @override
+  String get settingsGroupControl => 'Controls';
+
+  @override
+  String get settingsGroupHelp => 'Help';
 }

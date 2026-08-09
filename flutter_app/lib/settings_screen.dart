@@ -20,6 +20,7 @@ import 'services/care_service.dart';
 import 'services/colorblind_service.dart';
 import 'services/high_contrast_service.dart';
 import 'features/stats/stats_screen.dart';
+import 'features/onboarding/alarm_diagnostics_screen.dart';
 import 'services/alarm_readiness_service.dart';
 import 'overlay/overlay_coordinator.dart';
 
@@ -85,130 +86,8 @@ class SettingsScreen extends StatelessWidget {
           // ── 알람 점검 카드(디자인 §3) — 배터리 예외/알림이 깨졌을 때만 노출.
           if (isAndroid) const _AlarmCheckCard(),
 
-          // ── 활동 통계 (완료 로그 자동 집계) ────────────────────
-          _SettingsTile(
-            icon: Icons.bar_chart,
-            iconColor: AppColors.accent,
-            title: l.settingsStats,
-            subtitle: l.settingsStatsDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const StatsScreen()),
-            ),
-          ),
-
-          const _Divider(),
-
-          // ── 언어 ──────────────────────────────────────────────
-          _SettingsTile(
-            icon: Icons.language,
-            iconColor: AppColors.accent,
-            title: l.settingsLanguage,
-            trailing: Text(
-              langLabel,
-              style: TextStyle(
-                color: AppColors.muted,
-                fontSize: 13,
-                fontFamily: 'Pretendard',
-              ),
-            ),
-            onTap: () => showLanguagePicker(context),
-          ),
-
-          const _Divider(),
-
-          // ── 글씨 크기 (접근성) ─────────────────────────────────
-          _TextSizeTile(),
-
-          const _Divider(),
-
-          // ── 제작자에게 피드백 (버그/기능요청, 사진·동영상 첨부) ──────
-          _SettingsTile(
-            icon: Icons.send_outlined,
-            iconColor: AppColors.timerOrange,
-            title: l.feedbackEntry,
-            subtitle: l.feedbackEntryDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const FeedbackPage()),
-            ),
-          ),
-
-          const _Divider(),
-
-          // ── 전역 단축키 (데스크톱) — 다른 앱에서도 타이머 조작 ─────
-          if (isDesktop) ...[
-            ValueListenableBuilder<bool>(
-              valueListenable: HotkeyService.instance.enabledListenable,
-              builder: (ctx, hkOn, _) => Column(
-                children: [
-                  _SettingsTile(
-                    icon: Icons.keyboard_outlined,
-                    iconColor: AppColors.accent,
-                    title: l.settingsHotkeys,
-                    subtitle: l.settingsHotkeysDesc,
-                    trailing: Switch(
-                      value: hkOn,
-                      onChanged: HotkeyService.instance.setEnabled,
-                      activeThumbColor: AppColors.accent,
-                      trackColor: WidgetStateProperty.resolveWith(
-                        (states) => states.contains(WidgetState.selected)
-                            ? AppColors.accent.withAlpha(0x55)
-                            : AppColors.surface,
-                      ),
-                    ),
-                    onTap: () => HotkeyService.instance.setEnabled(!hkOn),
-                  ),
-                  // 액션별 조합 — 탭하면 녹화 다이얼로그로 변경.
-                  if (hkOn)
-                    ValueListenableBuilder<int>(
-                      valueListenable: HotkeyService.instance.bindingsRev,
-                      builder: (ctx2, _, _) => Column(
-                        children: [
-                          _hotkeyRow(
-                            context,
-                            l.shortcutTimerToggle,
-                            'timer_toggle',
-                          ),
-                          _hotkeyRow(
-                            context,
-                            l.shortcutTimerNext,
-                            'timer_next',
-                          ),
-                          _hotkeyRow(context, l.shortcutSwLap, 'sw_lap'),
-                          _hotkeyRow(
-                            context,
-                            l.shortcutWidgetFocus,
-                            'widget_focus',
-                          ),
-                          // 시안 결정 4: 기본값과 달라졌을 때만 노출 —
-                          // 평소엔 시각 소음 0.
-                          if (HotkeyService.instance.isModified)
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 16),
-                                child: TextButton(
-                                  onPressed:
-                                      HotkeyService.instance.resetBindings,
-                                  child: Text(
-                                    l.hotkeyReset,
-                                    style: TextStyle(
-                                      fontSize: 11.5,
-                                      color: AppColors.faint,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const _Divider(),
-          ],
+          // ══ 그룹 1: 알림 방식 ═════════════════════════════════
+          _GroupHeader(l.settingsGroupNotify),
 
           // ── 음성 안내 (TTS) — 세그먼트 전환/완료를 소리로 ────────
           ValueListenableBuilder<bool>(
@@ -668,6 +547,32 @@ class SettingsScreen extends StatelessWidget {
             const _Divider(),
           ],
 
+          // ══ 그룹 2: 화면 표시 ═════════════════════════════════
+          _GroupHeader(l.settingsGroupDisplay),
+
+          // ── 글씨 크기 (접근성) ─────────────────────────────────
+          _TextSizeTile(),
+
+          const _Divider(),
+
+          // ── 언어 ──────────────────────────────────────────────
+          _SettingsTile(
+            icon: Icons.language,
+            iconColor: AppColors.accent,
+            title: l.settingsLanguage,
+            trailing: Text(
+              langLabel,
+              style: TextStyle(
+                color: AppColors.muted,
+                fontSize: 13,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+            onTap: () => showLanguagePicker(context),
+          ),
+
+          const _Divider(),
+
           // ── 고대비 (접근성) ───────────────────────────────────
           ValueListenableBuilder<bool>(
             valueListenable: HighContrastService.instance.enabledListenable,
@@ -714,7 +619,125 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
-          const _Divider(),
+          // ══ 그룹 3: 내 데이터 ═════════════════════════════════
+          _GroupHeader(l.settingsGroupData),
+
+          // ── 활동 통계 (완료 로그 자동 집계) ────────────────────
+          _SettingsTile(
+            icon: Icons.bar_chart,
+            iconColor: AppColors.accent,
+            title: l.settingsStats,
+            subtitle: l.settingsStatsDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const StatsScreen()),
+            ),
+          ),
+
+          // ── 배터리 모니터링 (모바일 전용) ─────────────────────
+          if (isAndroid || isIOS) ...[
+            const _Divider(),
+            ValueListenableBuilder<bool>(
+              valueListenable: BatteryService.instance.monitoringEnabled,
+              builder: (ctx, enabled, _) => _SettingsTile(
+                icon: Icons.battery_std,
+                iconColor: const Color(0xFFB45309),
+                title: l.settingsBattery,
+                subtitle: l.settingsBatteryDesc,
+                trailing: Switch(
+                  value: enabled,
+                  onChanged: BatteryService.instance.setEnabled,
+                  activeThumbColor: const Color(0xFFB45309),
+                  trackColor: WidgetStateProperty.resolveWith(
+                    (states) => states.contains(WidgetState.selected)
+                        ? const Color(0xFFB45309).withAlpha(0x55)
+                        : AppColors.surface,
+                  ),
+                ),
+                onTap: () => BatteryService.instance.setEnabled(!enabled),
+              ),
+            ),
+          ],
+
+          // ── 진단 데이터 전송 (Android — ANR-free 지표 동의) ────
+          if (isAndroid) ...[const _Divider(), const _TelemetryConsentTile()],
+
+          // ══ 그룹 4: 조작 ═════════════════════════════════════
+          if (isDesktop || isAndroid) _GroupHeader(l.settingsGroupControl),
+
+          // ── 전역 단축키 (데스크톱) — 다른 앱에서도 타이머 조작 ─────
+          if (isDesktop) ...[
+            ValueListenableBuilder<bool>(
+              valueListenable: HotkeyService.instance.enabledListenable,
+              builder: (ctx, hkOn, _) => Column(
+                children: [
+                  _SettingsTile(
+                    icon: Icons.keyboard_outlined,
+                    iconColor: AppColors.accent,
+                    title: l.settingsHotkeys,
+                    subtitle: l.settingsHotkeysDesc,
+                    trailing: Switch(
+                      value: hkOn,
+                      onChanged: HotkeyService.instance.setEnabled,
+                      activeThumbColor: AppColors.accent,
+                      trackColor: WidgetStateProperty.resolveWith(
+                        (states) => states.contains(WidgetState.selected)
+                            ? AppColors.accent.withAlpha(0x55)
+                            : AppColors.surface,
+                      ),
+                    ),
+                    onTap: () => HotkeyService.instance.setEnabled(!hkOn),
+                  ),
+                  // 액션별 조합 — 탭하면 녹화 다이얼로그로 변경.
+                  if (hkOn)
+                    ValueListenableBuilder<int>(
+                      valueListenable: HotkeyService.instance.bindingsRev,
+                      builder: (ctx2, _, _) => Column(
+                        children: [
+                          _hotkeyRow(
+                            context,
+                            l.shortcutTimerToggle,
+                            'timer_toggle',
+                          ),
+                          _hotkeyRow(
+                            context,
+                            l.shortcutTimerNext,
+                            'timer_next',
+                          ),
+                          _hotkeyRow(context, l.shortcutSwLap, 'sw_lap'),
+                          _hotkeyRow(
+                            context,
+                            l.shortcutWidgetFocus,
+                            'widget_focus',
+                          ),
+                          // 시안 결정 4: 기본값과 달라졌을 때만 노출 —
+                          // 평소엔 시각 소음 0.
+                          if (HotkeyService.instance.isModified)
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 16),
+                                child: TextButton(
+                                  onPressed:
+                                      HotkeyService.instance.resetBindings,
+                                  child: Text(
+                                    l.hotkeyReset,
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: AppColors.faint,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const _Divider(),
+          ],
 
           // ── 오버레이 상호 배타 (Android 전용) ──────────────────
           if (isAndroid) ...[
@@ -741,32 +764,36 @@ class SettingsScreen extends StatelessWidget {
             const _Divider(),
           ],
 
-          // ── 배터리 모니터링 (모바일 전용) ─────────────────────
-          if (isAndroid || isIOS) ...[
-            ValueListenableBuilder<bool>(
-              valueListenable: BatteryService.instance.monitoringEnabled,
-              builder: (ctx, enabled, _) => _SettingsTile(
-                icon: Icons.battery_std,
-                iconColor: const Color(0xFFB45309),
-                title: l.settingsBattery,
-                subtitle: l.settingsBatteryDesc,
-                trailing: Switch(
-                  value: enabled,
-                  onChanged: BatteryService.instance.setEnabled,
-                  activeThumbColor: const Color(0xFFB45309),
-                  trackColor: WidgetStateProperty.resolveWith(
-                    (states) => states.contains(WidgetState.selected)
-                        ? const Color(0xFFB45309).withAlpha(0x55)
-                        : AppColors.surface,
-                  ),
+          // ══ 그룹 5: 도움 ═════════════════════════════════════
+          _GroupHeader(l.settingsGroupHelp),
+
+          // ── 알람 점검 (자가 진단 — 알림·배터리·오버레이 체크) ──────
+          if (isAndroid)
+            _SettingsTile(
+              icon: Icons.health_and_safety_outlined,
+              iconColor: AppColors.accent,
+              title: l.settingsDiag,
+              subtitle: l.settingsDiagDesc,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AlarmDiagnosticsScreen(),
                 ),
-                onTap: () => BatteryService.instance.setEnabled(!enabled),
               ),
             ),
-          ],
+          if (isAndroid) const _Divider(),
 
-          // ── 진단 데이터 전송 (Android — ANR-free 지표 동의) ────
-          if (isAndroid) ...[const _Divider(), const _TelemetryConsentTile()],
+          // ── 제작자에게 피드백 (버그/기능요청, 사진·동영상 첨부) ──────
+          _SettingsTile(
+            icon: Icons.send_outlined,
+            iconColor: AppColors.timerOrange,
+            title: l.feedbackEntry,
+            subtitle: l.feedbackEntryDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FeedbackPage()),
+            ),
+          ),
         ],
       ),
     );
@@ -1428,6 +1455,26 @@ class _Divider extends StatelessWidget {
   }
 }
 
+/// 설정 그룹 헤더(디자인 "설정 구조 & 초기 설정" §3) — 5개 그룹 라벨.
+class _GroupHeader extends StatelessWidget {
+  final String text;
+  const _GroupHeader(this.text);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
+    child: Text(
+      text.toUpperCase(),
+      style: TextStyle(
+        color: AppColors.faint,
+        fontSize: 12,
+        letterSpacing: 0.6,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+  );
+}
+
 /// 알람 점검 카드(디자인 "설정 구조 & 초기 설정" §3) — 배터리 예외/알림 권한이
 /// 깨졌을 때만 설정 상단에 등장. 탭하면 시스템 권한을 요청해 바로 고친다.
 class _AlarmCheckCard extends StatefulWidget {
@@ -1510,7 +1557,9 @@ class _AlarmCheckCardState extends State<_AlarmCheckCard>
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              battery ? l.checkAlarmDesc : l.checkAlarmNotifDesc,
+                              battery
+                                  ? l.checkAlarmDesc
+                                  : l.checkAlarmNotifDesc,
                               style: TextStyle(
                                 color: AppColors.muted,
                                 fontSize: 12.5,

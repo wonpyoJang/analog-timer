@@ -49,6 +49,14 @@ class MainActivity : FlutterActivity() {
                         TimerNotificationManager.cancel(this)
                         result.success(null)
                     }
+                    "testAlarm" -> {
+                        TimerNotificationManager.testAlarm(
+                            this,
+                            call.argument<String>("title") ?: "Analog Timer",
+                            call.argument<String>("body") ?: "",
+                        )
+                        result.success(null)
+                    }
                     else -> result.notImplemented()
                 }
             }

@@ -2720,6 +2720,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fix'**
   String get checkFix;
+
+  /// No description provided for @diagTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When alarms don\'t ring'**
+  String get diagTitle;
+
+  /// No description provided for @diagSub.
+  ///
+  /// In en, this message translates to:
+  /// **'We checked for you. Takes a minute to fix.'**
+  String get diagSub;
+
+  /// No description provided for @diagWarnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} things need fixing'**
+  String diagWarnTitle(int n);
+
+  /// No description provided for @diagWarnDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'As is, alarms may not ring after you close the app.'**
+  String get diagWarnDesc;
+
+  /// No description provided for @diagAllGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything looks good'**
+  String get diagAllGood;
+
+  /// No description provided for @diagAllGoodDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Alarms will ring even after you close the app.'**
+  String get diagAllGoodDesc;
+
+  /// No description provided for @diagResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Check results'**
+  String get diagResult;
+
+  /// No description provided for @diagNotifTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications allowed'**
+  String get diagNotifTitle;
+
+  /// No description provided for @diagNotifOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts can show on screen'**
+  String get diagNotifOk;
+
+  /// No description provided for @diagNotifBad.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off — timers can\'t alert you.'**
+  String get diagNotifBad;
+
+  /// No description provided for @diagBatteryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery saver exception'**
+  String get diagBatteryTitle;
+
+  /// No description provided for @diagBatteryOk.
+  ///
+  /// In en, this message translates to:
+  /// **'The app won\'t be put to sleep'**
+  String get diagBatteryOk;
+
+  /// No description provided for @diagBatteryBad.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery saver is sleeping the app. Scheduled alarms get delayed or dropped.'**
+  String get diagBatteryBad;
+
+  /// No description provided for @diagOverlayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display over other apps'**
+  String get diagOverlayTitle;
+
+  /// No description provided for @diagOverlayOk.
+  ///
+  /// In en, this message translates to:
+  /// **'The overlay pill can show'**
+  String get diagOverlayOk;
+
+  /// No description provided for @diagOverlayBad.
+  ///
+  /// In en, this message translates to:
+  /// **'The overlay pill won\'t appear.'**
+  String get diagOverlayBad;
+
+  /// No description provided for @diagFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix'**
+  String get diagFix;
+
+  /// No description provided for @diagFixAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix all'**
+  String get diagFixAll;
+
+  /// No description provided for @diagTestAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a test alarm now'**
+  String get diagTestAlarm;
+
+  /// No description provided for @diagTestNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Try closing the app after sending, to confirm it still rings.'**
+  String get diagTestNote;
+
+  /// No description provided for @diagTestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Test alarm sent — check your notifications'**
+  String get diagTestSent;
+
+  /// No description provided for @settingsDiag.
+  ///
+  /// In en, this message translates to:
+  /// **'When alarms don\'t ring'**
+  String get settingsDiag;
+
+  /// No description provided for @settingsDiagDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'self-check: permissions & battery'**
+  String get settingsDiagDesc;
+
+  /// No description provided for @settingsGroupNotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsGroupNotify;
+
+  /// No description provided for @settingsGroupDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Display'**
+  String get settingsGroupDisplay;
+
+  /// No description provided for @settingsGroupData.
+  ///
+  /// In en, this message translates to:
+  /// **'My data'**
+  String get settingsGroupData;
+
+  /// No description provided for @settingsGroupControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Controls'**
+  String get settingsGroupControl;
+
+  /// No description provided for @settingsGroupHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get settingsGroupHelp;
 }
 
 class _AppLocalizationsDelegate
