@@ -9,6 +9,7 @@ import '../../../services/persistence_service.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/sound_service.dart';
 import '../../../services/care_service.dart';
+import '../../../features/stats/activity_stats_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
 import '../../../overlay/multi_overlay_service.dart';
@@ -338,6 +339,13 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   void _onCompleted(BuildContext context, MultiTimerState s) {
     final ids = s.justCompleted;
     if (ids.isEmpty) return;
+    // 활동 통계 집계 — 완료된 타이머의 이름·계획시간 기록.
+    for (final id in ids) {
+      final t = s.timers.where((x) => x.id == id).firstOrNull;
+      if (t != null) {
+        ActivityStatsService.instance.log(t.name, t.totalMs);
+      }
+    }
     _openAlarm(); // 풀스크린 알람(요리 시안 §1)
     HapticService.instance.heavy(); // 스펙: 완료 = heavyImpact (동시 다건도 1회)
     SoundService.instance.play('done'); // C5-E5-G5 아르페지오(알람 본음과 별개)

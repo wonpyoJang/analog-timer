@@ -2516,6 +2516,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'leave completed timers in the list'**
   String get careKeepDoneDesc;
+
+  /// No description provided for @statsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statsTitle;
+
+  /// No description provided for @statsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get statsToday;
+
+  /// No description provided for @statsWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get statsWeek;
+
+  /// No description provided for @statsMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get statsMonth;
+
+  /// No description provided for @statsFocusedTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{period} focused time'**
+  String statsFocusedTime(String period);
+
+  /// No description provided for @statsSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get statsSessions;
+
+  /// No description provided for @statsStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get statsStreak;
+
+  /// No description provided for @statsBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get statsBest;
+
+  /// No description provided for @statsDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}d'**
+  String statsDays(int n);
+
+  /// No description provided for @statsSessionsN.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}x'**
+  String statsSessionsN(int n);
+
+  /// No description provided for @statsLast7.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get statsLast7;
+
+  /// No description provided for @statsByActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'By activity'**
+  String get statsByActivity;
+
+  /// No description provided for @statsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No records yet — finish a timer to see stats'**
+  String get statsEmpty;
+
+  /// No description provided for @statsInsightTop.
+  ///
+  /// In en, this message translates to:
+  /// **'You focused most on {day}. Now on a {n}-day streak!'**
+  String statsInsightTop(String day, int n);
+
+  /// No description provided for @statsPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Data stays on this device. No account, no cloud.'**
+  String get statsPrivacy;
+
+  /// No description provided for @statsHoursMin.
+  ///
+  /// In en, this message translates to:
+  /// **'{h}h {m}m'**
+  String statsHoursMin(int h, int m);
+
+  /// No description provided for @statsMinOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'{m}m'**
+  String statsMinOnly(int m);
+
+  /// No description provided for @settingsStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity statistics'**
+  String get settingsStats;
+
+  /// No description provided for @settingsStatsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'focused time, sessions, streak'**
+  String get settingsStatsDesc;
 }
 
 class _AppLocalizationsDelegate
