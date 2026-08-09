@@ -1933,4 +1933,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get ocrTitle => 'Scan package';
+
+  @override
+  String get seqParallel => 'Start together';
+
+  @override
+  String get seqSequential => 'One after another';
+
+  @override
+  String get seqNote => 'Each step starts when the previous finishes.';
 }

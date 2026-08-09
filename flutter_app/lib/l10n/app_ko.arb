@@ -617,5 +617,8 @@
   "ocrAlbum": "앨범에서 고르기",
   "ocrReading": "글자를 읽는 중…",
   "ocrNoTime": "시간을 찾지 못했어요 · 직접 맞춰주세요",
-  "ocrTitle": "봉지 찍기"
+  "ocrTitle": "봉지 찍기",
+  "seqParallel": "동시에 시작",
+  "seqSequential": "이어서 실행",
+  "seqNote": "한 단계가 끝나면 다음 단계가 이어서 시작돼요."
 }
