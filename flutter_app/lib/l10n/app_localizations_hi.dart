@@ -1898,4 +1898,16 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get voiceStopHint =>
       'Several timers are running — open the app to choose.';
+
+  @override
+  String get scFocus => 'Focus 25 min';
+
+  @override
+  String get scRest => 'Break 5 min';
+
+  @override
+  String get scStop => 'Stop timer';
+
+  @override
+  String get scStatus => 'Time left';
 }

@@ -606,5 +606,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "scFocus": "집중 25분",
+  "scRest": "휴식 5분",
+  "scStop": "타이머 정지",
+  "scStatus": "남은 시간"
 }

@@ -1855,4 +1855,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get voiceStopHint => '여러 개가 실행 중이라 앱에서 골라주세요.';
+
+  @override
+  String get scFocus => '집중 25분';
+
+  @override
+  String get scRest => '휴식 5분';
+
+  @override
+  String get scStop => '타이머 정지';
+
+  @override
+  String get scStatus => '남은 시간';
 }

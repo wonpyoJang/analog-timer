@@ -1065,5 +1065,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "scFocus": "Focus 25 min",
+  "scRest": "Break 5 min",
+  "scStop": "Stop timer",
+  "scStatus": "Time left"
 }
