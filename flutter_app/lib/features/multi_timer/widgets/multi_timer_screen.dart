@@ -1393,7 +1393,8 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                       ),
                     ),
                   // 말·글로 타이머 만들기(온디바이스 §4·§E) — 한 문장에서 여러 개.
-                  if (!editMode)
+                  // 배포(release) 빌드에선 아직 미완성이라 숨김(디버그에선 계속 노출).
+                  if (!editMode && !kReleaseMode)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 14),
                       child: Material(
