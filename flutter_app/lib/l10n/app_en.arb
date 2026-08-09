@@ -816,5 +816,72 @@
   "careTtsName": "Speak timer name",
   "careTtsNameDesc": "\"Boil pasta, finished\"",
   "careKeepDone": "Keep finished timers",
-  "careKeepDoneDesc": "leave completed timers in the list"
+  "careKeepDoneDesc": "leave completed timers in the list",
+  "statsTitle": "Statistics",
+  "statsToday": "Today",
+  "statsWeek": "Week",
+  "statsMonth": "Month",
+  "statsFocusedTime": "{period} focused time",
+  "@statsFocusedTime": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "statsSessions": "Sessions",
+  "statsStreak": "Streak",
+  "statsBest": "Best",
+  "statsDays": "{n}d",
+  "@statsDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "statsSessionsN": "{n}x",
+  "@statsSessionsN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "statsLast7": "Last 7 days",
+  "statsByActivity": "By activity",
+  "statsEmpty": "No records yet — finish a timer to see stats",
+  "statsInsightTop": "You focused most on {day}. Now on a {n}-day streak!",
+  "@statsInsightTop": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "statsPrivacy": "Data stays on this device. No account, no cloud.",
+  "statsHoursMin": "{h}h {m}m",
+  "@statsHoursMin": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "statsMinOnly": "{m}m",
+  "@statsMinOnly": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsStats": "Activity statistics",
+  "settingsStatsDesc": "focused time, sessions, streak"
 }

@@ -19,6 +19,7 @@ import 'services/sound_service.dart';
 import 'services/care_service.dart';
 import 'services/colorblind_service.dart';
 import 'services/high_contrast_service.dart';
+import 'features/stats/stats_screen.dart';
 import 'overlay/overlay_coordinator.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -80,6 +81,20 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
+          // ── 활동 통계 (완료 로그 자동 집계) ────────────────────
+          _SettingsTile(
+            icon: Icons.bar_chart,
+            iconColor: AppColors.accent,
+            title: l.settingsStats,
+            subtitle: l.settingsStatsDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const StatsScreen()),
+            ),
+          ),
+
+          const _Divider(),
+
           // ── 언어 ──────────────────────────────────────────────
           _SettingsTile(
             icon: Icons.language,
@@ -415,7 +430,9 @@ class SettingsScreen extends StatelessWidget {
                           for (final v in const [0, 1, 2, 5])
                             ChoiceChip(
                               label: Text(
-                                v == 0 ? l.carePreAlarmOff : l.carePreAlarmMin(v),
+                                v == 0
+                                    ? l.carePreAlarmOff
+                                    : l.carePreAlarmMin(v),
                               ),
                               selected: pre == v,
                               onSelected: (_) =>

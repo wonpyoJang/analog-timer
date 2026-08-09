@@ -1315,4 +1315,73 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get careKeepDoneDesc => '완료된 타이머를 리스트에 남겨둬요';
+
+  @override
+  String get statsTitle => '활동 통계';
+
+  @override
+  String get statsToday => '오늘';
+
+  @override
+  String get statsWeek => '이번 주';
+
+  @override
+  String get statsMonth => '이번 달';
+
+  @override
+  String statsFocusedTime(String period) {
+    return '$period 집중한 시간';
+  }
+
+  @override
+  String get statsSessions => '세션';
+
+  @override
+  String get statsStreak => '연속';
+
+  @override
+  String get statsBest => '최고';
+
+  @override
+  String statsDays(int n) {
+    return '$n일';
+  }
+
+  @override
+  String statsSessionsN(int n) {
+    return '$n회';
+  }
+
+  @override
+  String get statsLast7 => '최근 7일';
+
+  @override
+  String get statsByActivity => '활동별';
+
+  @override
+  String get statsEmpty => '아직 기록이 없어요 — 타이머를 완료하면 통계가 쌓여요';
+
+  @override
+  String statsInsightTop(String day, int n) {
+    return '$day에 가장 오래 집중했어요. 지금 $n일 연속이에요!';
+  }
+
+  @override
+  String get statsPrivacy => '데이터는 기기에만 저장돼요. 계정·클라우드 없음.';
+
+  @override
+  String statsHoursMin(int h, int m) {
+    return '$h시간 $m분';
+  }
+
+  @override
+  String statsMinOnly(int m) {
+    return '$m분';
+  }
+
+  @override
+  String get settingsStats => '활동 통계';
+
+  @override
+  String get settingsStatsDesc => '집중 시간·세션·연속 기록';
 }

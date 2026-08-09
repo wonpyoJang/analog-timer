@@ -1347,4 +1347,73 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get careKeepDoneDesc => 'leave completed timers in the list';
+
+  @override
+  String get statsTitle => 'Statistics';
+
+  @override
+  String get statsToday => 'Today';
+
+  @override
+  String get statsWeek => 'Week';
+
+  @override
+  String get statsMonth => 'Month';
+
+  @override
+  String statsFocusedTime(String period) {
+    return '$period focused time';
+  }
+
+  @override
+  String get statsSessions => 'Sessions';
+
+  @override
+  String get statsStreak => 'Streak';
+
+  @override
+  String get statsBest => 'Best';
+
+  @override
+  String statsDays(int n) {
+    return '${n}d';
+  }
+
+  @override
+  String statsSessionsN(int n) {
+    return '${n}x';
+  }
+
+  @override
+  String get statsLast7 => 'Last 7 days';
+
+  @override
+  String get statsByActivity => 'By activity';
+
+  @override
+  String get statsEmpty => 'No records yet — finish a timer to see stats';
+
+  @override
+  String statsInsightTop(String day, int n) {
+    return 'You focused most on $day. Now on a $n-day streak!';
+  }
+
+  @override
+  String get statsPrivacy => 'Data stays on this device. No account, no cloud.';
+
+  @override
+  String statsHoursMin(int h, int m) {
+    return '${h}h ${m}m';
+  }
+
+  @override
+  String statsMinOnly(int m) {
+    return '${m}m';
+  }
+
+  @override
+  String get settingsStats => 'Activity statistics';
+
+  @override
+  String get settingsStatsDesc => 'focused time, sessions, streak';
 }
