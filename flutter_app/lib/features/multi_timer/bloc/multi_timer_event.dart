@@ -16,9 +16,27 @@ class MtAdd extends MultiTimerEvent {
 
   /// 프리셋 카테고리 — 재알림 간격 결정(알람 시안 §1).
   final String? category;
-  const MtAdd(this.name, this.totalMs, {this.autoStart = false, this.category});
+
+  /// ack 게이트 순차 체인(조리법) — 같은 chainId, 확인 시 chainIndex+1 시작.
+  final String? chainId;
+  final int chainIndex;
+  const MtAdd(
+    this.name,
+    this.totalMs, {
+    this.autoStart = false,
+    this.category,
+    this.chainId,
+    this.chainIndex = 0,
+  });
   @override
-  List<Object?> get props => [name, totalMs, autoStart, category];
+  List<Object?> get props => [
+    name,
+    totalMs,
+    autoStart,
+    category,
+    chainId,
+    chainIndex,
+  ];
 }
 
 /// 루프 프리셋 추가(루프 시안 §2) — 단계들을 자동 반복.
@@ -27,12 +45,7 @@ class MtAddLoop extends MultiTimerEvent {
   final List<LoopStep> steps;
   final int repeat;
   final bool autoStart;
-  const MtAddLoop(
-    this.name,
-    this.steps,
-    this.repeat, {
-    this.autoStart = true,
-  });
+  const MtAddLoop(this.name, this.steps, this.repeat, {this.autoStart = true});
   @override
   List<Object?> get props => [name, steps, repeat, autoStart];
 }

@@ -103,4 +103,20 @@ void main() {
     expect(sec(r, 0), 3300);
     expect(r[0].name, '세탁');
   });
+
+  group('순차 시작방식 자동 추천(recommendAckGate)', () {
+    test('별개 작업(이름 다름) → ack 게이트(확인 후)', () {
+      // 파스타/소스 = 단계 사이 손 쓰는 별개 작업
+      expect(recommendAckGate(['파스타', '소스']), true);
+      expect(recommendAckGate(['면', '계란']), true);
+    });
+    test('수동 대기 단계(뜸·식히기) → 자동 진행', () {
+      expect(recommendAckGate(['면', '뜸 들이기']), false);
+      expect(recommendAckGate(['조리', '식히기']), false);
+      expect(recommendAckGate(['반죽', '냉장 휴지']), false);
+    });
+    test('같은 이름 반복 → 자동 진행(연속 과정)', () {
+      expect(recommendAckGate(['조리', '조리']), false);
+    });
+  });
 }

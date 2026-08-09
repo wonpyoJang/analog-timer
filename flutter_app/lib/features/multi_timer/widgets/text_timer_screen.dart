@@ -35,6 +35,7 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
   List<ParsedTimer>? _parsed; // null = 입력 단계
   final _selected = <int>{};
   bool _sequential = false; // 이어서 실행(조리법 순서) vs 동시에 시작
+  bool? _ackGateOverride; // null = 맥락 자동 추천, 값 있으면 사용자 토글
 
   static const _examples = ['라면이랑 세탁', '십오분 집중', '계란 육분 반숙', '파스타 팔분, 소스 오분'];
 
@@ -73,45 +74,60 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
   }
 
   void _start(AppLocalizations l) {
-    final list = _parsed;
-    if (list == null) return;
-    // 선택된 유효 후보(시간 있음)만 순서 유지해 수집.
-    final picks = [
-      for (var i = 0; i < list.length; i++)
-        if (_selected.contains(i) &&
-            list[i].kind != ParsedKind.unparsed &&
-            list[i].totalMs > 0)
-          list[i],
-    ];
+    final picks = _currentPicks();
     if (picks.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l.textTimerEmpty)));
       return;
     }
+    String nameOf(ParsedTimer t) => t.name.isEmpty ? l.multiTimerTitle : t.name;
     if (_sequential && picks.length > 1) {
-      // 이어서 실행 = 한 단계가 끝나면 다음이 이어지는 루프 1회(조리법 순서).
-      final steps = [
-        for (final t in picks)
-          LoopStep(t.name.isEmpty ? l.multiTimerTitle : t.name, t.totalMs),
-      ];
-      final loopName = picks.first.name.isEmpty
-          ? l.multiTimerTitle
-          : picks.first.name;
-      widget.bloc.add(MtAddLoop(loopName, steps, 1, autoStart: true));
+      if (_effectiveAckGate(picks)) {
+        // ack 게이트 = 한 단계 알람을 확인해야 다음이 시작(단계 사이 손 쓰는 조리법).
+        final chainId = 'chain${DateTime.now().microsecondsSinceEpoch}';
+        for (var i = 0; i < picks.length; i++) {
+          widget.bloc.add(
+            MtAdd(
+              nameOf(picks[i]),
+              picks[i].totalMs,
+              autoStart: i == 0, // 첫 단계만 실행, 나머지는 확인 시 시작
+              chainId: chainId,
+              chainIndex: i,
+            ),
+          );
+        }
+      } else {
+        // 자동 진행 = 한 단계가 끝나면 곧바로 다음(연속 과정: 뜸·식히기 등).
+        final steps = [for (final t in picks) LoopStep(nameOf(t), t.totalMs)];
+        widget.bloc.add(
+          MtAddLoop(nameOf(picks.first), steps, 1, autoStart: true),
+        );
+      }
     } else {
       for (final t in picks) {
-        widget.bloc.add(
-          MtAdd(
-            t.name.isEmpty ? l.multiTimerTitle : t.name,
-            t.totalMs,
-            autoStart: true,
-          ),
-        );
+        widget.bloc.add(MtAdd(nameOf(t), t.totalMs, autoStart: true));
       }
     }
     HapticService.instance.selection();
     Navigator.pop(context);
+  }
+
+  /// 현재 유효 ack 게이트 여부 — 사용자가 토글로 덮어썼으면 그 값, 아니면 자동 추천.
+  bool _effectiveAckGate(List<ParsedTimer> picks) =>
+      _ackGateOverride ?? recommendAckGate([for (final t in picks) t.name]);
+
+  /// 선택된 유효 후보(시간 있음)만 순서 유지.
+  List<ParsedTimer> _currentPicks() {
+    final list = _parsed;
+    if (list == null) return const [];
+    return [
+      for (var i = 0; i < list.length; i++)
+        if (_selected.contains(i) &&
+            list[i].kind != ParsedKind.unparsed &&
+            list[i].totalMs > 0)
+          list[i],
+    ];
   }
 
   @override
@@ -378,18 +394,84 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
               children: [seg(l.seqParallel, false), seg(l.seqSequential, true)],
             ),
           ),
-          if (_sequential)
-            Padding(
-              padding: const EdgeInsets.only(top: 8, left: 4),
-              child: Text(
-                l.seqNote,
-                style: TextStyle(
-                  color: AppColors.muted,
-                  fontSize: 12,
-                  height: 1.5,
+          if (_sequential) _ackGateRow(l),
+        ],
+      ),
+    );
+  }
+
+  /// ack 게이트 서브 토글(§C) — 맥락으로 자동 선택, 사용자가 덮어쓸 수 있음.
+  Widget _ackGateRow(AppLocalizations l) {
+    final picks = _currentPicks();
+    final ack = _effectiveAckGate(picks);
+    final isAuto = _ackGateOverride == null;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        l.seqAckTitle,
+                        style: const TextStyle(
+                          color: AppColors.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (isAuto) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withAlpha(0x24),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          l.seqAckAuto,
+                          style: const TextStyle(
+                            color: AppColors.accent,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
+              Switch(
+                value: ack,
+                onChanged: (v) => setState(() => _ackGateOverride = v),
+                activeThumbColor: AppColors.accent,
+                trackColor: WidgetStateProperty.resolveWith(
+                  (s) => s.contains(WidgetState.selected)
+                      ? AppColors.accent.withAlpha(0x55)
+                      : AppColors.surface,
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 2),
+            child: Text(
+              ack ? l.seqAckOnNote : l.seqAckOffNote,
+              style: TextStyle(
+                color: AppColors.muted,
+                fontSize: 12,
+                height: 1.5,
+              ),
             ),
+          ),
         ],
       ),
     );

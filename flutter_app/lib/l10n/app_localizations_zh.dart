@@ -1933,6 +1933,20 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seqNote => 'Each step starts when the previous finishes.';
+
+  @override
+  String get seqAckTitle => 'Confirm before next';
+
+  @override
+  String get seqAckAuto => 'Auto-picked';
+
+  @override
+  String get seqAckOnNote =>
+      'Next starts when you confirm each step — for hands-on recipes.';
+
+  @override
+  String get seqAckOffNote =>
+      'Next starts right after each step — for continuous steps.';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).

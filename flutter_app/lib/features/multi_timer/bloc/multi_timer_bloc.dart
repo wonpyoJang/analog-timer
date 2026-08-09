@@ -39,6 +39,8 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
       totalMs: e.totalMs,
       running: e.autoStart,
       category: e.category,
+      chainId: e.chainId,
+      chainIndex: e.chainIndex,
     );
     emit(state.copyWith(timers: [...state.timers, t]));
     if (e.autoStart) _syncTicker();
@@ -136,11 +138,36 @@ class MultiTimerBloc extends Bloc<MultiTimerEvent, MultiTimerState> {
   }
 
   void _onAck(MtAck e, Emitter<MultiTimerState> emit) {
+    // 확인된 타이머 — ack 게이트 체인이면 다음 단계(chainIndex+1)를 시작한다(조리법).
+    final acked = state.timers.where((t) => t.id == e.id).firstOrNull;
+    final nextId = (acked?.chainId != null)
+        ? state.timers
+              .where(
+                (t) =>
+                    t.chainId == acked!.chainId &&
+                    t.chainIndex == acked.chainIndex + 1,
+              )
+              .firstOrNull
+              ?.id
+        : null;
     emit(
       state.copyWith(
-        timers: _map((t) => t.copyWith(acked: true), onlyId: e.id),
+        timers: _map((t) {
+          if (t.id == e.id) return t.copyWith(acked: true);
+          if (t.id == nextId) {
+            // 다음 단계 시작 = 처음부터.
+            return t.copyWith(
+              running: true,
+              done: false,
+              acked: true,
+              remainMs: t.totalMs,
+            );
+          }
+          return t;
+        }),
       ),
     );
+    if (nextId != null) _syncTicker();
   }
 
   void _onRemove(MtRemove e, Emitter<MultiTimerState> emit) {
