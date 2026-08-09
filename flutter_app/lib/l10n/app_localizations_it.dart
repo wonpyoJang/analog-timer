@@ -1749,4 +1749,60 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get overlayPreviewLabel => 'Preview';
+
+  @override
+  String get textTimerEntry => 'Say or type';
+
+  @override
+  String get textTimerEntryDesc => '“Ramen 4 and a half min, egg 6 min”';
+
+  @override
+  String get textTimerTitle => 'Say or type';
+
+  @override
+  String get textTimerInputHint => 'e.g. 라면 사분반, 계란 육분';
+
+  @override
+  String get textTimerHelper => 'Write several at once, separated by commas.';
+
+  @override
+  String get textTimerExamplesHead => 'Try writing like this';
+
+  @override
+  String get textTimerOffline => 'Works offline · nothing is uploaded';
+
+  @override
+  String get textTimerParse => 'Read it';
+
+  @override
+  String get textTimerConfirmTitle => 'Make these?';
+
+  @override
+  String get textTimerConfirmSub => 'Tap a card to remove it, or rewrite.';
+
+  @override
+  String get textTimerRetype => 'Rewrite';
+
+  @override
+  String textTimerStartN(int n) {
+    return 'Start $n';
+  }
+
+  @override
+  String get textTimerSaveN => 'Save as presets';
+
+  @override
+  String get textTimerUnparsed => 'Couldn’t find a time · rewrite this part';
+
+  @override
+  String get textTimerFromPreset => 'Existing preset · kept its color & alarm';
+
+  @override
+  String get textTimerRangeShort => 'Picked the shorter side';
+
+  @override
+  String get textTimerEmpty => 'Nothing to start yet';
+
+  @override
+  String get textTimerNoTime => 'No time found. Try “ramen 4 min”.';
 }

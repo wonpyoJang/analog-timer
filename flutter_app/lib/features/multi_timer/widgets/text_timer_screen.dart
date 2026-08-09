@@ -1,0 +1,413 @@
+import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../theme/app_theme.dart';
+import '../../../services/haptic_service.dart';
+import '../bloc/multi_timer_bloc.dart';
+import '../bloc/multi_timer_event.dart';
+import '../time_parser.dart';
+
+/// 말·글로 타이머 만들기(디자인 "온디바이스 기능 화면" §E·§F).
+///
+/// 한 문장을 규칙 파서(time_parser)로 여러 후보로 쪼개 확인 카드로 보여주고
+/// 일괄 시작한다. 음성 인식은 후속(speech_to_text) — 지금은 텍스트 입력이 입구.
+class TextTimerScreen extends StatefulWidget {
+  final List<PresetRef> presets;
+  final MultiTimerBloc bloc;
+  const TextTimerScreen({super.key, required this.presets, required this.bloc});
+
+  @override
+  State<TextTimerScreen> createState() => _TextTimerScreenState();
+}
+
+class _TextTimerScreenState extends State<TextTimerScreen> {
+  final _ctrl = TextEditingController();
+  List<ParsedTimer>? _parsed; // null = 입력 단계
+  final _selected = <int>{};
+
+  static const _examples = ['라면이랑 세탁', '십오분 집중', '계란 육분 반숙', '파스타 팔분, 소스 오분'];
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _parse() {
+    final text = _ctrl.text.trim();
+    if (text.isEmpty) return;
+    final result = parseTimers(text, presets: widget.presets);
+    setState(() {
+      _parsed = result;
+      _selected
+        ..clear()
+        ..addAll([
+          for (var i = 0; i < result.length; i++)
+            if (result[i].kind != ParsedKind.unparsed) i,
+        ]);
+    });
+  }
+
+  void _start(AppLocalizations l) {
+    final list = _parsed;
+    if (list == null) return;
+    var count = 0;
+    for (final i in _selected) {
+      final t = list[i];
+      if (t.kind == ParsedKind.unparsed || t.totalMs <= 0) continue;
+      final name = t.name.isEmpty ? l.multiTimerTitle : t.name;
+      widget.bloc.add(MtAdd(name, t.totalMs, autoStart: true));
+      count++;
+    }
+    if (count == 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.textTimerEmpty)));
+      return;
+    }
+    HapticService.instance.selection();
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: AppColors.bg,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            size: 18,
+            color: AppColors.text,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          l.textTimerTitle,
+          style: const TextStyle(
+            color: AppColors.text,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: _parsed == null ? _input(l) : _confirm(l),
+    );
+  }
+
+  // ── 입력 단계(§E) ─────────────────────────────────────────
+  Widget _input(AppLocalizations l) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+      children: [
+        Text(
+          l.textTimerHelper,
+          style: TextStyle(color: AppColors.muted, fontSize: 13, height: 1.6),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _ctrl,
+          autofocus: true,
+          minLines: 2,
+          maxLines: 4,
+          style: const TextStyle(color: AppColors.text, fontSize: 16),
+          cursorColor: AppColors.accent,
+          decoration: InputDecoration(
+            hintText: l.textTimerInputHint,
+            hintStyle: TextStyle(color: AppColors.faint, fontSize: 15),
+            filled: true,
+            fillColor: const Color(0xFF141416),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.accent),
+            ),
+          ),
+          onSubmitted: (_) => _parse(),
+        ),
+        const SizedBox(height: 22),
+        Text(
+          l.textTimerExamplesHead.toUpperCase(),
+          style: TextStyle(
+            color: AppColors.faint,
+            fontSize: 12,
+            letterSpacing: 0.6,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final ex in _examples)
+              ActionChip(
+                label: Text(ex),
+                onPressed: () {
+                  _ctrl.text = ex;
+                  _ctrl.selection = TextSelection.collapsed(offset: ex.length);
+                },
+                backgroundColor: AppColors.accent.withAlpha(0x1F),
+                labelStyle: const TextStyle(
+                  color: AppColors.accent,
+                  fontSize: 13,
+                ),
+                side: BorderSide(color: AppColors.accent.withAlpha(0x55)),
+              ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text(
+          l.textTimerOffline,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: AppColors.faint, fontSize: 12, height: 1.6),
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          height: 52,
+          child: FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: _parse,
+            child: Text(
+              l.textTimerParse,
+              style: const TextStyle(
+                color: Color(0xFF141416),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── 확인 단계(§F) ─────────────────────────────────────────
+  Widget _confirm(AppLocalizations l) {
+    final list = _parsed!;
+    final startable = _selected
+        .where((i) => list[i].kind != ParsedKind.unparsed)
+        .length;
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+            children: [
+              Text(
+                l.textTimerConfirmTitle,
+                style: const TextStyle(
+                  color: AppColors.text,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l.textTimerConfirmSub,
+                style: TextStyle(color: AppColors.muted, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              if (list.every((t) => t.kind == ParsedKind.unparsed))
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    l.textTimerNoTime,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.muted, fontSize: 14),
+                  ),
+                ),
+              for (var i = 0; i < list.length; i++) _card(l, list[i], i),
+            ],
+          ),
+        ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: const Color(0xFF232326),
+                      side: const BorderSide(color: AppColors.border),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => setState(() => _parsed = null),
+                    child: Text(
+                      l.textTimerRetype,
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: startable == 0 ? null : () => _start(l),
+                    child: Text(
+                      l.textTimerStartN(startable),
+                      style: const TextStyle(
+                        color: Color(0xFF141416),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _card(AppLocalizations l, ParsedTimer t, int i) {
+    final unparsed = t.kind == ParsedKind.unparsed;
+    final sel = _selected.contains(i);
+    final color = AppColors.segColors[i % AppColors.segColors.length];
+    final reason = unparsed
+        ? l.textTimerUnparsed
+        : t.kind == ParsedKind.preset
+        ? l.textTimerFromPreset
+        : t.rangePickedShort
+        ? l.textTimerRangeShort
+        : (t.timeExpr != null && t.timeExpr!.isNotEmpty
+              ? '${t.timeExpr} → ${_fmt(t.totalMs)}'
+              : _fmt(t.totalMs));
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: unparsed
+            ? Colors.transparent
+            : sel
+            ? const Color(0xFF1D1C18)
+            : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: unparsed
+                ? AppColors.border
+                : sel
+                ? AppColors.accent.withAlpha(0x80)
+                : AppColors.border,
+            style: unparsed ? BorderStyle.none : BorderStyle.solid,
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: unparsed
+              ? null
+              : () => setState(() {
+                  if (sel) {
+                    _selected.remove(i);
+                  } else {
+                    _selected.add(i);
+                  }
+                }),
+          child: Container(
+            decoration: unparsed
+                ? BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFF3A3A3E)),
+                  )
+                : null,
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 11,
+                  height: 11,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: unparsed ? const Color(0xFF4A4A50) : color,
+                  ),
+                ),
+                const SizedBox(width: 13),
+                Text(
+                  unparsed ? '—:—' : _fmt(t.totalMs),
+                  style: TextStyle(
+                    color: unparsed ? AppColors.faint : AppColors.text,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.name.isEmpty ? l.multiTimerTitle : t.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: unparsed ? AppColors.muted : AppColors.text,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        reason,
+                        style: TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (!unparsed)
+                  Icon(
+                    sel ? Icons.check_circle : Icons.circle_outlined,
+                    color: sel ? AppColors.accent : AppColors.faint,
+                    size: 24,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _fmt(int ms) {
+    final s = ms ~/ 1000;
+    final m = s ~/ 60;
+    final sec = s % 60;
+    if (m >= 60) {
+      final h = m ~/ 60;
+      return '$h:${(m % 60).toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
+    }
+    return '$m:${sec.toString().padLeft(2, '0')}';
+  }
+}

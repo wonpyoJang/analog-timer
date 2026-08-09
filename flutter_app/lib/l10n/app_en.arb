@@ -997,5 +997,30 @@
   "overlayAutoHideDesc": "Disappears once acknowledged",
   "overlayGrantCta": "Grant",
   "overlayPreviewHint": "Drag to move it",
-  "overlayPreviewLabel": "Preview"
+  "overlayPreviewLabel": "Preview",
+  "textTimerEntry": "Say or type",
+  "textTimerEntryDesc": "“Ramen 4 and a half min, egg 6 min”",
+  "textTimerTitle": "Say or type",
+  "textTimerInputHint": "e.g. 라면 사분반, 계란 육분",
+  "textTimerHelper": "Write several at once, separated by commas.",
+  "textTimerExamplesHead": "Try writing like this",
+  "textTimerOffline": "Works offline · nothing is uploaded",
+  "textTimerParse": "Read it",
+  "textTimerConfirmTitle": "Make these?",
+  "textTimerConfirmSub": "Tap a card to remove it, or rewrite.",
+  "textTimerRetype": "Rewrite",
+  "textTimerStartN": "Start {n}",
+  "textTimerSaveN": "Save as presets",
+  "textTimerUnparsed": "Couldn’t find a time · rewrite this part",
+  "textTimerFromPreset": "Existing preset · kept its color & alarm",
+  "textTimerRangeShort": "Picked the shorter side",
+  "textTimerEmpty": "Nothing to start yet",
+  "textTimerNoTime": "No time found. Try “ramen 4 min”.",
+  "@textTimerStartN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }
