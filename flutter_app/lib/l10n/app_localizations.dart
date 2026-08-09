@@ -3578,6 +3578,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time left'**
   String get scStatus;
+
+  /// No description provided for @ocrEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a package'**
+  String get ocrEntry;
+
+  /// No description provided for @ocrEntryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reads the cook time and makes it'**
+  String get ocrEntryDesc;
+
+  /// No description provided for @ocrCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get ocrCamera;
+
+  /// No description provided for @ocrAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick from album'**
+  String get ocrAlbum;
+
+  /// No description provided for @ocrReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading text…'**
+  String get ocrReading;
+
+  /// No description provided for @ocrNoTime.
+  ///
+  /// In en, this message translates to:
+  /// **'No time found — set it by hand'**
+  String get ocrNoTime;
+
+  /// No description provided for @ocrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan package'**
+  String get ocrTitle;
 }
 
 class _AppLocalizationsDelegate

@@ -13,7 +13,17 @@ import '../time_parser.dart';
 class TextTimerScreen extends StatefulWidget {
   final List<PresetRef> presets;
   final MultiTimerBloc bloc;
-  const TextTimerScreen({super.key, required this.presets, required this.bloc});
+
+  /// OCR 등에서 이미 파싱된 후보로 바로 확인 단계 진입(§C). 제목도 전환.
+  final List<ParsedTimer>? initial;
+  final String? title;
+  const TextTimerScreen({
+    super.key,
+    required this.presets,
+    required this.bloc,
+    this.initial,
+    this.title,
+  });
 
   @override
   State<TextTimerScreen> createState() => _TextTimerScreenState();
@@ -25,6 +35,19 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
   final _selected = <int>{};
 
   static const _examples = ['라면이랑 세탁', '십오분 집중', '계란 육분 반숙', '파스타 팔분, 소스 오분'];
+
+  @override
+  void initState() {
+    super.initState();
+    final init = widget.initial;
+    if (init != null && init.isNotEmpty) {
+      _parsed = init;
+      _selected.addAll([
+        for (var i = 0; i < init.length; i++)
+          if (init[i].kind != ParsedKind.unparsed) i,
+      ]);
+    }
+  }
 
   @override
   void dispose() {
@@ -85,7 +108,7 @@ class _TextTimerScreenState extends State<TextTimerScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          l.textTimerTitle,
+          widget.title ?? l.textTimerTitle,
           style: const TextStyle(
             color: AppColors.text,
             fontSize: 17,

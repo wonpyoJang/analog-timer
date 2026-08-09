@@ -1867,4 +1867,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get scStatus => '남은 시간';
+
+  @override
+  String get ocrEntry => '봉지·안내문 찍기';
+
+  @override
+  String get ocrEntryDesc => '조리시간을 읽어서 바로 만들어요';
+
+  @override
+  String get ocrCamera => '카메라로 찍기';
+
+  @override
+  String get ocrAlbum => '앨범에서 고르기';
+
+  @override
+  String get ocrReading => '글자를 읽는 중…';
+
+  @override
+  String get ocrNoTime => '시간을 찾지 못했어요 · 직접 맞춰주세요';
+
+  @override
+  String get ocrTitle => '봉지 찍기';
 }
