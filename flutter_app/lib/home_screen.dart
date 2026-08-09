@@ -1673,6 +1673,20 @@ const _kTextHalo = [
   Shadow(offset: Offset(0, 1.5), blurRadius: 3, color: Colors.white),
 ];
 
+/// 블러 없는 흰 외곽선 — blurRadius 0 이라 MaskFilter.blur(saveLayer) 를 안 써서
+/// 스크롤 시 별도 레이어로 뒤처지지 않고 글리프에 딱 붙어 움직인다. 가독성용 흰
+/// 배경이 필요하지만 스크롤 lag 잔상을 남기면 안 되는 아이콘 글리프에 사용.
+const _kGlyphOutline = [
+  Shadow(offset: Offset(-1.4, 0), color: Colors.white),
+  Shadow(offset: Offset(1.4, 0), color: Colors.white),
+  Shadow(offset: Offset(0, -1.4), color: Colors.white),
+  Shadow(offset: Offset(0, 1.4), color: Colors.white),
+  Shadow(offset: Offset(1, 1), color: Colors.white),
+  Shadow(offset: Offset(-1, 1), color: Colors.white),
+  Shadow(offset: Offset(1, -1), color: Colors.white),
+  Shadow(offset: Offset(-1, -1), color: Colors.white),
+];
+
 class _CenterInfo extends StatelessWidget {
   final TimerState timerState;
   final StopwatchState swState;
@@ -1742,11 +1756,19 @@ class _CenterInfo extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.timer_outlined,
-                  size: 22,
-                  color: AppColors.swGreen,
-                  shadows: _kTextHalo,
+                // 아이콘 글리프 + 블러 없는 흰 외곽선(_kGlyphOutline). 블러 헤일로는
+                // 스크롤 시 saveLayer 가 뒤처져 흰 ⏱ 잔상을 남기므로, blur 0 외곽선으로
+                // 가독성용 흰 배경을 유지하되 글리프에 딱 붙어 같이 움직이게 한다.
+                Text(
+                  String.fromCharCode(Icons.timer_outlined.codePoint),
+                  style: TextStyle(
+                    fontFamily: Icons.timer_outlined.fontFamily,
+                    package: Icons.timer_outlined.fontPackage,
+                    fontSize: 22,
+                    height: 1,
+                    color: AppColors.swGreen,
+                    shadows: _kGlyphOutline,
+                  ),
                 ),
                 const SizedBox(width: 5),
                 Text(
