@@ -2041,8 +2041,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get waterStopToday => '오늘은 그만';
 
   @override
-  String get waterBgNote => '앱이 열려 있을 때 알림이 울려요. 백그라운드 전달은 준비 중입니다.';
+  String get waterBgNote => '앱이 닫혀 있어도 알려줘요 (정확 알람 권한 필요).';
 
   @override
   String get waterSettingsDesc => '간격·정해진 시각으로 물 마시기 알림';
+
+  @override
+  String get waterNotifBody => '물 마실 시간이에요';
 }

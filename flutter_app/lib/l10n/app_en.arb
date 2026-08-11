@@ -1169,7 +1169,7 @@
   "waterDrank": "Drank",
   "waterLater30": "In 30 min",
   "waterStopToday": "Done for today",
-  "waterBgNote": "Reminders fire while the app is open. Background delivery is coming.",
+  "waterBgNote": "Fires even when the app is closed (needs exact-alarm permission).",
   "@waterCups": {
     "placeholders": {
       "n": {
@@ -1197,5 +1197,6 @@
       }
     }
   },
-  "waterSettingsDesc": "Remind to drink at intervals or set times"
+  "waterSettingsDesc": "Remind to drink at intervals or set times",
+  "waterNotifBody": "Time to drink water"
 }

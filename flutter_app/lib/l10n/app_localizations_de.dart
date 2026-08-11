@@ -2090,8 +2090,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get waterBgNote =>
-      'Reminders fire while the app is open. Background delivery is coming.';
+      'Fires even when the app is closed (needs exact-alarm permission).';
 
   @override
   String get waterSettingsDesc => 'Remind to drink at intervals or set times';
+
+  @override
+  String get waterNotifBody => 'Time to drink water';
 }
