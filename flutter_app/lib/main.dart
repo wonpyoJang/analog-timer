@@ -28,6 +28,7 @@ import 'services/sound_service.dart';
 import 'services/care_service.dart';
 import 'services/list_display_service.dart';
 import 'services/water_reminder_service.dart';
+import 'services/notification_service.dart';
 import 'features/multi_timer/ai/timer_ai_service.dart';
 import 'services/overlay_settings_service.dart';
 import 'services/deep_link_service.dart';
@@ -68,6 +69,7 @@ Future<void> main(List<String> args) async {
   await ListDisplayService.instance.init();
   await TimerAiService.instance.load(); // AI 폴백 플래그(기본 OFF, 다음 릴리스)
   await WaterReminderService.instance.init(); // 물 마시기 알림 설정·오늘 카운트
+  unawaited(NotificationService.instance.init()); // 예약 알림 토대(백그라운드)
   await OverlaySettingsService.instance.init();
   await ColorblindService.instance.init();
   await HighContrastService.instance.init();

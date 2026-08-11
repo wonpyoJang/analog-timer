@@ -47,6 +47,8 @@ dependencies:
   image_picker: ^1.1.2 # 피드백 첨부 + OCR 봉지 촬영/앨범(모바일+데스크톱)
   google_mlkit_text_recognition: ^0.15.0 # 봉지 OCR — 온디바이스 텍스트 인식(Android)
   record: ^7.1.1 # 피드백 음성 녹음 (Windows MF / mobile)
+  flutter_local_notifications: ^18.0.1 # 예약 알림(물/루틴, 백그라운드)
+  timezone: ^0.9.4 # zonedSchedule 용 로컬 타임존
 
   # 데스크톱(Windows/macOS/Linux) 전용 — 모바일에선 호출하지 않음
   window_manager: ^0.4.3

@@ -43,7 +43,10 @@ class _RootShellState extends State<RootShell> {
         const Duration(seconds: 60),
         (_) => _checkWater(),
       );
-      WidgetsBinding.instance.addPostFrameCallback((_) => _checkWater());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _syncWaterNotif();
+        _checkWater();
+      });
     }
   }
 
@@ -52,6 +55,19 @@ class _RootShellState extends State<RootShell> {
     if (await WaterReminderService.instance.isDueNow() && mounted) {
       showWaterBanner(context);
     }
+  }
+
+  bool _waterNotifSynced = false;
+
+  /// 알림 문구를 l10n 으로 세팅하고 백그라운드 예약을 동기화(앱 시작 시 1회).
+  void _syncWaterNotif() {
+    if (_waterNotifSynced || !mounted) return;
+    _waterNotifSynced = true;
+    final l = AppLocalizations.of(context);
+    WaterReminderService.instance
+      ..notifTitle = l.waterBannerTitle
+      ..notifBody = l.waterNotifBody
+      ..syncSchedule();
   }
 
   void _onTabRequest() {

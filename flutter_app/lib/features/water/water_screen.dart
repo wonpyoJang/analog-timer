@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../services/water_reminder_service.dart';
+import '../../services/notification_service.dart';
 import '../../services/sound_service.dart';
 import '../../services/haptic_service.dart';
 
@@ -84,6 +86,24 @@ class _WaterSettingsPageState extends State<WaterSettingsPage> {
               ),
             ),
           ),
+          // 개발 검증용(release 숨김) — 알림 권한 요청 + 즉시 알림으로 플러그인 확인.
+          if (!kReleaseMode)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+              child: OutlinedButton(
+                onPressed: () async {
+                  await NotificationService.instance.requestPermission();
+                  // +8초 예약 — 실제 물 예약(zonedSchedule)과 동일 경로 검증용.
+                  await NotificationService.instance.scheduleAt(
+                    900001,
+                    l.waterBannerTitle,
+                    l.waterNotifBody,
+                    DateTime.now().add(const Duration(seconds: 8)),
+                  );
+                },
+                child: const Text('테스트 예약 +8초 (debug)'),
+              ),
+            ),
         ],
       ),
     );

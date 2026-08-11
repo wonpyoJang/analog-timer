@@ -10,6 +10,8 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // flutter_local_notifications(예약 알림) 가 core library desugaring 요구.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -50,6 +52,8 @@ flutter {
 }
 
 dependencies {
+    // flutter_local_notifications 예약 알림용 core library desugaring 런타임.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     // 운동 TTS 워치 미러 — Data Layer 통신(폰→워치 상태, 워치→폰 명령)
     implementation("com.google.android.gms:play-services-wearable:18.1.0")
     // 봉지 OCR 한국어 인식기 — 플러그인이 compileOnly 로만 선언하므로(APK 미포함)

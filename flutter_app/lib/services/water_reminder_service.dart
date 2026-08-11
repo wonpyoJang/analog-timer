@@ -1,14 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'notification_service.dart';
+
 /// 물 마시기 알림(디자인 "물 알림 & 루틴 알람" §1·§2).
 ///
 /// 철칙: **간격 타이머는 "마셨어요" 시점부터 리셋**(합집합 아님 — 방금 마셨는데 또
 /// 울리는 사고 방지). 정해진 시각과 [dedupMin]분 내로 겹치면 하나만. 활동 시간대
 /// 밖에서는 전부 침묵. 무시해도 카운트 불변("죄책감 UI 금지").
 ///
-/// 현재 구현: 앱 실행 중 인앱 알림(배너+소리). 백그라운드(앱 종료) 예약 전달은
-/// flutter_local_notifications 도입 후 후속(§ nextWaterReminderMs 를 그대로 재사용).
+/// 전달: 앱 실행 중엔 인앱 배너(§2), 앱이 닫혀 있으면 NotificationService 로 예약한
+/// OS 알림(flutter_local_notifications zonedSchedule → AlarmManager 정확 알람).
+/// 상태 변경마다 _reschedule() 이 다음 예정 시각으로 다시 건다.
 class WaterReminderService {
   WaterReminderService._();
   static final WaterReminderService instance = WaterReminderService._();
@@ -54,6 +57,28 @@ class WaterReminderService {
   // "30분 뒤" 스누즈 — 이 시각 전엔 안 울림.
   int _snoozeUntilMs = 0;
 
+  // 백그라운드 예약 알림 문구 — l10n 접근 불가라 UI(root_shell)가 세팅. 한국어 기본.
+  String notifTitle = '물 한 잔';
+  String notifBody = '물 마실 시간이에요';
+  static const _notifId = 900010; // 물 예약 알림 고정 id
+
+  /// 다음 알림을 OS 예약(백그라운드 전달). 상태 변경마다 호출 — 기존 예약 취소 후
+  /// 다음 예정 시각으로 다시 건다. 예정 없음(비활성/목표달성/오늘그만)이면 취소만.
+  Future<void> _reschedule() async {
+    await NotificationService.instance.cancel(_notifId);
+    final next = await nextReminderMs();
+    if (next == null) return;
+    await NotificationService.instance.scheduleAt(
+      _notifId,
+      notifTitle,
+      notifBody,
+      DateTime.fromMillisecondsSinceEpoch(next),
+    );
+  }
+
+  /// 외부(UI)에서 알림 문구 세팅 후 예약 동기화용.
+  Future<void> syncSchedule() => _reschedule();
+
   static int _dayKey(DateTime d) => d.year * 10000 + d.month * 100 + d.day;
 
   Future<void> init() async {
@@ -86,24 +111,38 @@ class WaterReminderService {
 
   Future<SharedPreferences> get _p => SharedPreferences.getInstance();
 
-  Future<void> setEnabled(bool v) async =>
-      _p.then((p) => p.setBool(_kEnabled, enabled.value = v));
-  Future<void> setInterval(int m) async =>
-      _p.then((p) => p.setInt(_kIntervalMin, intervalMin.value = m));
-  Future<void> setFixedEnabled(bool v) async =>
-      _p.then((p) => p.setBool(_kFixedEnabled, fixedEnabled.value = v));
+  Future<void> setEnabled(bool v) async {
+    (await _p).setBool(_kEnabled, enabled.value = v);
+    await _reschedule();
+  }
+
+  Future<void> setInterval(int m) async {
+    (await _p).setInt(_kIntervalMin, intervalMin.value = m);
+    await _reschedule();
+  }
+
+  Future<void> setFixedEnabled(bool v) async {
+    (await _p).setBool(_kFixedEnabled, fixedEnabled.value = v);
+    await _reschedule();
+  }
+
   Future<void> setWithTimerEnd(bool v) async =>
       _p.then((p) => p.setBool(_kWithTimerEnd, withTimerEnd.value = v));
   Future<void> setSound(bool v) async =>
       _p.then((p) => p.setBool(_kSound, sound.value = v));
-  Future<void> setGoal(int g) async =>
-      _p.then((p) => p.setInt(_kGoal, dailyGoal.value = g));
+
+  Future<void> setGoal(int g) async {
+    (await _p).setInt(_kGoal, dailyGoal.value = g);
+    await _reschedule();
+  }
+
   Future<void> setActiveHours(int start, int end) async {
     activeStartMin.value = start;
     activeEndMin.value = end;
     final p = await _p;
     await p.setInt(_kActiveStart, start);
     await p.setInt(_kActiveEnd, end);
+    await _reschedule();
   }
 
   /// "마셨어요" — 한 잔 기록 + 간격 타이머 리셋 기준점 갱신.
@@ -117,6 +156,7 @@ class WaterReminderService {
     await p.setInt(_kCount, todayCount.value);
     await p.setInt(_kCountDay, today);
     await p.setInt(_kLastDrank, _lastDrankMs);
+    await _reschedule();
   }
 
   /// 알림이 울렸음 — 슬롯 소비(간격을 여기서 다시 셈, 즉시 재알림 방지).
@@ -124,6 +164,7 @@ class WaterReminderService {
     _lastRemindedMs = (at ?? DateTime.now()).millisecondsSinceEpoch;
     final p = await _p;
     await p.setInt(_kLastReminded, _lastRemindedMs);
+    await _reschedule();
   }
 
   /// "30분 뒤" — 30분간 스누즈(간격/시각 무시). 카운트 불변.
@@ -131,12 +172,14 @@ class WaterReminderService {
     _snoozeUntilMs = (at ?? DateTime.now()).millisecondsSinceEpoch + 30 * 60000;
     final p = await _p;
     await p.setInt(_kSnooze, _snoozeUntilMs);
+    await _reschedule();
   }
 
   /// "오늘은 그만" — 오늘 하루 침묵(카운트는 불변).
   Future<void> muteToday([DateTime? at]) async {
     final p = await _p;
     await p.setInt(_kMutedDay, _dayKey(at ?? DateTime.now()));
+    await _reschedule();
   }
 
   Future<bool> _mutedToday(DateTime now) async {

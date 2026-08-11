@@ -15,3 +15,11 @@
 -keep interface com.google.mlkit.** { *; }
 -keep class com.google.android.gms.internal.mlkit_** { *; }
 -dontwarn com.google.mlkit.**
+
+# flutter_local_notifications — Gson 으로 알림 상세를 직렬화하므로 R8 이 제네릭/모델을
+# 지우면 예약 알림이 릴리스에서 조용히 실패한다(ML Kit 과 동일 계열 이슈).
+-keep class com.dexterous.** { *; }
+-keep class com.google.gson.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn com.dexterous.**

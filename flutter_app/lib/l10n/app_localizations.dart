@@ -3888,7 +3888,7 @@ abstract class AppLocalizations {
   /// No description provided for @waterBgNote.
   ///
   /// In en, this message translates to:
-  /// **'Reminders fire while the app is open. Background delivery is coming.'**
+  /// **'Fires even when the app is closed (needs exact-alarm permission).'**
   String get waterBgNote;
 
   /// No description provided for @waterSettingsDesc.
@@ -3896,6 +3896,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remind to drink at intervals or set times'**
   String get waterSettingsDesc;
+
+  /// No description provided for @waterNotifBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to drink water'**
+  String get waterNotifBody;
 }
 
 class _AppLocalizationsDelegate
