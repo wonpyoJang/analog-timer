@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 import 'overlay_clock_painter.dart';
+import 'desktop_multi_pill.dart';
 import '../services/desktop_service.dart';
 import '../services/colorblind_service.dart';
 import '../services/high_contrast_service.dart';
@@ -67,6 +68,11 @@ Size _sizeForScale(double s) =>
 /// 서브윈도우에선 window_manager 의 getPosition / onWindowMoved 가 동작하지 않으므로,
 /// 위치는 Dart 에서 직접 추적(드래그 시 setPosition)하고 prefs 에 저장한다.
 Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
+  // 멀티 오버레이 pill 서브윈도우 — 단일 위젯과 다른 경량 UI 로 분기.
+  if (args['variant'] == 'multi') {
+    await runDesktopMultiPill(args);
+    return;
+  }
   await ColorblindService.instance.init();
   await HighContrastService.instance.init();
   final ovPrefs = await _loadOverlayPrefs();
@@ -310,6 +316,14 @@ class _OverlayBodyState extends State<_OverlayBody>
   void initState() {
     super.initState();
     _winPos = widget.initialPos;
+    // _blinkCtrl 은 _applyState 보다 먼저 초기화해야 한다 — 초기 상태에
+    // ending=true(잔여 ≤10초)가 오면 _applyState 가 _blinkCtrl.repeat() 를
+    // 호출하므로, 늦게 만들면 LateInitializationError 로 위젯이 죽는다.
+    _blinkCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+      value: 1.0,
+    );
     // 키보드 이동 — 위젯 창 포커스 시 화살표.
     HardwareKeyboard.instance.addHandler(_onMoveKey);
     windowManager.addListener(this); // onWindowBlur → 키보드 모드 해제
@@ -332,12 +346,6 @@ class _OverlayBodyState extends State<_OverlayBody>
         await windowManager.setAlwaysOnTop(true);
       } catch (_) {}
     });
-    _blinkCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-      value: 1.0,
-    );
-
     // 메인 윈도우 → 오버레이 상태 push 수신
     WindowController.fromCurrentEngine().then((controller) {
       controller.setWindowMethodHandler((call) async {
