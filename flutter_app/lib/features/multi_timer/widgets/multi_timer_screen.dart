@@ -31,6 +31,7 @@ import 'alarm_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../services/ocr_service.dart';
 import '../../../services/platform_info.dart';
+import '../../../services/desktop_overlay_service.dart';
 
 String _fmt(int ms) {
   final total = (ms / 1000).ceil();
@@ -98,6 +99,11 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     _restore();
     // 단일 오버레이가 켜지면 멀티 오버레이를 전부 닫도록 훅 등록(상호 배타).
     OverlayCoordinator.instance.closeMultiOverlays = _closeAllOverlaysForMutex;
+    // 데스크톱 pill 액션(재생/정지·닫기) 수신 — MultiTimerBloc 이 이 화면의
+    // 서브트리에 살므로 여기서 디스패치한다(IndexedStack 상주라 앱 수명 내내 유효).
+    if (isDesktop) {
+      DesktopOverlayService.instance.onMultiAction = _onDesktopPillAction;
+    }
     // l10n 이 필요한 기본 시드는 첫 프레임 후에(initState 에선 inherited 조회 불가).
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadPresets());
     // pill 탭 = 프리-알림 구간 +5분 연장(페르소나 §5).
@@ -746,6 +752,22 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   }
 
   /// 개별 타이머의 오버레이 위젯 켜기/끄기. 켤 때만 권한 확인.
+  /// 데스크톱 pill 에서 올라온 액션 — `multi|<id>|<action>` 라우팅의 종착지.
+  void _onDesktopPillAction(String id, String action) {
+    if (!mounted) return;
+    final bloc = context.read<MultiTimerBloc>();
+    switch (action) {
+      case 'toggle':
+        final t = bloc.state.timers.where((e) => e.id == id).firstOrNull;
+        if (t == null || t.done) return;
+        bloc.add(t.running ? MtPause(id) : MtStart(id));
+      case 'close':
+        MultiOverlayService.close(id);
+        _lastPushed.remove(id);
+        setState(() => _overlayIds.remove(id));
+    }
+  }
+
   Future<void> _toggleOverlayFor(
     BuildContext context,
     CountdownTimer timer,
@@ -778,7 +800,10 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     }
     if (!mounted) return;
     // 상호 배타 — 단일 오버레이(2nd 엔진)를 꺼 플랫폼 스레드 경합 제거.
-    unawaited(OverlayCoordinator.instance.onMultiOverlayEnabled());
+    // Android 전용: 데스크톱은 다중 서브윈도우 공존이 검증되어 함께 띄운다.
+    if (isAndroid) {
+      unawaited(OverlayCoordinator.instance.onMultiOverlayEnabled());
+    }
     setState(() => _overlayIds.add(timer.id));
     _syncOverlays(l, bloc.state);
   }
@@ -836,6 +861,12 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       _closeAllOverlaysForMutex,
     )) {
       OverlayCoordinator.instance.closeMultiOverlays = null;
+    }
+    if (identical(
+      DesktopOverlayService.instance.onMultiAction,
+      _onDesktopPillAction,
+    )) {
+      DesktopOverlayService.instance.onMultiAction = null;
     }
     // 화면을 떠나면 bloc(ticker)이 정지 → 멈춘 pill이 남지 않도록 정리.
     if (_overlayIds.isNotEmpty) MultiOverlayService.closeAll();

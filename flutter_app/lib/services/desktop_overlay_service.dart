@@ -19,6 +19,10 @@ class DesktopOverlayService {
   /// 오버레이 버튼(재생/일시정지/다음/닫기)에서 올라온 액션 콜백. home_screen 이 설정.
   void Function(String action)? onAction;
 
+  /// 멀티 오버레이 pill 액션 콜백(`multi|<timerId>|<action>` 라우팅).
+  /// multi_timer_screen 이 설정 — MultiTimerBloc 이 그 화면의 서브트리에 살기 때문.
+  void Function(String timerId, String action)? onMultiAction;
+
   WindowController? _overlay;
   bool get isShown => _overlay != null;
 
@@ -43,7 +47,16 @@ class DesktopOverlayService {
       selfWindowId = self.windowId;
       await self.setWindowMethodHandler((call) async {
         if (call.method == 'action' && call.arguments is String) {
-          onAction?.call(call.arguments as String);
+          final a = call.arguments as String;
+          // 멀티 pill 액션 — 'multi|<timerId>|<action>' 형식으로 분리 라우팅.
+          if (a.startsWith('multi|')) {
+            final parts = a.split('|');
+            if (parts.length >= 3) {
+              onMultiAction?.call(parts[1], parts.sublist(2).join('|'));
+            }
+          } else {
+            onAction?.call(a);
+          }
         }
         return null;
       });

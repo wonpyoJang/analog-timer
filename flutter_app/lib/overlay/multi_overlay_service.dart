@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import '../services/platform_info.dart';
 import '../services/care_service.dart';
+import '../services/desktop_multi_overlay_service.dart';
 
 /// 엔진 없는 네이티브 멀티 오버레이 브리지.
 ///
@@ -35,6 +36,8 @@ class MultiOverlayService {
   /// 기기별 동시 표시 상한 — 겹침 없이 배치 가능한 슬롯 수(네이티브 격자 공식).
   /// 화면이 클수록 늘어난다. 실측상 메모리·ANR 제약은 없고 화면 공간만이 제약.
   static Future<int> maxWindows() async {
+    // 데스크톱 — 서브엔진 메모리 부담으로 별도(보수적) 상한.
+    if (isDesktop) return DesktopMultiOverlayService.maxWindows;
     if (!isAndroid) return fallbackMaxWindows;
     try {
       final v = await _channel.invokeMethod<int>('capacity');
@@ -45,10 +48,11 @@ class MultiOverlayService {
     }
   }
 
-  /// 네이티브 멀티 오버레이 지원 여부(Android 전용).
-  static bool get supported => isAndroid;
+  /// 멀티 오버레이 지원 여부 — Android(네이티브 뷰) + 데스크톱(서브윈도우 풀).
+  static bool get supported => isAndroid || isDesktop;
 
   static Future<bool> get isPermissionGranted async {
+    if (isDesktop) return true; // 데스크톱은 OS 오버레이 권한 개념 없음.
     if (!isAndroid) return false;
     return FlutterOverlayWindow.isPermissionGranted();
   }
@@ -72,25 +76,41 @@ class MultiOverlayService {
     required bool running,
     bool done = false,
     String doneText = '',
-  }) => _send(
-    'show',
-    id,
-    name: name,
-    color: colorValue,
-    totalMs: totalMs,
-    remainMs: remainMs,
-    running: running,
-    done: done,
-    doneText: doneText,
-  );
+  }) {
+    if (isDesktop) {
+      return DesktopMultiOverlayService.instance.show(
+        id: id,
+        name: name,
+        colorValue: colorValue,
+        totalMs: totalMs,
+        remainMs: remainMs,
+        running: running,
+        done: done,
+        doneText: doneText,
+      );
+    }
+    return _send(
+      'show',
+      id,
+      name: name,
+      color: colorValue,
+      totalMs: totalMs,
+      remainMs: remainMs,
+      running: running,
+      done: done,
+      doneText: doneText,
+    );
+  }
 
   /// id 창을 닫는다. 마지막 창이면 서비스가 스스로 종료한다.
   static Future<void> close(String id) async {
+    if (isDesktop) return DesktopMultiOverlayService.instance.close(id);
     if (!isAndroid) return;
     await _channel.invokeMethod('close', {'id': id});
   }
 
   static Future<void> closeAll() async {
+    if (isDesktop) return DesktopMultiOverlayService.instance.closeAll();
     if (!isAndroid) return;
     await _channel.invokeMethod('closeAll');
   }
