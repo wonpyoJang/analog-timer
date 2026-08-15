@@ -522,7 +522,24 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
           return t;
         })
         .toList();
+    // 데스크톱: 이전 세션에 띄워둔 pill 을 복원 — MtRestore 방출 시 listener 의
+    // _syncOverlays 가 이 집합을 보고 자동으로 다시 띄운다(순서 보장 위해 선세팅).
+    if (isDesktop && mounted) {
+      final savedIds = await PersistenceService.loadDesktopMultiOverlayIds();
+      if (savedIds.isNotEmpty && mounted) {
+        final alive = timers.map((t) => t.id).toSet();
+        setState(() => _overlayIds.addAll(savedIds.where(alive.contains)));
+      }
+    }
     if (mounted) context.read<MultiTimerBloc>().add(MtRestore(timers));
+  }
+
+  /// 데스크톱 pill 표시 집합 저장 — 재시작 복원용. ids 변경 지점에서만 호출.
+  void _persistOverlayIds() {
+    if (!isDesktop) return;
+    unawaited(
+      PersistenceService.saveDesktopMultiOverlayIds(_overlayIds.toList()),
+    );
   }
 
   // 스로틀 저장 — 실행 중 매 틱 저장(16ms)은 막되, 최소 1.5s 간격으로 갱신하고
@@ -765,6 +782,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         MultiOverlayService.close(id);
         _lastPushed.remove(id);
         setState(() => _overlayIds.remove(id));
+        _persistOverlayIds();
     }
   }
 
@@ -779,6 +797,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       MultiOverlayService.close(timer.id);
       _lastPushed.remove(timer.id);
       if (mounted) setState(() => _overlayIds.remove(timer.id));
+      _persistOverlayIds();
       return;
     }
     // 상한 초과 방지 — 기기 화면의 겹침 없는 슬롯 수만큼 허용.
@@ -805,6 +824,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       unawaited(OverlayCoordinator.instance.onMultiOverlayEnabled());
     }
     setState(() => _overlayIds.add(timer.id));
+    _persistOverlayIds();
     _syncOverlays(l, bloc.state);
   }
 
@@ -819,6 +839,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       _overlayIds.remove(id);
       _lastPushed.remove(id);
     }
+    if (gone.isNotEmpty) _persistOverlayIds();
     for (var i = 0; i < state.timers.length; i++) {
       final t = state.timers[i];
       if (!_overlayIds.contains(t.id)) continue;
@@ -829,6 +850,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         MultiOverlayService.close(t.id);
         _overlayIds.remove(t.id);
         _lastPushed.remove(t.id);
+        _persistOverlayIds();
         continue;
       }
       final color = AppColors.segColors[i % AppColors.segColors.length]

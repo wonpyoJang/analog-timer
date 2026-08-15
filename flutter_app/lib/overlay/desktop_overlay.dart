@@ -916,7 +916,6 @@ class _OverlayBodyState extends State<_OverlayBody>
         ),
         padding: const EdgeInsets.all(8),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             // 날짜·요일 — 시계 위 한 줄
             Padding(
@@ -937,30 +936,38 @@ class _OverlayBodyState extends State<_OverlayBody>
               ),
             ),
             // 시계 영역 = 드래그로 창 이동 (서브윈도우라 위치를 직접 추적)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onPanStart: _onDragStart,
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CustomPaint(
-                      painter: OverlayClockPainter(
-                        now: _now,
-                        timerActive: _timerActive,
-                        segRemainMs: _segRemainMs,
-                        segColor: _effectiveTimerColor,
-                        swActive: _swActive,
-                        swElapsedMs: _swElapsedMs,
-                        swStartAngleRad: _swStartAngleRad,
-                        colorblind: ColorblindService.instance.enabled,
-                      ),
-                      child: const SizedBox.expand(),
+            //
+            // Expanded 로 날짜·컨트롤바를 제외한 잔여 높이에 맞춘다 — 이전엔
+            // AspectRatio(1) 이 폭(204)만큼 높이를 차지해 합계가 디자인 높이
+            // (254)를 ~6.5px 초과, "BOTTOM OVERFLOWED" 경고가 상시 표시됐다.
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanStart: _onDragStart,
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CustomPaint(
+                          painter: OverlayClockPainter(
+                            now: _now,
+                            timerActive: _timerActive,
+                            segRemainMs: _segRemainMs,
+                            segColor: _effectiveTimerColor,
+                            swActive: _swActive,
+                            swElapsedMs: _swElapsedMs,
+                            swStartAngleRad: _swStartAngleRad,
+                            colorblind: ColorblindService.instance.enabled,
+                          ),
+                          child: const SizedBox.expand(),
+                        ),
+                        if (_timerActive || _swActive)
+                          IgnorePointer(child: _centerInfo()),
+                      ],
                     ),
-                    if (_timerActive || _swActive)
-                      IgnorePointer(child: _centerInfo()),
-                  ],
+                  ),
                 ),
               ),
             ),

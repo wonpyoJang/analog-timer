@@ -731,6 +731,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _initDesktop() async {
     // 오버레이(서브윈도우) 버튼 → 메인으로 전달되는 액션 처리
     DesktopOverlayService.instance.onAction = _handleOverlayAction;
+    // 트레이 '멀티 타이머' → 멀티 화면 열기(IndexedStack 인덱스 전환).
+    DesktopService.instance.onOpenMultiTimer = _openMultiTimer;
     // 글로벌 핫키(Ctrl+Alt+Space/N/L) — 같은 액션 핸들러로 배선.
     HotkeyService.instance.onAction = _handleOverlayAction;
     // 단축키 맥락 힌트 — 버튼 3번째 클릭 시 액션별 1회 스낵바.
@@ -1639,6 +1641,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       action = 'sw_toggle';
     } else if (key == LogicalKeyboardKey.keyL && !shift) {
       action = 'sw_lap';
+    } else if (isDesktop && key == LogicalKeyboardKey.keyM && !shift) {
+      // M — 멀티 타이머 화면 전환(데스크톱 전용, IndexedStack 인덱스).
+      _openMultiTimer();
+      return true;
     } else if (key == LogicalKeyboardKey.keyW && !shift) {
       action = 'widget_toggle';
     } else if (key == LogicalKeyboardKey.question ||

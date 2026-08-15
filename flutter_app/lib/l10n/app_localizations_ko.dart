@@ -497,6 +497,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shortcutWidgetToggle => '위젯 켜기/끄기';
 
   @override
+  String get shortcutMultiTimer => '멀티 타이머 열기';
+
+  @override
   String get shortcutWidgetMove => '위젯 이동 (위젯을 먼저 클릭)';
 
   @override

@@ -135,6 +135,7 @@ class DesktopService with WindowListener, TrayListener {
           MenuItem(label: status, disabled: true),
           MenuItem.separator(),
           MenuItem(key: 'show', label: '열기'),
+          MenuItem(key: 'multi', label: '멀티 타이머'),
           MenuItem(key: 'restart', label: '다시 시작 (화면 멈춤 해소)'),
           MenuItem(key: 'quit', label: '종료'),
         ],
@@ -326,10 +327,16 @@ class DesktopService with WindowListener, TrayListener {
     switch (menuItem.key) {
       case 'show':
         _showWindow();
+      case 'multi':
+        _showWindow();
+        onOpenMultiTimer?.call();
       case 'restart':
         restart();
       case 'quit':
         quit();
     }
   }
+
+  /// 트레이 '멀티 타이머' → 멀티 화면 열기. home_screen 이 등록.
+  VoidCallback? onOpenMultiTimer;
 }
