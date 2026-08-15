@@ -940,26 +940,35 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
               final showDrift =
                   drift != null &&
                   (driftGid == null || !_driftDismissed.contains(driftGid));
-              final list = ListView.separated(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: items.length,
-                separatorBuilder: (_, _) => const Divider(
-                  height: 1,
-                  indent: 16,
-                  endIndent: 16,
-                  color: AppColors.border,
-                ),
-                itemBuilder: (context, i) => _TimerRow(
-                  timer: items[i],
-                  color: colorById[items[i].id] ?? AppColors.segColors[0],
-                  overlayOn: _overlayIds.contains(items[i].id),
-                  onToggleOverlay: MultiOverlayService.supported
-                      ? () => _toggleOverlayFor(context, items[i])
-                      : null,
-                  scale: lds.scale,
-                  showRing: lds.showRing.value,
-                  dim: lds.dimDone.value && items[i].done,
-                ),
+              final list = LayoutBuilder(
+                builder: (context, constraints) {
+                  // 데스크톱 넓은 창: 좌우 여백으로 내용 폭을 ~560 으로 제한해
+                  // 모바일 같은 정돈된 세로 컬럼으로 보이게 한다(반응형 없음 보완).
+                  final side = isDesktop && constraints.maxWidth > 600
+                      ? (constraints.maxWidth - 560) / 2
+                      : 0.0;
+                  return ListView.separated(
+                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: side),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const Divider(
+                      height: 1,
+                      indent: 16,
+                      endIndent: 16,
+                      color: AppColors.border,
+                    ),
+                    itemBuilder: (context, i) => _TimerRow(
+                      timer: items[i],
+                      color: colorById[items[i].id] ?? AppColors.segColors[0],
+                      overlayOn: _overlayIds.contains(items[i].id),
+                      onToggleOverlay: MultiOverlayService.supported
+                          ? () => _toggleOverlayFor(context, items[i])
+                          : null,
+                      scale: lds.scale,
+                      showRing: lds.showRing.value,
+                      dim: lds.dimDone.value && items[i].done,
+                    ),
+                  );
+                },
               );
               if (!showDrift) return list;
               return Column(

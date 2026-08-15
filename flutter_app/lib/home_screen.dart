@@ -1367,6 +1367,52 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     ),
                                   ),
                                 ),
+                                const SizedBox(width: 10),
+                                // 멀티타이머 바로가기 — 모바일은 하단 탭이지만
+                                // 데스크톱은 탭이 없어 ⋯메뉴에 묻히므로 헤더에 노출.
+                                Tooltip(
+                                  message: l.multiTimerTitle,
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const MultiTimerScreen(),
+                                      ),
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        border: Border.all(
+                                          color: AppColors.border,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.timelapse,
+                                            size: 13,
+                                            color: AppColors.muted,
+                                          ),
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            l.navMulti,
+                                            style: TextStyle(
+                                              color: AppColors.muted,
+                                              fontSize: 11,
+                                              letterSpacing: 0.6,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ],
                               // ⋯ 오버플로 — 설정·동기화·복구(문제 해결)를 한
                               // 뎁스 아래로. 헤더는 [위젯 토글 + ⋯] 2개만 남는다.
