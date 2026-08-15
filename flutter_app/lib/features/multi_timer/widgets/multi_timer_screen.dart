@@ -45,21 +45,27 @@ String _fmt(int ms) {
 class MultiTimerScreen extends StatelessWidget {
   /// 하단 탭으로 임베드될 때 true — 뒤로가기 화살표를 숨긴다.
   final bool embedded;
-  const MultiTimerScreen({super.key, this.embedded = false});
+
+  /// 뒤로가기 동작 재정의 — 데스크톱은 IndexedStack 으로 화면을 살려두므로
+  /// Navigator.pop 대신 홈 인덱스로 전환한다. null 이면 기존 pop 동작.
+  final VoidCallback? onBack;
+
+  const MultiTimerScreen({super.key, this.embedded = false, this.onBack});
 
   @override
   Widget build(BuildContext context) {
     // 복원(async)은 _MultiTimerView.initState 에서 dispatch.
     return BlocProvider(
       create: (_) => MultiTimerBloc(),
-      child: _MultiTimerView(embedded: embedded),
+      child: _MultiTimerView(embedded: embedded, onBack: onBack),
     );
   }
 }
 
 class _MultiTimerView extends StatefulWidget {
   final bool embedded;
-  const _MultiTimerView({this.embedded = false});
+  final VoidCallback? onBack;
+  const _MultiTimerView({this.embedded = false, this.onBack});
   @override
   State<_MultiTimerView> createState() => _MultiTimerViewState();
 }
@@ -845,7 +851,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         backgroundColor: AppColors.bg,
         elevation: 0,
         automaticallyImplyLeading: false,
-        leading: widget.embedded
+        leading: (widget.embedded && widget.onBack == null)
             ? null
             : IconButton(
                 icon: const Icon(
@@ -853,7 +859,8 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                   color: AppColors.text,
                   size: 18,
                 ),
-                onPressed: () => Navigator.pop(context),
+                onPressed:
+                    widget.onBack ?? () => Navigator.pop(context),
               ),
         title: Text(
           l.multiTimerTitle,

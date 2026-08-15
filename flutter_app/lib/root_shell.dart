@@ -88,8 +88,25 @@ class _RootShellState extends State<RootShell> {
 
   @override
   Widget build(BuildContext context) {
-    // 데스크톱: 하단 탭 없이 기존 홈 화면(오버플로 메뉴로 이동).
-    if (isDesktop) return const HomeScreen();
+    // 데스크톱: 하단 탭은 이질적이라 두지 않되, 모바일과 동일하게 IndexedStack 으로
+    // 멀티 타이머 화면을 살려둔다. 라우트 push/pop 방식이면 화면을 떠날 때
+    // MultiTimerBloc 이 dispose 되어 티커·완료 알림·영속화가 모두 멈춘다.
+    // 전환은 홈 헤더의 '멀티' 버튼과 멀티 화면의 뒤로가기로 한다.
+    if (isDesktop) {
+      return IndexedStack(
+        index: _index,
+        children: [
+          HomeScreen(
+            active: _index == 0,
+            onOpenMultiTimer: () => setState(() => _index = 1),
+          ),
+          MultiTimerScreen(
+            embedded: true,
+            onBack: () => setState(() => _index = 0),
+          ),
+        ],
+      );
+    }
 
     final l = AppLocalizations.of(context);
     return Scaffold(

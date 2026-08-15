@@ -59,7 +59,12 @@ class HomeScreen extends StatefulWidget {
   /// 하단 탭에서 현재 보이는 탭인지 여부. false 면 60fps 시계 재빌드를 멈춰
   /// 숨겨진 상태에서 메인스레드 부하를 없앤다(오버레이 조작 굶김 방지).
   final bool active;
-  const HomeScreen({super.key, this.active = true});
+
+  /// 멀티 타이머 열기 동작 재정의 — 데스크톱은 IndexedStack 인덱스 전환을 넘긴다.
+  /// null 이면 기존처럼 라우트로 push(모바일은 하단 탭이라 사용되지 않음).
+  final VoidCallback? onOpenMultiTimer;
+
+  const HomeScreen({super.key, this.active = true, this.onOpenMultiTimer});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -706,6 +711,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     SyncService.instance.onPushSnapshot = null;
     BatteryService.instance.stop();
     super.dispose();
+  }
+
+  /// 멀티 타이머 열기 — 데스크톱(RootShell)은 IndexedStack 인덱스 전환 콜백을
+  /// 넘겨주므로 화면이 dispose 되지 않는다. 콜백이 없으면 기존 라우트 push.
+  void _openMultiTimer() {
+    final open = widget.onOpenMultiTimer;
+    if (open != null) {
+      open();
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MultiTimerScreen()),
+    );
   }
 
   // ── 데스크톱 통합 ────────────────────────────────────────────
@@ -1373,12 +1392,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 Tooltip(
                                   message: l.multiTimerTitle,
                                   child: GestureDetector(
-                                    onTap: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const MultiTimerScreen(),
-                                      ),
-                                    ),
+                                    onTap: _openMultiTimer,
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 10,
@@ -1438,12 +1452,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     showTelemetrySettings(context),
                                 onShowShortcuts: () =>
                                     showShortcutSheet(context),
-                                onOpenMultiTimer: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const MultiTimerScreen(),
-                                  ),
-                                ),
+                                onOpenMultiTimer: _openMultiTimer,
                               ),
                             ],
                           ),
