@@ -38,7 +38,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private var timeText: some View {
-        if conn.timerRunning && conn.timerEndEpochMs > 0 {
+        if conn.timerRunning, conn.timerEndEpochMs > 0, #available(watchOS 9.0, *) {
             Text(timerInterval: Date()...Date(timeIntervalSince1970: conn.timerEndEpochMs / 1000),
                  countsDown: true)
                 .font(.system(size: 32, weight: .bold, design: .monospaced))
