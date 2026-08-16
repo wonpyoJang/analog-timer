@@ -22,8 +22,9 @@ class DeepLinkService {
   bool _started = false;
 
   /// 채널 리스너 등록 + 콜드 스타트 초기 링크 흡수. main 에서 1회 호출.
+  /// Android=MainActivity, iOS=AppDelegate/SceneDelegate 가 같은 채널로 넘긴다.
   Future<void> init() async {
-    if (_started || !isAndroid) return;
+    if (_started || (!isAndroid && !isIOS)) return;
     _started = true;
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'link') {
