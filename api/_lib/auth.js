@@ -9,11 +9,16 @@ import crypto from 'crypto';
 export const SESSION_COOKIE = 'at_admin';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7일
 
+/// 세션 서명 키 — 비밀번호 해시가 있으면 그것을 우선 사용해, 비밀번호를
+/// 바꾸면 기존 세션이 전부 무효화되게 한다. 없으면 레거시 ADMIN_TOKEN.
+function sessionSecret() {
+  return String(
+    process.env.ADMIN_PASSWORD_SCRYPT || process.env.ADMIN_TOKEN || '',
+  );
+}
+
 function hmac(payload) {
-  return crypto
-    .createHmac('sha256', String(process.env.ADMIN_TOKEN))
-    .update(payload)
-    .digest('hex');
+  return crypto.createHmac('sha256', sessionSecret()).update(payload).digest('hex');
 }
 
 /// 상수시간 문자열 비교 — 길이가 달라도 조기 반환하지 않는다.
@@ -32,6 +37,38 @@ export function safeEqual(a, b) {
 export function checkToken(token) {
   if (!process.env.ADMIN_TOKEN || !token) return false;
   return safeEqual(token, process.env.ADMIN_TOKEN);
+}
+
+/// scrypt 해시 문자열 생성 — `scrypt$N$r$p$salthex$hashhex`.
+/// 운영자가 env(ADMIN_PASSWORD_SCRYPT) 값을 만들 때 쓴다.
+export function hashPassword(password, N = 16384, r = 8, p = 1) {
+  const salt = crypto.randomBytes(16);
+  const hash = crypto.scryptSync(String(password), salt, 32, { N, r, p });
+  return `scrypt$${N}$${r}$${p}$${salt.toString('hex')}$${hash.toString('hex')}`;
+}
+
+/// id/비밀번호 검증 — ADMIN_ID + ADMIN_PASSWORD_SCRYPT(해시만 저장, 평문 금지).
+export function checkCredentials(id, password) {
+  const envId = process.env.ADMIN_ID;
+  const stored = process.env.ADMIN_PASSWORD_SCRYPT;
+  if (!envId || !stored || !id || !password) return false;
+  const parts = String(stored).split('$');
+  if (parts.length !== 6 || parts[0] !== 'scrypt') return false;
+  const [, nStr, rStr, pStr, saltHex, hashHex] = parts;
+  let derived;
+  try {
+    derived = crypto.scryptSync(String(password), Buffer.from(saltHex, 'hex'), 32, {
+      N: parseInt(nStr, 10),
+      r: parseInt(rStr, 10),
+      p: parseInt(pStr, 10),
+    });
+  } catch (_) {
+    return false;
+  }
+  // id 비교도 상수시간 — 두 검증을 모두 수행한 뒤 합산한다.
+  const idOk = safeEqual(id, envId);
+  const pwOk = safeEqual(derived.toString('hex'), hashHex);
+  return idOk && pwOk;
 }
 
 /// 로그인 성공 시 Set-Cookie 값 생성.
@@ -62,7 +99,7 @@ function parseCookies(req) {
 
 /// 세션 쿠키가 유효한가 (서명 일치 + 미만료).
 export function verifySession(req) {
-  if (!process.env.ADMIN_TOKEN) return false;
+  if (!sessionSecret()) return false;
   const value = parseCookies(req)[SESSION_COOKIE];
   if (!value) return false;
   const dot = value.indexOf('.');

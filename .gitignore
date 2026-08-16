@@ -12,3 +12,5 @@ package-lock.json
 # TDR/freeze 재현 실험 로그 (로컬 전용)
 repro*.log
 repro*.ps1
+
+.env*
