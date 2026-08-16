@@ -42,7 +42,7 @@ dependencies:
   live_activities: ^2.4.9
   shared_preferences: ^2.3.0
   qr_flutter: ^4.1.0 # 기기 동기화 — 페어링 QR 생성(순수 Dart, 전 플랫폼)
-  mobile_scanner: ^6.0.3 # 기기 동기화 — QR 스캔(모바일 전용, 데스크톱 사용 안 함)
+  mobile_scanner: ^7.4.0 # 기기 동기화 — QR 스캔(모바일 전용). 7.x=GoogleMLKit 9(iOS text_recognition과 정합)
   battery_plus: ^6.0.3
   image_picker: ^1.1.2 # 피드백 첨부 + OCR 봉지 촬영/앨범(모바일+데스크톱)
   google_mlkit_text_recognition: ^0.15.0 # 봉지 OCR — 온디바이스 텍스트 인식(Android)

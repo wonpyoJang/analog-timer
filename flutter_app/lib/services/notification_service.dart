@@ -11,7 +11,9 @@ class NotificationService {
 
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _ready = false;
-  bool get isSupported => defaultTargetPlatform == TargetPlatform.android;
+  bool get _isAndroid => defaultTargetPlatform == TargetPlatform.android;
+  bool get _isApple => defaultTargetPlatform == TargetPlatform.iOS;
+  bool get isSupported => _isAndroid || _isApple;
 
   static const waterChannel = 'water_reminder';
   static const routineChannel = 'routine_alarm';
@@ -21,7 +23,22 @@ class NotificationService {
     tzdata.initializeTimeZones();
     _setLocalByOffset();
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    await _plugin.initialize(const InitializationSettings(android: android));
+    // iOS 권한은 init 시점이 아니라 사용자가 물/루틴 알림을 켤 때
+    // requestPermission()에서 명시 요청(불필요한 권한 팝업 조기 노출 방지).
+    const darwin = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    await _plugin.initialize(
+      const InitializationSettings(android: android, iOS: darwin),
+    );
+    if (_isAndroid) await _createAndroidChannels();
+    _ready = true;
+  }
+
+  /// Android 알림 채널 생성(iOS는 채널 개념 없음 — 스킵).
+  Future<void> _createAndroidChannels() async {
     final impl = _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -42,7 +59,6 @@ class NotificationService {
         importance: Importance.high,
       ),
     );
-    _ready = true;
   }
 
   /// IANA 이름 조회 플러그인 없이 로컬 타임존 설정 — 지금 기기 오프셋과 같은 오프셋을
@@ -62,13 +78,26 @@ class NotificationService {
   Future<bool> requestPermission() async {
     if (!isSupported) return false;
     if (!_ready) await init();
+    if (_isAndroid) {
+      final impl = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      final granted = await impl?.requestNotificationsPermission() ?? false;
+      await impl?.requestExactAlarmsPermission();
+      return granted;
+    }
+    // iOS — 알림 배너/소리/배지 권한 팝업
     final impl = _plugin
         .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
+          IOSFlutterLocalNotificationsPlugin
         >();
-    final granted = await impl?.requestNotificationsPermission() ?? false;
-    await impl?.requestExactAlarmsPermission();
-    return granted;
+    return await impl?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        ) ??
+        false;
   }
 
   Future<void> showNow(
@@ -119,6 +148,14 @@ class NotificationService {
       routine ? '루틴 알람' : '물 마시기 알림',
       importance: routine ? Importance.high : Importance.defaultImportance,
       priority: routine ? Priority.high : Priority.defaultPriority,
+    ),
+    iOS: DarwinNotificationDetails(
+      presentAlert: true,
+      presentSound: true,
+      // 루틴 알람은 집중 모드(방해금지)에서도 뚫도록 시간 민감 레벨.
+      interruptionLevel: routine
+          ? InterruptionLevel.timeSensitive
+          : InterruptionLevel.active,
     ),
   );
 }
