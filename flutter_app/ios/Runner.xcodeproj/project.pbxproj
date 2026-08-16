@@ -14,6 +14,7 @@
 		2F798E3A52CC390AE3BEA918 /* TimerPiPViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9EDE2265350FB9E31C2EE5 /* TimerPiPViewController.swift */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		42D6844410D3C5A64B266B74 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBE08156F988298E688981B7 /* Foundation.framework */; };
 		6C1D9B9DFA41FF2BE45988E6 /* TimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76AEFABD8E97E58D8026ABD5 /* TimerAttributes.swift */; };
 		72A6CAFFA706F903E0F76F90 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E0F2071BF5EB6FB2509D30C /* AVKit.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
@@ -22,8 +23,12 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		99B8FC5659020CF74AA7F7E2 /* AnalogTimerWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 866A4A3CA33F38B1B2A304C3 /* AnalogTimerWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9DC8BCF565B64398C713D5E5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B87A640899B2B983CA62675 /* ContentView.swift */; };
 		B31818E6E3BB91331A0CC678 /* TimerPiPData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE359BCBD55B038E9A307583 /* TimerPiPData.swift */; };
 		B7F9C02FD154ABD0392547B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 438E3429190B82FCBD098CC1 /* Foundation.framework */; };
+		BA3F7FE99B92771E071875CE /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D579B751C6A63F05D931A2F9 /* WatchConnectivityManager.swift */; };
+		CAD7142C10A5AB201CAF223C /* AnalogTimerWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F600CEAC8091FDA006A77D7 /* AnalogTimerWatchApp.swift */; };
 		CE748ACF29F3ACF702D76B20 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9DBCD050D65490890D5E7A29 /* Pods_Runner.framework */; };
 		CFB55630A039F4CC37A375A8 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 749DEB459C32D7759F6D3698 /* AVFoundation.framework */; };
 		D4389368443CF17564F595B9 /* TimerLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2369A18E86A62ED6518FFA8B /* TimerLiveActivityWidget.swift */; };
@@ -45,6 +50,13 @@
 			remoteGlobalIDString = BAFAF15D9B468CDBE271164C;
 			remoteInfo = TimerLiveActivity;
 		};
+		B31615A46F7345C7DECA6936 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 34F08991E6567CACDE1DA124;
+			remoteInfo = AnalogTimerWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -57,6 +69,17 @@
 				F193A999DD3B094924D2632D /* TimerLiveActivity.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7406CC4DAC9C2D4BBED1F223 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				99B8FC5659020CF74AA7F7E2 /* AnalogTimerWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
@@ -81,6 +104,7 @@
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3828784FB174874F2C922F33 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		3B87A640899B2B983CA62675 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		401BDEA824D242B0C25244C3 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		434FDCDB874D2E21BD116CA6 /* TimerLiveActivity.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = TimerLiveActivity.entitlements; sourceTree = "<group>"; };
 		438E3429190B82FCBD098CC1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -92,6 +116,8 @@
 		7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
+		866A4A3CA33F38B1B2A304C3 /* AnalogTimerWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AnalogTimerWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F600CEAC8091FDA006A77D7 /* AnalogTimerWatchApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AnalogTimerWatchApp.swift; sourceTree = "<group>"; };
 		94411795B3E561A591201FC7 /* TimerLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TimerLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
@@ -102,12 +128,14 @@
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9DBCD050D65490890D5E7A29 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9EF45607B1A8A5FBF23103CB /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		BBE08156F988298E688981B7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS11.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		BD9EDE2265350FB9E31C2EE5 /* TimerPiPViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimerPiPViewController.swift; sourceTree = "<group>"; };
 		BE359BCBD55B038E9A307583 /* TimerPiPData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimerPiPData.swift; sourceTree = "<group>"; };
 		BFBCF54EF953D4B32E1E2D61 /* TimerPiPView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimerPiPView.swift; sourceTree = "<group>"; };
 		C4F0ECFFABDBE0A83654A1B1 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		D29E076AE531BBA4A258CF53 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		D395AFFA8876C2A800125FC7 /* TimerPiPManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimerPiPManager.swift; sourceTree = "<group>"; };
+		D579B751C6A63F05D931A2F9 /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		FF208A9EBF23EAADE863D314 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -128,6 +156,14 @@
 				CE748ACF29F3ACF702D76B20 /* Pods_Runner.framework in Frameworks */,
 				72A6CAFFA706F903E0F76F90 /* AVKit.framework in Frameworks */,
 				CFB55630A039F4CC37A375A8 /* AVFoundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EDBF8F023BF83652BA838A92 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				42D6844410D3C5A64B266B74 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,6 +197,14 @@
 			path = RunnerTests;
 			sourceTree = "<group>";
 		};
+		43123F7B04BCE88E5C27792A /* watchOS */ = {
+			isa = PBXGroup;
+			children = (
+				BBE08156F988298E688981B7 /* Foundation.framework */,
+			);
+			name = watchOS;
+			sourceTree = "<group>";
+		};
 		5DB8E0755A2D10457D009964 /* TimerPiP */ = {
 			isa = PBXGroup;
 			children = (
@@ -170,6 +214,17 @@
 				D395AFFA8876C2A800125FC7 /* TimerPiPManager.swift */,
 			);
 			path = TimerPiP;
+			sourceTree = "<group>";
+		};
+		7C72F724360D4D7D2B1DBEF8 /* AnalogTimerWatch */ = {
+			isa = PBXGroup;
+			children = (
+				8F600CEAC8091FDA006A77D7 /* AnalogTimerWatchApp.swift */,
+				D579B751C6A63F05D931A2F9 /* WatchConnectivityManager.swift */,
+				3B87A640899B2B983CA62675 /* ContentView.swift */,
+			);
+			name = AnalogTimerWatch;
+			path = AnalogTimerWatch;
 			sourceTree = "<group>";
 		};
 		9740EEB11CF90186004384FC /* Flutter */ = {
@@ -194,6 +249,7 @@
 				D87D3A3AEE48653724BE377D /* Pods */,
 				F6B85FBEAAD9AFB9C7F542BC /* Frameworks */,
 				15A58E3B6D8BADD0D5ADBF7A /* TimerLiveActivity */,
+				7C72F724360D4D7D2B1DBEF8 /* AnalogTimerWatch */,
 			);
 			sourceTree = "<group>";
 		};
@@ -203,6 +259,7 @@
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
 				94411795B3E561A591201FC7 /* TimerLiveActivity.appex */,
+				866A4A3CA33F38B1B2A304C3 /* AnalogTimerWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -253,6 +310,7 @@
 				D0CA330D73EF9E7E21B005A9 /* iOS */,
 				1E0F2071BF5EB6FB2509D30C /* AVKit.framework */,
 				749DEB459C32D7759F6D3698 /* AVFoundation.framework */,
+				43123F7B04BCE88E5C27792A /* watchOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -279,6 +337,23 @@
 			productReference = 331C8081294A63A400263BE5 /* RunnerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		34F08991E6567CACDE1DA124 /* AnalogTimerWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1D02249D9A07338820D1D230 /* Build configuration list for PBXNativeTarget "AnalogTimerWatch" */;
+			buildPhases = (
+				D9F5AD015710796A6189BABA /* Sources */,
+				EDBF8F023BF83652BA838A92 /* Frameworks */,
+				9652CE861DBEA5C0B36BDB23 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AnalogTimerWatch;
+			productName = AnalogTimerWatch;
+			productReference = 866A4A3CA33F38B1B2A304C3 /* AnalogTimerWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 		97C146ED1CF9000F007C117D /* Runner */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
@@ -287,6 +362,7 @@
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
+				7406CC4DAC9C2D4BBED1F223 /* Embed Watch Content */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				221F387E9239BB5BA2B4B740 /* Embed App Extensions */,
@@ -298,6 +374,7 @@
 			);
 			dependencies = (
 				29326C1DCE497E83CB778390 /* PBXTargetDependency */,
+				D79B736F364882C724997A3E /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -363,12 +440,20 @@
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
 				BAFAF15D9B468CDBE271164C /* TimerLiveActivity */,
+				34F08991E6567CACDE1DA124 /* AnalogTimerWatch */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		331C807F294A63A400263BE5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9652CE861DBEA5C0B36BDB23 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -530,6 +615,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D9F5AD015710796A6189BABA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CAD7142C10A5AB201CAF223C /* AnalogTimerWatchApp.swift in Sources */,
+				BA3F7FE99B92771E071875CE /* WatchConnectivityManager.swift in Sources */,
+				9DC8BCF565B64398C713D5E5 /* ContentView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E7602189BCC407F302E08C56 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -552,6 +647,12 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
+		};
+		D79B736F364882C724997A3E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = AnalogTimerWatch;
+			target = 34F08991E6567CACDE1DA124 /* AnalogTimerWatch */;
+			targetProxy = B31615A46F7345C7DECA6936 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -762,6 +863,31 @@
 			};
 			name = Release;
 		};
+		58C9B3CBD60B8864B8CFF48E /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = P9WSQ5LD7Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Analog Timer";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = dev.analogtimer.analogTimer;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.analogtimer.analogTimer.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Profile;
+		};
 		927009EA7EA333BD359ACF39 /* Profile */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -950,9 +1076,68 @@
 			};
 			name = Release;
 		};
+		9F0FB48ABC11488370A940B0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = P9WSQ5LD7Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Analog Timer";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = dev.analogtimer.analogTimer;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.analogtimer.analogTimer.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Debug;
+		};
+		A26FA09AEC8C7A6A9C7A82D5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = P9WSQ5LD7Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Analog Timer";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = dev.analogtimer.analogTimer;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.analogtimer.analogTimer.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1D02249D9A07338820D1D230 /* Build configuration list for PBXNativeTarget "AnalogTimerWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A26FA09AEC8C7A6A9C7A82D5 /* Release */,
+				9F0FB48ABC11488370A940B0 /* Debug */,
+				58C9B3CBD60B8864B8CFF48E /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		331C8087294A63A400263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
