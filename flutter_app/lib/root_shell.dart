@@ -71,7 +71,33 @@ class _RootShellState extends State<RootShell> {
     if (await WaterReminderService.instance.isDueNow() && mounted) {
       if (isDesktop) unawaited(_maybeDesktopWaterToast());
       showWaterBanner(context);
+      // 물 알림을 실제로 경험하는 맥락에서 위젯을 1회 제안(TTS 온보딩 관례).
+      if (isDesktop) unawaited(_maybeShowWaterWidgetOnboarding());
     }
+  }
+
+  /// 맥락 트리거형 물 위젯 온보딩 — 팝업이 아닌 스낵바 1회. "켜보기"는 즉시
+  /// pill 을 띄워 가치를 체감시킨다. 무시하면 다시 뜨지 않는다.
+  Future<void> _maybeShowWaterWidgetOnboarding() async {
+    final s = WaterReminderService.instance;
+    if (!await s.shouldShowWidgetOnboarding()) return;
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    await s.markWidgetOnboardingShown();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l.waterWidgetOnboardBody),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 12),
+        action: SnackBarAction(
+          label: l.waterWidgetOnboardEnable,
+          textColor: AppColors.accent,
+          // desktopWidget 리스너(_syncWaterWidget)가 즉시 pill 을 띄운다.
+          onPressed: () => unawaited(s.setDesktopWidget(true)),
+        ),
+      ),
+    );
   }
 
   /// 물 pill 상태 push — 위젯 켜짐+알림 켜짐일 때만 표시, 아니면 숨김.
