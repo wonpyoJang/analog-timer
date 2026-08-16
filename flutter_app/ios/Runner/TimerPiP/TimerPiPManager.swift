@@ -9,6 +9,7 @@ class TimerPiPManager: NSObject {
     private var pipController: AVPictureInPictureController?
     private var sourceView: UIView?
     private var isStarted = false
+    private var possibleObs: NSKeyValueObservation?
 
     private override init() {}
 
@@ -39,13 +40,19 @@ class TimerPiPManager: NSObject {
     }
 
     func startPiP() {
-        guard #available(iOS 15.0, *),
-              AVPictureInPictureController.isPictureInPictureSupported(),
-              !isStarted else { return }
+        guard #available(iOS 15.0, *) else { return }
+        guard AVPictureInPictureController.isPictureInPictureSupported() else {
+            NSLog("[PiP] not supported on this device"); return
+        }
+        guard !isStarted else { return }
 
-        guard let rootVC = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first?.windows.first(where: { $0.isKeyWindow })?.rootViewController else { return }
+        // Flutter scene 구성에서 isKeyWindow 매칭이 실패할 수 있어 첫 window 로 폴백.
+        let windows = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+        guard let rootVC = (windows.first(where: { $0.isKeyWindow }) ?? windows.first)?.rootViewController else {
+            NSLog("[PiP] no rootVC"); return
+        }
 
         // 애니메이션 시작 기준이 될 1×1 투명 뷰 (우상단 고정)
         let sv = UIView(frame: CGRect(x: rootVC.view.bounds.width - 2, y: 60, width: 1, height: 1))
@@ -57,7 +64,7 @@ class TimerPiPManager: NSObject {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            print("[PiP] Audio session error: \(error)")
+            NSLog("[PiP] audio session error: \(error.localizedDescription)")
         }
 
         let pipVC = TimerPiPViewController()
@@ -75,12 +82,18 @@ class TimerPiPManager: NSObject {
         pipController = pip
         isStarted = true
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            pip.startPictureInPicture()
+        // isPictureInPicturePossible 는 셋업 후 비동기로 true 가 된다 — 0.15s 고정 대신
+        // 가능해지는 순간 시작(KVO). 아직 not-possible 일 때 start() 를 부르면 무시된다.
+        possibleObs = pip.observe(\.isPictureInPicturePossible, options: [.initial, .new]) { controller, _ in
+            if controller.isPictureInPicturePossible && !controller.isPictureInPictureActive {
+                controller.startPictureInPicture()
+            }
         }
     }
 
     func stopPiP() {
+        possibleObs?.invalidate()
+        possibleObs = nil
         pipController?.stopPictureInPicture()
         pipController = nil
         sourceView?.removeFromSuperview()
@@ -123,7 +136,7 @@ extension TimerPiPManager: AVPictureInPictureControllerDelegate {
         _ controller: AVPictureInPictureController,
         failedToStartPictureInPictureWithError error: Error
     ) {
-        print("[PiP] Failed to start: \(error.localizedDescription)")
+        NSLog("[PiP] failed to start: \(error.localizedDescription)")
         isStarted = false
     }
 }
