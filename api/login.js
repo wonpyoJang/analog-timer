@@ -1,25 +1,28 @@
-// 어드민 로그인/로그아웃 — 토큰 1회 검증 후 HttpOnly 세션 쿠키 발급.
+// 어드민 로그인/로그아웃 — 자격 1회 검증 후 HttpOnly 세션 쿠키 발급.
 //
-// POST   {token}  → 일치 시 Set-Cookie(at_admin, 7일) — 이후 어드민 API 는
-//                   쿠키만으로 인증되어 URL 에 토큰이 남지 않는다.
-// DELETE          → 쿠키 말소(로그아웃).
+// POST {id, password} → ADMIN_ID/ADMIN_PASSWORD_SCRYPT(해시) 검증.
+// POST {token}        → 레거시 ADMIN_TOKEN 검증(하위호환).
+// 성공 시 Set-Cookie(at_admin, 7일) — 이후 어드민 API 는 쿠키만으로 인증.
+// DELETE              → 쿠키 말소(로그아웃).
 import {
   checkToken,
+  checkCredentials,
   createSessionCookie,
   clearSessionCookie,
 } from './_lib/auth.js';
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
-    let token = '';
+    let body;
     try {
-      const body =
-        typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-      token = String(body?.token ?? '');
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     } catch (_) {
       return res.status(400).json({ error: 'bad request' });
     }
-    if (!checkToken(token)) {
+    const authed = body?.token
+      ? checkToken(String(body.token))
+      : checkCredentials(String(body?.id ?? ''), String(body?.password ?? ''));
+    if (!authed) {
       // 무차별 대입 완화 — 실패 응답을 일괄 지연.
       await new Promise((r) => setTimeout(r, 800));
       return res.status(401).json({ error: 'unauthorized' });

@@ -43,8 +43,9 @@ function loginPage(res) {
 <div class="login">
   <form id="f">
     <h1>⏱ 어드민 로그인</h1>
-    <span class="muted">ADMIN_TOKEN 을 입력하세요. 이 브라우저에 7일간 유지됩니다.</span>
-    <input id="tok" type="password" placeholder="ADMIN_TOKEN" autofocus autocomplete="current-password">
+    <span class="muted">로그인 정보는 이 브라우저에 7일간 유지됩니다.</span>
+    <input id="uid" type="text" placeholder="아이디" autofocus autocomplete="username">
+    <input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password">
     <div class="err" id="err"></div>
     <button type="submit">로그인</button>
   </form>
@@ -58,10 +59,13 @@ document.getElementById('f').addEventListener('submit', async (e) => {
     const r = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: document.getElementById('tok').value.trim() }),
+      body: JSON.stringify({
+        id: document.getElementById('uid').value.trim(),
+        password: document.getElementById('pw').value,
+      }),
     });
     if (r.status === 200) { location.reload(); return; }
-    err.textContent = r.status === 401 ? '토큰이 올바르지 않습니다' : '오류 (' + r.status + ')';
+    err.textContent = r.status === 401 ? '아이디 또는 비밀번호가 올바르지 않습니다' : '오류 (' + r.status + ')';
   } catch (ex) { err.textContent = '요청 실패: ' + ex.message; }
 });
 </script>
