@@ -42,7 +42,12 @@ class _WaterSettingsPageState extends State<WaterSettingsPage> {
             builder: (_, on, _) => Switch(
               value: on,
               activeColor: _c2,
-              onChanged: (v) => _s.setEnabled(v),
+              onChanged: (v) async {
+                // 켤 때 알림 권한 먼저 요청 — iOS·Android13+ 는 권한 없으면
+                // OS 예약 알림이 조용히 실패한다(인앱 배너만 뜸).
+                if (v) await NotificationService.instance.requestPermission();
+                await _s.setEnabled(v);
+              },
             ),
           ),
           const SizedBox(width: 8),
