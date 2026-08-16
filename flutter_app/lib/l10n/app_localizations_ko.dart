@@ -679,6 +679,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsHighContrastDesc => '보조 텍스트를 더 밝게 해 가독성 향상';
 
   @override
+  String get waterDesktopWidget => '떠 있는 물 위젯';
+
+  @override
+  String get waterDesktopWidgetSub => '잔 수와 다음 알림을 항상 위 작은 창으로 표시';
+
+  @override
   String get multiTimerTitle => '멀티 타이머';
 
   @override

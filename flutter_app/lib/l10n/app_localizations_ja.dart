@@ -699,6 +699,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsHighContrastDesc => '補助テキストを明るくして読みやすく';
 
   @override
+  String get waterDesktopWidget => 'Floating water widget';
+
+  @override
+  String get waterDesktopWidgetSub =>
+      'Cups and next reminder in an always-on-top mini window';
+
+  @override
   String get multiTimerTitle => 'マルチタイマー';
 
   @override

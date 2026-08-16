@@ -706,6 +706,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Осветлить второстепенный текст для удобства чтения';
 
   @override
+  String get waterDesktopWidget => 'Floating water widget';
+
+  @override
+  String get waterDesktopWidgetSub =>
+      'Cups and next reminder in an always-on-top mini window';
+
+  @override
   String get multiTimerTitle => 'Несколько таймеров';
 
   @override

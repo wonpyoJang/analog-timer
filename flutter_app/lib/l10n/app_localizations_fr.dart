@@ -706,6 +706,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Éclaircir le texte secondaire pour une meilleure lisibilité';
 
   @override
+  String get waterDesktopWidget => 'Floating water widget';
+
+  @override
+  String get waterDesktopWidgetSub =>
+      'Cups and next reminder in an always-on-top mini window';
+
+  @override
   String get multiTimerTitle => 'Minuteurs multiples';
 
   @override

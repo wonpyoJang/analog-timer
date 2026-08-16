@@ -23,6 +23,9 @@ class DesktopOverlayService {
   /// multi_timer_screen 이 설정 — MultiTimerBloc 이 그 화면의 서브트리에 살기 때문.
   void Function(String timerId, String action)? onMultiAction;
 
+  /// 물 위젯 pill 액션 콜백(`water|<action>` 라우팅). RootShell 이 설정.
+  void Function(String action)? onWaterAction;
+
   WindowController? _overlay;
   bool get isShown => _overlay != null;
 
@@ -54,6 +57,8 @@ class DesktopOverlayService {
             if (parts.length >= 3) {
               onMultiAction?.call(parts[1], parts.sublist(2).join('|'));
             }
+          } else if (a.startsWith('water|')) {
+            onWaterAction?.call(a.substring(6));
           } else {
             onAction?.call(a);
           }

@@ -1389,6 +1389,18 @@ abstract class AppLocalizations {
   /// **'Brighten secondary text for easier reading'**
   String get settingsHighContrastDesc;
 
+  /// No description provided for @waterDesktopWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Floating water widget'**
+  String get waterDesktopWidget;
+
+  /// No description provided for @waterDesktopWidgetSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Cups and next reminder in an always-on-top mini window'**
+  String get waterDesktopWidgetSub;
+
   /// No description provided for @multiTimerTitle.
   ///
   /// In en, this message translates to:

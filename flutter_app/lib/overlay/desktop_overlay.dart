@@ -10,6 +10,7 @@ import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 import 'overlay_clock_painter.dart';
 import 'desktop_multi_pill.dart';
+import 'desktop_water_pill.dart';
 import '../services/desktop_service.dart';
 import '../services/colorblind_service.dart';
 import '../services/high_contrast_service.dart';
@@ -68,9 +69,13 @@ Size _sizeForScale(double s) =>
 /// 서브윈도우에선 window_manager 의 getPosition / onWindowMoved 가 동작하지 않으므로,
 /// 위치는 Dart 에서 직접 추적(드래그 시 setPosition)하고 prefs 에 저장한다.
 Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
-  // 멀티 오버레이 pill 서브윈도우 — 단일 위젯과 다른 경량 UI 로 분기.
+  // 멀티 오버레이/물 위젯 pill 서브윈도우 — 단일 위젯과 다른 경량 UI 로 분기.
   if (args['variant'] == 'multi') {
     await runDesktopMultiPill(args);
+    return;
+  }
+  if (args['variant'] == 'water') {
+    await runDesktopWaterPill(args);
     return;
   }
   await ColorblindService.instance.init();
