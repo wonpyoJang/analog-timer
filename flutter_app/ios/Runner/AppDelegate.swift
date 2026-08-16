@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import AppIntents
+import WidgetKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -18,6 +19,8 @@ import AppIntents
         TimerPiPManager.shared.setup(channel: channel)
         // anytime:// 딥링크 브리지 — URL 스킴/Siri App Intent 가 같은 채널로 넘긴다.
         DeepLinkBridge.shared.attach(messenger: controller.binaryMessenger)
+        // 홈 화면 위젯 데이터 브리지 — 앱 그룹에 기록 + 타임라인 리로드.
+        HomeWidgetBridge.shared.attach(messenger: controller.binaryMessenger)
       }
     }
 
@@ -82,6 +85,31 @@ final class DeepLinkBridge {
   /// App Intent 는 앱과 다른 실행 맥락일 수 있어 UserDefaults 로 링크를 넘긴다.
   static func stash(_ link: String) {
     UserDefaults.standard.set(link, forKey: defaultsKey)
+  }
+}
+
+/// 홈 화면 위젯(HomeTimerWidget) 데이터 브리지 — 앱이 타이머 상태를 앱 그룹
+/// UserDefaults 에 "hw_" 키로 기록하고 WidgetKit 타임라인을 리로드한다.
+/// 카운트다운은 위젯의 Text(timerInterval:)가 처리하므로 리로드는 상태 변경 시에만.
+final class HomeWidgetBridge {
+  static let shared = HomeWidgetBridge()
+  private init() {}
+  private let defaults = UserDefaults(suiteName: "group.dev.analogtimer.analogTimer")
+
+  func attach(messenger: FlutterBinaryMessenger) {
+    FlutterMethodChannel(name: "analog_timer/home_widget", binaryMessenger: messenger)
+      .setMethodCallHandler { [weak self] call, result in
+        if call.method == "update", let args = call.arguments as? [String: Any] {
+          self?.write(args)
+        }
+        result(nil)
+      }
+  }
+
+  private func write(_ args: [String: Any]) {
+    guard let d = defaults else { return }
+    for (k, v) in args { d.set(v, forKey: "hw_\(k)") }
+    if #available(iOS 14.0, *) { WidgetCenter.shared.reloadAllTimelines() }
   }
 }
 
