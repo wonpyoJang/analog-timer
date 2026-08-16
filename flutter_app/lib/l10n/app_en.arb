@@ -65,6 +65,7 @@
   "statusWaiting": "Ready",
   "widget": "Widget",
   "widgetOn": "Widget ON",
+  "widgetIosHint": "The timer floats over other apps — leave the app to see it",
   "notifyTimerDoneTitle": "Timer complete",
   "notifyTimerDoneBody": "All segments finished 🎉",
   "notifySegmentDoneTitle": "Segment complete",

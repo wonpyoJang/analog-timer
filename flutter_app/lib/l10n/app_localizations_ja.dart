@@ -138,6 +138,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get widgetOn => 'ウィジェット オン';
 
   @override
+  String get widgetIosHint =>
+      'The timer floats over other apps — leave the app to see it';
+
+  @override
   String get notifyTimerDoneTitle => 'タイマー完了';
 
   @override

@@ -41,6 +41,7 @@
   "statusWaiting": "대기 중",
   "widget": "위젯",
   "widgetOn": "위젯 ON",
+  "widgetIosHint": "타이머가 다른 앱 위에 떠 있어요 — 홈으로 나가면 보여요",
   "notifyTimerDoneTitle": "타이머 완료",
   "notifyTimerDoneBody": "모든 세그먼트를 마쳤습니다 🎉",
   "notifySegmentDoneTitle": "세그먼트 완료",

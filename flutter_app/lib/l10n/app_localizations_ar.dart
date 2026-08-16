@@ -139,6 +139,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get widgetOn => 'الأداة مفعّلة';
 
   @override
+  String get widgetIosHint =>
+      'The timer floats over other apps — leave the app to see it';
+
+  @override
   String get notifyTimerDoneTitle => 'اكتمل المؤقّت';
 
   @override

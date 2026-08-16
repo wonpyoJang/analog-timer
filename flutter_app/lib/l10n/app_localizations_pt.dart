@@ -139,6 +139,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get widgetOn => 'Widget ativado';
 
   @override
+  String get widgetIosHint =>
+      'The timer floats over other apps — leave the app to see it';
+
+  @override
   String get notifyTimerDoneTitle => 'Temporizador concluído';
 
   @override

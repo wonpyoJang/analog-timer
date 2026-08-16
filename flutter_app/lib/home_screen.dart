@@ -41,6 +41,7 @@ import 'services/haptic_service.dart';
 import 'services/colorblind_service.dart';
 import 'widgets/overflow_menu.dart';
 import 'widgets/shortcut_sheet.dart';
+import 'widgets/app_dialog.dart';
 import 'widgets/telemetry_consent.dart';
 import 'widgets/review_prompt.dart';
 import 'services/review_prompt_service.dart';
@@ -1204,6 +1205,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         PersistenceService.saveOverlayOn(true);
         await PipService.start();
         _syncLiveActivity();
+        // iOS 위젯(PiP)은 앱을 벗어나야 화면 위에 뜬다 — 앱 안에선 안 보이므로 안내.
+        if (mounted) {
+          showAppToast(context, AppLocalizations.of(context).widgetIosHint);
+        }
       }
       return;
     }
