@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'features/water/water_screen.dart';
 import 'services/water_reminder_service.dart';
+import 'services/desktop_notification_service.dart';
 import 'l10n/app_localizations.dart';
 import 'features/multi_timer/widgets/multi_timer_screen.dart';
 import 'features/workout/workout_screen.dart';
@@ -38,7 +39,9 @@ class _RootShellState extends State<RootShell> {
     DeepLinkRouter.instance.requestedTab.addListener(_onTabRequest);
     _onTabRequest();
     // 물 마시기 알림(인앱) — 앱 실행 중 1분마다 예정 시각 도래 확인 → 배너.
-    if (isAndroid || isIOS) {
+    // 데스크톱 포함: 트레이 상주라 인앱 체크만으로 상시 커버되고, 창이 가려져
+    // 있을 때를 위해 OS 토스트(액션센터)를 함께 띄운다(OS 예약 알림은 Android 전용).
+    if (isAndroid || isIOS || isDesktop) {
       _waterTimer = Timer.periodic(
         const Duration(seconds: 60),
         (_) => _checkWater(),
@@ -53,8 +56,20 @@ class _RootShellState extends State<RootShell> {
   Future<void> _checkWater() async {
     if (!mounted) return;
     if (await WaterReminderService.instance.isDueNow() && mounted) {
+      if (isDesktop) unawaited(_maybeDesktopWaterToast());
       showWaterBanner(context);
     }
+  }
+
+  /// 데스크톱 토스트 — due 는 사용자가 배너 액션(마심/스누즈)을 누를 때까지
+  /// 유지되므로, 같은 예정 시각(next)에 대해선 한 번만 쏜다(매분 스팸 방지).
+  int _lastWaterToastKey = 0;
+  Future<void> _maybeDesktopWaterToast() async {
+    final s = WaterReminderService.instance;
+    final key = await s.nextReminderMs() ?? 0;
+    if (key == 0 || key == _lastWaterToastKey) return;
+    _lastWaterToastKey = key;
+    await DesktopNotificationService.notify(s.notifTitle, s.notifBody);
   }
 
   bool _waterNotifSynced = false;
