@@ -70,6 +70,8 @@ class TimerPiPManager: NSObject {
 
         let pip = AVPictureInPictureController(contentSource: contentSource)
         pip.delegate = self
+        // 앱을 벗어나면 자동으로 PiP 시작 — video-call PiP 가 화면 위에 뜨는 표준 경로.
+        pip.canStartPictureInPictureAutomaticallyFromInline = true
         pipController = pip
         isStarted = true
 

@@ -64,22 +64,17 @@ class LiveActivityService {
     };
 
     try {
+      // 생명주기는 위젯 토글(ON=이 함수 호출됨 / OFF=end())에 연결 — 타이머가 쉬어도
+      // 위젯이 켜져 있으면 계속 표시(Android 오버레이 parity). idle 이어도 유지.
       if (_active) {
-        if (!timerActive && !swActive) {
-          await _plugin.endActivity(_activityId);
-          _active = false;
-        } else {
-          await _plugin.updateActivity(_activityId, data);
-        }
+        await _plugin.updateActivity(_activityId, data);
       } else {
-        if (timerActive || swActive) {
-          await _plugin.createOrUpdateActivity(
-            _activityId,
-            data,
-            iOSEnableRemoteUpdates: false,
-          );
-          _active = true;
-        }
+        await _plugin.createOrUpdateActivity(
+          _activityId,
+          data,
+          iOSEnableRemoteUpdates: false,
+        );
+        _active = true;
       }
     } catch (e) {
       if (kDebugMode) debugPrint('[LiveActivity] error: $e');
