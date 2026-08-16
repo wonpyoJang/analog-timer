@@ -2,6 +2,7 @@ import Flutter
 import UIKit
 import AppIntents
 import WidgetKit
+import WatchConnectivity
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -21,6 +22,8 @@ import WidgetKit
         DeepLinkBridge.shared.attach(messenger: controller.binaryMessenger)
         // 홈 화면 위젯 데이터 브리지 — 앱 그룹에 기록 + 타임라인 리로드.
         HomeWidgetBridge.shared.attach(messenger: controller.binaryMessenger)
+        // Apple Watch 브리지 — WCSession 으로 폰↔워치 상태/명령 중계.
+        WatchBridge.shared.attach(messenger: controller.binaryMessenger)
       }
     }
 
@@ -85,6 +88,53 @@ final class DeepLinkBridge {
   /// App Intent 는 앱과 다른 실행 맥락일 수 있어 UserDefaults 로 링크를 넘긴다.
   static func stash(_ link: String) {
     UserDefaults.standard.set(link, forKey: defaultsKey)
+  }
+}
+
+/// Apple Watch 브리지 — WCSession 으로 폰↔워치 통신. 폰 → 워치 상태(applicationContext
+/// +reachable 시 message), 워치 → 폰 명령(cmd)을 Flutter 채널로 중계.
+final class WatchBridge: NSObject, WCSessionDelegate {
+  static let shared = WatchBridge()
+  private override init() { super.init() }
+
+  private var channel: FlutterMethodChannel?
+  private var session: WCSession?
+
+  func attach(messenger: FlutterBinaryMessenger) {
+    let ch = FlutterMethodChannel(name: "analog_timer/watch", binaryMessenger: messenger)
+    ch.setMethodCallHandler { [weak self] call, result in
+      if call.method == "sync", let state = call.arguments as? [String: Any] {
+        self?.syncToWatch(state)
+      }
+      result(nil)
+    }
+    channel = ch
+    if WCSession.isSupported() {
+      let s = WCSession.default
+      s.delegate = self
+      s.activate()
+      session = s
+    }
+  }
+
+  private func syncToWatch(_ state: [String: Any]) {
+    guard let s = session, s.activationState == .activated else { return }
+    try? s.updateApplicationContext(state) // 최신 상태 코얼레싱
+    if s.isReachable {
+      s.sendMessage(state, replyHandler: nil, errorHandler: nil)
+    }
+  }
+
+  // MARK: WCSessionDelegate
+  func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {}
+  func sessionDidBecomeInactive(_ session: WCSession) {}
+  func sessionDidDeactivate(_ session: WCSession) { session.activate() }
+
+  func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+    guard let cmd = message["cmd"] as? String else { return }
+    DispatchQueue.main.async { [weak self] in
+      self?.channel?.invokeMethod("command", arguments: cmd)
+    }
   }
 }
 

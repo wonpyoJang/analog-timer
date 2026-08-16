@@ -48,6 +48,7 @@ import 'services/review_prompt_service.dart';
 import 'widgets/sync_connect_page.dart';
 import 'services/sync_service.dart';
 import 'services/home_widget_service.dart';
+import 'services/watch_service.dart';
 import 'services/daily_record_service.dart';
 import 'services/platform_info.dart';
 import 'features/timer/models/segment.dart';
@@ -129,6 +130,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _restoreState();
     } else if (isIOS) {
       _loadIosWidgetPref();
+      // Apple Watch — 워치 버튼 명령을 메인 타이머/스톱워치에 라우팅(단축키와 동일 경로).
+      WatchService.instance
+        ..onCommand = _handleOverlayAction
+        ..init();
       // Android/데스크톱과 동일하게 프로세스 킬 후 타이머/스톱워치 복원 —
       // 이게 없으면 iOS 만 재실행 시 실행 중이던 상태가 전량 유실된다.
       _restoreState();
@@ -1119,8 +1124,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  // iOS 홈 화면 위젯 동기화 — 상태 시그니처가 바뀔 때만 앱 그룹 기록+타임라인 리로드
-  // (카운트다운은 위젯 Text(timerInterval:)가 처리 → 매초 리로드 불필요, 예산 절약).
+  // iOS 홈 위젯 + Apple Watch 상태 동기화. 같은 데이터 맵을 재사용 —
+  // 홈 위젯은 시그니처 변경 시에만(리로드 예산), 워치는 WatchService 가 자체 게이팅.
+  // 카운트다운은 위젯/워치의 Text(timerInterval:)가 처리(timerEndEpochMs).
   String _lastHwSig = '';
   void _syncHomeWidget() {
     if (!isIOS) return;
@@ -1130,9 +1136,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ts.status == TimerStatus.running || ts.status == TimerStatus.paused;
     final timerDone = ts.status == TimerStatus.done;
     final swActive = sw.running || sw.elapsedMs > 0;
-    final sig = '${ts.status}|${ts.currentSeg}|${sw.running}|$swActive';
-    if (sig == _lastHwSig) return;
-    _lastHwSig = sig;
 
     final seg = ts.currentSegment;
     final segTotalMs = seg?.duration.inMilliseconds ?? 1;
@@ -1141,7 +1144,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         : 0.0;
     final color = seg?.color.toARGB32() ?? 0xFFE07A52;
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    HomeWidgetService.update({
+    final data = <String, dynamic>{
       'timerActive': timerActive,
       'timerRunning': ts.status == TimerStatus.running,
       'timerDone': timerDone,
@@ -1159,7 +1162,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       'swRunning': sw.running,
       'swElapsed': swActive ? _fmt(sw.elapsedMs) : '',
       'swStartEpochMs': sw.running ? nowMs - sw.elapsedMs : 0,
-    });
+    };
+    // Apple Watch — 자체 시그니처 게이팅으로 변경 시에만 전송.
+    WatchService.instance.sync(data);
+    // 홈 위젯 — 시그니처 변경 시에만 리로드(예산 절약).
+    final sig = '${ts.status}|${ts.currentSeg}|${sw.running}|$swActive';
+    if (sig == _lastHwSig) return;
+    _lastHwSig = sig;
+    HomeWidgetService.update(data);
   }
 
   void _syncNativeWidget() {
