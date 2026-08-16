@@ -1,3 +1,4 @@
+import { isAuthed } from './_lib/auth.js';
 import { Redis } from '@upstash/redis';
 
 const redis = Redis.fromEnv();
@@ -101,8 +102,7 @@ export default async function handler(req, res) {
   }
 
   // ── 어드민 조회/삭제 ─────────────────────────────────────────
-  const token = req.headers['x-admin-token'] || req.query.token;
-  const authed = process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN;
+  const authed = isAuthed(req);
   if (req.method === 'GET') {
     if (!authed) return res.status(401).json({ error: 'unauthorized' });
     const limit = Math.min(parseInt(req.query.limit ?? '100', 10) || 100, MAX);

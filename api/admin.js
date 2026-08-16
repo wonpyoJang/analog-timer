@@ -1,13 +1,9 @@
-// 어드민 대시보드 — /api/admin?token=<ADMIN_TOKEN>
-// HTML 페이지를 반환하고, 페이지 내 JS 가 같은 token 으로 /api/telemetry 를 조회한다.
-export default function handler(req, res) {
-  const token = String(req.query.token || '');
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.status(200).send(`<!DOCTYPE html>
-<html lang="ko"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Analog Timer — 텔레메트리</title>
-<style>
+// 어드민 대시보드 — /api/admin
+// 세션 쿠키(HttpOnly) 미보유 시 로그인 화면을, 보유 시 대시보드를 반환한다.
+// 페이지 내 JS 는 쿠키만으로 /api/telemetry·feedback 을 조회한다(URL 토큰 없음).
+import { verifySession } from './_lib/auth.js';
+
+const STYLE = `<style>
   :root{--bg:#0E0E0F;--surface:#1A1A1C;--border:#2E2E32;--text:#E8E6E0;--muted:#6B6968;--accent:#F0C040;--orange:#E07A52;--danger:#E05252}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px}
@@ -32,15 +28,62 @@ export default function handler(req, res) {
   details summary{cursor:pointer;color:var(--muted);margin-top:6px;font-size:12px}
   .empty{color:var(--muted);text-align:center;padding:40px}
   input{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 10px;width:240px}
-</style></head>
+  .login{min-height:100vh;display:flex;align-items:center;justify-content:center}
+  .login form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:12px;width:320px}
+  .login h1{margin-bottom:4px}
+  .err{color:var(--danger);font-size:12px;min-height:14px}
+</style>`;
+
+function loginPage(res) {
+  res.status(200).send(`<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analog Timer — 어드민 로그인</title>${STYLE}</head>
+<body>
+<div class="login">
+  <form id="f">
+    <h1>⏱ 어드민 로그인</h1>
+    <span class="muted">ADMIN_TOKEN 을 입력하세요. 이 브라우저에 7일간 유지됩니다.</span>
+    <input id="tok" type="password" placeholder="ADMIN_TOKEN" autofocus autocomplete="current-password">
+    <div class="err" id="err"></div>
+    <button type="submit">로그인</button>
+  </form>
+</div>
+<script>
+document.getElementById('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err');
+  err.textContent = '';
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: document.getElementById('tok').value.trim() }),
+    });
+    if (r.status === 200) { location.reload(); return; }
+    err.textContent = r.status === 401 ? '토큰이 올바르지 않습니다' : '오류 (' + r.status + ')';
+  } catch (ex) { err.textContent = '요청 실패: ' + ex.message; }
+});
+</script>
+</body></html>`);
+}
+
+export default function handler(req, res) {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  if (!verifySession(req)) return loginPage(res);
+  res.status(200).send(`<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analog Timer — 텔레메트리</title>${STYLE}</head>
 <body>
 <header>
   <h1>⏱ Analog Timer — 텔레메트리</h1>
   <span id="count" class="muted">로딩…</span>
   <span style="flex:1"></span>
-  <input id="tok" type="password" placeholder="ADMIN_TOKEN" value="${token.replace(/"/g, '&quot;')}">
   <button onclick="load()">새로고침</button>
   <button onclick="clearAll()" style="border-color:#553">전체 지우기</button>
+  <button onclick="logout()">로그아웃</button>
 </header>
 <div class="wrap">
   <div class="agg" id="agg"></div>
@@ -87,10 +130,13 @@ function render(reports){
     return '<div class="card"><div class="row1">'+badge(r)+'<span class="muted">'+fmt(r.receivedAt)+'</span></div><div class="meta">'+meta+'</div>'+det+'</div>';
   }).join('');
 }
+async function logout(){
+  try{ await fetch('/api/login',{method:'DELETE'}); }catch(e){}
+  location.reload();
+}
 async function clearAll(){
   if(!confirm('모든 리포트를 삭제할까요? 되돌릴 수 없습니다.')) return;
-  const t=document.getElementById('tok').value.trim();
-  try{ const r=await fetch('/api/telemetry?token='+encodeURIComponent(t),{method:'DELETE'}); if(r.status===401){alert('인증 실패 — ADMIN_TOKEN 확인');return;} load(); }catch(e){ alert('실패: '+e.message); }
+  try{ const r=await fetch('/api/telemetry',{method:'DELETE'}); if(r.status===401){location.reload();return;} load(); }catch(e){ alert('실패: '+e.message); }
 }
 function fbBadge(c){
   if(c==='bug') return '<span class="badge crash">버그</span>';
@@ -134,15 +180,14 @@ function renderFb(items){
   }).join('');
 }
 async function load(){
-  const t=document.getElementById('tok').value.trim();
   try{
-    const res=await fetch('/api/telemetry?token='+encodeURIComponent(t)+'&limit=300');
-    if(res.status===401){ document.getElementById('list').innerHTML='<div class="empty">인증 실패 — ADMIN_TOKEN 을 확인하세요</div>'; document.getElementById('count').textContent=''; return; }
+    const res=await fetch('/api/telemetry?limit=300');
+    if(res.status===401){ location.reload(); return; }
     const j=await res.json();
     render(j.reports||[]);
   }catch(e){ document.getElementById('list').innerHTML='<div class="empty">오류: '+esc(e.message)+'</div>'; }
   try{
-    const fr=await fetch('/api/feedback?token='+encodeURIComponent(t)+'&limit=100');
+    const fr=await fetch('/api/feedback?limit=100');
     if(fr.status===200){ const fj=await fr.json(); renderFb(fj.items||[]); }
     else document.getElementById('fblist').innerHTML='<div class="empty">피드백 로드 실패 ('+fr.status+')</div>';
   }catch(e){ document.getElementById('fblist').innerHTML='<div class="empty">오류: '+esc(e.message)+'</div>'; }

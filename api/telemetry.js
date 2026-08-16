@@ -1,3 +1,4 @@
+import { isAuthed } from './_lib/auth.js';
 import { Redis } from '@upstash/redis';
 
 const redis = Redis.fromEnv();
@@ -50,8 +51,7 @@ export default async function handler(req, res) {
 
   // ── 리포트 조회 (어드민, 비밀키) ──────────────────────────
   if (req.method === 'GET') {
-    const token = req.headers['x-admin-token'] || req.query.token;
-    if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) {
+    if (!isAuthed(req)) {
       return res.status(401).json({ error: 'unauthorized' });
     }
     const limit = Math.min(parseInt(req.query.limit ?? '200', 10) || 200, MAX);
@@ -62,8 +62,7 @@ export default async function handler(req, res) {
 
   // ── 전체 삭제 (어드민, 비밀키) — 테스트/누적 데이터 정리용 ──────
   if (req.method === 'DELETE') {
-    const token = req.headers['x-admin-token'] || req.query.token;
-    if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) {
+    if (!isAuthed(req)) {
       return res.status(401).json({ error: 'unauthorized' });
     }
     await redis.del(KEY);
