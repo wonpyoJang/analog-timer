@@ -703,6 +703,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsHighContrastDesc => 'تفتيح النص الثانوي لتسهيل القراءة';
 
   @override
+  String get waterDesktopWidget => 'Floating water widget';
+
+  @override
+  String get waterDesktopWidgetSub =>
+      'Cups and next reminder in an always-on-top mini window';
+
+  @override
   String get multiTimerTitle => 'مؤقتات متعددة';
 
   @override

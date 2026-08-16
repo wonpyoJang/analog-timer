@@ -51,6 +51,10 @@ class WaterReminderService {
   /// 오늘 마신 잔 수(자정 지나면 0). UI 가 구독.
   final ValueNotifier<int> todayCount = ValueNotifier<int>(0);
 
+  /// 데스크톱 떠 있는 물 위젯 표시 여부(데스크톱 전용 UI 에서만 노출).
+  final ValueNotifier<bool> desktopWidget = ValueNotifier<bool>(false);
+  static const _kDesktopWidget = 'water_desktop_widget';
+
   int _lastDrankMs = 0;
   // 알림이 한 번 울리면 그 슬롯을 소비(간격은 여기서 다시 셈) → 재알림 없음.
   int _lastRemindedMs = 0;
@@ -99,6 +103,7 @@ class WaterReminderService {
     withTimerEnd.value = p.getBool(_kWithTimerEnd) ?? false;
     sound.value = p.getBool(_kSound) ?? true;
     dailyGoal.value = p.getInt(_kGoal) ?? 8;
+    desktopWidget.value = p.getBool(_kDesktopWidget) ?? false;
     _lastDrankMs = p.getInt(_kLastDrank) ?? 0;
     _lastRemindedMs = p.getInt(_kLastReminded) ?? 0;
     _snoozeUntilMs = p.getInt(_kSnooze) ?? 0;
@@ -110,6 +115,10 @@ class WaterReminderService {
   }
 
   Future<SharedPreferences> get _p => SharedPreferences.getInstance();
+
+  Future<void> setDesktopWidget(bool v) async {
+    (await _p).setBool(_kDesktopWidget, desktopWidget.value = v);
+  }
 
   Future<void> setEnabled(bool v) async {
     (await _p).setBool(_kEnabled, enabled.value = v);

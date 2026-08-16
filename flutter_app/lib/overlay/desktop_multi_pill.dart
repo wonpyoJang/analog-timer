@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import '../services/high_contrast_service.dart';
+import 'pill_prefs.dart';
 import '../theme/app_theme.dart';
 
 /// 데스크톱 멀티 오버레이 pill — 카운트다운 1개용 소형 always-on-top 창.
@@ -16,65 +16,14 @@ import '../theme/app_theme.dart';
 /// 계산한다. 창은 파괴되지 않고 hide/show 로 재사용된다(풀 — 핸들 누수 회피).
 const _pillSize = Size(210, 64);
 
-/// 슬롯별 위치 파일 — 단일 오버레이와 같은 이유로 SharedPreferences 금지
-/// (서브엔진의 prefs 스냅샷 재작성이 메인 상태를 롤백시키는 race). pill 은
-/// 창(슬롯)마다 별도 파일을 써서 pill 엔진 간 경합도 없앤다.
-File _pillPrefsFile(int slot) {
-  final appdata = Platform.environment['APPDATA'];
-  final base = (Platform.isWindows && appdata != null)
-      ? '$appdata\\dev.analogtimer\\analog_timer'
-      : Directory.systemTemp.path;
-  return File('$base${Platform.pathSeparator}analog_timer_pill_$slot.json');
-}
-
-Future<Offset?> _loadPillPos(int slot) async {
-  try {
-    final f = _pillPrefsFile(slot);
-    if (await f.exists()) {
-      final m = (jsonDecode(await f.readAsString()) as Map)
-          .cast<String, dynamic>();
-      final x = (m['x'] as num?)?.toDouble();
-      final y = (m['y'] as num?)?.toDouble();
-      if (x != null && y != null) return Offset(x, y);
-    }
-  } catch (_) {}
-  return null;
-}
-
-Future<void> _savePillPos(int slot, Offset pos) async {
-  try {
-    final f = _pillPrefsFile(slot);
-    await f.parent.create(recursive: true);
-    await f.writeAsString(jsonEncode({'x': pos.dx, 'y': pos.dy}));
-  } catch (_) {}
-}
-
-/// 저장된 위치가 현재 어느 디스플레이에도 없으면(모니터 해제 등) 무시.
-Future<bool> _isOnAnyDisplay(Offset pos) async {
-  try {
-    final displays = await screenRetriever.getAllDisplays();
-    for (final d in displays) {
-      final p = d.visiblePosition ?? Offset.zero;
-      final s = d.visibleSize ?? d.size;
-      if (pos.dx >= p.dx - _pillSize.width + 40 &&
-          pos.dx <= p.dx + s.width - 40 &&
-          pos.dy >= p.dy - 10 &&
-          pos.dy <= p.dy + s.height - 30) {
-        return true;
-      }
-    }
-  } catch (_) {}
-  return false;
-}
-
 Future<void> runDesktopMultiPill(Map<String, dynamic> args) async {
   // AppColors.muted/faint 가 고대비 토글 getter 라 서비스 초기화 필요.
   await HighContrastService.instance.init();
 
   final slot = (args['slot'] as num?)?.toInt() ?? 0;
   // 저장된 위치(이전 세션 드래그) 우선, 없거나 화면 밖이면 우측 캐스케이드.
-  Offset? pos = await _loadPillPos(slot);
-  if (pos != null && !await _isOnAnyDisplay(pos)) pos = null;
+  Offset? pos = await loadPillPos('$slot');
+  if (pos != null && !await pillPosOnAnyDisplay(pos, _pillSize)) pos = null;
   if (pos == null) {
     try {
       final d = await screenRetriever.getPrimaryDisplay();
@@ -240,7 +189,7 @@ class _DesktopMultiPillState extends State<DesktopMultiPill> {
     try {
       final cursor = await screenRetriever.getCursorScreenPoint();
       _winPos = cursor - grab;
-      unawaited(_savePillPos(widget.slot, _winPos));
+      unawaited(savePillPos('${widget.slot}', _winPos));
     } catch (_) {}
     _dragging = false;
   }
@@ -267,12 +216,13 @@ class _DesktopMultiPillState extends State<DesktopMultiPill> {
         onPanStart: _onDragStart,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
+          // 사각 테두리 — 창이 불투명 사각(투명 레이어드 금지)이라 둥근 모서리를
+          // 쓰면 테두리 밖 네 귀퉁이가 검은 삼각형으로 비어져 보인다.
           decoration: BoxDecoration(
             border: Border.all(
               color: _done ? _color : AppColors.border,
               width: _done ? 2 : 1,
             ),
-            borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
             children: [

@@ -705,6 +705,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Clareia o texto secundário para facilitar a leitura';
 
   @override
+  String get waterDesktopWidget => 'Floating water widget';
+
+  @override
+  String get waterDesktopWidgetSub =>
+      'Cups and next reminder in an always-on-top mini window';
+
+  @override
   String get multiTimerTitle => 'Vários temporizadores';
 
   @override

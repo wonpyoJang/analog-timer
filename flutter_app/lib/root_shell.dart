@@ -6,6 +6,8 @@ import 'home_screen.dart';
 import 'features/water/water_screen.dart';
 import 'services/water_reminder_service.dart';
 import 'services/desktop_notification_service.dart';
+import 'services/desktop_overlay_service.dart';
+import 'services/desktop_water_overlay_service.dart';
 import 'l10n/app_localizations.dart';
 import 'features/multi_timer/widgets/multi_timer_screen.dart';
 import 'features/workout/workout_screen.dart';
@@ -51,13 +53,59 @@ class _RootShellState extends State<RootShell> {
         _checkWater();
       });
     }
+    // 데스크톱 물 위젯(pill) — 설정 토글·잔 수·목표 변화에 반응해 표시/갱신.
+    if (isDesktop) {
+      final s = WaterReminderService.instance;
+      DesktopOverlayService.instance.onWaterAction = _onWaterPillAction;
+      s.desktopWidget.addListener(_syncWaterWidget);
+      s.enabled.addListener(_syncWaterWidget);
+      s.todayCount.addListener(_syncWaterWidget);
+      s.dailyGoal.addListener(_syncWaterWidget);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _syncWaterWidget());
+    }
   }
 
   Future<void> _checkWater() async {
     if (!mounted) return;
+    if (isDesktop) unawaited(_syncWaterWidget()); // 다음 알림 시각 최신화
     if (await WaterReminderService.instance.isDueNow() && mounted) {
       if (isDesktop) unawaited(_maybeDesktopWaterToast());
       showWaterBanner(context);
+    }
+  }
+
+  /// 물 pill 상태 push — 위젯 켜짐+알림 켜짐일 때만 표시, 아니면 숨김.
+  Future<void> _syncWaterWidget() async {
+    if (!isDesktop || !mounted) return;
+    final s = WaterReminderService.instance;
+    if (!s.desktopWidget.value || !s.enabled.value) {
+      await DesktopWaterOverlayService.instance.hide();
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    final next = await s.nextReminderMs();
+    String nextHm = '—';
+    if (next != null) {
+      final d = DateTime.fromMillisecondsSinceEpoch(next);
+      nextHm =
+          '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    }
+    await DesktopWaterOverlayService.instance.show({
+      'title': l.waterBannerTitle,
+      'count': s.todayCount.value,
+      'goal': s.dailyGoal.value,
+      'nextHm': nextHm,
+    });
+  }
+
+  /// 물 pill 액션 — 링 탭=한 잔 기록, ×=위젯 설정 끄기.
+  void _onWaterPillAction(String action) {
+    final s = WaterReminderService.instance;
+    switch (action) {
+      case 'drank':
+        unawaited(s.recordCup()); // todayCount 리스너가 pill 을 갱신한다.
+      case 'close':
+        unawaited(s.setDesktopWidget(false)); // desktopWidget 리스너가 숨긴다.
     }
   }
 
@@ -98,6 +146,19 @@ class _RootShellState extends State<RootShell> {
   void dispose() {
     _waterTimer?.cancel();
     DeepLinkRouter.instance.requestedTab.removeListener(_onTabRequest);
+    if (isDesktop) {
+      final s = WaterReminderService.instance;
+      s.desktopWidget.removeListener(_syncWaterWidget);
+      s.enabled.removeListener(_syncWaterWidget);
+      s.todayCount.removeListener(_syncWaterWidget);
+      s.dailyGoal.removeListener(_syncWaterWidget);
+      if (identical(
+        DesktopOverlayService.instance.onWaterAction,
+        _onWaterPillAction,
+      )) {
+        DesktopOverlayService.instance.onWaterAction = null;
+      }
+    }
     super.dispose();
   }
 

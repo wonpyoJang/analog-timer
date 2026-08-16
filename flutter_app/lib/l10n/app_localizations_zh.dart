@@ -699,6 +699,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsHighContrastDesc => '提亮次要文字以便阅读';
 
   @override
+  String get waterDesktopWidget => 'Floating water widget';
+
+  @override
+  String get waterDesktopWidgetSub =>
+      'Cups and next reminder in an always-on-top mini window';
+
+  @override
   String get multiTimerTitle => '多个计时器';
 
   @override

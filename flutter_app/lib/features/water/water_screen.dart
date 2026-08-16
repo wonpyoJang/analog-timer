@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../services/water_reminder_service.dart';
+import '../../services/platform_info.dart';
 import '../../services/notification_service.dart';
 import '../../services/sound_service.dart';
 import '../../services/haptic_service.dart';
@@ -63,7 +64,17 @@ class _WaterSettingsPageState extends State<WaterSettingsPage> {
               _s.setWithTimerEnd,
             ),
           ]),
-          _group(l.waterHowGroup, [_intensityRow(l), _goalRow(l)]),
+          _group(l.waterHowGroup, [
+            _intensityRow(l),
+            _goalRow(l),
+            if (isDesktop)
+              _switchRow(
+                l.waterDesktopWidget,
+                l.waterDesktopWidgetSub,
+                _s.desktopWidget,
+                _s.setDesktopWidget,
+              ),
+          ]),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
             child: Text(
