@@ -138,6 +138,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get widgetOn => '위젯 ON';
 
   @override
+  String get widgetIosHint => '타이머가 다른 앱 위에 떠 있어요 — 홈으로 나가면 보여요';
+
+  @override
   String get notifyTimerDoneTitle => '타이머 완료';
 
   @override

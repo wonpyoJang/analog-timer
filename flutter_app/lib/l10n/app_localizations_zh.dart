@@ -138,6 +138,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get widgetOn => '小组件已开启';
 
   @override
+  String get widgetIosHint =>
+      'The timer floats over other apps — leave the app to see it';
+
+  @override
   String get notifyTimerDoneTitle => '计时完成';
 
   @override

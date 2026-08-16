@@ -369,6 +369,12 @@ abstract class AppLocalizations {
   /// **'Widget ON'**
   String get widgetOn;
 
+  /// No description provided for @widgetIosHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The timer floats over other apps — leave the app to see it'**
+  String get widgetIosHint;
+
   /// No description provided for @notifyTimerDoneTitle.
   ///
   /// In en, this message translates to:
