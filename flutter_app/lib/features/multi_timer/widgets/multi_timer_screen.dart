@@ -21,6 +21,7 @@ import '../../../features/stats/activity_stats_service.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/desktop_notification_service.dart';
 import '../../../overlay/multi_overlay_service.dart';
+import '../../../services/multi_live_activity_service.dart';
 import '../../../overlay/overlay_coordinator.dart';
 import '../bloc/multi_timer_bloc.dart';
 import '../bloc/multi_timer_event.dart';
@@ -794,10 +795,31 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     final messenger = ScaffoldMessenger.of(context);
     final bloc = context.read<MultiTimerBloc>();
     if (_overlayIds.contains(timer.id)) {
-      MultiOverlayService.close(timer.id);
+      if (isIOS) {
+        await MultiLiveActivityService.instance.end(timer.id);
+      } else {
+        MultiOverlayService.close(timer.id);
+      }
       _lastPushed.remove(timer.id);
       if (mounted) setState(() => _overlayIds.remove(timer.id));
       _persistOverlayIds();
+      return;
+    }
+    // iOS: 타이머별 Live Activity(다이나믹 아일랜드/잠금화면). 자유 오버레이 권한 불필요.
+    if (isIOS) {
+      if (MultiLiveActivityService.instance.atLimit) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              l.multiTimerOverlayLimit(MultiLiveActivityService.maxActivities),
+            ),
+          ),
+        );
+        return;
+      }
+      setState(() => _overlayIds.add(timer.id));
+      _persistOverlayIds();
+      _syncOverlays(l, bloc.state);
       return;
     }
     // 상한 초과 방지 — 기기 화면의 겹침 없는 슬롯 수만큼 허용.
@@ -831,11 +853,16 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   /// 선택된 타이머(_overlayIds)만 네이티브 오버레이 창에 반영. 표시 문구가 바뀐
   /// 창만 push(초 단위 throttle), 삭제됐거나 선택 해제된 타이머의 창은 닫는다.
   void _syncOverlays(AppLocalizations l, MultiTimerState state) {
+    final ios = isIOS;
     final byId = {for (final t in state.timers) t.id: t};
     // 목록에서 사라진 선택 항목은 정리.
     final gone = _overlayIds.where((id) => !byId.containsKey(id)).toList();
     for (final id in gone) {
-      MultiOverlayService.close(id);
+      if (ios) {
+        MultiLiveActivityService.instance.end(id);
+      } else {
+        MultiOverlayService.close(id);
+      }
       _overlayIds.remove(id);
       _lastPushed.remove(id);
     }
@@ -847,7 +874,11 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       if (OverlaySettingsService.instance.autoHideDone.value &&
           t.done &&
           t.acked) {
-        MultiOverlayService.close(t.id);
+        if (ios) {
+          MultiLiveActivityService.instance.end(t.id);
+        } else {
+          MultiOverlayService.close(t.id);
+        }
         _overlayIds.remove(t.id);
         _lastPushed.remove(t.id);
         _persistOverlayIds();
@@ -856,21 +887,59 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       final color = AppColors.segColors[i % AppColors.segColors.length]
           .toARGB32();
       // 상태 전이(시작/정지/리셋/완료/이름·지속시간 변경) 시에만 push. 매초 남은시간은
-      // 네이티브가 자체 계산하므로 key 에 remainMs/시간 문자열을 넣지 않는다.
+      // 네이티브/위젯이 자체 계산하므로 key 에 remainMs/시간 문자열을 넣지 않는다.
       final key = '${t.name}|${t.running}|${t.done}|${t.totalMs}';
       if (_lastPushed[t.id] == key) continue;
       _lastPushed[t.id] = key;
-      MultiOverlayService.show(
-        id: t.id,
-        name: t.name,
-        colorValue: color,
-        totalMs: t.totalMs,
-        remainMs: t.remainMs,
-        running: t.running,
-        done: t.done,
-        doneText: l.multiTimerDone,
-      );
+      if (ios) {
+        MultiLiveActivityService.instance.start(t.id, _laData(t, color));
+      } else {
+        MultiOverlayService.show(
+          id: t.id,
+          name: t.name,
+          colorValue: color,
+          totalMs: t.totalMs,
+          remainMs: t.remainMs,
+          running: t.running,
+          done: t.done,
+          doneText: l.multiTimerDone,
+        );
+      }
     }
+  }
+
+  /// iOS Live Activity 용 데이터 — 기존 TimerLiveActivity 위젯의 키 구조 재사용
+  /// (각 활동이 멀티 타이머 하나를 "타이머"로 표시). running 이면 위젯이
+  /// Text(timerInterval:) 로 자체 카운트다운하도록 timerEndEpochMs 를 준다.
+  Map<String, dynamic> _laData(CountdownTimer t, int color) {
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final frac = t.totalMs > 0 ? (t.remainMs / t.totalMs).clamp(0.0, 1.0) : 0.0;
+    return {
+      'timerActive': !t.done,
+      'timerRunning': t.running,
+      'timerDone': t.done,
+      'timerLabel': t.name,
+      'timerRemain': _fmtMs(t.remainMs),
+      'ending': !t.done && t.remainMs <= 10000,
+      'timerFrac': frac,
+      'timerEndEpochMs': t.running ? nowMs + t.remainMs : 0,
+      'timerColorR': ((color >> 16) & 0xFF) / 255.0,
+      'timerColorG': ((color >> 8) & 0xFF) / 255.0,
+      'timerColorB': (color & 0xFF) / 255.0,
+      'swActive': false,
+      'swRunning': false,
+      'swElapsed': '',
+      'swStartEpochMs': 0,
+    };
+  }
+
+  String _fmtMs(int ms) {
+    final s = (ms / 1000).round();
+    final h = s ~/ 3600, m = (s % 3600) ~/ 60, sec = s % 60;
+    if (h > 0) {
+      return '$h:${m.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
+    }
+    return '$m:${sec.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -912,8 +981,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                   color: AppColors.text,
                   size: 18,
                 ),
-                onPressed:
-                    widget.onBack ?? () => Navigator.pop(context),
+                onPressed: widget.onBack ?? () => Navigator.pop(context),
               ),
         title: Text(
           l.multiTimerTitle,
@@ -1008,7 +1076,10 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                       ? (constraints.maxWidth - 560) / 2
                       : 0.0;
                   return ListView.separated(
-                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: side),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: side,
+                    ),
                     itemCount: items.length,
                     separatorBuilder: (_, _) => const Divider(
                       height: 1,
@@ -1020,7 +1091,9 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                       timer: items[i],
                       color: colorById[items[i].id] ?? AppColors.segColors[0],
                       overlayOn: _overlayIds.contains(items[i].id),
-                      onToggleOverlay: MultiOverlayService.supported
+                      onToggleOverlay:
+                          (MultiOverlayService.supported ||
+                              MultiLiveActivityService.instance.supported)
                           ? () => _toggleOverlayFor(context, items[i])
                           : null,
                       scale: lds.scale,
