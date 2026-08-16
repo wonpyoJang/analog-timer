@@ -132,8 +132,15 @@ public class OverlayService extends Service implements View.OnTouchListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         mResources = getApplicationContext().getResources();
-        // Android can restart sticky services with a null intent — guard against NPE
-        if (intent == null) return START_STICKY;
+        // 프로세스 킬 후 스티키 재시작(null intent): 엔진/뷰 없이 좀비 FGS로 남아
+        // OS 재시작이 반복되면 메모리 압박 기기에서 스래싱→서비스 실행 ANR. 깔끔히
+        // 종료하고 앱의 복구 타이머(_restoreOverlayIfDead)가 포그라운드 복귀 시 재생성.
+        if (intent == null) {
+            isRunning = false;
+            stopForeground(STOP_FOREGROUND_REMOVE);
+            stopSelf();
+            return START_NOT_STICKY;
+        }
         int startX = intent.getIntExtra("startX", OverlayConstants.DEFAULT_XY);
         int startY = intent.getIntExtra("startY", OverlayConstants.DEFAULT_XY);
         boolean isCloseWindow = intent.getBooleanExtra(INTENT_EXTRA_IS_CLOSE_WINDOW, false);
@@ -148,10 +155,11 @@ public class OverlayService extends Service implements View.OnTouchListener {
             return START_STICKY;
         }
         if (windowManager != null) {
+            // 재show — 기존 뷰만 정리하고 아래에서 재생성. 서비스 자체는 살려둔다
+            // (stopSelf 금지: 재부착 직후 종료 예약돼 오버레이가 사라지고 재시작 스래싱 유발)
             windowManager.removeView(flutterView);
             windowManager = null;
             flutterView.detachFromFlutterEngine();
-            stopSelf();
         }
         isRunning = true;
         Log.d("onStartCommand", "Service started");
