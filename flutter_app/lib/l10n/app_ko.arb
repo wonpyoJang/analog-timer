@@ -162,6 +162,7 @@
   "shortcutSwToggle": "스톱워치 시작/정지",
   "shortcutSwLap": "랩",
   "shortcutWidgetToggle": "위젯 켜기/끄기",
+  "shortcutMultiTimer": "멀티 타이머 열기",
   "shortcutWidgetMove": "위젯 이동 (위젯을 먼저 클릭)",
   "shortcutWidgetAnchor": "위젯 3×3 그리드 스냅",
   "shortcutWidgetMirror": "위젯 반대편으로 대칭 이동",

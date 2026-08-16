@@ -31,6 +31,7 @@ import 'alarm_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../services/ocr_service.dart';
 import '../../../services/platform_info.dart';
+import '../../../services/desktop_overlay_service.dart';
 
 String _fmt(int ms) {
   final total = (ms / 1000).ceil();
@@ -45,21 +46,27 @@ String _fmt(int ms) {
 class MultiTimerScreen extends StatelessWidget {
   /// 하단 탭으로 임베드될 때 true — 뒤로가기 화살표를 숨긴다.
   final bool embedded;
-  const MultiTimerScreen({super.key, this.embedded = false});
+
+  /// 뒤로가기 동작 재정의 — 데스크톱은 IndexedStack 으로 화면을 살려두므로
+  /// Navigator.pop 대신 홈 인덱스로 전환한다. null 이면 기존 pop 동작.
+  final VoidCallback? onBack;
+
+  const MultiTimerScreen({super.key, this.embedded = false, this.onBack});
 
   @override
   Widget build(BuildContext context) {
     // 복원(async)은 _MultiTimerView.initState 에서 dispatch.
     return BlocProvider(
       create: (_) => MultiTimerBloc(),
-      child: _MultiTimerView(embedded: embedded),
+      child: _MultiTimerView(embedded: embedded, onBack: onBack),
     );
   }
 }
 
 class _MultiTimerView extends StatefulWidget {
   final bool embedded;
-  const _MultiTimerView({this.embedded = false});
+  final VoidCallback? onBack;
+  const _MultiTimerView({this.embedded = false, this.onBack});
   @override
   State<_MultiTimerView> createState() => _MultiTimerViewState();
 }
@@ -92,6 +99,11 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     _restore();
     // 단일 오버레이가 켜지면 멀티 오버레이를 전부 닫도록 훅 등록(상호 배타).
     OverlayCoordinator.instance.closeMultiOverlays = _closeAllOverlaysForMutex;
+    // 데스크톱 pill 액션(재생/정지·닫기) 수신 — MultiTimerBloc 이 이 화면의
+    // 서브트리에 살므로 여기서 디스패치한다(IndexedStack 상주라 앱 수명 내내 유효).
+    if (isDesktop) {
+      DesktopOverlayService.instance.onMultiAction = _onDesktopPillAction;
+    }
     // l10n 이 필요한 기본 시드는 첫 프레임 후에(initState 에선 inherited 조회 불가).
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadPresets());
     // pill 탭 = 프리-알림 구간 +5분 연장(페르소나 §5).
@@ -510,7 +522,24 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
           return t;
         })
         .toList();
+    // 데스크톱: 이전 세션에 띄워둔 pill 을 복원 — MtRestore 방출 시 listener 의
+    // _syncOverlays 가 이 집합을 보고 자동으로 다시 띄운다(순서 보장 위해 선세팅).
+    if (isDesktop && mounted) {
+      final savedIds = await PersistenceService.loadDesktopMultiOverlayIds();
+      if (savedIds.isNotEmpty && mounted) {
+        final alive = timers.map((t) => t.id).toSet();
+        setState(() => _overlayIds.addAll(savedIds.where(alive.contains)));
+      }
+    }
     if (mounted) context.read<MultiTimerBloc>().add(MtRestore(timers));
+  }
+
+  /// 데스크톱 pill 표시 집합 저장 — 재시작 복원용. ids 변경 지점에서만 호출.
+  void _persistOverlayIds() {
+    if (!isDesktop) return;
+    unawaited(
+      PersistenceService.saveDesktopMultiOverlayIds(_overlayIds.toList()),
+    );
   }
 
   // 스로틀 저장 — 실행 중 매 틱 저장(16ms)은 막되, 최소 1.5s 간격으로 갱신하고
@@ -740,6 +769,23 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
   }
 
   /// 개별 타이머의 오버레이 위젯 켜기/끄기. 켤 때만 권한 확인.
+  /// 데스크톱 pill 에서 올라온 액션 — `multi|<id>|<action>` 라우팅의 종착지.
+  void _onDesktopPillAction(String id, String action) {
+    if (!mounted) return;
+    final bloc = context.read<MultiTimerBloc>();
+    switch (action) {
+      case 'toggle':
+        final t = bloc.state.timers.where((e) => e.id == id).firstOrNull;
+        if (t == null || t.done) return;
+        bloc.add(t.running ? MtPause(id) : MtStart(id));
+      case 'close':
+        MultiOverlayService.close(id);
+        _lastPushed.remove(id);
+        setState(() => _overlayIds.remove(id));
+        _persistOverlayIds();
+    }
+  }
+
   Future<void> _toggleOverlayFor(
     BuildContext context,
     CountdownTimer timer,
@@ -751,6 +797,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       MultiOverlayService.close(timer.id);
       _lastPushed.remove(timer.id);
       if (mounted) setState(() => _overlayIds.remove(timer.id));
+      _persistOverlayIds();
       return;
     }
     // 상한 초과 방지 — 기기 화면의 겹침 없는 슬롯 수만큼 허용.
@@ -772,8 +819,12 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     }
     if (!mounted) return;
     // 상호 배타 — 단일 오버레이(2nd 엔진)를 꺼 플랫폼 스레드 경합 제거.
-    unawaited(OverlayCoordinator.instance.onMultiOverlayEnabled());
+    // Android 전용: 데스크톱은 다중 서브윈도우 공존이 검증되어 함께 띄운다.
+    if (isAndroid) {
+      unawaited(OverlayCoordinator.instance.onMultiOverlayEnabled());
+    }
     setState(() => _overlayIds.add(timer.id));
+    _persistOverlayIds();
     _syncOverlays(l, bloc.state);
   }
 
@@ -788,6 +839,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
       _overlayIds.remove(id);
       _lastPushed.remove(id);
     }
+    if (gone.isNotEmpty) _persistOverlayIds();
     for (var i = 0; i < state.timers.length; i++) {
       final t = state.timers[i];
       if (!_overlayIds.contains(t.id)) continue;
@@ -798,6 +850,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         MultiOverlayService.close(t.id);
         _overlayIds.remove(t.id);
         _lastPushed.remove(t.id);
+        _persistOverlayIds();
         continue;
       }
       final color = AppColors.segColors[i % AppColors.segColors.length]
@@ -831,6 +884,12 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
     )) {
       OverlayCoordinator.instance.closeMultiOverlays = null;
     }
+    if (identical(
+      DesktopOverlayService.instance.onMultiAction,
+      _onDesktopPillAction,
+    )) {
+      DesktopOverlayService.instance.onMultiAction = null;
+    }
     // 화면을 떠나면 bloc(ticker)이 정지 → 멈춘 pill이 남지 않도록 정리.
     if (_overlayIds.isNotEmpty) MultiOverlayService.closeAll();
     super.dispose();
@@ -845,7 +904,7 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
         backgroundColor: AppColors.bg,
         elevation: 0,
         automaticallyImplyLeading: false,
-        leading: widget.embedded
+        leading: (widget.embedded && widget.onBack == null)
             ? null
             : IconButton(
                 icon: const Icon(
@@ -853,7 +912,8 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
                   color: AppColors.text,
                   size: 18,
                 ),
-                onPressed: () => Navigator.pop(context),
+                onPressed:
+                    widget.onBack ?? () => Navigator.pop(context),
               ),
         title: Text(
           l.multiTimerTitle,
@@ -940,26 +1000,35 @@ class _MultiTimerViewState extends State<_MultiTimerView> {
               final showDrift =
                   drift != null &&
                   (driftGid == null || !_driftDismissed.contains(driftGid));
-              final list = ListView.separated(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: items.length,
-                separatorBuilder: (_, _) => const Divider(
-                  height: 1,
-                  indent: 16,
-                  endIndent: 16,
-                  color: AppColors.border,
-                ),
-                itemBuilder: (context, i) => _TimerRow(
-                  timer: items[i],
-                  color: colorById[items[i].id] ?? AppColors.segColors[0],
-                  overlayOn: _overlayIds.contains(items[i].id),
-                  onToggleOverlay: MultiOverlayService.supported
-                      ? () => _toggleOverlayFor(context, items[i])
-                      : null,
-                  scale: lds.scale,
-                  showRing: lds.showRing.value,
-                  dim: lds.dimDone.value && items[i].done,
-                ),
+              final list = LayoutBuilder(
+                builder: (context, constraints) {
+                  // 데스크톱 넓은 창: 좌우 여백으로 내용 폭을 ~560 으로 제한해
+                  // 모바일 같은 정돈된 세로 컬럼으로 보이게 한다(반응형 없음 보완).
+                  final side = isDesktop && constraints.maxWidth > 600
+                      ? (constraints.maxWidth - 560) / 2
+                      : 0.0;
+                  return ListView.separated(
+                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: side),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const Divider(
+                      height: 1,
+                      indent: 16,
+                      endIndent: 16,
+                      color: AppColors.border,
+                    ),
+                    itemBuilder: (context, i) => _TimerRow(
+                      timer: items[i],
+                      color: colorById[items[i].id] ?? AppColors.segColors[0],
+                      overlayOn: _overlayIds.contains(items[i].id),
+                      onToggleOverlay: MultiOverlayService.supported
+                          ? () => _toggleOverlayFor(context, items[i])
+                          : null,
+                      scale: lds.scale,
+                      showRing: lds.showRing.value,
+                      dim: lds.dimDone.value && items[i].done,
+                    ),
+                  );
+                },
               );
               if (!showDrift) return list;
               return Column(

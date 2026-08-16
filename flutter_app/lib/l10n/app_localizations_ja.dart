@@ -511,6 +511,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shortcutWidgetToggle => 'Toggle widget';
 
   @override
+  String get shortcutMultiTimer => 'Open multiple timers';
+
+  @override
   String get shortcutWidgetMove => 'Move widget (click the widget first)';
 
   @override

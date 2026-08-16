@@ -1053,6 +1053,12 @@ abstract class AppLocalizations {
   /// **'Toggle widget'**
   String get shortcutWidgetToggle;
 
+  /// No description provided for @shortcutMultiTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open multiple timers'**
+  String get shortcutMultiTimer;
+
   /// No description provided for @shortcutWidgetMove.
   ///
   /// In en, this message translates to:

@@ -148,6 +148,26 @@ class PersistenceService {
     }
   }
 
+  static const _kDesktopMultiOverlayIds = 'desktop_multi_overlay_ids';
+
+  /// 데스크톱 멀티 오버레이(pill)로 띄워둔 타이머 id 목록 — 재시작 복원용.
+  /// (Android pill 은 프로세스와 함께 죽는 네이티브 뷰라 저장하지 않는다.)
+  static Future<void> saveDesktopMultiOverlayIds(List<String> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kDesktopMultiOverlayIds, jsonEncode(ids));
+  }
+
+  static Future<List<String>> loadDesktopMultiOverlayIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString(_kDesktopMultiOverlayIds);
+    if (str == null) return const [];
+    try {
+      return (jsonDecode(str) as List).cast<String>();
+    } catch (_) {
+      return const [];
+    }
+  }
+
   static const _kOverlayPosX = 'overlay_pos_x';
   static const _kOverlayPosY = 'overlay_pos_y';
   static const _kOverlayCustomW = 'overlay_custom_w';

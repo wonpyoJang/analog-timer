@@ -59,7 +59,12 @@ class HomeScreen extends StatefulWidget {
   /// 하단 탭에서 현재 보이는 탭인지 여부. false 면 60fps 시계 재빌드를 멈춰
   /// 숨겨진 상태에서 메인스레드 부하를 없앤다(오버레이 조작 굶김 방지).
   final bool active;
-  const HomeScreen({super.key, this.active = true});
+
+  /// 멀티 타이머 열기 동작 재정의 — 데스크톱은 IndexedStack 인덱스 전환을 넘긴다.
+  /// null 이면 기존처럼 라우트로 push(모바일은 하단 탭이라 사용되지 않음).
+  final VoidCallback? onOpenMultiTimer;
+
+  const HomeScreen({super.key, this.active = true, this.onOpenMultiTimer});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -708,10 +713,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  /// 멀티 타이머 열기 — 데스크톱(RootShell)은 IndexedStack 인덱스 전환 콜백을
+  /// 넘겨주므로 화면이 dispose 되지 않는다. 콜백이 없으면 기존 라우트 push.
+  void _openMultiTimer() {
+    final open = widget.onOpenMultiTimer;
+    if (open != null) {
+      open();
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MultiTimerScreen()),
+    );
+  }
+
   // ── 데스크톱 통합 ────────────────────────────────────────────
   Future<void> _initDesktop() async {
     // 오버레이(서브윈도우) 버튼 → 메인으로 전달되는 액션 처리
     DesktopOverlayService.instance.onAction = _handleOverlayAction;
+    // 트레이 '멀티 타이머' → 멀티 화면 열기(IndexedStack 인덱스 전환).
+    DesktopService.instance.onOpenMultiTimer = _openMultiTimer;
     // 글로벌 핫키(Ctrl+Alt+Space/N/L) — 같은 액션 핸들러로 배선.
     HotkeyService.instance.onAction = _handleOverlayAction;
     // 단축키 맥락 힌트 — 버튼 3번째 클릭 시 액션별 1회 스낵바.
@@ -1367,6 +1388,47 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     ),
                                   ),
                                 ),
+                                const SizedBox(width: 10),
+                                // 멀티타이머 바로가기 — 모바일은 하단 탭이지만
+                                // 데스크톱은 탭이 없어 ⋯메뉴에 묻히므로 헤더에 노출.
+                                Tooltip(
+                                  message: l.multiTimerTitle,
+                                  child: GestureDetector(
+                                    onTap: _openMultiTimer,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        border: Border.all(
+                                          color: AppColors.border,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.timelapse,
+                                            size: 13,
+                                            color: AppColors.muted,
+                                          ),
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            l.navMulti,
+                                            style: TextStyle(
+                                              color: AppColors.muted,
+                                              fontSize: 11,
+                                              letterSpacing: 0.6,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ],
                               // ⋯ 오버플로 — 설정·동기화·복구(문제 해결)를 한
                               // 뎁스 아래로. 헤더는 [위젯 토글 + ⋯] 2개만 남는다.
@@ -1392,12 +1454,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     showTelemetrySettings(context),
                                 onShowShortcuts: () =>
                                     showShortcutSheet(context),
-                                onOpenMultiTimer: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const MultiTimerScreen(),
-                                  ),
-                                ),
+                                onOpenMultiTimer: _openMultiTimer,
                               ),
                             ],
                           ),
@@ -1584,6 +1641,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       action = 'sw_toggle';
     } else if (key == LogicalKeyboardKey.keyL && !shift) {
       action = 'sw_lap';
+    } else if (isDesktop && key == LogicalKeyboardKey.keyM && !shift) {
+      // M — 멀티 타이머 화면 전환(데스크톱 전용, IndexedStack 인덱스).
+      _openMultiTimer();
+      return true;
     } else if (key == LogicalKeyboardKey.keyW && !shift) {
       action = 'widget_toggle';
     } else if (key == LogicalKeyboardKey.question ||
