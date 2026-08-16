@@ -47,6 +47,7 @@ import 'widgets/review_prompt.dart';
 import 'services/review_prompt_service.dart';
 import 'widgets/sync_connect_page.dart';
 import 'services/sync_service.dart';
+import 'services/home_widget_service.dart';
 import 'services/daily_record_service.dart';
 import 'services/platform_info.dart';
 import 'features/timer/models/segment.dart';
@@ -628,6 +629,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         _syncOverlay();
         _syncLiveActivity();
         _syncDesktopOverlay();
+        _syncHomeWidget(); // iOS 홈 위젯 — 상태 변경 시에만 앱 그룹 기록+리로드
         _maybeChimeHour(now); // 정각 시보 — 1초 주기면 0분을 놓치지 않는다
       }
       _nativeTick = (_nativeTick + 1) % 62; // ~1초마다
@@ -1115,6 +1117,49 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       swRunning: swState.running,
       swElapsed: swElapsed,
     );
+  }
+
+  // iOS 홈 화면 위젯 동기화 — 상태 시그니처가 바뀔 때만 앱 그룹 기록+타임라인 리로드
+  // (카운트다운은 위젯 Text(timerInterval:)가 처리 → 매초 리로드 불필요, 예산 절약).
+  String _lastHwSig = '';
+  void _syncHomeWidget() {
+    if (!isIOS) return;
+    final ts = context.read<TimerBloc>().state;
+    final sw = context.read<StopwatchBloc>().state;
+    final timerActive =
+        ts.status == TimerStatus.running || ts.status == TimerStatus.paused;
+    final timerDone = ts.status == TimerStatus.done;
+    final swActive = sw.running || sw.elapsedMs > 0;
+    final sig = '${ts.status}|${ts.currentSeg}|${sw.running}|$swActive';
+    if (sig == _lastHwSig) return;
+    _lastHwSig = sig;
+
+    final seg = ts.currentSegment;
+    final segTotalMs = seg?.duration.inMilliseconds ?? 1;
+    final timerFrac = (timerActive && segTotalMs > 0)
+        ? (ts.segRemainMs / segTotalMs).clamp(0.0, 1.0)
+        : 0.0;
+    final color = seg?.color.toARGB32() ?? 0xFFE07A52;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    HomeWidgetService.update({
+      'timerActive': timerActive,
+      'timerRunning': ts.status == TimerStatus.running,
+      'timerDone': timerDone,
+      'timerLabel': seg?.name ?? '',
+      'timerRemain': timerActive ? _fmt(ts.segRemainMs) : '--:--',
+      'ending': timerActive && ts.segRemainMs <= 10000,
+      'timerFrac': timerFrac,
+      'timerEndEpochMs': ts.status == TimerStatus.running
+          ? nowMs + ts.segRemainMs
+          : 0,
+      'timerColorR': ((color >> 16) & 0xFF) / 255.0,
+      'timerColorG': ((color >> 8) & 0xFF) / 255.0,
+      'timerColorB': (color & 0xFF) / 255.0,
+      'swActive': swActive,
+      'swRunning': sw.running,
+      'swElapsed': swActive ? _fmt(sw.elapsedMs) : '',
+      'swStartEpochMs': sw.running ? nowMs - sw.elapsedMs : 0,
+    });
   }
 
   void _syncNativeWidget() {

@@ -278,12 +278,134 @@ struct TimerExpandedView: View {
     }
 }
 
+// MARK: - Home Screen Widget (WidgetKit)
+// 앱이 상태 변경 시 앱 그룹에 "hw_" 키로 기록 → 위젯이 읽는다. 카운트다운은
+// Text(timerInterval:)가 스스로 처리하므로 타임라인 리로드는 상태 변경 시에만.
+
+private func hwStr(_ k: String) -> String { sharedDefault.string(forKey: "hw_\(k)") ?? "" }
+private func hwBool(_ k: String) -> Bool { sharedDefault.bool(forKey: "hw_\(k)") }
+private func hwDbl(_ k: String) -> Double { sharedDefault.double(forKey: "hw_\(k)") }
+
+private func hwTimerColor() -> Color {
+    let r = hwDbl("timerColorR"), g = hwDbl("timerColorG"), b = hwDbl("timerColorB")
+    if r == 0 && g == 0 && b == 0 { return Color(red: 0.878, green: 0.478, blue: 0.322) }
+    return Color(red: r, green: g, blue: b)
+}
+
+private func hwEndDate() -> Date? {
+    let ms = hwDbl("timerEndEpochMs"); guard ms > 0 else { return nil }
+    return Date(timeIntervalSince1970: ms / 1000)
+}
+
+private func hwSwStartDate() -> Date? {
+    let ms = hwDbl("swStartEpochMs"); guard ms > 0 else { return nil }
+    return Date(timeIntervalSince1970: ms / 1000)
+}
+
+struct HomeTimerEntry: TimelineEntry { let date: Date }
+
+struct HomeTimerProvider: TimelineProvider {
+    func placeholder(in context: Context) -> HomeTimerEntry { HomeTimerEntry(date: Date()) }
+    func getSnapshot(in context: Context, completion: @escaping (HomeTimerEntry) -> Void) {
+        completion(HomeTimerEntry(date: Date()))
+    }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<HomeTimerEntry>) -> Void) {
+        // 카운트다운은 Text(timerInterval:)가 처리 → 엔트리 1개, 상태변경 시 앱이 reload.
+        completion(Timeline(entries: [HomeTimerEntry(date: Date())], policy: .never))
+    }
+}
+
+private struct WidgetContainerBackground: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOSApplicationExtension 17.0, *) {
+            content.containerBackground(bgColor, for: .widget)
+        } else {
+            content.background(bgColor)
+        }
+    }
+}
+
+struct HomeTimerWidgetView: View {
+    var body: some View {
+        let timerActive = hwBool("timerActive")
+        let timerDone   = hwBool("timerDone")
+        let running     = hwBool("timerRunning")
+        let ending      = hwBool("ending")
+        let swActive    = hwBool("swActive")
+        let tColor      = ending ? Color(red: 0.878, green: 0.322, blue: 0.322) : hwTimerColor()
+
+        VStack(alignment: .leading, spacing: 8) {
+            if timerActive || timerDone {
+                HStack(spacing: 5) {
+                    StateDot(running: running && !timerDone, color: timerDone ? mutedColor : tColor)
+                    let label = hwStr("timerLabel")
+                    if !label.isEmpty {
+                        Text(label).font(.system(size: 11, weight: .medium))
+                            .foregroundColor(tColor.opacity(0.85)).lineLimit(1)
+                    } else {
+                        Text("타이머").font(.system(size: 11, weight: .medium))
+                            .foregroundColor(tColor.opacity(0.85))
+                    }
+                }
+                if running, let end = hwEndDate() {
+                    Text(timerInterval: Date()...end, countsDown: true)
+                        .font(.system(size: 34, weight: .bold, design: .monospaced))
+                        .foregroundColor(tColor).monospacedDigit()
+                } else {
+                    Text(timerDone ? "00:00" : (hwStr("timerRemain").isEmpty ? "--:--" : hwStr("timerRemain")))
+                        .font(.system(size: 34, weight: .bold, design: .monospaced))
+                        .foregroundColor(timerDone ? mutedColor : tColor)
+                }
+            } else if swActive {
+                HStack(spacing: 5) {
+                    StateDot(running: hwBool("swRunning"), color: swGreen)
+                    Text("스톱워치").font(.system(size: 11, weight: .medium))
+                        .foregroundColor(swGreen.opacity(0.85))
+                }
+                if hwBool("swRunning"), let start = hwSwStartDate() {
+                    Text(timerInterval: start...Date.distantFuture, countsDown: false)
+                        .font(.system(size: 34, weight: .bold, design: .monospaced))
+                        .foregroundColor(swGreen).monospacedDigit()
+                } else {
+                    Text(hwStr("swElapsed").isEmpty ? "00:00" : hwStr("swElapsed"))
+                        .font(.system(size: 34, weight: .bold, design: .monospaced))
+                        .foregroundColor(swGreen)
+                }
+            } else {
+                Spacer()
+                HStack(spacing: 6) {
+                    Image(systemName: "timer").font(.system(size: 20)).foregroundColor(mutedColor)
+                    Text("아날로그 타이머").font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(mutedColor)
+                }
+                Spacer()
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .padding(14)
+        .modifier(WidgetContainerBackground())
+    }
+}
+
+struct HomeTimerWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "HomeTimerWidget", provider: HomeTimerProvider()) { _ in
+            HomeTimerWidgetView()
+        }
+        .configurationDisplayName("아날로그 타이머")
+        .description("타이머·스톱워치를 홈 화면에서 확인")
+        .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
 // MARK: - Widget Bundle
 
 @main
 struct TimerLiveActivityBundle: WidgetBundle {
     var body: some Widget {
         TimerLiveActivityWidget()
+        HomeTimerWidget()
     }
 }
 
