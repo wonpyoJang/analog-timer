@@ -1,3 +1,4 @@
+import { isAuthed } from './_lib/auth.js';
 import { Redis } from '@upstash/redis';
 
 const redis = Redis.fromEnv();
@@ -16,8 +17,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'method not allowed' });
 
-  const token = req.headers['x-admin-token'] || req.query.token;
-  if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) {
+  if (!isAuthed(req)) {
     return res.status(401).json({ error: 'unauthorized' });
   }
 
