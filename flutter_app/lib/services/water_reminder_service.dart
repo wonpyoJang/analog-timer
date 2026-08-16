@@ -120,6 +120,18 @@ class WaterReminderService {
     (await _p).setBool(_kDesktopWidget, desktopWidget.value = v);
   }
 
+  /// 데스크톱 물 위젯 온보딩(스낵바 1회) — 물 배너를 처음 경험할 때 제안.
+  static const _kWidgetOnboarded = 'water_widget_onboarded';
+
+  Future<bool> shouldShowWidgetOnboarding() async {
+    if (desktopWidget.value) return false; // 이미 켜둔 사용자는 제안 불필요
+    return !((await _p).getBool(_kWidgetOnboarded) ?? false);
+  }
+
+  Future<void> markWidgetOnboardingShown() async {
+    (await _p).setBool(_kWidgetOnboarded, true);
+  }
+
   Future<void> setEnabled(bool v) async {
     (await _p).setBool(_kEnabled, enabled.value = v);
     await _reschedule();

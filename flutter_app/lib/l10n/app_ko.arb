@@ -218,6 +218,8 @@
   "hourlyChimeSpoken": "{time}입니다",
   "settingsHighContrast": "고대비",
   "settingsHighContrastDesc": "보조 텍스트를 더 밝게 해 가독성 향상",
+  "waterWidgetOnboardBody": "떠 있는 물 위젯으로 잔 수와 다음 알림을 항상 볼 수 있어요",
+  "waterWidgetOnboardEnable": "켜보기",
   "waterDesktopWidget": "떠 있는 물 위젯",
   "waterDesktopWidgetSub": "잔 수와 다음 알림을 항상 위 작은 창으로 표시",
   "multiTimerTitle": "멀티 타이머",
