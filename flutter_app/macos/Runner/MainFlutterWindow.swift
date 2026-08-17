@@ -17,6 +17,13 @@ class MainFlutterWindow: NSWindow {
       RegisterGeneratedPlugins(registry: controller)
     }
 
+    // 위젯(오버레이 pill)만 떠 있고 메인 창을 X 로 닫으면, pill 이 앱을 살려둔
+    // 채로 메인 창이 파괴돼 되살릴 수 없었다. 닫아도 창 객체를 유지(+AppDelegate
+    // 전역 참조)해 Dock 재열기/트레이 '열기' 로 복구한다. pill 이 없으면
+    // applicationShouldTerminateAfterLastWindowClosed 가 그대로 종료시킨다.
+    self.isReleasedWhenClosed = false
+    AppDelegate.mainWindow = self
+
     super.awakeFromNib()
   }
 }
