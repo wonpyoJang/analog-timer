@@ -6,6 +6,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import '../services/high_contrast_service.dart';
+import '../services/platform_info.dart';
 import '../theme/app_theme.dart';
 import 'pill_prefs.dart';
 
@@ -35,12 +36,15 @@ Future<void> runDesktopWaterPill(Map<String, dynamic> args) async {
   }
   final resolvedPos = pos;
 
-  // 투명 레이어드 윈도우 금지(일부 GPU 합성 실패 — desktop_overlay.dart 참고).
+  // Windows: 불투명 사각(투명 레이어드 GPU 합성 실패 회피).
+  // macOS: OS 둥근 창에 사각 테두리가 잘려 투명 창 + 둥근 pill.
   final opts = WindowOptions(
     size: _pillSize,
     minimumSize: _pillSize,
     maximumSize: _pillSize,
-    backgroundColor: const Color(0xFF0E0E0F),
+    backgroundColor: isMacOS
+        ? const Color(0x00000000)
+        : const Color(0xFF0E0E0F),
     skipTaskbar: true,
     titleBarStyle: TitleBarStyle.hidden,
     windowButtonVisibility: false,
@@ -162,14 +166,18 @@ class _DesktopWaterPillState extends State<DesktopWaterPill> {
     final frac = _goal <= 0 ? 0.0 : (_count / _goal).clamp(0.0, 1.0);
     final done = _goal > 0 && _count >= _goal;
     return Scaffold(
-      backgroundColor: const Color(0xFF0E0E0F),
+      backgroundColor: isMacOS
+          ? const Color(0x00000000)
+          : const Color(0xFF0E0E0F),
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onPanStart: _onDragStart,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          // 사각 테두리 — 창이 불투명 사각이라 둥근 모서리는 귀퉁이가 비어 보인다.
+          // macOS: 투명 창+둥근 pill. Windows: 불투명 사각(둥근 모서리 시 귀퉁이 빔).
           decoration: BoxDecoration(
+            color: isMacOS ? const Color(0xFF0E0E0F) : null,
+            borderRadius: isMacOS ? BorderRadius.circular(16) : null,
             border: Border.all(
               color: done ? _waterBlue : AppColors.border,
               width: done ? 2 : 1,
