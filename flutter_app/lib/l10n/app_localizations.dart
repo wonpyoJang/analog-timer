@@ -1209,6 +1209,30 @@ abstract class AppLocalizations {
   /// **'Restart app'**
   String get menuRestartApp;
 
+  /// No description provided for @trayShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get trayShow;
+
+  /// No description provided for @trayMulti.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-timer'**
+  String get trayMulti;
+
+  /// No description provided for @trayRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart (unfreeze)'**
+  String get trayRestart;
+
+  /// No description provided for @trayQuit.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit'**
+  String get trayQuit;
+
   /// No description provided for @menuErrorReports.
   ///
   /// In en, this message translates to:
