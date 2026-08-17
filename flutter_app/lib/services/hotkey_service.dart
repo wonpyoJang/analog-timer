@@ -102,18 +102,21 @@ class HotkeyService {
     final mods = hk.modifiers ?? <HotKeyModifier>[];
     final parts = <String>[
       for (final m in order)
-        if (mods.contains(m))
-          switch (m) {
-            HotKeyModifier.control => 'Ctrl',
-            HotKeyModifier.shift => 'Shift',
-            HotKeyModifier.alt => 'Alt',
-            HotKeyModifier.meta => 'Win',
-            _ => m.name,
-          },
+        if (mods.contains(m)) modifierLabel(m),
     ];
     parts.add(_keyLabel(hk.key));
     return parts.join('+');
   }
+
+  /// 수식키 라벨 — macOS 는 네이티브 기호(⌃⇧⌥⌘), 그 외(Windows/Linux)는 낱말.
+  /// 조합 문자열의 '+' 구분자는 플랫폼 공통 유지 — KeyCaps 가 그걸로 칩을 쪼갠다.
+  static String modifierLabel(HotKeyModifier m) => switch (m) {
+    HotKeyModifier.control => isMacOS ? '⌃' : 'Ctrl',
+    HotKeyModifier.shift => isMacOS ? '⇧' : 'Shift',
+    HotKeyModifier.alt => isMacOS ? '⌥' : 'Alt',
+    HotKeyModifier.meta => isMacOS ? '⌘' : 'Win',
+    _ => m.name,
+  };
 
   /// 키 라벨 — **release 안전 + 이벤트 무관**.
   /// debugName 은 릴리즈에서 null 이고, lookUpLayout 은 그 키를 실제로 누른
