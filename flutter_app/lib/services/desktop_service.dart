@@ -120,9 +120,18 @@ class DesktopService with WindowListener, TrayListener {
     // 러너(main.cpp)가 메시지 루프 종료 후 TerminateProcess 로 즉시 종료하므로
     // teardown 레이스(크래시·좀비) 없이 한 번에 닫힌다. preventClose 미사용.
     trayManager.addListener(this);
-    await trayManager.setIcon(
-      isWindows ? 'assets/icons/app_icon.ico' : 'assets/icons/app_icon.png',
-    );
+    // macOS 메뉴바는 단색 template 이미지를 써야 다크/라이트에 자동 반전된다.
+    // Windows 는 .ico(크기별 렌디션), Linux 는 컬러 PNG.
+    if (isMacOS) {
+      await trayManager.setIcon(
+        'assets/icons/tray_macos_template.png',
+        isTemplate: true,
+      );
+    } else {
+      await trayManager.setIcon(
+        isWindows ? 'assets/icons/app_icon.ico' : 'assets/icons/app_icon.png',
+      );
+    }
     await trayManager.setToolTip('Analog Timer');
     await _rebuildMenu((await _l10n()).statusWaiting);
     _trayReady = true;
