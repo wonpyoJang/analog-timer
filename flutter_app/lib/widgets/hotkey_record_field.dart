@@ -118,14 +118,7 @@ class _HotkeyRecordFieldState extends State<HotkeyRecordField> {
     ];
     final parts = [
       for (final m in order)
-        if (_heldMods.contains(m))
-          switch (m) {
-            HotKeyModifier.control => 'Ctrl',
-            HotKeyModifier.shift => 'Shift',
-            HotKeyModifier.alt => 'Alt',
-            HotKeyModifier.meta => 'Win',
-            _ => m.name,
-          },
+        if (_heldMods.contains(m)) HotkeyService.modifierLabel(m),
       '…',
     ];
     return parts.join('+');
