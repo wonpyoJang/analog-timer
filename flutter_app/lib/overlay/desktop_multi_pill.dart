@@ -50,7 +50,10 @@ Future<void> runDesktopMultiPill(Map<String, dynamic> args) async {
     backgroundColor: isMacOS
         ? const Color(0x00000000)
         : const Color(0xFF0E0E0F),
-    skipTaskbar: true,
+    // Windows 만 작업표시줄에서 숨김. macOS 는 skipTaskbar 가 앱 전역
+    // NSApp.setActivationPolicy(.accessory) 라, pill 하나로 메인 앱이 Dock·
+    // Command+Tab 에서 사라진다 → macOS 는 끄고 .regular 유지.
+    skipTaskbar: !isMacOS,
     titleBarStyle: TitleBarStyle.hidden,
     windowButtonVisibility: false,
     alwaysOnTop: true,
