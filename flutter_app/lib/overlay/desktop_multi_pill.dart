@@ -6,6 +6,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import '../services/high_contrast_service.dart';
+import '../services/platform_info.dart';
 import 'pill_prefs.dart';
 import '../theme/app_theme.dart';
 
@@ -40,12 +41,15 @@ Future<void> runDesktopMultiPill(Map<String, dynamic> args) async {
   // 클로저 캡처를 위해 non-null 로컬로 굳힌다.
   final resolvedPos = pos;
 
-  // 투명 레이어드 윈도우 금지(일부 GPU 합성 실패 — desktop_overlay.dart 참고).
+  // Windows: 투명 레이어드 윈도우 금지(일부 GPU 합성 실패) → 불투명 사각.
+  // macOS: OS 가 창 모서리를 둥글게 처리해 사각 테두리가 잘림 → 투명 창 + 둥근 pill.
   final opts = WindowOptions(
     size: _pillSize,
     minimumSize: _pillSize,
     maximumSize: _pillSize,
-    backgroundColor: const Color(0xFF0E0E0F),
+    backgroundColor: isMacOS
+        ? const Color(0x00000000)
+        : const Color(0xFF0E0E0F),
     skipTaskbar: true,
     titleBarStyle: TitleBarStyle.hidden,
     windowButtonVisibility: false,
@@ -206,19 +210,23 @@ class _DesktopMultiPillState extends State<DesktopMultiPill> {
 
   @override
   Widget build(BuildContext context) {
-    final frac = _totalMs <= 0
-        ? 0.0
-        : (_remainMs / _totalMs).clamp(0.0, 1.0);
+    final frac = _totalMs <= 0 ? 0.0 : (_remainMs / _totalMs).clamp(0.0, 1.0);
+    // macOS: 투명 창 + 둥근 pill(채움+반경) — OS 둥근 모서리에 잘리지 않음.
+    // Windows: 불투명 사각 + 사각 테두리(투명 레이어드 금지, 둥근 모서리 시 네
+    // 귀퉁이가 검은 삼각형으로 비어져 보임).
+    final radius = isMacOS ? BorderRadius.circular(16) : null;
     return Scaffold(
-      backgroundColor: const Color(0xFF0E0E0F),
+      backgroundColor: isMacOS
+          ? const Color(0x00000000)
+          : const Color(0xFF0E0E0F),
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onPanStart: _onDragStart,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          // 사각 테두리 — 창이 불투명 사각(투명 레이어드 금지)이라 둥근 모서리를
-          // 쓰면 테두리 밖 네 귀퉁이가 검은 삼각형으로 비어져 보인다.
           decoration: BoxDecoration(
+            color: isMacOS ? const Color(0xFF0E0E0F) : null,
+            borderRadius: radius,
             border: Border.all(
               color: _done ? _color : AppColors.border,
               width: _done ? 2 : 1,
@@ -228,9 +236,7 @@ class _DesktopMultiPillState extends State<DesktopMultiPill> {
             children: [
               // 진행 링 + 재생/정지 토글.
               MouseRegion(
-                cursor: _done
-                    ? MouseCursor.defer
-                    : SystemMouseCursors.click,
+                cursor: _done ? MouseCursor.defer : SystemMouseCursors.click,
                 child: GestureDetector(
                   onTap: _done ? null : () => _sendAction('toggle'),
                   child: SizedBox(
@@ -269,10 +275,7 @@ class _DesktopMultiPillState extends State<DesktopMultiPill> {
                         _name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: AppColors.muted, fontSize: 11),
                       ),
                     Text(
                       _done && _doneText.isNotEmpty
