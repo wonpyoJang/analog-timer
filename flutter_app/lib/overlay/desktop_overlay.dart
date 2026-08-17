@@ -93,7 +93,9 @@ Future<void> runDesktopOverlay(Map<String, dynamic> args) async {
     minimumSize: _sizeForScale(_scaleMin),
     maximumSize: _sizeForScale(_scaleMax),
     backgroundColor: const Color(0xFF0E0E0F),
-    skipTaskbar: true,
+    // macOS 는 skipTaskbar 가 앱 전역 accessory 전환이라 메인이 Dock·Cmd+Tab
+    // 에서 사라진다 → Windows 만 숨기고 macOS 는 .regular 유지. (multi_pill 참조)
+    skipTaskbar: !isMacOS,
     titleBarStyle: TitleBarStyle.hidden,
     windowButtonVisibility: false,
     alwaysOnTop: true,
