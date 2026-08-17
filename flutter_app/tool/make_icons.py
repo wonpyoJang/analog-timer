@@ -51,7 +51,37 @@ def draw_clock(size: int, with_disc: bool) -> Image.Image:
     return img.resize((size, size), Image.LANCZOS)
 
 
+def draw_template(size: int) -> Image.Image:
+    """macOS 메뉴바 template 아이콘 — 검정 글리프(알파 마스크).
+
+    template 이미지는 색이 무시되고 알파만 마스크로 쓰인다. OS 가 라이트
+    메뉴바엔 검정, 다크 메뉴바엔 흰색으로 자동 반전하므로 형태만 담는다.
+    (컬러 앱아이콘을 그대로 축소하면 반전이 안 돼 어두운 메뉴바에서 뭉갠다.)
+    """
+    s = size * SS
+    img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    black = (0, 0, 0, 255)
+    pad = s * 0.10
+    box = [pad, pad, s - pad, s - pad]
+    d.ellipse(box, outline=black, width=max(2, int(s * 0.085)))
+    cx = cy = s / 2
+    r = (s - 2 * pad) / 2
+    hw = max(2, int(s * 0.075))
+    d.line([cx, cy, cx - r * 0.42, cy - r * 0.34], fill=black, width=hw)  # 10시
+    d.line([cx, cy, cx + r * 0.30, cy - r * 0.50], fill=black, width=hw)  # 10분
+    cr = s * 0.05
+    d.ellipse([cx - cr, cy - cr, cx + cr, cy + cr], fill=black)
+    return img.resize((size, size), Image.LANCZOS)
+
+
 def main() -> None:
+    import os
+    # macOS 메뉴바 template — OS 무관 경로(이 스크립트는 Windows 에서 주로 돌지만
+    # template 산출물은 어디서 돌려도 같은 위치에 나오게 os.path.join 사용).
+    draw_template(44).save(os.path.join("assets", "icons", "tray_macos_template.png"))
+    print("생성: assets/icons/tray_macos_template.png")
+
     art = Image.open(SRC).convert("RGBA")
     # 타이틀바 로고(14px 표시) — 어두운 바에서도 보이는 링 렌디션 PNG.
     draw_clock(64, with_disc=False).save(r"assets\icons\app_icon_small.png")
