@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
+import '../l10n/app_localizations.dart';
 import 'native_confirm.dart';
+import 'persistence_service.dart';
 import 'platform_info.dart';
 import 'telemetry_service.dart';
 
@@ -122,22 +124,41 @@ class DesktopService with WindowListener, TrayListener {
       isWindows ? 'assets/icons/app_icon.ico' : 'assets/icons/app_icon.png',
     );
     await trayManager.setToolTip('Analog Timer');
-    await _rebuildMenu('대기 중');
+    await _rebuildMenu((await _l10n()).statusWaiting);
     _trayReady = true;
     _startFreezeWatchdog();
   }
 
+  /// 트레이는 위젯 트리 밖(BuildContext 없음)이라 저장된 locale 로 직접 해석한다.
+  /// 지원 안 하는 태그면 en 폴백 — home_screen 이 넘기는 status 는 이미 지역화됨.
+  Future<AppLocalizations> _l10n() async {
+    Locale locale = const Locale('en');
+    final tag = await PersistenceService.loadLocale();
+    if (tag != null) {
+      final p = tag.split(RegExp('[_-]'));
+      locale = p.length >= 2
+          ? Locale.fromSubtags(languageCode: p[0], scriptCode: p[1])
+          : Locale(p[0]);
+    }
+    try {
+      return lookupAppLocalizations(locale);
+    } catch (_) {
+      return lookupAppLocalizations(const Locale('en'));
+    }
+  }
+
   Future<void> _rebuildMenu(String status) async {
     _lastMenuStatus = status;
+    final l = await _l10n();
     await trayManager.setContextMenu(
       Menu(
         items: [
           MenuItem(label: status, disabled: true),
           MenuItem.separator(),
-          MenuItem(key: 'show', label: '열기'),
-          MenuItem(key: 'multi', label: '멀티 타이머'),
-          MenuItem(key: 'restart', label: '다시 시작 (화면 멈춤 해소)'),
-          MenuItem(key: 'quit', label: '종료'),
+          MenuItem(key: 'show', label: l.trayShow),
+          MenuItem(key: 'multi', label: l.trayMulti),
+          MenuItem(key: 'restart', label: l.trayRestart),
+          MenuItem(key: 'quit', label: l.trayQuit),
         ],
       ),
     );

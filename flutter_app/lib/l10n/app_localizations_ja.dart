@@ -601,6 +601,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get menuRestartApp => 'Restart app';
 
   @override
+  String get trayShow => 'Open';
+
+  @override
+  String get trayMulti => 'Multi-timer';
+
+  @override
+  String get trayRestart => 'Restart (unfreeze)';
+
+  @override
+  String get trayQuit => 'Quit';
+
+  @override
   String get menuErrorReports => 'Error reports';
 
   @override

@@ -583,6 +583,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get menuRestartApp => '앱 재시작';
 
   @override
+  String get trayShow => '열기';
+
+  @override
+  String get trayMulti => '멀티 타이머';
+
+  @override
+  String get trayRestart => '다시 시작 (화면 멈춤 해소)';
+
+  @override
+  String get trayQuit => '종료';
+
+  @override
   String get menuErrorReports => '오류 리포트';
 
   @override
